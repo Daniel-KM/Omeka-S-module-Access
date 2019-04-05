@@ -1,0 +1,55 @@
+<?php
+/**
+ * @var \Zend\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
+ * @var array $values
+ * @var string $linkTitle
+ */
+
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+
+$accessRequest = $resource;
+
+if ($user = $accessRequest->user()):
+    $userText = $this->hyperlink($user->name(), $user->adminUrl(), ['target' => '_blank']);
+else:
+    $userText = $translate('[no user]');
+endif;
+
+$requestedResource = $accessRequest->resource();
+$resourceText = $this->hyperlink(
+    sprintf('%s #%s', $requestedResource->getControllerName(), $requestedResource->id()),
+    $requestedResource->adminUrl(),
+    ['target' => '_blank']
+);
+
+?>
+<div class="resource-details" data-resource-values="<?php echo $escape($values); ?>">
+
+    <?php if ($linkTitle): ?>
+    <h3 class="o-title"><?php echo $resource->link($resource->displayTitle()); ?></h3>
+    <?php else: ?>
+    <h3 class="o-title"><?php echo $escape($resource->displayTitle()); ?></h3>
+    <?php endif; ?>
+    <div class="o-description"><?php echo $escape($resource->displayDescription()); ?></div>
+
+    <?php echo $this->thumbnail($requestedResource, 'square'); ?>
+
+    <div class="meta-group">
+        <h4><?php echo $escape($translate('User')); ?></h4>
+        <div class="value"><?php echo $userText; ?></div>
+    </div>
+
+    <div class="meta-group">
+        <h4><?php echo $escape($translate('Resource')); ?></h4>
+        <div class="value"><?php echo $resourceText; ?></div>
+    </div>
+
+    <div class="meta-group">
+        <h4><?php echo $escape($translate('Status')); ?></h4>
+        <div class="value"><?php echo $translate($resource->statusLabel()); ?></div>
+    </div>
+
+    <?php $this->trigger('view.details', array('entity' => $resource)); ?>
+</div>

@@ -1,0 +1,223 @@
+<?php
+/**
+ * @var \Zend\View\Renderer\PhpRenderer $this
+ * @var \AccessResource\Api\Representation\AccessResourceRepresentation[] $accessResources
+ */
+
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+$urlHelper = $this->plugin('url');
+
+$resourceTypes = [
+    'media' => \Omeka\Api\Representation\MediaRepresentation::class,
+    'item' => \Omeka\Api\Representation\ItemRepresentation::class,
+    'itemSet' => \Omeka\Api\Representation\ItemSetRepresentation::class,
+];
+
+$sortHeadings = [
+    [
+        'label' => $translate('User'),
+        'value' => 'user'
+    ],
+    [
+        'label' => $translate('Resource'),
+        'value' => 'resource'
+    ],
+    [
+        'label' => $translate('Enabled'),
+        'value' => 'enabled'
+    ],
+    [
+        'label' => $translate('Created'),
+        'value' => 'created'
+    ],
+    [
+        'label' => $translate('Modified'),
+        'value' => 'modified'
+    ],
+    [
+        'label' => $translate('Token'),
+        'value' => 'token'
+    ],
+    [
+        'label' => $translate('Start date'),
+        'value' => 'startDate'
+    ],
+    [
+        'label' => $translate('End date'),
+        'value' => 'endDate'
+    ]
+];
+
+$this->headLink()->appendStylesheet($this->assetUrl('css/table-access-resource.css', 'AccessResource'));
+$this->htmlElement('body')->appendAttribute('class', 'sites browse');
+?>
+
+<?php echo $this->pageTitle($translate('Accesses')); ?>
+
+<div id="page-actions">
+    <?php if ($this->userIsAllowed(\AccessResource\Entity\AccessResource::class, 'create')): ?>
+        <?php echo $this->hyperlink($translate('Add new access record'), $urlHelper('admin/access-resource/default', ['controller' => 'access', 'action' => 'add']), ['class' => 'button']); ?>
+    <?php endif; ?>
+</div>
+
+<?php if (count($accessResources)): ?>
+    <div class="browse-controls">
+        <?php echo $this->pagination(); ?>
+        <?php echo $this->sortSelector($sortHeadings); ?>
+    </div>
+    <?php $this->trigger('view.browse.before'); ?>
+
+    <table class="tablesaw" data-tablesaw-mode="stack">
+        <thead>
+            <tr>
+                <th><?php echo $escape($translate('User')); ?></th>
+                <th><?php echo $escape($translate('Resource')); ?></th>
+                <th><?php echo $escape($translate('Enabled')); ?></th>
+                <th>&nbsp;</th>
+                <th><?php echo $escape($translate('Created')); ?></th>
+                <th><?php echo $escape($translate('Modified')); ?></th>
+                <th><?php echo $escape($translate('Token')); ?></th>
+                <th><?php echo $escape($translate('Temporal')); ?></th>
+                <th><?php echo $escape($translate('Start date')); ?></th>
+                <th><?php echo $escape($translate('End date')); ?></th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($accessResources as $accessResource): ?>
+            <?php
+                if ($user = $accessResource->user()):
+                    $userText = $this->hyperlink($user->name(), $user->adminUrl());
+                else:
+                    $userText = $translate('[no user]');
+                endif;
+
+                $resourceText = '';
+                if ($requestedResource = $accessResource->resource()):
+                    $types = array_filter($resourceTypes, function($class) use ($requestedResource) {
+                        return $requestedResource instanceof $class;
+                    });
+                    if (count($types)):
+                        $type = array_keys($types)[0];
+                        $resourceText = $this->hyperlink(
+                            sprintf('%s #%s', $type, $requestedResource->id()),
+                            $requestedResource->adminUrl()
+                        );
+                    endif;
+                endif;
+            ?>
+            <tr>
+                <td><?php echo $userText; ?></td>
+                <td><?php echo $resourceText; ?></td>
+                <td><?php echo $accessResource->enabled() ? $escape('Yes') : $escape('No'); ?></td>
+                <td>
+                    <ul class="actions">
+                        <?php if ($accessResource->userIsAllowed('update')): ?>
+                        <li>
+                            <?php echo $this->hyperlink('', $accessResource->url('edit'), [
+                                'class' => 'o-icon-edit',
+                                'title' => $translate('Edit'),
+                            ]); ?>
+                        </li>
+                        <?php endif; ?>
+                        <?php if ($accessResource->userIsAllowed('delete')): ?>
+                        <li>
+                            <?php echo $this->hyperlink('', '#', [
+                                'data-sidebar-selector' => '#sidebar',
+                                'data-sidebar-content-url' => $accessResource->url('delete-confirm'),
+                                'class' => 'o-icon-delete sidebar-content',
+                                'title' => $translate('Delete'),
+                            ]); ?>
+                        </li>
+                        <?php endif; ?>
+                    </ul>
+                </td>
+                <td><?php echo $accessResource->created()->format('Y-m-d H:i:s'); ?></td>
+                <td><?php echo $accessResource->modified()->format('Y-m-d H:i:s'); ?></td>
+                <td><?php echo $accessResource->token(); ?></td>
+                <td><?php echo $accessResource->temporal() ? $translate('Yes') : $translate('No'); ?></td>
+                <td><?php echo $accessResource->startDate() ? $accessResource->startDate()->format('Y-m-d H:i') : ''; ?></td>
+                <td><?php echo $accessResource->endDate() ? $accessResource->endDate()->format('Y-m-d H:i'): ''; ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+
+    <?php $this->trigger('view.browse.after'); ?>
+    <div class="browse-controls">
+        <?php echo $this->pagination(); ?>
+    </div>
+
+    <div id="sidebar" class="sidebar">
+        <?php echo $this->hyperlink('', '#', [
+            'class' => 'sidebar-close o-icon-close',
+            'title' => $translate('Close'),
+        ]); ?>
+        <div class="sidebar-content"></div>
+    </div>
+    <div id="sidebar-delete-selected" class="sidebar">
+        <?php echo $this->hyperlink('', '#', [
+            'class' => 'sidebar-close o-icon-close',
+            'title' => $translate('Close'),
+        ]); ?>
+        <div class="sidebar-content">
+            <div id="sidebar-confirm">
+                <h3><?php echo $translate('Delete records'); ?></h3>
+                <p><?php echo $translate('Are you sure you would like to delete the selected records?'); ?></p>
+                <p class="error"><?php echo sprintf(
+                        $translate('%s: this action will permanently delete %s records and cannot be undone.'),
+                        sprintf('<strong>%s</strong>', $translate('Warning')),
+                        '<strong><span id="delete-selected-count"></span></strong>'
+                    ); ?></p>
+                <?php echo 'formDeleteSelected' /*$this->form($this->formDeleteSelected);*/ ?>
+            </div>
+        </div>
+    </div>
+    <div id="sidebar-delete-all" class="sidebar">
+        <?php echo $this->hyperlink('', '#', [
+            'class' => 'sidebar-close o-icon-close',
+            'title' => $translate('Close'),
+        ]); ?>
+        <div class="sidebar-content">
+            <div id="sidebar-confirm">
+                <h3><?php echo $translate('Delete records'); ?></h3>
+                <p><?php echo $translate('Are you sure you would like to delete all records on all pages of this result?'); ?></p>
+                <p class="error"><?php echo sprintf(
+                        $translate('%s: this action will permanently delete %s records and cannot be undone.'),
+                        sprintf('<strong>%s</strong>', $translate('Warning')),
+                        sprintf('<strong>%s</strong>', number_format($this->pagination()->getPaginator()->getTotalCount()))
+                    ); ?></p>
+                <label><input type="checkbox" name="confirm-delete-all-check"> <?php echo $translate('Are you sure?'); ?></label>
+                <?php echo 'formDeleteAll' /*$this->form($this->formDeleteAll);*/ ?>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Complete the batch delete form after confirmation.
+        $('#confirm-delete-selected, #confirm-delete-all').on('submit', function(e) {
+            var confirmForm = $(this);
+            if ('confirm-delete-all' === this.id) {
+                confirmForm.append($('.batch-query').clone());
+            } else {
+                $('#batch-form').find('input[name="resource_ids[]"]:checked').each(function() {
+                    confirmForm.append($(this).clone().prop('disabled', false).attr('type', 'hidden'));
+                });
+            }
+        });
+        $('.delete-all').on('click', function(e) {
+            Omeka.closeSidebar($('#sidebar-delete-selected'));
+        });
+        $('.delete-selected').on('click', function(e) {
+            Omeka.closeSidebar($('#sidebar-delete-all'));
+            var inputs = $('input[name="resource_ids[]"]');
+            $('#delete-selected-count').text(inputs.filter(':checked').length);
+        });
+        $('#sidebar-delete-all').on('click', 'input[name="confirm-delete-all-check"]', function(e) {
+            $('#confirm-delete-all input[type="submit"]').prop('disabled', this.checked ? false : true);
+        });
+    </script>
+
+<?php else: ?>
+    <p><?php echo $escape($translate('No access records yet.')); ?> <a href="<?php echo $urlHelper(null, [], true); ?>"><?php echo $escape($translate('Refresh page')); ?></a></p>
+<?php endif; ?>

@@ -1,0 +1,4 @@
+.browse td:first-child, 
+.browse th:first-child {
+    width: 10%;
+}

@@ -1,0 +1,65 @@
+<?php
+/**
+ * @var \Zend\View\Renderer\PhpRenderer $this
+ * @var \AccessResource\Entity\AccessLog[] $logs
+ */
+
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+
+$this->headLink()->appendStylesheet($this->assetUrl('css/table-access-resource.css', 'AccessResource'));
+$this->htmlElement('body')->appendAttribute('class', 'sites browse');
+?>
+
+<?php echo $this->pageTitle($translate('Access logs')); ?>
+
+<div id="page-actions">
+    <?php if ($this->userIsAllowed(\AccessResource\Entity\AccessResource::class, 'create')): ?>
+        <?php echo $this->hyperlink($translate('Add new access record'), $this->url('admin/access-resource/default', ['controller' => 'access', 'action' => 'add']), ['class' => 'button']); ?>
+    <?php endif; ?>
+</div>
+
+<?php if (count($logs)): ?>
+    <div class="browse-controls">
+        <?php echo $this->pagination(); ?>
+    </div>
+    <?php $this->trigger('view.browse.before'); ?>
+
+    <table class="tablesaw" data-tablesaw-mode="stack">
+        <thead>
+        <tr>
+            <th><?php echo $escape($translate('User')); ?></th>
+            <th><?php echo $escape($translate('Action')); ?></th>
+            <th><?php echo $escape($translate('Record Id')); ?></th>
+            <th><?php echo $escape($translate('Type')); ?></th>
+            <th><?php echo $escape($translate('Date')); ?></th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($logs as $log): ?>
+            <?php
+                if ($user = $log->getUser()):
+                    $userText = $this->hyperlink(
+                        $user->getName(),
+                        $this->url('admin/id', ['controller' => 'user', 'action' => 'show', 'id' => $user->getId()])
+                    );
+                else:
+                    $userText = $translate('[no user]');
+                endif;
+            ?>
+            <tr>
+                <td><?php echo $userText; ?></td>
+                <td><?php echo $log->getAction(); ?></td>
+                <td><?php echo $log->getRecordId(); ?></td>
+                <td><?php echo $log->getType(); ?></td>
+                <td><?php echo $log->getDate()->format('Y-m-d H:i:s'); ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+
+    <?php $this->trigger('view.browse.after'); ?>
+
+<?php else: ?>
+    <p><?php echo $escape($translate('No access records yet.')); ?> <a href="<?php echo $this->url(null, [], true); ?>"><?php echo $escape($translate('Refresh page')); ?></a></p>
+<?php endif; ?>

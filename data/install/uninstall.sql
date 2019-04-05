@@ -1,0 +1,5 @@
+SET FOREIGN_KEY_CHECKS=0;
+DROP TABLE access_log;
+DROP TABLE access_request;
+DROP TABLE access_resource;
+SET FOREIGN_KEY_CHECKS=1;

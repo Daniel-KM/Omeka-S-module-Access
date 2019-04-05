@@ -1,0 +1,73 @@
+<?php
+/**
+ * @var \Zend\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[] $resources
+ * @var \AccessResource\Form\AccessRequestForm $form
+ * @var bool $visitorHasIdentity
+ */
+
+$translate = $this->plugin('translate');
+$this->headLink()->appendStylesheet($this->assetUrl('css/helper-request-resource-access-form.css', 'AccessResource'));
+$this->headScript()->appendFile($this->assetUrl('js/helper-request-resource-access-form.js', 'AccessResource'));
+
+$formSubmitUrl = $this->url('access-resource-request');
+?>
+<br/>
+<br/>
+<?php echo $this->hyperlink(
+    $translate('Request resource access'),
+    'javascript: void(0)',
+    ['class' => 'button request-access-resource']
+); ?>
+<br/>
+<br/>
+<div class="access-resource-request-form" data-uri="<?php echo $formSubmitUrl; ?>">
+    <div class="form-wrapper">
+        <div class="form-block">
+            <div class="block-title">
+                <h3><?php echo $translate('Request Access'); ?></h3>
+                <a href="javascript: void(0)" class="block-close o-icon-close">
+                    <span class="screen-reader-text"><?php echo $translate('Close'); ?></span>
+                </a>
+            </div>
+            <div class="block-body">
+                <?php if ($visitorHasIdentity): ?>
+
+                    <?php echo $this->form()->openTag($form); ?>
+                    <?php foreach($resources as $resource): ?>
+                <div>
+                    <label>
+                        <input type="checkbox" name="resources[]" value="<?php echo $resource->id(); ?>">
+                        <?php echo $resource->linkPretty(); ?>
+                    </label>
+                </div>
+                    <?php endforeach; ?>
+                    <?php
+                    echo $this->formCollection($form);
+                    echo $this->form()->closeTag();
+                    ?>
+
+                <?php else: ?>
+
+                <div>
+                    <?php
+                    if ($this->setting('guestuser_open')):
+                        echo sprintf(
+                            $translate('To request access please %s or %s!'),
+                            $this->hyperlink($translate('Register'), $this->url('site/guest-user', ['action' =>'register'], true)),
+                            $this->hyperlink($translate('Login'), $this->url('site/guest-user', ['action' =>'login'], true))
+                        );
+                    else:
+                        echo sprintf(
+                            $translate('To request access please %s or contact the publisher!'),
+                            $this->hyperlink($translate('Login'), $this->url('site/guest-user', ['action' =>'login'], true))
+                        );
+                    endif;
+                ?>
+                </div>
+
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>

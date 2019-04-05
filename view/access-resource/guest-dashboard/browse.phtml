@@ -1,0 +1,72 @@
+<?php
+/**
+ * @var \Zend\View\Renderer\PhpRenderer $this
+ * @var \AccessResource\Api\Representation\AccessRequestRepresentation[] $accessRequests
+ */
+
+$translate = $this->plugin('translate');
+$escape = $this->plugin('escapeHtml');
+
+$resourceTypes = [
+    'media' => \Omeka\Api\Representation\MediaRepresentation::class,
+    'item' => \Omeka\Api\Representation\ItemRepresentation::class,
+    'itemSet' => \Omeka\Api\Representation\ItemSetRepresentation::class,
+];
+
+$this->headLink()->appendStylesheet($this->assetUrl('css/table-access-resource.css', 'AccessResource'));
+$this->htmlElement('body')->appendAttribute('class', 'sites browse');
+?>
+
+<?php echo $this->pageTitle($translate('Guest resource access dashboard')); ?>
+
+<?php if (count($accessRequests)): ?>
+    <div class="browse-controls">
+        <?php echo $this->pagination(); ?>
+    </div>
+    <?php $this->trigger('view.browse.before'); ?>
+
+    <table class="tablesaw" data-tablesaw-mode="stack">
+        <thead>
+        <tr>
+            <th><?php echo $escape($translate('User')); ?></th>
+            <th><?php echo $escape($translate('Resource')); ?></th>
+            <th><?php echo $escape($translate('Status')); ?></th>
+            <th><?php echo $escape($translate('Created')); ?></th>
+            <th><?php echo $escape($translate('Modified')); ?></th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($accessRequests as $accessRequest): ?>
+            <?php
+
+            $resourceText = '';
+            if ($requestedResource = $accessRequest->resource()):
+                $types = array_filter($resourceTypes, function($class) use ($requestedResource) {
+                    return $requestedResource instanceof $class;
+                });
+                if (count($types)):
+                    $type = array_keys($types)[0];
+                    $resourceText = $this->hyperlink(
+                        sprintf('%s #%s', $type, $requestedResource->id()),
+                        $requestedResource->adminUrl()
+                    );
+                endif;
+
+            endif;
+            ?>
+            <tr>
+                <td><?php echo $accessRequest->user()->name(); ?></td>
+                <td><?php echo $resourceText; ?></td>
+                <td><?php echo $translate($accessRequest->statusLabel()); ?></td>
+                <td><?php echo $accessRequest->created()->format('Y-m-d H:i:s'); ?></td>
+                <td><?php echo $accessRequest->modified()->format('Y-m-d H:i:s'); ?></td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+
+    <?php $this->trigger('view.browse.after'); ?>
+
+<?php else: ?>
+    <p><?php echo $escape($translate('No request records yet.')); ?> <a href=""><?php echo $escape($translate('Refresh page')); ?></a></p>
+<?php endif; ?>

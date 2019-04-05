@@ -1,0 +1,184 @@
+@media screen {
+    header nav .access-resource:before {
+        content:"";
+    }
+    .access-resource .no-resources:before {
+        content:"";
+    }
+    #tags .property {
+        display: inherit;
+    }
+    #resource-tags .actions {
+        float: right;
+    }
+    #resource-tags.empty,
+    #resource-tags+.no-resources {
+        display:none;
+    }
+    #resource-tags.empty+.no-resources {
+        display:block;
+        padding:0 24px;
+    }
+    #resource-tags.empty+.no-resources:before {
+        content:"";
+    }
+    #resource-tags tr.delete {
+        background-color:#fcc;
+    }
+    .taggings .resource-details .tag-internal-id {
+        font-size: 0.7em;
+    }
+
+    @media (min-width:641px) {
+        .tags.browse table th:nth-child(1n+2),
+        .tags.browse table td:nth-child(1n+2) {
+            text-align: right;
+        }
+        .tags.browse table th:nth-child(1n+2) *,
+        .tags.browse table td:nth-child(1n+2) * {
+            text-align: right;
+            float: right;
+        }
+
+        .taggings.browse table th:first-child,
+        .taggings.browse table td:first-child {
+            max-width: 40%;
+            min-width: 30%;
+            width: 30%;
+        }
+    }
+
+    .access-resource table .resource-name {
+        display: inline-block;
+        vertical-align: bottom;
+        margin-left: .5em;
+        opacity: .5;
+    }
+
+    .access-resource .single.actions {
+        float: right;
+    }
+    .access-resource .single.actions a::before {
+        text-align: inherit;
+    }
+    .access-resource .single.actions .o-icon-transmit::before {
+        background: url('../img/waiting-mini.gif') no-repeat scroll 3px 3px transparent !important;
+    }
+    .access-resource .tag-name[contenteditable=true].o-icon-transmit::before,
+    .access-resource .no-action::before {
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        vertical-align: top;
+        border: 0;
+        box-shadow: none;
+        opacity: .5;
+        text-align: inherit;
+    }
+    .access-resource.meta-group .single.actions,
+    .access-resource.meta-group .no-action::before {
+        float: right;
+    }
+
+    .access-resource.meta-group span,
+    .access-resource .meta-group span {
+        display: inline;
+        hyphens: auto;
+        word-wrap: break-word;
+    }
+
+    .access-resource.meta-group::before,
+    .access-resource .status-toggle::before,
+    .access-resource .resource-name::before {
+        display: inline-block;
+        font-family: "Font Awesome 5 Free";
+        padding-left: 3px;
+        padding-right: 3px;
+        width: 24px;
+    }
+    .access-resource .resource-name.resource::before {
+        content: "";
+    }
+    .access-resource .resource-name.no-resource::before {
+        content: "❌";
+    }
+    .access-resource .resource-name.item-set::before {
+        content: "";
+    }
+    .access-resource .resource-name.item::before {
+        content: "";
+    }
+    .access-resource .resource-name.media::before {
+        content: "";
+    }
+    .access-resource .o-icon-proposed::before {
+        color: #FFA500;
+        content: "";
+    }
+    .access-resource .o-icon-allowed::before {
+        color: #FFA500;
+        content: "";
+    }
+    .access-resource .o-icon-approved::before {
+        color: #00FF00;
+        content: "";
+    }
+    .access-resource .o-icon-rejected::before {
+        color: #FF0000;
+        content: "";
+    }
+    .access-resource .o-icon-undefined::before {
+        color: #FF0000;
+        content: "";
+    }
+    .access-resource .o-icon-none::before {
+        color: #FFFFFF;
+        content: "";
+    }
+    .access-resource .o-icon-transmit::before {
+        background: url('../img/waiting-mini.gif') no-repeat scroll 12px 3px transparent !important;
+        color: #000000;
+        content: "";
+        cursor: progress;
+    }
+
+    .access-resource .tag-name[contenteditable="true"] {
+        background: inherit;
+        border: hidden;
+        display: inline-block;
+        min-height: unset;
+        max-height: 3em;
+        padding: inherit;
+        width: 84%;
+    }
+    .access-resource .tag-name[contenteditable=true]:hover,
+    .access-resource .tag-name[contenteditable=true]:focus {
+        outline: 1px dotted rgba(0,0,0,0.15);
+    }
+    .access-resource .tag-name[contenteditable="true"]:active {
+        display: inline;
+        outline: 1px dashed rgba(0,0,0,0.15);
+        overflow: hidden;
+        white-space: nowrap;
+    }
+    .access-resource .tag-name[contenteditable="true"]:active br {
+        display:none;
+    }
+    .access-resource .tag-name[contenteditable="true"]:active * {
+        display:inline;
+        white-space:nowrap;
+    }
+    .access-resource .tag-name[contenteditable=true].o-icon-transmit::before {
+        background: url('../img/waiting-mini.gif') no-repeat scroll 3px 3px transparent !important;
+    }
+}
+
+@media screen and (max-width: 640px) {
+    fieldset.section>#resource-tags.empty+.no-resources {
+        display:none;
+    }
+    fieldset.section.mobile-active>#resource-tags.empty+.no-resources {
+        display:block;
+        margin-top:48px;
+    }
+}
