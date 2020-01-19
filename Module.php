@@ -9,6 +9,7 @@ if (!class_exists(\Generic\AbstractModule::class)) {
 
 use Generic\AbstractModule;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
+use Omeka\Settings\SettingsInterface;
 use Zend\EventManager\Event;
 use Zend\EventManager\SharedEventManagerInterface;
 use Zend\Mvc\MvcEvent;
@@ -20,10 +21,29 @@ class Module extends AbstractModule
 
     protected $dependency = 'Guest';
 
+    /**
+     * @var string
+     */
+    protected $accessMode = 'global';
+
+    public function getConfig()
+    {
+        $config = include OMEKA_PATH . '/config/local.config.php';
+        $this->accessMode = @$config['accessresource']['access_mode'] ?: 'global';
+        return $this->accessMode === 'individual'
+            ? include __DIR__ . '/config/module.config.individual.php'
+            : include __DIR__ . '/config/module.config.php';
+    }
+
     public function onBootstrap(MvcEvent $event)
     {
         parent::onBootstrap($event);
-        $this->addAclRoleAndRules();
+
+        if ($this->accessMode === 'individual') {
+            $this->addAclRoleAndRulesIndividually();
+        } else {
+            $this->addAclRoleAndRulesGlobally();
+        }
     }
 
     public function install(ServiceLocatorInterface $serviceLocator)
@@ -32,55 +52,34 @@ class Module extends AbstractModule
         $this->installVocabulary();
     }
 
-    protected function installVocabulary()
+    /**
+     * Add ACL role and rules for this module.
+     */
+    protected function addAclRoleAndRulesGlobally()
     {
-        $vocabulary = [
-            'o:namespace_uri' => 'https://curation.omeka.org',
-            'o:prefix' => 'curation',
-            'o:label' => 'Curation', // @translate
-            'o:comment' => 'Curation of resource access', // @translate
-            'o:class' => [],
-            'o:property' => [
-                [
-                    'o:local_name' => 'reservedAccess',
-                    'o:label' => 'Reserved Access', // @translate
-                    'o:comment' => 'Gives an ability for private resource to be listed (previewed).', // @translate
-                ],
-            ],
-        ];
-
-        $api = $this->getServiceLocator()->get('Omeka\ApiManager');
-
-        $existingVocabList = $api
-            ->search(
-                'vocabularies',
-                [
-                    'namespace_uri' => $vocabulary['o:namespace_uri'],
-                    'limit' => 1,
-                ]
+        $this->getServiceLocator()->get('Omeka\Acl')
+            ->allow(
+                null,
+                ['AccessResource\Controller\AccessResource'],
+                ['index', 'files']
             )
-            ->getContent();
-        $existingVocab = is_array($existingVocabList) && count($existingVocabList) ? $existingVocabList[0] : null;
-
-        if (!$existingVocab) {
-            $api->create('vocabularies', $vocabulary);
-        }
+        ;
     }
 
     /**
      * Add ACL role and rules for this module.
      */
-    protected function addAclRoleAndRules()
+    protected function addAclRoleAndRulesIndividually()
     {
         /** @var \Omeka\Permissions\Acl $acl */
         $services = $this->getServiceLocator();
         $acl = $services->get('Omeka\Acl');
 
         // Since Omeka 1.4, modules are ordered, so Guest come after AccessResource.
-        // See \Guest\Module::onBootstrap().
-        if (!$acl->hasRole('guest')) {
-            $acl->addRole('guest');
-        }
+        // See \Guest\Module::onBootstrap(). Manage other roles too: contributor, etc.
+        // if (!$acl->hasRole('guest')) {
+        //     $acl->addRole('guest');
+        // }
 
         $acl
             ->allow(
@@ -95,7 +94,7 @@ class Module extends AbstractModule
             )
             ->allow(
                 // TODO Limit access to authenticated users, instead of checking in controller.
-                // Guest role is not yet loaded.
+                // Guest role is not yet loaded, neither specific roles (contributor…).
                 null,
                 ['AccessResource\Controller\Site\GuestBoard'],
                 ['browse']
@@ -114,7 +113,8 @@ class Module extends AbstractModule
                 null,
                 [\AccessResource\Entity\AccessRequest::class],
                 ['create', 'update']
-            );
+            )
+        ;
     }
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager)
@@ -145,6 +145,11 @@ class Module extends AbstractModule
             'api.find.query',
             [$this, 'filterMedia']
         );
+
+        // No more event when access is global: no form, requests, checks…
+        if ($this->accessMode !== 'individual') {
+            return;
+        }
 
         // Attach to Doctrine events Access Request update, to trigger Access
         // resource management.
@@ -229,102 +234,11 @@ class Module extends AbstractModule
         );
     }
 
-    public function handlerRequestCreated(Event $event)
+    protected function prepareDataToPopulate(SettingsInterface $settings, $settingsType)
     {
-        $services = $this->getServiceLocator();
-        if (!$services->get('Omeka\Settings')->get('accessresource_message_send')) {
-            return;
-        }
-
-        $requestMailer = $services->get(\AccessResource\Service\RequestMailerFactory::class);
-        $requestMailer->sendMailToAdmin('created');
-        $requestMailer->sendMailToUser('created');
-    }
-
-    public function handlerRequestUpdated(Event $event)
-    {
-        $services = $this->getServiceLocator();
-        if (!$services->get('Omeka\Settings')->get('accessresource_message_send')) {
-            return;
-        }
-
-        $requestMailer = $services->get(\AccessResource\Service\RequestMailerFactory::class);
-        // $requestMailer->sendMailToAdmin('updated');
-        $requestMailer->sendMailToUser('updated');
-    }
-
-    /**
-     * Add a tab to section navigation.
-     *
-     * @param Event $event
-     */
-    public function addAccessTab(Event $event)
-    {
-        $sectionNav = $event->getParam('section_nav');
-        $sectionNav['access'] = 'Access'; // @translate
-        $event->setParam('section_nav', $sectionNav);
-    }
-
-    /**
-     * Display a partial for a resource.
-     *
-     * @param Event $event
-     */
-    public function displayListAndForm(Event $event)
-    {
-        $request = $this->getServiceLocator()->get('Request');
-
-        if ($request->isPost()) {
-            // Create access.
-            // $post = $request->getPost();
-
-            $api = $this->getServiceLocator()->get('Omeka\ApiManager');
-            $api->create('access_resources', []);
-        }
-
-        echo '<div id="access" class="section">';
-        $resource = $event->getTarget()->resource;
-        $this->displayAccessesAccessResource($event, $resource);
-        // if ($allowed) {
-        // echo $this->createAddAccessForm($event);
-        // }
-        echo '</div>';
-    }
-
-    /*
-    protected function createAddAccessForm(Event $event)
-    {
-        $controller = $event->getTarget();
-        $form = new \AccessResource\Form\Admin\AddAccessForm();
-        return $controller->formCollection(new \AccessResource\Form\Admin\AddAccessForm());
-    }
-    */
-
-    /**
-     * Helper to display the access for a resource.
-     *
-     * @param Event $event
-     * @param AbstractResourceEntityRepresentation $resource
-     */
-    protected function displayAccessesAccessResource(
-        Event $event,
-        AbstractResourceEntityRepresentation $resource
-    ) {
-        $services = $this->getServiceLocator();
-        $api = $services->get('Omeka\ApiManager');
-
-        $accesses = $api->search('access_resources', ['resource_id' => $resource->id()])->getContent();
-        $requests = $api->search('access_requests', ['resource_id' => $resource->id()])->getContent();
-
-        $partial = 'common/admin/access-resource-list';
-        echo $event->getTarget()->partial(
-            $partial,
-            [
-                'resource' => $resource,
-                'accesses' => $accesses,
-                'requests' => $requests,
-            ]
-        );
+        $data = parent::prepareDataToPopulate($settings, $settingsType);
+        $data['accessresource_access_mode'] = $this->accessMode;
+        return $data;
     }
 
     /**
@@ -428,6 +342,104 @@ class Module extends AbstractModule
         }
     }
 
+    public function handlerRequestCreated(Event $event)
+    {
+        $services = $this->getServiceLocator();
+        if (!$services->get('Omeka\Settings')->get('accessresource_message_send')) {
+            return;
+        }
+
+        $requestMailer = $services->get(\AccessResource\Service\RequestMailerFactory::class);
+        $requestMailer->sendMailToAdmin('created');
+        $requestMailer->sendMailToUser('created');
+    }
+
+    public function handlerRequestUpdated(Event $event)
+    {
+        $services = $this->getServiceLocator();
+        if (!$services->get('Omeka\Settings')->get('accessresource_message_send')) {
+            return;
+        }
+
+        $requestMailer = $services->get(\AccessResource\Service\RequestMailerFactory::class);
+        // $requestMailer->sendMailToAdmin('updated');
+        $requestMailer->sendMailToUser('updated');
+    }
+
+    /**
+     * Add a tab to section navigation.
+     *
+     * @param Event $event
+     */
+    public function addAccessTab(Event $event)
+    {
+        $sectionNav = $event->getParam('section_nav');
+        $sectionNav['access'] = 'Access'; // @translate
+        $event->setParam('section_nav', $sectionNav);
+    }
+
+    /**
+     * Display a partial for a resource.
+     *
+     * @param Event $event
+     */
+    public function displayListAndForm(Event $event)
+    {
+        $request = $this->getServiceLocator()->get('Request');
+
+        if ($request->isPost()) {
+            // Create access.
+            // $post = $request->getPost();
+
+            $api = $this->getServiceLocator()->get('Omeka\ApiManager');
+            $api->create('access_resources', []);
+        }
+
+        echo '<div id="access" class="section">';
+        $resource = $event->getTarget()->resource;
+        $this->displayAccessesAccessResource($event, $resource);
+        // if ($allowed) {
+        // echo $this->createAddAccessForm($event);
+        // }
+        echo '</div>';
+    }
+
+    /*
+    protected function createAddAccessForm(Event $event)
+    {
+        $controller = $event->getTarget();
+        $form = new \AccessResource\Form\Admin\AddAccessForm();
+        return $controller->formCollection(new \AccessResource\Form\Admin\AddAccessForm());
+    }
+    */
+
+    /**
+     * Helper to display the access for a resource.
+     *
+     * @param Event $event
+     * @param AbstractResourceEntityRepresentation $resource
+     */
+    protected function displayAccessesAccessResource(
+        Event $event,
+        AbstractResourceEntityRepresentation $resource
+    ) {
+        $services = $this->getServiceLocator();
+        $api = $services->get('Omeka\ApiManager');
+
+        $accesses = $api->search('access_resources', ['resource_id' => $resource->id()])->getContent();
+        $requests = $api->search('access_requests', ['resource_id' => $resource->id()])->getContent();
+
+        $partial = 'common/admin/access-resource-list';
+        echo $event->getTarget()->partial(
+            $partial,
+            [
+                'resource' => $resource,
+                'accesses' => $accesses,
+                'requests' => $requests,
+            ]
+        );
+    }
+
     public function manageAccessByRequest(Event $event)
     {
         $entity = $event->getTarget();
@@ -504,5 +516,40 @@ class Module extends AbstractModule
         $widgets['access'] = $widget;
 
         $event->setParam('widgets', $widgets);
+    }
+
+    protected function installVocabulary()
+    {
+        $vocabulary = [
+            'o:namespace_uri' => 'https://curation.omeka.org',
+            'o:prefix' => 'curation',
+            'o:label' => 'Curation', // @translate
+            'o:comment' => 'Curation of resource access', // @translate
+            'o:class' => [],
+            'o:property' => [
+                [
+                    'o:local_name' => 'reservedAccess',
+                    'o:label' => 'Reserved Access', // @translate
+                    'o:comment' => 'Gives an ability for private resource to be listed (previewed).', // @translate
+                ],
+            ],
+        ];
+
+        $api = $this->getServiceLocator()->get('Omeka\ApiManager');
+
+        $existingVocabList = $api
+            ->search(
+                'vocabularies',
+                [
+                    'namespace_uri' => $vocabulary['o:namespace_uri'],
+                    'limit' => 1,
+                ]
+            )
+            ->getContent();
+        $existingVocab = is_array($existingVocabList) && count($existingVocabList) ? $existingVocabList[0] : null;
+
+        if (!$existingVocab) {
+            $api->create('vocabularies', $vocabulary);
+        }
     }
 }

@@ -48,12 +48,24 @@ class AccessResourceController extends AbstractActionController
             throw new Exception\NotFoundException;
         }
 
+        $services = $this->getServiceLocator();
+        $user = $services->get('Omeka\AuthenticationService')->getIdentity();
+
+        $mode = $this->settings()->get('accessresource_mode', 'global');
+        if ($mode === 'global') {
+            // No log when the mode is global.
+            if ($user) {
+                return $this->sendFile();
+            } else {
+                return $this->sendFakeFile();
+            }
+        }
+
         /** @var \Doctrine\ORM\EntityManager $entityManager */
-        $entityManager = $this->getServiceLocator()->get('Omeka\EntityManager');
-        $user = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
+        $entityManager = $services->get('Omeka\EntityManager');
 
         //if Without admin permissions check access.
-        $acl = $this->getServiceLocator()->get('Omeka\Acl');
+        $acl = $services->get('Omeka\Acl');
         if (!$acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
             $access = $this->getMediaAccess();
             if (!$access) {
