@@ -5,7 +5,7 @@ use AccessResource\Form\AccessRequestForm;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Zend\View\Helper\AbstractHelper;
 
-class requestResourceAccessForm extends AbstractHelper
+class RequestResourceAccessForm extends AbstractHelper
 {
     use ServiceLocatorAwareTrait;
 
@@ -85,9 +85,9 @@ class requestResourceAccessForm extends AbstractHelper
         $services = $this->getServiceLocator();
         $reservedResources = $this->getReservedResources();
 
-        /** @var \Omeka\Entity\User $identity */
-        $identity = $services->get('Omeka\AuthenticationService')->getIdentity();
-        if (!$identity) {
+        /** @var \Omeka\Entity\User $user */
+        $user = $services->get('Omeka\AuthenticationService')->getIdentity();
+        if (!$user) {
             return $reservedResources;
         }
 
@@ -98,11 +98,12 @@ class requestResourceAccessForm extends AbstractHelper
         /** @var \Omeka\Api\Manager $api */
         $api = $services->get('Omeka\ApiManager');
 
+        // TODO Output column directly.
         $accessRecords = $api
             ->search(
                 'access_resources',
                 [
-                    'user_id' => $identity->getId(),
+                    'user_id' => $user->getId(),
                     'resource_id' => $reservedResourcesIds,
                     'enabled' => true,
                 ],
@@ -110,7 +111,7 @@ class requestResourceAccessForm extends AbstractHelper
             )
             ->getContent();
         $accessRecordsIds = array_map(function ($v) {
-            return $v->resource()->id();
+            return $v->getResource()->getId();
         }, $accessRecords);
 
         $inaccessibleReservedResources = array_filter($reservedResources, function ($v) use ($accessRecordsIds) {
@@ -161,14 +162,14 @@ class requestResourceAccessForm extends AbstractHelper
 
         // Visitors without user account should not be able to send access
         // requests.
-        $identity = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
+        $user = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
 
         return $this->getView()->partial(
-            'common/helper/request-access-resource-form',
+            'common/helper/request-resource-access-form',
             [
                 'resources' => $this->getInaccessibleReservedResources(),
                 'form' => $this->form(),
-                'visitorHasIdentity' => (bool) $identity,
+                'visitorHasIdentity' => (bool) $user,
             ]
         );
     }

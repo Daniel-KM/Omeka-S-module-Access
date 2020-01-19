@@ -171,6 +171,31 @@
     .access-resource .tag-name[contenteditable=true].o-icon-transmit::before {
         background: url('../img/waiting-mini.gif') no-repeat scroll 3px 3px transparent !important;
     }
+
+    .access-resources.browse td:first-child,
+    .access-resources.browse th:first-child {
+        width: 10%;
+    }
+    .access-resources .resource .resource-name:after,
+    .access-requests .resource .resource-name:after {
+        font-family:"Font Awesome 5 Free";
+        font-weight:900;
+        display:inline-block;
+        margin-left:.5em;
+        opacity: 0.6;
+    }
+    .access-requests .resource.items .resource-name:after,
+    .access-resources .resource.items .resource-name:after {
+        content:"\f1b2"
+    }
+    .access-requests .resource.media .resource-name:after,
+    .access-resources .resource.media .resource-name:after {
+        content:"\f03e"
+    }
+    .access-requests .resource.item_sets .resource-name:after,
+    .access-resources .resource.item_sets .resource-name:after {
+        content:"\f1b3"
+    }
 }
 
 @media screen and (max-width: 640px) {

@@ -1,11 +1,12 @@
 <?php
-namespace AccessResource\Controller;
+namespace AccessResource\Controller\Site;
 
 use AccessResource\Traits\ServiceLocatorAwareTrait;
+use Omeka\Mvc\Exception\PermissionDeniedException;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 
-class GuestDashboardController extends AbstractActionController
+class GuestBoardController extends AbstractActionController
 {
     use ServiceLocatorAwareTrait;
 
@@ -17,6 +18,10 @@ class GuestDashboardController extends AbstractActionController
     public function browseAction()
     {
         $user = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
+        // To simplify routing, check of rights is done here.
+        if (!$user) {
+            throw new PermissionDeniedException();
+        }
 
         $params = $this->params();
         $page = $params->fromQuery('page', 1);
@@ -34,7 +39,9 @@ class GuestDashboardController extends AbstractActionController
         $this->paginator($requests->getTotalResults(), $page, $perPage);
 
         $view = new ViewModel();
-        $view->setVariable('accessRequests', $requests->getContent());
+        $view
+            ->setTemplate('guest/site/guest/access-resources')
+            ->setVariable('accessRequests', $requests->getContent());
         return $view;
     }
 }

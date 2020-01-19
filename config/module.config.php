@@ -16,7 +16,8 @@ return [
             dirname(__DIR__) . '/data/doctrine-proxies',
         ],
         'filters' => [
-            'resource_visibility' => Db\Filter\ResourceVisibilityFilter::class,
+            // Override Omeka core resource visibility with a new condition.
+            'resource_visibility' => Db\Filter\ReservedResourceVisibilityFilter::class,
         ],
     ],
     'view_manager' => [
@@ -33,6 +34,9 @@ return [
         ],
     ],
     'form_elements' => [
+        'invokables' => [
+            Form\SettingsFieldset::class => Form\SettingsFieldset::class,
+        ],
         'factories' => [
             Form\Admin\AccessRequestForm::class => Service\Form\FormFactory::class,
             Form\Admin\AccessResourceForm::class => Service\Form\FormFactory::class,
@@ -41,12 +45,12 @@ return [
     ],
     'controllers' => [
         'factories' => [
+            'AccessResource\Controller\AccessResource' => Service\Controller\ControllerFactory::class,
             'AccessResource\Controller\Admin\Access' => Service\Controller\ControllerFactory::class,
-            'AccessResource\Controller\Admin\Request' => Service\Controller\ControllerFactory::class,
             'AccessResource\Controller\Admin\Log' => Service\Controller\ControllerFactory::class,
-            'AccessResource\Controller\Download' => Service\Controller\ControllerFactory::class,
-            'AccessResource\Controller\GuestDashboard' => Service\Controller\ControllerFactory::class,
-            'AccessResource\Controller\Request' => Service\Controller\ControllerFactory::class,
+            'AccessResource\Controller\Admin\Request' => Service\Controller\ControllerFactory::class,
+            'AccessResource\Controller\Site\GuestBoard' => Service\Controller\ControllerFactory::class,
+            'AccessResource\Controller\Site\Request' => Service\Controller\ControllerFactory::class,
         ],
     ],
     'service_manager' => [
@@ -57,36 +61,52 @@ return [
     ],
     'router' => [
         'routes' => [
-            'access-resource-file-download' => [
+            'access-resource-file' => [
                 'type' => \Zend\Router\Http\Segment::class,
                 'options' => [
-                    'route' => '/access-resource/download/files/:type/:file',
+                    'route' => '/access/files/:type/:file',
                     'defaults' => [
                         '__NAMESPACE__' => 'AccessResource\Controller',
-                        'controller' => 'Download',
+                        'controller' => 'AccessResource',
                         'action' => 'files',
                     ],
                 ],
             ],
-            'access-resource-request' => [
-                'type' => \Zend\Router\Http\Segment::class,
-                'options' => [
-                    'route' => '/access-resource/request',
-                    'defaults' => [
-                        '__NAMESPACE__' => 'AccessResource\Controller',
-                        'controller' => 'Request',
-                        'action' => 'submit',
+            'site' => [
+                'child_routes' => [
+                    'access-resource-request' => [
+                        'type' => \Zend\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/access-resource-request',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'AccessResource\Controller\Site',
+                                'controller' => 'Request',
+                                'action' => 'submit',
+                            ],
+                        ],
                     ],
-                ],
-            ],
-            'guest-user-dashboard' => [
-                'type' => \Zend\Router\Http\Segment::class,
-                'options' => [
-                    'route' => '/access-resource/guest-dashboard',
-                    'defaults' => [
-                        '__NAMESPACE__' => 'AccessResource\Controller',
-                        'controller'    => 'GuestDashboard',
-                        'action'        => 'browse',
+                    'guest' => [
+                        // The default values for the guest user route are kept
+                        // to avoid issues for visitors when an upgrade of
+                        // module Guest occurs or when it is disabled.
+                        'type' => \Zend\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/guest',
+                        ],
+                        'may_terminate' => true,
+                        'child_routes' => [
+                            'access-resource' => [
+                                'type' => \Zend\Router\Http\Literal::class,
+                                'options' => [
+                                    'route' => '/access-resource',
+                                    'defaults' => [
+                                        '__NAMESPACE__' => 'AccessResource\Controller\Site',
+                                        'controller' => 'GuestBoard',
+                                        'action' => 'browse',
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],
@@ -145,27 +165,54 @@ return [
         'AdminModule' => [
             [
                 'label' => 'Access Resources', // @translate
-                'route' => 'admin/access-resource/default',
+                'route' => 'admin/access-resource',
                 'controller' => 'access',
-                'action' => 'browse',
                 'pages' => [
                     [
                         'label' => 'Access Management', // @translate
-                        'route' => 'admin/access-resource/default',
+                        'route' => 'admin/access-resource',
                         'controller' => 'access',
                         'action' => 'browse',
+                        'pages' => [
+                            [
+                                'route' => 'admin/access-resource/default',
+                                'controller' => 'access',
+                                'visible' => false,
+                            ],
+                            [
+                                'route' => 'admin/access-resource/id',
+                                'controller' => 'access',
+                                'visible' => false,
+                            ],
+                        ],
                     ],
                     [
                         'label' => 'Requests', // @translate
                         'route' => 'admin/access-resource/default',
                         'controller' => 'request',
                         'action' => 'browse',
+                        'pages' => [
+                            [
+                                'route' => 'admin/access-resource/default',
+                                'controller' => 'request',
+                                'visible' => false,
+                            ],
+                            [
+                                'route' => 'admin/access-resource/id',
+                                'controller' => 'request',
+                                'visible' => false,
+                            ],
+                        ],
                     ],
                     [
                         'label' => 'Logs', // @translate
                         'route' => 'admin/access-resource/default',
                         'controller' => 'log',
                         'action' => 'browse',
+                    ],
+                    [
+                        'route' => 'admin/access-resource',
+                        'visible' => false,
                     ],
                 ],
             ],
@@ -183,11 +230,13 @@ return [
     ],
     'accessresource' => [
         'settings' => [
-            'accessresource_mail_subject' => 'New request status!', //@translate
-            'accessresource_admin_message_request_created' => 'User created new request to AccessResource. Please, check request dashboard.', //@translate
-            'accessresource_user_message_request_created' => 'Your request is sent to administrator. You will be inform when your request will change.', //@translate
-            'accessresource_admin_message_request_updated' => 'User request to resource access is updated.', //@translate
-            'accessresource_user_message_request_updated' => 'Your request to resource access is updated. You can check guest user requests dashboard.', //@translate
+            'accessresource_message_send' => true,
+            'accessresource_message_admin_subject' => 'New request status!', //@translate
+            'accessresource_message_admin_request_created' => 'User created new request to AccessResource. Please, check request dashboard.', //@translate
+            'accessresource_message_admin_request_updated' => 'User request to resource access is updated.', //@translate
+            'accessresource_message_user_subject' => 'New request status!', //@translate
+            'accessresource_message_user_request_created' => 'Your request is sent to administrator. You will be inform when your request will change.', //@translate
+            'accessresource_message_user_request_updated' => 'Your request to resource access is updated. You can check guest user requests dashboard.', //@translate
         ]
     ]
 ];

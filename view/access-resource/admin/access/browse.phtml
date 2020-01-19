@@ -8,12 +8,6 @@ $translate = $this->plugin('translate');
 $escape = $this->plugin('escapeHtml');
 $urlHelper = $this->plugin('url');
 
-$resourceTypes = [
-    'media' => \Omeka\Api\Representation\MediaRepresentation::class,
-    'item' => \Omeka\Api\Representation\ItemRepresentation::class,
-    'itemSet' => \Omeka\Api\Representation\ItemSetRepresentation::class,
-];
-
 $sortHeadings = [
     [
         'label' => $translate('User'),
@@ -49,11 +43,11 @@ $sortHeadings = [
     ]
 ];
 
-$this->headLink()->appendStylesheet($this->assetUrl('css/table-access-resource.css', 'AccessResource'));
-$this->htmlElement('body')->appendAttribute('class', 'sites browse');
+$this->headLink()->appendStylesheet($this->assetUrl('css/access-resource-admin.css', 'AccessResource'));
+$this->htmlElement('body')->appendAttribute('class', 'access-resources browse');
 ?>
 
-<?php echo $this->pageTitle($translate('Accesses')); ?>
+<?php echo $this->pageTitle($translate('Access resources')); ?>
 
 <div id="page-actions">
     <?php if ($this->userIsAllowed(\AccessResource\Entity\AccessResource::class, 'create')): ?>
@@ -92,23 +86,16 @@ $this->htmlElement('body')->appendAttribute('class', 'sites browse');
                     $userText = $translate('[no user]');
                 endif;
 
+                $resourceType = '';
                 $resourceText = '';
                 if ($requestedResource = $accessResource->resource()):
-                    $types = array_filter($resourceTypes, function($class) use ($requestedResource) {
-                        return $requestedResource instanceof $class;
-                    });
-                    if (count($types)):
-                        $type = array_keys($types)[0];
-                        $resourceText = $this->hyperlink(
-                            sprintf('%s #%s', $type, $requestedResource->id()),
-                            $requestedResource->adminUrl()
-                        );
-                    endif;
+                    $resourceType = $requestedResource->resourceName();
+                    $resourceText = $requestedResource->linkPretty();
                 endif;
             ?>
             <tr>
                 <td><?php echo $userText; ?></td>
-                <td><?php echo $resourceText; ?></td>
+                <td class="resource <?php echo $resourceType; ?>"><?php echo $resourceText; ?></td>
                 <td><?php echo $accessResource->enabled() ? $escape('Yes') : $escape('No'); ?></td>
                 <td>
                     <ul class="actions">

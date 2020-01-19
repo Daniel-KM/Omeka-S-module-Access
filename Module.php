@@ -18,7 +18,7 @@ class Module extends AbstractModule
 {
     const NAMESPACE = __NAMESPACE__;
 
-    protected $dependency = 'GuestUser';
+    protected $dependency = 'Guest';
 
     public function onBootstrap(MvcEvent $event)
     {
@@ -76,20 +76,28 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $acl = $services->get('Omeka\Acl');
 
+        // Since Omeka 1.4, modules are ordered, so Guest come after AccessResource.
+        // See \Guest\Module::onBootstrap().
+        if (!$acl->hasRole('guest')) {
+            $acl->addRole('guest');
+        }
+
         $acl
             ->allow(
                 null,
-                ['AccessResource\Controller\Download'],
-                ['index','files']
+                ['AccessResource\Controller\AccessResource'],
+                ['index', 'files']
             )
             ->allow(
                 null,
-                ['AccessResource\Controller\Request'],
+                ['AccessResource\Controller\Site\Request'],
                 ['submit']
             )
             ->allow(
+                // TODO Limit access to authenticated users, instead of checking in controller.
+                // Guest role is not yet loaded.
                 null,
-                ['AccessResource\Controller\GuestDashboard'],
+                ['AccessResource\Controller\Site\GuestBoard'],
                 ['browse']
             )
             ->allow(
@@ -100,12 +108,12 @@ class Module extends AbstractModule
             ->allow(
                 null,
                 [\AccessResource\Api\Adapter\AccessRequestAdapter::class],
-                ['search','create','update']
+                ['search', 'create', 'update']
             )
             ->allow(
                 null,
                 [\AccessResource\Entity\AccessRequest::class],
-                ['create','update']
+                ['create', 'update']
             );
     }
 
@@ -177,7 +185,7 @@ class Module extends AbstractModule
         );
 
         $sharedEventManager->attach(
-            \AccessResource\Controller\RequestController::class,
+            \AccessResource\Controller\Site\RequestController::class,
             'accessresource.request.created',
             [$this, 'handlerRequestCreated']
         );
@@ -205,22 +213,44 @@ class Module extends AbstractModule
                 [$this, 'displayListAndForm']
             );
         }
+
+        // Guest user integration.
+        $sharedEventManager->attach(
+            \Guest\Controller\Site\GuestController::class,
+            'guest.widgets',
+            [$this, 'handleGuestWidgets']
+        );
+
+        // Handle main settings.
+        $sharedEventManager->attach(
+            \Omeka\Form\SettingForm::class,
+            'form.add_elements',
+            [$this, 'handleMainSettings']
+        );
     }
 
     public function handlerRequestCreated(Event $event)
     {
-        $requestMailer = $this->getServiceLocator()->get(\AccessResource\Service\RequestMailerFactory::class);
+        $services = $this->getServiceLocator();
+        if (!$services->get('Omeka\Settings')->get('accessresource_message_send')) {
+            return;
+        }
 
-        $requestMailer->sendMailToAdmin("created");
-        $requestMailer->sendMailToUser("created");
+        $requestMailer = $services->get(\AccessResource\Service\RequestMailerFactory::class);
+        $requestMailer->sendMailToAdmin('created');
+        $requestMailer->sendMailToUser('created');
     }
 
     public function handlerRequestUpdated(Event $event)
     {
-        $requestMailer = $this->getServiceLocator()->get(\AccessResource\Service\RequestMailerFactory::class);
+        $services = $this->getServiceLocator();
+        if (!$services->get('Omeka\Settings')->get('accessresource_message_send')) {
+            return;
+        }
 
-        //$requestMailer->sendMailToAdmin("updated");
-        $requestMailer->sendMailToUser("updated");
+        $requestMailer = $services->get(\AccessResource\Service\RequestMailerFactory::class);
+        // $requestMailer->sendMailToAdmin('updated');
+        $requestMailer->sendMailToUser('updated');
     }
 
     /**
@@ -453,5 +483,20 @@ class Module extends AbstractModule
         $view = $event->getTarget();
         $resources = [$view->media->item(), $view->media];
         echo $view->requestResourceAccessForm($resources);
+    }
+
+    public function handleGuestWidgets(Event $event)
+    {
+        $widgets = $event->getParam('widgets');
+        $viewHelpers = $this->getServiceLocator()->get('ViewHelperManager');
+        $translate = $viewHelpers->get('translate');
+        $partial = $viewHelpers->get('partial');
+
+        $widget = [];
+        $widget['label'] = $translate('Resource access'); // @translate
+        $widget['content'] = $partial('guest/site/guest/widget/access-resource');
+        $widgets['access'] = $widget;
+
+        $event->setParam('widgets', $widgets);
     }
 }

@@ -1,0 +1,15 @@
+<?php
+/**
+ * @var \Zend\View\Renderer\PhpRenderer $this
+ */
+
+$translate = $this->plugin('translate');
+$urlHelper = $this->plugin('url');
+?>
+
+<ul>
+    <li>
+        <?php $url = $urlHelper('site/guest/access-resource', [], true); ?>
+        <?= $this->hyperlink($translate('Dashboard'), $url) ?>
+    </li>
+</ul>

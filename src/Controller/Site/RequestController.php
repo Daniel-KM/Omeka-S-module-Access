@@ -1,5 +1,5 @@
 <?php
-namespace AccessResource\Controller;
+namespace AccessResource\Controller\Site;
 
 use Omeka\Mvc\Exception\PermissionDeniedException;
 use AccessResource\Entity\AccessRequest;

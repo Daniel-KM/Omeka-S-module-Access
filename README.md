@@ -9,7 +9,7 @@ for some guest users, on identification or by token.
 Installation
 ------------
 
-The module depends on module [Generic] and [GuestUser], so install them first.
+The module depends on module [Guest], so install them first.
 
 See general end user documentation for [installing a module].
 
@@ -27,28 +27,33 @@ the module to `AccessResource`.
 Usage
 -----
 
-The module creates new vocabulary 'Curation' with the property `curation:reservedAccess`.
+The workflow to request access to a reserved resource is this one:
 
-When a private resource has a value for this property, whatever it is (except an
-empty value), it becomes available for all guest users, so they can view it
-automatically in listings.
+- First, select the private resources that will be available for visitors or
+  guest users: by default, private resources remain private, so you need to
+  allow visitors to know that they exist. That is to say you can keep some
+  private resources private, and some other ones available on request.
 
-To enable access management for guest users and make private resources available
-in listings (and preview for media) add `curation:reservedAccess` property to
-it.
+  To indicate which resources are available on request, simply add a value to
+  the property `curation:reservedAccess`, that is created by the module. When a
+  private resource has a value for this property, whatever it is (except an
+  empty value), it becomes available for all guest users, and all visitors can
+  view it automatically in listings. Preview will be available for media too.
 
-A tab "Access" is added to every Item and Media admin show page, so the admin
-can manage access of users to resources.
+- Second, the visitors can request an access to the resources they want. It can
+  be done directly for the guest users, or via a contact form for the anonymous.
+  The contact form may be added by the module [Contact Us].
 
-The module allows to add access by token. You can find them on access view/edit
-page.
+- Third, an admin can manage access of users to requested resources, in other
+  words accept or reject the visitors requests. It can be done in the tab
+  `Access` added to every Item and Media admin show page, or in the page "Access resources",
+  available in  the side bar.
 
-In public front-end, a dashboard is added for guest users. You can create a new
-page or redirect user to guest dashboard to take possible to view them access
-list.
-```
-/s/{SITE}/access-resource/guest-dashboard
-```
+The module allows another access mode, by token. You can find them on access
+view/edit page.
+
+In public front-end, a dashboard is added for guest users. The link is available
+in the guest user board (`/s/my-site/guest/access-resource`).
 
 
 Protecting your files
@@ -66,9 +71,9 @@ file in the `files` directory:
 Options +FollowSymlinks
 RewriteEngine on
 
-RewriteRule ^original/(.*)$ http://www.example.com/access-resource/download/files/original/$1 [NC,L]
+RewriteRule ^original/(.*)$ http://www.example.com/access/files/original/$1 [NC,L]
 # The file type is "original" by default, but other ones (large…) can be protected too.
-#RewriteRule ^large/(.*)$ http://www.example.com/access-resource/download/files/large/$1 [NC,L]
+#RewriteRule ^large/(.*)$ http://www.example.com/access/files/large/$1 [NC,L]
 ```
 
 You can adapt `routes.ini` as you wish too.
@@ -76,6 +81,13 @@ You can adapt `routes.ini` as you wish too.
 In this example, all original files will be protected: a check will be done by
 the module before to deliver files. If there is no access to a file, a
 notification page will be displayed.
+
+
+TODO
+----
+
+- Make resources available by token only, not login (like module Correction).
+- Integrate the module [Contact Us] to insert selected values to the form.
 
 
 Warning
@@ -132,10 +144,11 @@ Copyright
 [Access Resource]: https://github.com/Daniel-KM/Omeka-S-module-AccessResource
 [Omeka S]: https://omeka.org/s
 [Generic]: https://github.com/Daniel-KM/Omeka-S-module-Generic
-[GuestUser]: https://github.com/Daniel-KM/Omeka-S-module-GuestUser
+[Guest]: https://github.com/Daniel-KM/Omeka-S-module-Guest
+[Contact Us]: https://github.com/Daniel-KM/Omeka-S-module-ContactUs
 [Installing a module]: http://dev.omeka.org/docs/s/user-manual/modules/#installing-modules
 [`AccessResource.zip`]: https://github.com/Daniel-KM/Omeka-S-module-AccessResource/releases
-[module issues]: https://github.com/Daniel-KM/Omeka-S-module-LanguageSwitcher/issues
+[module issues]: https://github.com/Daniel-KM/Omeka-S-module-AccessResource/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org

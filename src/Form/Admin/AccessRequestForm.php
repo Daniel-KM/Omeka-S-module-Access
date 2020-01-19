@@ -19,10 +19,14 @@ class AccessRequestForm extends Form
 
         $this->add([
             'name' => 'status',
-            'type' => Element\Select::class,
+            'type' => Element\Radio::class,
             'options' => [
-                'label' => 'Status', // @translate
+
+                'label' => ' Status', // @translate
                 'value_options' => $this->getStatusOptions(),
+            ],
+            'attributes' => [
+                'value' => AccessRequest::STATUS_NEW,
             ],
         ]);
 

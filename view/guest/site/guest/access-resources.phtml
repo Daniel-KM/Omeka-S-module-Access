@@ -7,20 +7,17 @@
 $translate = $this->plugin('translate');
 $escape = $this->plugin('escapeHtml');
 
-$resourceTypes = [
-    'media' => \Omeka\Api\Representation\MediaRepresentation::class,
-    'item' => \Omeka\Api\Representation\ItemRepresentation::class,
-    'itemSet' => \Omeka\Api\Representation\ItemSetRepresentation::class,
-];
+$this->headLink()->appendStylesheet($this->assetUrl('vendor/tablesaw/tablesaw.stackonly.css', 'Omeka'));
+$this->headScript()->appendFile($this->assetUrl('vendor/tablesaw/tablesaw.stackonly.jquery.js', 'Omeka'));
 
-$this->headLink()->appendStylesheet($this->assetUrl('css/table-access-resource.css', 'AccessResource'));
 $this->htmlElement('body')->appendAttribute('class', 'sites browse');
 ?>
 
-<?php echo $this->pageTitle($translate('Guest resource access dashboard')); ?>
+<?php echo $this->pageTitle($translate('Resource access dashboard')); ?>
 
 <?php if (count($accessRequests)): ?>
     <div class="browse-controls">
+
         <?php echo $this->pagination(); ?>
     </div>
     <?php $this->trigger('view.browse.before'); ?>
@@ -28,7 +25,6 @@ $this->htmlElement('body')->appendAttribute('class', 'sites browse');
     <table class="tablesaw" data-tablesaw-mode="stack">
         <thead>
         <tr>
-            <th><?php echo $escape($translate('User')); ?></th>
             <th><?php echo $escape($translate('Resource')); ?></th>
             <th><?php echo $escape($translate('Status')); ?></th>
             <th><?php echo $escape($translate('Created')); ?></th>
@@ -39,24 +35,15 @@ $this->htmlElement('body')->appendAttribute('class', 'sites browse');
         <?php foreach ($accessRequests as $accessRequest): ?>
             <?php
 
+            $resourceType = '';
             $resourceText = '';
             if ($requestedResource = $accessRequest->resource()):
-                $types = array_filter($resourceTypes, function($class) use ($requestedResource) {
-                    return $requestedResource instanceof $class;
-                });
-                if (count($types)):
-                    $type = array_keys($types)[0];
-                    $resourceText = $this->hyperlink(
-                        sprintf('%s #%s', $type, $requestedResource->id()),
-                        $requestedResource->adminUrl()
-                    );
-                endif;
-
+                $resourceType = $requestedResource->resourceName();
+                $resourceText = $requestedResource->linkPretty();
             endif;
             ?>
             <tr>
-                <td><?php echo $accessRequest->user()->name(); ?></td>
-                <td><?php echo $resourceText; ?></td>
+                <td class="resource <?php echo $resourceType; ?>"><?php echo $resourceText; ?></td>
                 <td><?php echo $translate($accessRequest->statusLabel()); ?></td>
                 <td><?php echo $accessRequest->created()->format('Y-m-d H:i:s'); ?></td>
                 <td><?php echo $accessRequest->modified()->format('Y-m-d H:i:s'); ?></td>

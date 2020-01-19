@@ -10,7 +10,7 @@ $translate = $this->plugin('translate');
 $this->headLink()->appendStylesheet($this->assetUrl('css/helper-request-resource-access-form.css', 'AccessResource'));
 $this->headScript()->appendFile($this->assetUrl('js/helper-request-resource-access-form.js', 'AccessResource'));
 
-$formSubmitUrl = $this->url('access-resource-request');
+$formSubmitUrl = $this->url('site/access-resource-request', [], true);
 ?>
 <br/>
 <br/>
@@ -51,16 +51,16 @@ $formSubmitUrl = $this->url('access-resource-request');
 
                 <div>
                     <?php
-                    if ($this->setting('guestuser_open')):
+                    if ($this->setting('guest_open') !== 'close'):
                         echo sprintf(
                             $translate('To request access please %s or %s!'),
-                            $this->hyperlink($translate('Register'), $this->url('site/guest-user', ['action' =>'register'], true)),
-                            $this->hyperlink($translate('Login'), $this->url('site/guest-user', ['action' =>'login'], true))
+                            $this->hyperlink($translate('Register'), $this->url('site/guest/anonymous', ['action' =>'register'], true)),
+                            $this->hyperlink($translate('Login'), $this->url('site/guest/anonymous', ['action' =>'login'], true))
                         );
                     else:
                         echo sprintf(
                             $translate('To request access please %s or contact the publisher!'),
-                            $this->hyperlink($translate('Login'), $this->url('site/guest-user', ['action' =>'login'], true))
+                            $this->hyperlink($translate('Login'), $this->url('site/guest/anonymous', ['action' =>'login'], true))
                         );
                     endif;
                 ?>

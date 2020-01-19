@@ -30,9 +30,9 @@ $user = $accessResource ? $accessResource->user() : null;
 
 <?php
 if ($accessResource):
-        echo $this->pageTitle(sprintf($translate('Access #%d'), $accessResource->id()), 1, $translate('Access'), $translate('Edit'));
+        echo $this->pageTitle(sprintf($translate('Access #%d'), $accessResource->id()), 1, $translate('Access resources'), $translate('Edit'));
     else:
-        echo $this->pageTitle('', 1, $translate('Access'), $translate('Add'));
+        echo $this->pageTitle($translate('New access'), 1, $translate('Access resources'), $translate('Add'));
     endif;
 ?>
 <div id="page-actions">

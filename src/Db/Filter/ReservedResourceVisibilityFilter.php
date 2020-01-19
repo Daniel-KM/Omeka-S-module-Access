@@ -1,9 +1,9 @@
 <?php
 namespace AccessResource\Db\Filter;
 
+use AccessResource\Service\Property\ReservedAccess as PropertyReservedAccess;
 use Doctrine\DBAL\Types\Type;
 use Omeka\Db\Filter\ResourceVisibilityFilter as BaseResourceVisibilityFilter;
-use AccessResource\Service\Property\ReservedAccess as PropertyReservedAccess;
 
 /**
  * Filter resources by default rules and user access.
@@ -12,10 +12,11 @@ use AccessResource\Service\Property\ReservedAccess as PropertyReservedAccess;
  *
  * {@inheritdoc}
  */
-class ResourceVisibilityFilter extends BaseResourceVisibilityFilter
+class ReservedResourceVisibilityFilter extends BaseResourceVisibilityFilter
 {
     protected function getResourceConstraint($alias)
     {
+        // Check rights from the core resource visibility filter.
         $constraints = parent::getResourceConstraint($alias);
 
         // Don't add a constraint for admins or visitors, who already view all
@@ -23,7 +24,6 @@ class ResourceVisibilityFilter extends BaseResourceVisibilityFilter
         if (empty($constraints)) {
             return $constraints;
         }
-
 
         $reservedConstraints = [];
 

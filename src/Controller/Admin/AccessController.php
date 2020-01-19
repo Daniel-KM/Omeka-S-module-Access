@@ -108,6 +108,8 @@ class AccessController extends AbstractActionController
                         ->setDate(new \DateTime());
                     $entityManager->flush();
                 } else {
+                    $post['token'] = $this->createToken();
+
                     /** @var \Doctrine\ORM\EntityManager $entityManager */
                     $entityManager = $services->get('Omeka\EntityManager');
                     $response = $this->api($form)->create('access_resources', $post);
@@ -279,4 +281,34 @@ class AccessController extends AbstractActionController
             ],
         ]);
     }
+
+    /**
+    * Create a random token string.
+    *
+    * @return string
+    */
+    protected function createToken()
+    {
+        $services = $this->getServiceLocator();
+        /** @var \Doctrine\ORM\EntityManager $entityManager */
+        $entityManager = $services->get('Omeka\EntityManager');
+
+        $repository = $entityManager->getRepository(\AccessResource\Entity\AccessResource::class);
+
+        $tokenString = PHP_VERSION_ID < 70000
+            ? function() { return sha1(mt_rand()); }
+            : function() { return substr(str_replace(['+', '/', '-', '='], '', base64_encode(random_bytes(16))), 0, 10); };
+
+        // Check if the token is unique.
+        do {
+            $token = $tokenString();
+            $result = $repository->findOneBy(['token' => $token]);
+            if (!$result) {
+                break;
+            }
+        } while (true);
+
+        return $token;
+    }
+
 }

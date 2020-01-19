@@ -27,7 +27,7 @@ class RequestMailer
     }
 
     /**
-     * @param string $action "created" or "updated"".
+     * @param string $action "created" or "updated".
      */
     public function sendMailToAdmin($action)
     {
@@ -35,18 +35,18 @@ class RequestMailer
             return;
         }
 
-        // mail to administrator
+        // Mail to administrator.
         $mail = [];
         $mail['from'] = $this->admin_user->getEmail();
         $mail['fromName'] = $this->admin_user->getName();
         $mail['to'] = $this->admin_user->getEmail();
         $mail['toName'] = $this->admin_user->getName();
-        if ($action === "created") {
-            $mail['subject'] = $this->config['accessresource']['config']['accessresource_mail_subject'];
-            $mail['body'] = $this->config['accessresource']['config']['accessresource_admin_message_request_created'];
-        } elseif ($action === "updated") {
-            $mail['subject'] = $this->config['accessresource']['config']['accessresource_mail_subject'];
-            $mail['body'] = $this->config['accessresource']['config']['accessresource_admin_message_request_updated'];
+        if ($action === 'created') {
+            $mail['subject'] = $this->config['accessresource']['settings']['accessresource_message_admin_subject'];
+            $mail['body'] = $this->config['accessresource']['settings']['accessresource_message_admin_request_created'];
+        } elseif ($action === 'updated') {
+            $mail['subject'] = $this->config['accessresource']['settings']['accessresource_message_admin_subject'];
+            $mail['body'] = $this->config['accessresource']['settings']['accessresource_message_admin_request_updated'];
         }
 
         $message = $this->mailer->createMessage();
@@ -59,7 +59,7 @@ class RequestMailer
     }
 
     /**
-     * @param string $action "created" or "updated"".
+     * @param string $action "created" or "updated".
      */
     public function sendMailToUser($action)
     {
@@ -67,19 +67,19 @@ class RequestMailer
             return;
         }
 
-        // mail to user
+        // Mail to user.
         $user = $this->serviceLocator->get('Omeka\AuthenticationService')->getIdentity();
         $mail = [];
         $mail['from'] = $this->admin_user->getEmail();
         $mail['fromName'] = $this->admin_user->getName();
         $mail['to'] = $user->getEmail();
         $mail['toName'] = $user->getName();
-        if ($action === "created") {
-            $mail['subject'] = $this->config['accessresource']['config']['accessresource_mail_subject'];
-            $mail['body'] = $this->config['accessresource']['config']['accessresource_user_message_request_created'];
-        } elseif ($action === "updated") {
-            $mail['subject'] = $this->config['accessresource']['config']['accessresource_mail_subject'];
-            $mail['body'] = $this->config['accessresource']['config']['accessresource_user_message_request_updated'];
+        if ($action === 'created') {
+            $mail['subject'] = $this->config['accessresource']['settings']['accessresource_message_user_subject'];
+            $mail['body'] = $this->config['accessresource']['settings']['accessresource_message_user_request_created'];
+        } elseif ($action === 'updated') {
+            $mail['subject'] = $this->config['accessresource']['settings']['accessresource_message_user_subject'];
+            $mail['body'] = $this->config['accessresource']['settings']['accessresource_message_user_request_updated'];
         }
 
         $message = $this->mailer->createMessage();

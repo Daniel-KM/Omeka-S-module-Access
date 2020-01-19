@@ -64,6 +64,7 @@ $this->headScript()
         </li>
     <?php endforeach; ?>
     </ul>
+<?php endif; ?>
 
     <form action="<?php echo $this->url("admin/access-resource/default", [
         'controller' => 'access',
@@ -77,7 +78,7 @@ $this->headScript()
                 <?php ?>
                 <input type="hidden" name="csrf" value="<?php echo (new \Zend\Form\Element\Csrf('csrf'))->getValue(); ?>">
                 <input type="hidden" name="resource_id" value="<?php echo $resource ? $resource->id() : ''; ?>">
-                <input type="hidden" name="user_id" value="<?php echo $user ? $user->id() : ''; ?>">
+                <input type="hidden" name="user_id" value="<?php echo $user ? $user->getId() : ''; ?>">
                 <input type="hidden" name="enabled" value="<?php echo 1; ?>">
                 <input type="hidden" name="temporal" value="<?php echo 0; ?>">
                 <input type="hidden" name="startDate" value="<?php echo (new \DateTime())->format('Y-m-d H:i'); ?>">
@@ -85,7 +86,7 @@ $this->headScript()
                 <div class="selected-user">
                     <?php
                     if ($user):
-                        echo $this->hyperlink($user->name(), $user->adminUrl(), ['target' => '_blank']);
+                        echo $this->hyperlink($user->getName(), $this->url('admin/id', ['controller' => 'user', 'id' => $user->getId()], true), ['target' => '_blank']);
                     endif;
                     ?>
                 </div>
@@ -95,7 +96,6 @@ $this->headScript()
         </div>
         <input type="submit" value="<?php echo $escape($translate('Add access')); ?>">
     </form>
-<?php endif; ?>
 </div>
 
 <script>

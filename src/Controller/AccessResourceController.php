@@ -7,7 +7,7 @@ use Omeka\Mvc\Exception;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Zend\Mvc\Controller\AbstractActionController;
 
-class DownloadController extends AbstractActionController
+class AccessResourceController extends AbstractActionController
 {
     use ServiceLocatorAwareTrait;
 
