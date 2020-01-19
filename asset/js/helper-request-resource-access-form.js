@@ -27,7 +27,7 @@ $(document).ready(function() {
             data: data,
             dataType: 'json'
         }).done(function( response ) {
-            if (response.success) {
+            if (response.status === 200) {
                 $('.access-resource-request-form').hide();
             }
         });
