@@ -67,7 +67,6 @@ class AccessResourceController extends AbstractActionController
         }
 
         $value = $this->params('file');
-
         $this->data->set($key, $value);
         return $value;
     }
@@ -100,7 +99,13 @@ class AccessResourceController extends AbstractActionController
         }
 
         $filename = $this->getFilename();
-        $storageId = pathinfo($filename, PATHINFO_FILENAME);
+        // For compatibility with module ArchiveRepertory, don't take the
+        // filename, but remove the extension.
+        // $storageId = pathinfo($filename, PATHINFO_FILENAME);
+        $extension = pathinfo($filename, PATHINFO_EXTENSION);
+        $storageId = strlen($extension)
+            ? substr($filename, 0, -strlen($extension) - 1)
+            : $filename;
 
         /** @var \Omeka\Api\Representation\MediaRepresentation $value */
         $value = $storageId
@@ -231,7 +236,6 @@ class AccessResourceController extends AbstractActionController
         $config = $this->getServiceLocator()->get('Config');
         $basePath = $config['file_store']['local']['base_path'] ?: OMEKA_PATH . '/files';
         $value = sprintf('%s/%s/%s', $basePath, $storageType, $filename);
-
         if (!is_readable($value)) {
             return null;
         }

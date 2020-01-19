@@ -64,7 +64,8 @@ return [
             'access-resource-file' => [
                 'type' => \Zend\Router\Http\Segment::class,
                 'options' => [
-                    'route' => '/access/files/:type/:file',
+                    // The "{?}" allows to use module Archive Repertory and a full filepath.
+                    'route' => '/access/files/:type/:file{?}',
                     'defaults' => [
                         '__NAMESPACE__' => 'AccessResource\Controller',
                         'controller' => 'AccessResource',
