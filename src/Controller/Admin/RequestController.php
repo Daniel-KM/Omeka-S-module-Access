@@ -6,6 +6,7 @@ use AccessResource\Form\Admin\AccessRequestForm;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Omeka\Form\ConfirmForm;
 use Zend\Mvc\Controller\AbstractActionController;
+use Zend\View\Model\JsonModel;
 use Zend\View\Model\ViewModel;
 
 class RequestController extends AbstractActionController
@@ -174,5 +175,46 @@ class RequestController extends AbstractActionController
             ],
             true
         );
+    }
+
+    public function toggleAction()
+    {
+        if ($this->getRequest()->isPost()) {
+            $userRole = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity()->getRole();
+            // TODO Use the permission check.
+            $isAdmin = in_array($userRole, [\Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN, \Omeka\Permissions\Acl::ROLE_SITE_ADMIN]);
+            if ($isAdmin) {
+                $api = $this->api();
+
+                $id = $this->params('id');
+                $request = $api->searchOne('access_requests', ['id' => $id])->getContent();
+                if ($id && !$request) {
+                    return false;
+                }
+
+                $status = $request->status() === \AccessResource\Entity\AccessRequest::STATUS_ACCEPTED
+                    ? \AccessResource\Entity\AccessRequest::STATUS_REJECTED
+                    : \AccessResource\Entity\AccessRequest::STATUS_ACCEPTED;
+
+                $api->update('access_requests', $id, ['status' => $status]);
+
+                return new JsonModel([
+                    'status' => \Zend\Http\Response::STATUS_CODE_200,
+                    'data' => [
+                        'status' => $status,
+                    ],
+                ]);
+            }
+
+            return new JsonModel([
+                'status' => \Zend\Http\Response::STATUS_CODE_403,
+                'message' => $this->translate('No rights to update status.'), // @translate
+            ]);
+        }
+
+        return new JsonModel([
+            'status' => \Zend\Http\Response::STATUS_CODE_405,
+            'message' => $this->translate('Method should be post.'), // @translate
+        ]);
     }
 }

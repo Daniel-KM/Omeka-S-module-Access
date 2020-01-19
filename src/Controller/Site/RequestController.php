@@ -56,7 +56,7 @@ class RequestController extends AbstractActionController
         $result = new JsonModel();
         $result
             ->setVariable('status', \Zend\Http\Response::STATUS_CODE_200)
-            ->setVariable('result', ['success' => true]);
+            ->setVariable('data', ['success' => true]);
 
         // $event = new Event('AccessResource\Controller\RequestController', $this);
         // $event->setName('view.handle.after');

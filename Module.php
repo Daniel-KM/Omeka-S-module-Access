@@ -314,6 +314,7 @@ class Module extends AbstractModule
         $api = $services->get('Omeka\ApiManager');
 
         $accesses = $api->search('access_resources', ['resource_id' => $resource->id()])->getContent();
+        $requests = $api->search('access_requests', ['resource_id' => $resource->id()])->getContent();
 
         $partial = 'common/admin/access-resource-list';
         echo $event->getTarget()->partial(
@@ -321,6 +322,7 @@ class Module extends AbstractModule
             [
                 'resource' => $resource,
                 'accesses' => $accesses,
+                'requests' => $requests,
             ]
         );
     }

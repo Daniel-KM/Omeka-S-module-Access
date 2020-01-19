@@ -2,11 +2,13 @@
 /**
  * @var \Zend\View\Renderer\PhpRenderer $this
  * @var \AccessResource\Api\Representation\AccessResourceRepresentation[] $accesses
+ * @var \AccessResource\Api\Representation\AccessRequestRepresentation[] $requests
  * @var \Omeka\Api\Representation\AbstractResourceRepresentation $resource
  */
 
 $translate = $this->plugin('translate');
 $escape = $this->plugin('escapeHtml');
+$hyperlink = $this->plugin('hyperlink');
 $url = $this->plugin('url');
 
 $this->headLink()
@@ -17,7 +19,68 @@ $this->headScript()
     ->appendFile($this->assetUrl('js/access-resource-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
 ?>
 
-<div class="access-resource">
+<div class="access-resource access-request">
+
+    <?php // Manage user requests. ?>
+
+    <div class="access-requests">
+        <h4><?= $translate('User requests') ?></h4>
+
+    <?php if (empty($requests)): ?>
+
+    <div class="no-resources">
+        <p><?= $translate('There are no requests for this resource.') ?></p>
+    </div>
+
+    <?php else: ?>
+
+    <?php
+    // TODO Add a button to clean all access to public resources (and mutiple toggle/deletion anyway).
+
+    // $resourceName = $resource->getControllerName();
+    $updateRight = $this->userIsAllowed(\AccessResource\Entity\AccessRequest::class, 'update');
+    ?>
+    <ul>
+    <?php foreach ($requests as $request): ?>
+        <?php
+            $user = $request->user();
+            $userText = $user ? $hyperlink($user->name(), $user->adminUrl()) : '';
+            $status = $request->status();
+        ?>
+
+        <li class="value tag" data-id="<?= $request->id() ?>">
+            <span><?= sprintf($translate('user: %s'), $userText) ?></span>
+            <?php if ($updateRight): ?>
+            <span class="single actions"><a href="<?= $url('admin/access-resource/id', ['controller' => 'request', 'id' => $request->id(), 'action' => 'edit']) ?>"
+                class="o-icon-edit"
+                aria-label="<?= $escape($translate('Edit')) ?>"
+                title="<?= $escape($translate('Edit')) ?>"></a></span>
+            <span class="single actions"><a href="#"
+                class="status-toggle-access-resource o-icon-<?= $status ?>"
+                data-status-toggle-url="<?= $this->url("admin/access-resource/id", ['controller' => 'request', 'id' => $request->id(), 'action' => "toggle" ]) ?>"
+                data-status="<?= $status ?>"
+                aria-label="<?= $escape($translate('Toggle request')) ?>"
+                title="<?= $escape($translate('Toggle request')) ?>"></a></span>
+            <span class="single actions"><a href="#"
+                class="o-icon-delete"
+                data-status-toggle-url="<?= $this->url('admin/access-resource/id', ['controller' => 'request', 'id' => $request->id(), 'action' => 'delete']) ?>"
+                aria-label="<?= $escape($translate('Remove request')) ?>"
+                title="<?= $escape($translate('Remove request')) ?>"></a></span>
+            <?php else: ?>
+            <span class="no-action o-icon-<?= $status ?>"></span>
+            <?php endif; ?>
+        </li>
+    <?php endforeach; ?>
+    </ul>
+
+    <?php endif; ?>
+
+    </div>
+
+    <?php // Manage resource access. ?>
+
+    <div class="access-resources">
+        <h4><?= $translate('Accesses') ?></h4>
 
     <?php if (empty($accesses)): ?>
 
@@ -37,7 +100,7 @@ $this->headScript()
     <?php foreach ($accesses as $access): ?>
         <?php
             $user = $access->user();
-            $userText = $user ? $this->hyperlink($user->name(), $user->adminUrl()) : '';
+            $userText = $user ? $hyperlink($user->name(), $user->adminUrl()) : '';
         ?>
 
         <li class="value tag" data-id="<?= $access->id() ?>">
@@ -67,7 +130,14 @@ $this->headScript()
 
     <?php endif; ?>
 
-    <?php if ($resource->isPublic()): ?>
+    </div>
+
+    <?php // Quick form to add access. ?>
+
+    <div>
+        <h4><?= $translate('Add an access') ?></h4>
+
+     <?php if ($resource->isPublic()): ?>
 
     <div class="no-resources">
         <p><?= $translate('This resource is public: no access is needed to view it.'); ?></p>
@@ -107,6 +177,7 @@ $this->headScript()
         <input type="submit" value="<?= $escape($translate('Add access')) ?>">
     </form>
 
+    <?php // TODO Move to js file. ?>
     <script>
         $(document).ready(function() {
             var value = $('form .value-resource');
@@ -117,5 +188,7 @@ $this->headScript()
     </script>
 
     <?php endif; ?>
+
+    </div>
 
 </div>

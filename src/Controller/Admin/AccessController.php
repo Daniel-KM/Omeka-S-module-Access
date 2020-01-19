@@ -269,17 +269,26 @@ class AccessController extends AbstractActionController
                 }
 
                 $api->update('access_resources', $id, ['enabled' => $enabled]);
+
+                $status = $enabled === 1 ? 'approved' : 'private';
+
+                return new JsonModel([
+                    'status' => \Zend\Http\Response::STATUS_CODE_200,
+                    'data' => [
+                        'status' => $status,
+                    ],
+                ]);
             }
+
+            return new JsonModel([
+                'status' => \Zend\Http\Response::STATUS_CODE_403,
+                'message' => $this->translate('No rights to update status.'), // @translate
+            ]);
         }
 
-        $status = $enabled === 1
-            ? 'approved'
-            : 'private';
-
         return new JsonModel([
-            'content' => [
-                'status' => $status,
-            ],
+            'status' => \Zend\Http\Response::STATUS_CODE_405,
+            'message' => $this->translate('Method should be post.'), // @translate
         ]);
     }
 
