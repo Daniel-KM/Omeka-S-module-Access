@@ -24,12 +24,6 @@ class ReservedResourceVisibilityFilter extends BaseResourceVisibilityFilter
             return $constraints;
         }
 
-        // Don't add a constraint for visitors, who see only public resources.
-        $identity = $this->serviceLocator->get('Omeka\AuthenticationService')->getIdentity();
-        if (!$identity) {
-            return $constraints;
-        }
-
         $reservedConstraints = [];
 
         // Resource should be private.
