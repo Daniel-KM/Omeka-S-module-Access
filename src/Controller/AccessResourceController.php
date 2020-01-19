@@ -2,6 +2,7 @@
 
 namespace AccessResource\Controller;
 
+use AccessResource\Entity\AccessLog;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Omeka\Mvc\Exception;
@@ -42,17 +43,47 @@ class AccessResourceController extends AbstractActionController
             throw new Exception\NotFoundException;
         }
 
+        $media = $this->getMedia();
+        if (!$media) {
+            throw new Exception\NotFoundException;
+        }
+
+        /** @var \Doctrine\ORM\EntityManager $entityManager */
+        $entityManager = $this->getServiceLocator()->get('Omeka\EntityManager');
+        $user = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
+
         //if Without admin permissions check access.
         $acl = $this->getServiceLocator()->get('Omeka\Acl');
         if (!$acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
             $access = $this->getMediaAccess();
             if (!$access) {
-                // Don't throw exception, because it's not really an error.
-                // throw new Exception\PermissionDeniedException;
-                // return $this->permissionDeniedAction();
-                // Return an image instead of a 403.
+                // Log attempt to access original record.
+                if ($type === 'original') {
+                    $log = new AccessLog();
+                    $entityManager->persist($log);
+                    $log
+                        ->setAction('no_access')
+                        ->setUser($user)
+                        ->setRecordId($media->id())
+                        ->setType('access')
+                        ->setDate(new \DateTime());
+                    $entityManager->flush();
+                }
+
                 return $this->sendFakeFile();
             }
+        }
+
+        if ($type === 'original') {
+            $log = new AccessLog();
+            $entityManager->persist($log);
+            $log
+                ->setAction('accessed')
+                ->setUser($user)
+                ->setRecordId($media->id())
+                ->setType('access')
+                ->setDate(new \DateTime());
+            $entityManager->flush();
         }
 
         return $this->sendFile();
