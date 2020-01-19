@@ -282,8 +282,29 @@ class AccessResourceController extends AbstractActionController
      */
     protected function sendFakeFile()
     {
+        $media = $this->getMedia();
+        $mediaType = $media ? $media->mediaType() : 'image/png';
+        switch ($mediaType) {
+            case strtok($mediaType, '/') === 'image':
+                $file = 'img/locked-file.png';
+                break;
+            case 'application/pdf':
+                $file = 'img/locked-file.pdf';
+                break;
+            case strtok($mediaType, '/') === 'audio':
+            case strtok($mediaType, '/') === 'video':
+                $file = 'img/locked-file.mp4';
+                break;
+            case 'application/vnd.oasis.opendocument.text':
+                $file = 'img/locked-file.odt';
+                break;
+            default:
+                $file = 'img/locked-file.png';
+                break;
+        }
+
         $assetUrl = $this->viewHelpers()->get('assetUrl');
-        $filepath = $assetUrl('img/locked-file.png', 'AccessResource', true);
+        $filepath = $assetUrl($file, 'AccessResource', true);
         return $this->redirect()->toUrl($filepath);
     }
 
