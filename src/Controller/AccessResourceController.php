@@ -217,13 +217,20 @@ class AccessResourceController extends AbstractActionController
         }
 
         $storageType = $this->getStorageType();
-        if ($storageType == 'original' && !$media->hasOriginal()) {
+        if ($storageType === 'original') {
+            if (!$media->hasOriginal()) {
+                return null;
+            }
+            $filename = $media->filename();
+        } elseif (!$media->hasThumbnails()) {
             return null;
+        } else {
+            $filename = $media->storageId() . '.jpg';
         }
 
         $config = $this->getServiceLocator()->get('Config');
         $basePath = $config['file_store']['local']['base_path'] ?: OMEKA_PATH . '/files';
-        $value = sprintf('%s/%s/%s', $basePath, $storageType, $media->filename());
+        $value = sprintf('%s/%s/%s', $basePath, $storageType, $filename);
 
         if (!is_readable($value)) {
             return null;
@@ -248,7 +255,7 @@ class AccessResourceController extends AbstractActionController
 
         $filename = $media->source();
         $filesize = $media->size();
-        $mediaType = $media->mediaType();
+        $mediaType = $this->data->get('storageType') === 'original' ? $media->mediaType() : 'image/jpeg';
 
         $dispositionMode =
             (
