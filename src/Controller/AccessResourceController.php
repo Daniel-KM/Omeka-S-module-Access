@@ -6,6 +6,7 @@ use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Omeka\Mvc\Exception;
 use Zend\Mvc\Controller\AbstractActionController;
+use Zend\View\Model\ViewModel;
 
 class AccessResourceController extends AbstractActionController
 {
@@ -22,7 +23,7 @@ class AccessResourceController extends AbstractActionController
     }
 
     /**
-     * Forward to the 'play' action
+     * Forward to the 'files' action
      *
      * @see self::playAction()
      */
@@ -46,8 +47,9 @@ class AccessResourceController extends AbstractActionController
         if (!$acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
             $access = $this->getMediaAccess();
             if (!$access) {
-                // TODO: load access denied image with 403 response
-                throw new Exception\PermissionDeniedException;
+                // Don't throw exception, because it's not really an error.
+                // throw new Exception\PermissionDeniedException;
+                return $this->permissionDeniedAction();
             }
         }
 
@@ -268,5 +270,37 @@ class AccessResourceController extends AbstractActionController
 
         // Return Response to avoid default view rendering
         return $response;
+    }
+
+    /**
+     * Action called if media is not available for the user.
+     *
+     * It avoids to throw an exception, since it's not really an error and trace
+     * is useless.
+     *
+     * @return ViewModel
+     */
+    public function permissionDeniedAction()
+    {
+        $event = $this->getEvent();
+        $routeMatch = $event->getRouteMatch();
+        $routeMatch->setParam('action', 'forbidden');
+
+        $response = $event->getResponse();
+        $response->setStatusCode(403);
+
+        $user = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
+
+        $this->logger()->warn(
+            sprintf('Access to private resource "%s" by user "%s".', // $translate
+                $this->data['storageType'] . '/' . $this->data['fileName'],
+                $user ? $user->getId() : 'unidentified'
+            )
+        );
+
+        $view = new ViewModel;
+        return $view
+            ->setTemplate('error/403-access-resource')
+            ->setVariable('exception', new Exception\PermissionDeniedException('Access forbidden')); // @translate
     }
 }
