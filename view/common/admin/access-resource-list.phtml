@@ -20,18 +20,20 @@ $this->headScript()
 
 <div class="access-resource">
 
-<?php if (empty($accesses)): ?>
+    <?php if (empty($accesses)): ?>
 
     <div class="no-resources">
         <p><?= $translate('There are no access for this resource.'); ?></p>
     </div>
 
-<?php else: ?>
+    <?php else: ?>
 
-<?php
+    <?php
+    // TODO Add a button to clean all access to public resources (and mutiple toggle/deletion anyway).
+
     // $resourceName = $resource->getControllerName();
     $updateRight = $this->userIsAllowed(\AccessResource\Entity\AccessResource::class, 'update');
-?>
+    ?>
     <ul>
     <?php foreach ($accesses as $access): ?>
         <?php
@@ -64,7 +66,22 @@ $this->headScript()
     <?php endforeach; ?>
     </ul>
 
-<?php endif; ?>
+    <?php endif; ?>
+
+    <?php if ($resource->isPublic()): ?>
+
+    <div class="no-resources">
+        <p><?= $translate('This resource is public: no access is needed to view it.'); ?></p>
+    </div>
+
+    <?php elseif (!$resource->value('curation:reservedAccess')): ?>
+
+    <div class="no-resources">
+        <p><?= $translate('This resource is private and not marked reservable: no access is possible.'); ?></p>
+    </div>
+
+    <?php // Manage access to private resource when marked reservable. ?>
+    <?php else: ?>
 
     <form action="<?= $this->url("admin/access-resource/default", [
         'controller' => 'access',
@@ -90,13 +107,16 @@ $this->headScript()
         </div>
         <input type="submit" value="<?= $escape($translate('Add access')) ?>">
     </form>
-</div>
 
-<script>
-    $(document).ready(function() {
-        var value = $('form .value-resource');
-        var valueObj = <?= $resource ? json_encode($resource->valueRepresentation()) : '{}' ?>;
-        var namePrefix = value.data('name-prefix');
-        $(document).trigger('o:prepare-value', ['resource', value, valueObj, namePrefix]);
-    });
-</script>
+    <script>
+        $(document).ready(function() {
+            var value = $('form .value-resource');
+            var valueObj = <?= $resource ? json_encode($resource->valueRepresentation()) : '{}' ?>;
+            var namePrefix = value.data('name-prefix');
+            $(document).trigger('o:prepare-value', ['resource', value, valueObj, namePrefix]);
+        });
+    </script>
+
+    <?php endif; ?>
+
+</div>
