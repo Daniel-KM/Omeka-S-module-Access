@@ -14,7 +14,9 @@ class RequestController extends AbstractActionController
 
     public function indexAction()
     {
-        $this->forward('browse');
+        $params = $this->params()->fromRoute();
+        $params['action'] = 'browse';
+        return $this->forward()->dispatch(__CLASS__, $params);
     }
 
     public function browseAction()

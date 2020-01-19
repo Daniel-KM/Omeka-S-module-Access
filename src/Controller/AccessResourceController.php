@@ -29,7 +29,9 @@ class AccessResourceController extends AbstractActionController
      */
     public function indexAction()
     {
-        $this->forward('files');
+        $params = $this->params()->fromRoute();
+        $params['action'] = 'files';
+        return $this->forward()->dispatch(__CLASS__, $params);
     }
 
     public function filesAction()
