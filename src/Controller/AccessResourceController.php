@@ -37,7 +37,7 @@ class AccessResourceController extends AbstractActionController
     public function filesAction()
     {
         $type = $this->getStorageType();
-        $file = $this->getFileName();
+        $file = $this->getFilename();
         if (empty($type) || empty($file)) {
             throw new Exception\NotFoundException;
         }
@@ -58,9 +58,9 @@ class AccessResourceController extends AbstractActionController
         return $this->sendFile();
     }
 
-    protected function getFileName()
+    protected function getFilename()
     {
-        $key = 'fileName';
+        $key = 'filename';
         $value = $this->data->get($key);
         if ($value) {
             return $value;
@@ -99,8 +99,8 @@ class AccessResourceController extends AbstractActionController
             return $value;
         }
 
-        $fileName = $this->getFileName();
-        $storageId = pathinfo($fileName, PATHINFO_FILENAME);
+        $filename = $this->getFilename();
+        $storageId = pathinfo($filename, PATHINFO_FILENAME);
 
         /** @var \Omeka\Api\Representation\MediaRepresentation $value */
         $value = $storageId
@@ -203,9 +203,9 @@ class AccessResourceController extends AbstractActionController
      *
      * @return string|null Path to the file.
      */
-    protected function getFilePath()
+    protected function getFilepath()
     {
-        $key = 'filePath';
+        $key = 'filepath';
         $value = $this->data->get($key);
         if ($value) {
             return $value;
@@ -246,7 +246,7 @@ class AccessResourceController extends AbstractActionController
      */
     protected function sendFile()
     {
-        $filepath = $this->getFilePath();
+        $filepath = $this->getFilepath();
         if (!$filepath) {
             throw new Exception\NotFoundException('File does not exist.'); // @translate
         }
@@ -336,7 +336,7 @@ class AccessResourceController extends AbstractActionController
 
         $this->logger()->warn(
             sprintf('Access to private resource "%s" by user "%s".', // $translate
-                $this->data['storageType'] . '/' . $this->data['fileName'],
+                $this->data['storageType'] . '/' . $this->data['filename'],
                 $user ? $user->getId() : 'unidentified'
             )
         );
