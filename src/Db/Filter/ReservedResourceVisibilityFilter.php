@@ -19,9 +19,14 @@ class ReservedResourceVisibilityFilter extends BaseResourceVisibilityFilter
         // Check rights from the core resource visibility filter.
         $constraints = parent::getResourceConstraint($alias);
 
-        // Don't add a constraint for admins or visitors, who already view all
-        // or nothing private.
+        // Don't add a constraint for admins, who already view all private.
         if (empty($constraints)) {
+            return $constraints;
+        }
+
+        // Don't add a constraint for visitors, who see only public resources.
+        $identity = $this->serviceLocator->get('Omeka\AuthenticationService')->getIdentity();
+        if (!$identity) {
             return $constraints;
         }
 
