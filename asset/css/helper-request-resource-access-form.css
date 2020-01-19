@@ -1,4 +1,4 @@
-.request-resource-access-form {
+.access-resource-request-form {
     display: none;
 
     padding: 0;
@@ -10,7 +10,7 @@
     top: 0;
     left: 0;
 }
-.request-resource-access-form .form-wrapper {
+.access-resource-request-form .form-wrapper {
     padding: 0;
     margin: 0;
     width: 100%;
@@ -23,29 +23,29 @@
     align-items: center;
     justify-content: center;
 }
-.request-resource-access-form .form-wrapper .form-block {
+.access-resource-request-form .form-wrapper .form-block {
     background: #ffffff;
     border: 1px solid #000000;
 
     min-width: 800px;
 }
-.request-resource-access-form .form-wrapper .form-block .block-title {
+.access-resource-request-form .form-wrapper .form-block .block-title {
     background-color: #000000;
     padding: 5px 10px;
     color: #ffffff;
     position: relative;
 }
-.request-resource-access-form .form-wrapper .form-block .block-title h3{
+.access-resource-request-form .form-wrapper .form-block .block-title h3{
     display: inline;
 }
-.request-resource-access-form .form-wrapper .form-block .block-title a {
+.access-resource-request-form .form-wrapper .form-block .block-title a {
     color: #ffffff;
 }
-.request-resource-access-form .form-wrapper .form-block .block-title .block-close {
+.access-resource-request-form .form-wrapper .form-block .block-title .block-close {
     position: absolute;
     right: 12px;
     top: 5px;
 }
-.request-resource-access-form .form-wrapper .form-block .block-body {
+.access-resource-request-form .form-wrapper .form-block .block-body {
     padding: 15px 10px;
 }

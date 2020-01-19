@@ -346,6 +346,9 @@ class Module extends AbstractModule
             return;
         }
 
+        $isOldOmeka = \Omeka\Module::VERSION < 2;
+        $alias = $isOldOmeka ? \Omeka\Entity\Media::class : 'omeka_root';
+
         /** @var \Omeka\Api\Adapter\MediaAdapter $adapter */
         $adapter = $event->getTarget();
 
@@ -355,7 +358,7 @@ class Module extends AbstractModule
         $expr = $qb->expr();
 
         $itemAlias = $adapter->createAlias();
-        $qb->innerJoin('Omeka\Entity\Media.item', $itemAlias);
+        $qb->innerJoin($alias . '.item', $itemAlias);
 
         // Users can view media they do not own that belong to public items.
         $conditions = [
@@ -374,7 +377,7 @@ class Module extends AbstractModule
 
             // Users can view some media if they have access by token.
             if ($access) {
-                $conditions[] = $expr->eq('Omeka\Entity\Media.id', $access->getResource()->getId());
+                $conditions[] = $expr->eq($alias . '.id', $access->getResource()->getId());
             }
 
             // Users can view all media in private items with special property.
@@ -392,7 +395,7 @@ class Module extends AbstractModule
             $conditions[] = $expr->in($itemAlias . '.id', $qbs->getDQL());
         } elseif ($access) {
             // Users can view some media if they have access by token.
-            $conditions[] = $expr->eq('Omeka\Entity\Media.id', $access->getResource()->getId());
+            $conditions[] = $expr->eq($alias . '.id', $access->getResource()->getId());
         }
 
         $expression = $expr->orX();
@@ -416,8 +419,10 @@ class Module extends AbstractModule
         $query = $request->getContent();
         // Ability to filter by storage_id.
         if (isset($query['storage_id'])) {
+            $isOldOmeka = \Omeka\Module::VERSION < 2;
+            $alias = $isOldOmeka ? \Omeka\Entity\Media::class : 'omeka_root';
             $qb->andWhere($qb->expr()->eq(
-                'Omeka\Entity\Media.storageId',
+                $alias . '.storageId',
                 $adapter->createNamedParameter($qb, $query['storage_id'])
             ));
         }
