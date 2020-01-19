@@ -9,14 +9,25 @@ class RequestResourceAccessForm extends AbstractHelper
 {
     use ServiceLocatorAwareTrait;
 
+    /**
+     * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[]
+     */
     protected $resources;
+
+    /**
+     * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[]
+     */
     protected $reservedResources;
+
+    /**
+     * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[]
+     */
     protected $inaccessibleReservedResources;
 
     public function __invoke($resources = null)
     {
         if (!$resources) {
-            return;
+            return $this;
         }
         if (!is_array($resources)) {
             $resources = [$resources];
@@ -27,9 +38,9 @@ class RequestResourceAccessForm extends AbstractHelper
         return $this->render();
     }
 
-    public function setResources($value)
+    public function setResources(array $resources)
     {
-        $this->resources = $value;
+        $this->resources = $resources;
         return $this;
     }
 
@@ -38,15 +49,15 @@ class RequestResourceAccessForm extends AbstractHelper
         return $this->resources;
     }
 
-    public function setReservedResources($value)
+    public function setReservedResources(array $reservedResources)
     {
-        $this->reservedResources = $value;
+        $this->reservedResources = $reservedResources;
         return $this;
     }
 
     public function getReservedResources()
     {
-        if ($this->reservedResources) {
+        if (is_array($this->reservedResources)) {
             return $this->reservedResources;
         }
 
@@ -70,15 +81,15 @@ class RequestResourceAccessForm extends AbstractHelper
         return $reservedResources;
     }
 
-    public function setInaccessibleReservedResources($value)
+    public function setInaccessibleReservedResources(array $inaccessibleReservedResources)
     {
-        $this->inaccessibleReservedResources = $value;
+        $this->inaccessibleReservedResources = $inaccessibleReservedResources;
         return $this;
     }
 
     public function getInaccessibleReservedResources()
     {
-        if ($this->inaccessibleReservedResources) {
+        if (is_array($this->inaccessibleReservedResources)) {
             return $this->inaccessibleReservedResources;
         }
 
@@ -88,7 +99,14 @@ class RequestResourceAccessForm extends AbstractHelper
         /** @var \Omeka\Entity\User $user */
         $user = $services->get('Omeka\AuthenticationService')->getIdentity();
         if (!$user) {
-            return $reservedResources;
+            $this->setInaccessibleReservedResources($reservedResources);
+            return $this->inaccessibleReservedResources;
+        }
+
+        $acl = $this->getServiceLocator()->get('Omeka\Acl');
+        if ($acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
+            $this->setInaccessibleReservedResources([]);
+            return $this->inaccessibleReservedResources;
         }
 
         $reservedResourcesIds = array_map(function ($v) {
@@ -98,7 +116,7 @@ class RequestResourceAccessForm extends AbstractHelper
         /** @var \Omeka\Api\Manager $api */
         $api = $services->get('Omeka\ApiManager');
 
-        // TODO Output column directly.
+        // TODO Output column directly (see AbstractEntityAdapoter with getAssociationNames().
         $accessRecords = $api
             ->search(
                 'access_resources',

@@ -25,7 +25,7 @@ class AccessResourceController extends AbstractActionController
     /**
      * Forward to the 'files' action
      *
-     * @see self::playAction()
+     * @see self::filesAction()
      */
     public function indexAction()
     {
@@ -87,7 +87,7 @@ class AccessResourceController extends AbstractActionController
     /**
      * Get Media Representation.
      *
-     * @return mixed|null|\Omeka\Api\Representation\MediaRepresentation
+     * @return \Omeka\Api\Representation\MediaRepresentation|null
      */
     protected function getMedia()
     {
@@ -223,6 +223,10 @@ class AccessResourceController extends AbstractActionController
         $basePath = $config['file_store']['local']['base_path'] ?: OMEKA_PATH . '/files';
         $value = sprintf('%s/%s/%s', $basePath, $storageType, $media->filename());
 
+        if (!is_readable($value)) {
+            return null;
+        }
+
         $this->data->set($key, $value);
         return $value;
     }
@@ -231,26 +235,23 @@ class AccessResourceController extends AbstractActionController
      * This is the 'file' action that is invoked when a user wants to download
      * the given file.
      */
-    public function sendFile()
+    protected function sendFile()
     {
-        $path = $this->getFilePath();
+        $filepath = $this->getFilePath();
+        if (!$filepath) {
+            throw new Exception\NotFoundException('File does not exist.'); // @translate
+        }
+
         $media = $this->getMedia();
 
-        $fileName = $media->source();
-        $fileSize = $media->size();
+        $filename = $media->source();
+        $filesize = $media->size();
         $mediaType = $media->mediaType();
-
-        // Try to open file.
-        if (!is_readable($path)) {
-            // Set 404 Not Found status code.
-            $this->getResponse()->setStatusCode(404);
-            return;
-        }
 
         $dispositionMode =
             (
-                strstr($_SERVER['HTTP_USER_AGENT'], 'MSIE') ||
-                strstr($_SERVER['HTTP_USER_AGENT'], 'Mozilla')
+                strstr($_SERVER['HTTP_USER_AGENT'], 'MSIE')
+                || strstr($_SERVER['HTTP_USER_AGENT'], 'Mozilla')
             )
             ? 'inline'
             : 'attachment';
@@ -259,14 +260,15 @@ class AccessResourceController extends AbstractActionController
         $response = $this->getResponse();
         $headers = $response->getHeaders();
         $headers->addHeaderLine(sprintf('Content-type: %s', $mediaType));
-        $headers->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', $dispositionMode, $fileName));
-        $headers->addHeaderLine(sprintf('Content-length: %s', $fileSize));
+        $headers->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', $dispositionMode, $filename));
+        $headers->addHeaderLine(sprintf('Content-length: %s', $filesize));
         // Use this to open files directly.
         $headers->addHeaderLine('Cache-control: private');
 
         // Send headers separately to handle large files.
         $response->sendHeaders();
-        $response->setContent(readfile($path));
+        // TODO Use a redirect and a temp storage hard link for big files.
+        $response->setContent(readfile($filepath));
 
         // Return Response to avoid default view rendering
         return $response;

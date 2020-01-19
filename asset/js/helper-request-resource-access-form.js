@@ -1,5 +1,4 @@
-$(document).ready(function()
-{
+$(document).ready(function() {
 
     $('.request-access-resource').click(function(e) {
         e.preventDefault();
@@ -14,7 +13,7 @@ $(document).ready(function()
     $('.access-resource-request-form .form-wrapper .form-block .resource-link').click(function(e) {
         e.preventDefault();
         const checkbox = $(this).closest('label').find('input[type="checkbox"]');
-        checkbox.prop('checked',!checkbox.prop('checked'));
+        checkbox.prop('checked', !checkbox.prop('checked'));
     });
 
     $('.access-resource-request-form form').submit(function(e) {
@@ -32,6 +31,6 @@ $(document).ready(function()
                 $('.access-resource-request-form').hide();
             }
         });
-
     });
+
 });

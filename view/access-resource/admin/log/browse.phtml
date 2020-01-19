@@ -11,28 +11,22 @@ $this->headLink()->appendStylesheet($this->assetUrl('css/table-access-resource.c
 $this->htmlElement('body')->appendAttribute('class', 'sites browse');
 ?>
 
-<?php echo $this->pageTitle($translate('Access logs')); ?>
-
-<div id="page-actions">
-    <?php if ($this->userIsAllowed(\AccessResource\Entity\AccessResource::class, 'create')): ?>
-        <?php echo $this->hyperlink($translate('Add new access record'), $this->url('admin/access-resource/default', ['controller' => 'access', 'action' => 'add']), ['class' => 'button']); ?>
-    <?php endif; ?>
-</div>
+<?= $this->pageTitle($translate('Access logs')) ?>
 
 <?php if (count($logs)): ?>
     <div class="browse-controls">
-        <?php echo $this->pagination(); ?>
+        <?= $this->pagination() ?>
     </div>
     <?php $this->trigger('view.browse.before'); ?>
 
     <table class="tablesaw" data-tablesaw-mode="stack">
         <thead>
         <tr>
-            <th><?php echo $escape($translate('User')); ?></th>
-            <th><?php echo $escape($translate('Action')); ?></th>
-            <th><?php echo $escape($translate('Record Id')); ?></th>
-            <th><?php echo $escape($translate('Type')); ?></th>
-            <th><?php echo $escape($translate('Date')); ?></th>
+            <th><?= $escape($translate('User')) ?></th>
+            <th><?= $escape($translate('Action')) ?></th>
+            <th><?= $escape($translate('Record Id')) ?></th>
+            <th><?= $escape($translate('Type')) ?></th>
+            <th><?= $escape($translate('Date')) ?></th>
         </tr>
         </thead>
         <tbody>
@@ -48,11 +42,11 @@ $this->htmlElement('body')->appendAttribute('class', 'sites browse');
                 endif;
             ?>
             <tr>
-                <td><?php echo $userText; ?></td>
-                <td><?php echo $log->getAction(); ?></td>
-                <td><?php echo $log->getRecordId(); ?></td>
-                <td><?php echo $log->getType(); ?></td>
-                <td><?php echo $log->getDate()->format('Y-m-d H:i:s'); ?></td>
+                <td><?= $userText ?></td>
+                <td><?= $log->getAction() ?></td>
+                <td><?= $log->getRecordId() ?></td>
+                <td><?= $log->getType() ?></td>
+                <td><?= $log->getDate()->format('Y-m-d H:i:s') ?></td>
             </tr>
         <?php endforeach; ?>
         </tbody>
@@ -61,5 +55,7 @@ $this->htmlElement('body')->appendAttribute('class', 'sites browse');
     <?php $this->trigger('view.browse.after'); ?>
 
 <?php else: ?>
-    <p><?php echo $escape($translate('No access records yet.')); ?> <a href="<?php echo $this->url(null, [], true); ?>"><?php echo $escape($translate('Refresh page')); ?></a></p>
+
+    <p><?= $escape($translate('No access records yet.')); ?> <a href="<?= $this->url(null, [], true); ?>"><?= $escape($translate('Refresh page')); ?></a></p>
+
 <?php endif; ?>

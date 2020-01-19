@@ -18,31 +18,31 @@ else:
     $userText = $translate('[no user]');
 endif;
 ?>
-<div class="resource-details" data-resource-values="<?php echo $escape($values); ?>">
 
+<div class="resource-details" data-resource-values="<?= $escape($values) ?>">
     <?php if ($linkTitle): ?>
-    <h3 class="o-title"><?php echo $resource->link($resource->displayTitle()); ?></h3>
+    <h3 class="o-title"><?= $resource->link($resource->displayTitle()) ?></h3>
     <?php else: ?>
-    <h3 class="o-title"><?php echo $escape($resource->displayTitle()); ?></h3>
+    <h3 class="o-title"><?= $escape($resource->displayTitle()) ?></h3>
     <?php endif; ?>
-    <div class="o-description"><?php echo $escape($resource->displayDescription()); ?></div>
+    <div class="o-description"><?= $escape($resource->displayDescription()) ?></div>
 
     <?php // echo $this->thumbnail($requestedResource, 'square'); ?>
 
     <div class="meta-group">
-        <h4><?php echo $escape($translate('User')); ?></h4>
-        <div class="value"><?php echo $userText; ?></div>
+        <h4><?= $escape($translate('User')) ?></h4>
+        <div class="value"><?= $userText ?></div>
     </div>
 
     <div class="meta-group">
-        <h4><?php echo $escape($translate('Resource')); ?></h4>
-        <div class="value"><?php echo $accessRequest->resource()->linkPretty(); ?></div>
+        <h4><?= $escape($translate('Resource')) ?></h4>
+        <div class="value"><?= $accessRequest->resource()->linkPretty() ?></div>
     </div>
 
     <div class="meta-group">
-        <h4><?php echo $escape($translate('Status')); ?></h4>
-        <div class="value"><?php echo $translate($resource->statusLabel()); ?></div>
+        <h4><?= $escape($translate('Status')) ?></h4>
+        <div class="value"><?= $translate($resource->statusLabel()) ?></div>
     </div>
 
-    <?php $this->trigger('view.details', array('entity' => $resource)); ?>
+    <?php $this->trigger('view.details', ['entity' => $resource]) ?>
 </div>

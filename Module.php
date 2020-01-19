@@ -445,17 +445,18 @@ class Module extends AbstractModule
         ], ['responseContent' => 'resource'])->getContent();
         $accessRecord = count($accessRecords) ? array_pop($accessRecords) : null;
 
-        if (!$accessRecord) {
+        if ($accessRecord) {
+            $api->update('access_resources', $accessRecord->getId(), [
+                'enabled' => true,
+            ]);
+        } else {
             $api->create('access_resources', [
                 'resource_id' => $entity->getResource()->getId(),
                 'user_id' => $entity->getUser()->getId(),
                 'enabled' => true,
+                // FIXME Use a random token.
                 'token' => md5($entity->getResource()->getId() . '/' . $entity->getUser()->getId()),
                 'temporal' => false,
-            ]);
-        } else {
-            $api->update('access_resources', $accessRecord->getId(), [
-                'enabled' => true,
             ]);
         }
     }
