@@ -8,7 +8,7 @@ $translate = $this->plugin('translate');
 $escape = $this->plugin('escapeHtml');
 
 $this->headLink()->appendStylesheet($this->assetUrl('vendor/tablesaw/tablesaw.stackonly.css', 'Omeka'));
-$this->headScript()->appendFile($this->assetUrl('vendor/tablesaw/tablesaw.stackonly.jquery.js', 'Omeka'));
+$this->headScript()->appendFile($this->assetUrl('vendor/tablesaw/tablesaw.stackonly.jquery.js', 'Omeka'), 'text/javascript', ['defer' => 'defer']);
 
 $this->htmlElement('body')->appendAttribute('class', 'sites browse');
 ?>

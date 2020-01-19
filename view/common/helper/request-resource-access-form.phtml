@@ -10,7 +10,7 @@ $translate = $this->plugin('translate');
 $hyperlink = $this->plugin('hyperlink');
 
 $this->headLink()->appendStylesheet($this->assetUrl('css/helper-request-resource-access-form.css', 'AccessResource'));
-$this->headScript()->appendFile($this->assetUrl('js/helper-request-resource-access-form.js', 'AccessResource'));
+$this->headScript()->appendFile($this->assetUrl('js/helper-request-resource-access-form.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
 
 $formSubmitUrl = $this->url('site/access-resource-request', [], true);
 ?>

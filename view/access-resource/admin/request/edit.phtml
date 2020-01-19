@@ -11,8 +11,8 @@ $translate = $this->plugin('translate');
 $urlHelper = $this->plugin('url');
 
 $this->headScript()
-    ->appendFile($this->assetUrl('js/resource-form.js', 'Omeka'))
-    ->appendFile($this->assetUrl('js/user-selector.js', 'AccessResource'));
+    ->appendFile($this->assetUrl('js/resource-form.js', 'Omeka'), 'text/javascript', ['defer' => 'defer'])
+    ->appendFile($this->assetUrl('js/user-selector.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
 
 $this->htmlElement('body')->appendAttribute('class', 'edit items');
 

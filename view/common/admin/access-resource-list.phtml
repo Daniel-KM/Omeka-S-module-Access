@@ -12,9 +12,9 @@ $url = $this->plugin('url');
 $this->headLink()
     ->appendStylesheet($this->assetUrl('css/access-resource-admin.css', 'AccessResource'));
 $this->headScript()
-    ->appendFile($this->assetUrl('js/resource-form.js', 'Omeka'))
-    ->appendFile($this->assetUrl('js/user-selector.js', 'AccessResource'))
-    ->appendFile($this->assetUrl('js/access-resource-admin.js', 'AccessResource'));
+    ->appendFile($this->assetUrl('js/resource-form.js', 'Omeka'), 'text/javascript', ['defer' => 'defer'])
+    ->appendFile($this->assetUrl('js/user-selector.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer'])
+    ->appendFile($this->assetUrl('js/access-resource-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
 ?>
 
 <div class="access-resource">
