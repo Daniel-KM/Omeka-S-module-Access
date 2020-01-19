@@ -34,7 +34,7 @@ class GuestBoardController extends AbstractActionController
             'per_page' => $perPage,
             'sort_by' => $params->fromQuery('sort_by', 'id'),
             'sort_order' => $params->fromQuery('sort_order', 'desc'),
-            'user_id' => $user->getId()
+            'user_id' => $user->getId(),
         ];
         $requests = $this->api()->search('access_requests', $query);
 

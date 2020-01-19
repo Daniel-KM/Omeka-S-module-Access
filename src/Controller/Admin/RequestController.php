@@ -1,10 +1,10 @@
 <?php
 namespace AccessResource\Controller\Admin;
 
-use Omeka\Form\ConfirmForm;
 use AccessResource\Entity\AccessLog;
 use AccessResource\Form\Admin\AccessRequestForm;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
+use Omeka\Form\ConfirmForm;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 
@@ -170,7 +170,7 @@ class RequestController extends AbstractActionController
             'admin/access-resource/default',
             [
                 'controller' => 'request',
-                'action' => 'browse'
+                'action' => 'browse',
             ],
             true
         );

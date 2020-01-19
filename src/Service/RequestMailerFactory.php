@@ -1,8 +1,8 @@
 <?php
 namespace AccessResource\Service;
 
-use Interop\Container\ContainerInterface;
 use AccessResource\Mail\RequestMailer;
+use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
 class RequestMailerFactory implements FactoryInterface

@@ -1,9 +1,9 @@
 <?php
 namespace AccessResource\Controller\Site;
 
-use Omeka\Mvc\Exception\PermissionDeniedException;
 use AccessResource\Entity\AccessRequest;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
+use Omeka\Mvc\Exception\PermissionDeniedException;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\JsonModel;
 
@@ -28,7 +28,7 @@ class RequestController extends AbstractActionController
             if (count($resources)) {
                 $requests = $api->search('access_requests', [
                     'user_id' => $user->getId(),
-                    'resource_id' => $resources
+                    'resource_id' => $resources,
                 ])->getContent();
                 foreach ($requests as $request) {
                     $requestsByResource[$request->resource()->id()] = $request;

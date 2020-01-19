@@ -30,7 +30,7 @@ class AccessResourceForm extends Form
             'options' => [
                 'label' => 'Token', // @translate
             ],
-            'attributes'=> [
+            'attributes' => [
                 'readonly' => true,
                 'placeholder' => 'Will be automatically set', // @translate
             ],

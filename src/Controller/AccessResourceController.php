@@ -2,9 +2,9 @@
 
 namespace AccessResource\Controller;
 
+use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Omeka\Mvc\Exception;
-use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Zend\Mvc\Controller\AbstractActionController;
 
 class AccessResourceController extends AbstractActionController
@@ -12,7 +12,6 @@ class AccessResourceController extends AbstractActionController
     use ServiceLocatorAwareTrait;
 
     /**
-     *
      * @var ArrayCollection
      */
     protected $data;

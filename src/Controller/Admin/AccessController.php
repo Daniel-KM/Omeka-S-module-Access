@@ -1,10 +1,10 @@
 <?php
 namespace AccessResource\Controller\Admin;
 
-use Omeka\Form\ConfirmForm;
 use AccessResource\Entity\AccessLog;
 use AccessResource\Form\Admin\AccessResourceForm;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
+use Omeka\Form\ConfirmForm;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\JsonModel;
 use Zend\View\Model\ViewModel;
@@ -86,8 +86,8 @@ class AccessController extends AbstractActionController
             if ($form->isValid()) {
                 $response = null;
 
-                $post['startDate'] =  new \DateTime($post['startDate']);
-                $post['endDate'] =  new \DateTime($post['endDate']);
+                $post['startDate'] = new \DateTime($post['startDate']);
+                $post['endDate'] = new \DateTime($post['endDate']);
 
                 if ($accessResource) {
                     /** @var \Doctrine\ORM\EntityManager $entityManager */
@@ -284,10 +284,10 @@ class AccessController extends AbstractActionController
     }
 
     /**
-    * Create a random token string.
-    *
-    * @return string
-    */
+     * Create a random token string.
+     *
+     * @return string
+     */
     protected function createToken()
     {
         $services = $this->getServiceLocator();
@@ -311,5 +311,4 @@ class AccessController extends AbstractActionController
 
         return $token;
     }
-
 }

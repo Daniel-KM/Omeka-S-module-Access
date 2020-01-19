@@ -22,7 +22,7 @@ class AccessRequestForm extends Form
         ]);
 
         $this->get('access_request_submit')->add([
-            'type'  => Element\Submit::class,
+            'type' => Element\Submit::class,
             'name' => 'submit',
             'attributes' => [
                 'value' => 'Request', // @translate

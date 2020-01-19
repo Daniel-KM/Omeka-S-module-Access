@@ -45,8 +45,8 @@ class Module extends AbstractModule
                     'o:local_name' => 'reservedAccess',
                     'o:label' => 'Reserved Access', // @translate
                     'o:comment' => 'Gives an ability for private resource to be listed (previewed).', // @translate
-                ]
-            ]
+                ],
+            ],
         ];
 
         $api = $this->getServiceLocator()->get('Omeka\ApiManager');

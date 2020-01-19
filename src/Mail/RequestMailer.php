@@ -1,8 +1,8 @@
 <?php
 namespace AccessResource\Mail;
 
-use Omeka\Entity\User;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
+use Omeka\Entity\User;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
 class RequestMailer
