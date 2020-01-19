@@ -49,7 +49,9 @@ class AccessResourceController extends AbstractActionController
             if (!$access) {
                 // Don't throw exception, because it's not really an error.
                 // throw new Exception\PermissionDeniedException;
-                return $this->permissionDeniedAction();
+                // return $this->permissionDeniedAction();
+                // Return an image instead of a 403.
+                return $this->sendFakeFile();
             }
         }
 
@@ -272,6 +274,17 @@ class AccessResourceController extends AbstractActionController
 
         // Return Response to avoid default view rendering
         return $response;
+    }
+
+    /**
+     * This is the 'file' action that is invoked when a user wants to download
+     * the given file, but he has no rights.
+     */
+    protected function sendFakeFile()
+    {
+        $assetUrl = $this->viewHelpers()->get('assetUrl');
+        $filepath = $assetUrl('img/locked-file.png', 'AccessResource', true);
+        return $this->redirect()->toUrl($filepath);
     }
 
     /**
