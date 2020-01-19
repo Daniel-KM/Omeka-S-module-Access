@@ -15,15 +15,12 @@ $this->headScript()->appendFile($this->assetUrl('js/helper-request-resource-acce
 $formSubmitUrl = $this->url('site/access-resource-request', [], true);
 ?>
 
-<br/>
-<br/>
 <?= $hyperlink(
     $translate('Request resource access'),
     'javascript: void(0)',
     ['class' => 'button request-access-resource']
 ) ?>
-<br/>
-<br/>
+
 <div class="access-resource-request-form" data-uri="<?= $formSubmitUrl ?>">
     <div class="form-wrapper">
         <div class="form-block">
@@ -45,10 +42,10 @@ $formSubmitUrl = $this->url('site/access-resource-request', [], true);
                     </label>
                 </div>
                     <?php endforeach; ?>
-                    <?php
-                    echo $this->formCollection($form);
-                    echo $this->form()->closeTag();
-                    ?>
+                    <?= $this->formHidden($form->get('csrf')) ?>
+                    <br/>
+                    <?= $this->formRow($form->get('access_request_submit')->get('submit')) ?>
+                    <?= $this->form()->closeTag() ?>
 
                 <?php else: ?>
 
