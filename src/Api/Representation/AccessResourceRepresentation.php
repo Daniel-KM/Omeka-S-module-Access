@@ -49,7 +49,7 @@ class AccessResourceRepresentation extends AbstractEntityRepresentation
         }
 
         return [
-            'o:id' => $this->getId(),
+            'o:id' => $this->id(),
             'o:resource' => $this->resource()->getReference(),
             'o:user' => $user ? $user->getReference() : null,
             'o-module-access-resource:token' => $this->token(),

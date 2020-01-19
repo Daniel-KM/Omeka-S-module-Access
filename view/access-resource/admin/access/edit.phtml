@@ -88,7 +88,7 @@ if ($accessResource):
             <div class="field-label"><?php echo $translate('User'); ?></div>
         </div>
         <div class="inputs">
-            <input type="hidden" name="user_id" value="<?php echo $user ? $user->getId() : ''; ?>">
+            <input type="hidden" name="user_id" value="<?php echo $user ? $user->id() : ''; ?>">
             <div class="selected-user">
                 <?php
                     if ($user) {
