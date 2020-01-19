@@ -314,15 +314,13 @@ class Module extends AbstractModule
         $api = $services->get('Omeka\ApiManager');
 
         $accesses = $api->search('access_resources', ['resource_id' => $resource->id()])->getContent();
-        $user = $services->get('Omeka\AuthenticationService')->getIdentity();
 
         $partial = 'common/admin/access-resource-list';
         echo $event->getTarget()->partial(
             $partial,
             [
                 'resource' => $resource,
-                'access_resources' => $accesses,
-                'user' => $user,
+                'accesses' => $accesses,
             ]
         );
     }

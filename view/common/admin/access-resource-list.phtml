@@ -3,7 +3,6 @@
  * @var \Zend\View\Renderer\PhpRenderer $this
  * @var \AccessResource\Api\Representation\AccessResourceRepresentation[] $accesses
  * @var \Omeka\Api\Representation\AbstractResourceRepresentation $resource
- * @var \Omeka\Entity\User $user
  */
 
 $translate = $this->plugin('translate');
@@ -31,11 +30,7 @@ $this->headScript()
     <?php foreach ($accesses as $access): ?>
         <?php
             $user = $access->user();
-            if ($user):
-                $userText = $this->hyperlink($user->name(), $user->adminUrl());
-            else:
-                $userText = '';
-            endif;
+            $userText = $user ? $this->hyperlink($user->name(), $user->adminUrl()) : '';
         ?>
 
         <li class="value tag">id: <?php echo $access->id(); ?>
@@ -90,7 +85,7 @@ $this->headScript()
                     endif;
                     ?>
                 </div>
-                <button id="user-selector-button"><?php echo $user ? $translate('Change user') : $translate('Select user'); ?></button>
+                <button id="user-selector-button"><?php echo $translate('Select user'); ?></button>
                 <?php echo $this->userSelector($translate('Click on a user to select it.'), false); ?>
             </div>
         </div>
