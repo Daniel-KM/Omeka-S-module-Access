@@ -21,7 +21,6 @@ class AccessRequestForm extends Form
             'name' => 'status',
             'type' => Element\Radio::class,
             'options' => [
-
                 'label' => ' Status', // @translate
                 'value_options' => $this->getStatusOptions(),
             ],
