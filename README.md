@@ -37,15 +37,15 @@ large and other derivatives).
 ### Access mode
 
 Furthermore, the restricted visibility can be managed in two ways:
-- global: all authenticated users has access to all the restricted files. In
+- global: all authenticated users have access to all the restricted files. In
   practice, the guest users have no access to private resources, but they can
   view all private resources that are marked restricted.
 - individual: each file should be made accessible by a specific user one by one.
   So the module has some forms to manage individual requests and accesses. This
   mode requires the admin to set each rights.
 
-The default mode is "global". To set the mode "individual", you should set it in
-the file `config/local.config.php` of the Omeka directory:
+The default mode is "global". To set the mode "individual", you should specify
+it in the file `config/local.config.php` of the Omeka directory:
 
 ```php
     'accessresource' => [
