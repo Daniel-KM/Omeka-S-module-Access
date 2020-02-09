@@ -146,8 +146,8 @@ class AccessResourceController extends AbstractActionController
         // filename, but remove the extension.
         // $storageId = pathinfo($filename, PATHINFO_FILENAME);
         $extension = pathinfo($filename, PATHINFO_EXTENSION);
-        $storageId = strlen($extension)
-            ? substr($filename, 0, -strlen($extension) - 1)
+        $storageId = mb_strlen($extension)
+            ? mb_substr($filename, 0, -mb_strlen($extension) - 1)
             : $filename;
 
         /** @var \Omeka\Api\Representation\MediaRepresentation $value */
