@@ -43,6 +43,7 @@ class AccessResourceController extends AbstractActionController
             throw new Exception\NotFoundException;
         }
 
+        // If the media is private for the user, it is not available.
         $media = $this->getMedia();
         if (!$media) {
             throw new Exception\NotFoundException;
@@ -51,8 +52,8 @@ class AccessResourceController extends AbstractActionController
         $services = $this->getServiceLocator();
         $user = $services->get('Omeka\AuthenticationService')->getIdentity();
 
-        $mode = $this->settings()->get('accessresource_mode', 'global');
-        if ($mode === 'global') {
+        $accessMode = $this->getAccessMode();
+        if ($accessMode === 'global') {
             // No log when the mode is global.
             if ($user) {
                 return $this->sendFile();
@@ -64,7 +65,7 @@ class AccessResourceController extends AbstractActionController
         /** @var \Doctrine\ORM\EntityManager $entityManager */
         $entityManager = $services->get('Omeka\EntityManager');
 
-        //if Without admin permissions check access.
+        // If without admin permissions, check access.
         $acl = $services->get('Omeka\Acl');
         if (!$acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
             $access = $this->getMediaAccess();
@@ -99,6 +100,19 @@ class AccessResourceController extends AbstractActionController
         }
 
         return $this->sendFile();
+    }
+
+    protected function getAccessMode()
+    {
+        $key = 'accessMode';
+        $value = $this->data->get($key);
+        if ($value) {
+            return $value;
+        }
+
+        $value = $this->params('access_mode');
+        $this->data->set($key, $value);
+        return $value;
     }
 
     protected function getFilename()
@@ -196,17 +210,20 @@ class AccessResourceController extends AbstractActionController
 
             // Deny for visitor without token.
             if (!$user && is_null($token) && is_null($accessResource)) {
+                $this->data->set($key, false);
                 return false;
             }
 
             // Deny for guest who has not access.
             if ($user && is_null($token) && is_null($accessResource)) {
+                $this->data->set($key, false);
                 return false;
             }
 
             // Deny for token with not equal id media.
             if ($token && $accessResource) {
                 if ($media->id() !== $accessResource->resource()->id()) {
+                    $this->data->set($key, false);
                     return false;
                 }
             }
@@ -216,6 +233,7 @@ class AccessResourceController extends AbstractActionController
                 if (strtotime($accessResource->getStartDate()->format('Y-m-d H:i')) <= time()
                     || strtotime($accessResource->getEndDate()->format('Y-m-d H:i')) >= time()
                 ) {
+                    $this->data->set($key, false);
                     return false;
                 }
             }

@@ -34,6 +34,7 @@ return [
                         '__NAMESPACE__' => 'AccessResource\Controller',
                         'controller' => 'AccessResource',
                         'action' => 'files',
+                        'access_mode' => 'global',
                     ],
                 ],
             ],

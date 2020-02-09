@@ -71,6 +71,7 @@ return [
                         '__NAMESPACE__' => 'AccessResource\Controller',
                         'controller' => 'AccessResource',
                         'action' => 'files',
+                        'access_mode' => 'individual',
                     ],
                 ],
             ],
@@ -234,6 +235,8 @@ return [
         // Can be "global" or "individual".
         'access_mode' => 'individual',
         'config' => [
+            // This setting is just for info: it is overridden by [accessresource][access_mode]
+            // that should be set in config/local.config.php.
             'accessresource_access_mode' => 'global',
         ],
         'settings' => [

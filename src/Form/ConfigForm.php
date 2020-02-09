@@ -18,7 +18,7 @@ class ConfigForm extends Form
                     'documentation' => 'https://github.com/Daniel-KM/Omeka-S-module-AccessResource#access-mode',
                     'value_options' => [
                         'global' => 'Global: all users, included guests, have access to all reserved medias', // @translate
-                        'individual' => 'Individual: guests should request access to each media', // @translate
+                        'individual' => 'Individual: guests should request access to each reserved media', // @translate
                     ],
                 ],
                 'attributes' => [
