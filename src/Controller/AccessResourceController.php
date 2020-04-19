@@ -319,16 +319,11 @@ class AccessResourceController extends AbstractActionController
         $media = $this->getMedia();
 
         $filename = $media->source();
-        $filesize = $media->size();
-        $mediaType = $this->data->get('storageType') === 'original' ? $media->mediaType() : 'image/jpeg';
+        $storageType = $this->data->get('storageType');
+        $mediaType = $storageType === 'original' ? $media->mediaType() : 'image/jpeg';
+        $filesize = $this->mediaFilesize($media, $storageType);
 
-        $dispositionMode =
-            (
-                strstr($_SERVER['HTTP_USER_AGENT'], 'MSIE')
-                || strstr($_SERVER['HTTP_USER_AGENT'], 'Mozilla')
-            )
-            ? 'inline'
-            : 'attachment';
+        $dispositionMode = 'inline';
 
         // Write headers.
         $response = $this->getResponse();

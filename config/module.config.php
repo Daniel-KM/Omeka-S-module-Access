@@ -18,6 +18,11 @@ return [
             'AccessResource\Controller\AccessResource' => Service\Controller\ControllerFactory::class,
         ],
     ],
+    'controller_plugins' => [
+        'factories' => [
+            'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
+        ],
+    ],
     'service_manager' => [
         'factories' => [
             Service\Property\ReservedAccess::class => Service\Property\ReservedAccess::class,
