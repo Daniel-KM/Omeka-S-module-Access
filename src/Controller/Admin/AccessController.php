@@ -5,9 +5,9 @@ use AccessResource\Entity\AccessLog;
 use AccessResource\Form\Admin\AccessResourceForm;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Omeka\Form\ConfirmForm;
-use Zend\Mvc\Controller\AbstractActionController;
-use Zend\View\Model\JsonModel;
-use Zend\View\Model\ViewModel;
+use Laminas\Mvc\Controller\AbstractActionController;
+use Laminas\View\Model\JsonModel;
+use Laminas\View\Model\ViewModel;
 
 class AccessController extends AbstractActionController
 {
@@ -273,7 +273,7 @@ class AccessController extends AbstractActionController
                 $status = $enabled === 1 ? 'approved' : 'private';
 
                 return new JsonModel([
-                    'status' => \Zend\Http\Response::STATUS_CODE_200,
+                    'status' => \Laminas\Http\Response::STATUS_CODE_200,
                     'data' => [
                         'status' => $status,
                     ],
@@ -281,13 +281,13 @@ class AccessController extends AbstractActionController
             }
 
             return new JsonModel([
-                'status' => \Zend\Http\Response::STATUS_CODE_403,
+                'status' => \Laminas\Http\Response::STATUS_CODE_403,
                 'message' => $this->translate('No rights to update status.'), // @translate
             ]);
         }
 
         return new JsonModel([
-            'status' => \Zend\Http\Response::STATUS_CODE_405,
+            'status' => \Laminas\Http\Response::STATUS_CODE_405,
             'message' => $this->translate('Method should be post.'), // @translate
         ]);
     }

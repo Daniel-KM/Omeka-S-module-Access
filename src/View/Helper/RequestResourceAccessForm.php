@@ -3,7 +3,7 @@ namespace AccessResource\View\Helper;
 
 use AccessResource\Form\AccessRequestForm;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
-use Zend\View\Helper\AbstractHelper;
+use Laminas\View\Helper\AbstractHelper;
 
 class RequestResourceAccessForm extends AbstractHelper
 {

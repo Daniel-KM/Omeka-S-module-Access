@@ -3,8 +3,8 @@ namespace AccessResource\Controller\Site;
 
 use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Omeka\Mvc\Exception\PermissionDeniedException;
-use Zend\Mvc\Controller\AbstractActionController;
-use Zend\View\Model\ViewModel;
+use Laminas\Mvc\Controller\AbstractActionController;
+use Laminas\View\Model\ViewModel;
 
 class GuestBoardController extends AbstractActionController
 {

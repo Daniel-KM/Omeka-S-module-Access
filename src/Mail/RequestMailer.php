@@ -3,7 +3,7 @@ namespace AccessResource\Mail;
 
 use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Omeka\Entity\User;
-use Zend\ServiceManager\ServiceLocatorInterface;
+use Laminas\ServiceManager\ServiceLocatorInterface;
 
 class RequestMailer
 {

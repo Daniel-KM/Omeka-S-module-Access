@@ -31,7 +31,7 @@ return [
     'router' => [
         'routes' => [
             'access-resource-file' => [
-                'type' => \Zend\Router\Http\Segment::class,
+                'type' => \Laminas\Router\Http\Segment::class,
                 'options' => [
                     // The "{?}" allows to use module Archive Repertory and a full filepath.
                     'route' => '/access/files/:type/:file{?}',

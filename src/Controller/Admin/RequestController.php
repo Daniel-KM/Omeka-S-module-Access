@@ -5,9 +5,9 @@ use AccessResource\Entity\AccessLog;
 use AccessResource\Form\Admin\AccessRequestForm;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Omeka\Form\ConfirmForm;
-use Zend\Mvc\Controller\AbstractActionController;
-use Zend\View\Model\JsonModel;
-use Zend\View\Model\ViewModel;
+use Laminas\Mvc\Controller\AbstractActionController;
+use Laminas\View\Model\JsonModel;
+use Laminas\View\Model\ViewModel;
 
 class RequestController extends AbstractActionController
 {
@@ -199,7 +199,7 @@ class RequestController extends AbstractActionController
                 $api->update('access_requests', $id, ['status' => $status]);
 
                 return new JsonModel([
-                    'status' => \Zend\Http\Response::STATUS_CODE_200,
+                    'status' => \Laminas\Http\Response::STATUS_CODE_200,
                     'data' => [
                         'status' => $status,
                     ],
@@ -207,13 +207,13 @@ class RequestController extends AbstractActionController
             }
 
             return new JsonModel([
-                'status' => \Zend\Http\Response::STATUS_CODE_403,
+                'status' => \Laminas\Http\Response::STATUS_CODE_403,
                 'message' => $this->translate('No rights to update status.'), // @translate
             ]);
         }
 
         return new JsonModel([
-            'status' => \Zend\Http\Response::STATUS_CODE_405,
+            'status' => \Laminas\Http\Response::STATUS_CODE_405,
             'message' => $this->translate('Method should be post.'), // @translate
         ]);
     }

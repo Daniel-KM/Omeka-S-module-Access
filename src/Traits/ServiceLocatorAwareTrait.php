@@ -1,7 +1,7 @@
 <?php
 namespace AccessResource\Traits;
 
-use Zend\ServiceManager\ServiceLocatorInterface;
+use Laminas\ServiceManager\ServiceLocatorInterface;
 
 trait ServiceLocatorAwareTrait
 {

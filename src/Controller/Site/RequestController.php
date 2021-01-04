@@ -4,8 +4,8 @@ namespace AccessResource\Controller\Site;
 use AccessResource\Entity\AccessRequest;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Omeka\Mvc\Exception\PermissionDeniedException;
-use Zend\Mvc\Controller\AbstractActionController;
-use Zend\View\Model\JsonModel;
+use Laminas\Mvc\Controller\AbstractActionController;
+use Laminas\View\Model\JsonModel;
 
 class RequestController extends AbstractActionController
 {
@@ -55,7 +55,7 @@ class RequestController extends AbstractActionController
 
         $result = new JsonModel();
         $result
-            ->setVariable('status', \Zend\Http\Response::STATUS_CODE_200)
+            ->setVariable('status', \Laminas\Http\Response::STATUS_CODE_200)
             ->setVariable('data', ['success' => true]);
 
         // $event = new Event('AccessResource\Controller\RequestController', $this);

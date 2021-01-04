@@ -4,7 +4,7 @@ namespace AccessResource\Mvc\Controller\Plugin;
 use Omeka\Api\Representation\MediaRepresentation;
 use Omeka\Mvc\Exception\RuntimeException;
 use Omeka\Stdlib\Message;
-use Zend\Mvc\Controller\Plugin\AbstractPlugin;
+use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 
 class MediaFilesize extends AbstractPlugin
 {

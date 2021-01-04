@@ -2,9 +2,9 @@
 namespace AccessResource\Form\Admin;
 
 use AccessResource\Traits\ServiceLocatorAwareTrait;
-use Zend\Form\Element;
-use Zend\Form\Fieldset;
-use Zend\Form\Form;
+use Laminas\Form\Element;
+use Laminas\Form\Fieldset;
+use Laminas\Form\Form;
 
 class AccessResourceForm extends Form
 {

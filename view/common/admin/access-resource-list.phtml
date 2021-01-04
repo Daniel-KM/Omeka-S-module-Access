@@ -1,6 +1,6 @@
 <?php
 /**
- * @var \Zend\View\Renderer\PhpRenderer $this
+ * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var \AccessResource\Api\Representation\AccessResourceRepresentation[] $accesses
  * @var \AccessResource\Api\Representation\AccessRequestRepresentation[] $requests
  * @var \Omeka\Api\Representation\AbstractResourceRepresentation $resource
@@ -161,7 +161,7 @@ $this->headScript()
                 <div class="field-label"><?= $translate('New access') ?></div>
             </div>
             <div class="inputs">
-                <input type="hidden" name="csrf" value="<?= (new \Zend\Form\Element\Csrf('csrf'))->getValue() ?>">
+                <input type="hidden" name="csrf" value="<?= (new \Laminas\Form\Element\Csrf('csrf'))->getValue() ?>">
                 <input type="hidden" name="resource_id" value="<?= $resource ? $resource->id() : '' ?>">
                 <input type="hidden" name="user_id" value="">
                 <input type="hidden" name="enabled" value="<?= 1 ?>">

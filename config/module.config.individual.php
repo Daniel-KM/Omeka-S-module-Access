@@ -68,7 +68,7 @@ return [
     'router' => [
         'routes' => [
             'access-resource-file' => [
-                'type' => \Zend\Router\Http\Segment::class,
+                'type' => \Laminas\Router\Http\Segment::class,
                 'options' => [
                     // The "{?}" allows to use module Archive Repertory and a full filepath.
                     'route' => '/access/files/:type/:file{?}',
@@ -83,7 +83,7 @@ return [
             'site' => [
                 'child_routes' => [
                     'access-resource-request' => [
-                        'type' => \Zend\Router\Http\Literal::class,
+                        'type' => \Laminas\Router\Http\Literal::class,
                         'options' => [
                             'route' => '/access-resource-request',
                             'defaults' => [
@@ -97,14 +97,14 @@ return [
                         // The default values for the guest user route are kept
                         // to avoid issues for visitors when an upgrade of
                         // module Guest occurs or when it is disabled.
-                        'type' => \Zend\Router\Http\Literal::class,
+                        'type' => \Laminas\Router\Http\Literal::class,
                         'options' => [
                             'route' => '/guest',
                         ],
                         'may_terminate' => true,
                         'child_routes' => [
                             'access-resource' => [
-                                'type' => \Zend\Router\Http\Literal::class,
+                                'type' => \Laminas\Router\Http\Literal::class,
                                 'options' => [
                                     'route' => '/access-resource',
                                     'defaults' => [
@@ -121,7 +121,7 @@ return [
             'admin' => [
                 'child_routes' => [
                     'access-resource' => [
-                        'type' => \Zend\Router\Http\Literal::class,
+                        'type' => \Laminas\Router\Http\Literal::class,
                         'options' => [
                             'route' => '/access-resource',
                             'defaults' => [
@@ -133,7 +133,7 @@ return [
                         'may_terminate' => true,
                         'child_routes' => [
                             'default' => [
-                                'type' => \Zend\Router\Http\Segment::class,
+                                'type' => \Laminas\Router\Http\Segment::class,
                                 'options' => [
                                     'route' => '/:controller[/:action]',
                                     'constraints' => [
@@ -148,7 +148,7 @@ return [
                                 ],
                             ],
                             'id' => [
-                                'type' => \Zend\Router\Http\Segment::class,
+                                'type' => \Laminas\Router\Http\Segment::class,
                                 'options' => [
                                     'route' => '/:controller/:id[/:action]',
                                     'constraints' => [

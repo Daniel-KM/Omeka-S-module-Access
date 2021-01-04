@@ -3,8 +3,8 @@ namespace AccessResource\Controller\Admin;
 
 use AccessResource\Entity\AccessLog;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
-use Zend\Mvc\Controller\AbstractActionController;
-use Zend\View\Model\ViewModel;
+use Laminas\Mvc\Controller\AbstractActionController;
+use Laminas\View\Model\ViewModel;
 
 class LogController extends AbstractActionController
 {

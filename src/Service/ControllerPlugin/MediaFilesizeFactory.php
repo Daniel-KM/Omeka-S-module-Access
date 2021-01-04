@@ -3,7 +3,7 @@ namespace AccessResource\Service\ControllerPlugin;
 
 use AccessResource\Mvc\Controller\Plugin\MediaFilesize;
 use Interop\Container\ContainerInterface;
-use Zend\ServiceManager\Factory\FactoryInterface;
+use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class MediaFilesizeFactory implements FactoryInterface
 {
