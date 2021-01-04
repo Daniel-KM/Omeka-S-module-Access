@@ -3,58 +3,58 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-01-04 00:00+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: 2021-01-04 00:00+0000\n"
+"Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
+"Language-Team: \n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.2\n"
 
 #: Module.php:509
 msgid "Resource access"
-msgstr ""
+msgstr "Accès aux ressources"
 
 #: src/Api/Representation/AccessRequestRepresentation.php:125
 #, php-format
 msgid "Access request #%d"
-msgstr ""
+msgstr "Demande d’accès #%d"
 
 #: src/Api/Representation/AccessResourceRepresentation.php:157
 #: view/access-resource/admin/access/edit.phtml:33
 #, php-format
 msgid "Access #%d"
-msgstr ""
+msgstr "Accès #%d"
 
 #: src/Controller/Admin/AccessController.php:285
 #: src/Controller/Admin/RequestController.php:211
 msgid "No rights to update status."
-msgstr ""
+msgstr "Pas de droits de mettre à jour le statut."
 
 #: src/Controller/Admin/AccessController.php:291
 #: src/Controller/Admin/RequestController.php:217
 msgid "Method should be post."
-msgstr ""
+msgstr "La méthode doit être un Post."
 
 #: src/Generic/AbstractModule.php:66
 #, php-format
 msgid "This module requires the module \"%s\"."
-msgstr ""
+msgstr "Ce module requiert le module \"%s\"."
 
 #: src/Generic/AbstractModule.php:73
 #, php-format
 msgid "This module requires modules \"%s\"."
-msgstr ""
+msgstr "Ce module requiert les modules \"%s\"."
 
 #: src/Generic/AbstractModule.php:80
 msgid "This module has resources that connot be installed."
-msgstr ""
+msgstr "Ce module a des ressources qui ne peuvent pas être installées."
 
 #: src/Generic/AbstractModule.php:707
 #, php-format
@@ -62,60 +62,62 @@ msgid ""
 "The module \"%s\" was automatically deactivated because the dependencies are "
 "unavailable."
 msgstr ""
+"Le module %s\" a été automatiquement désactivé car ses dépendances ne sont "
+"plus disponibles."
 
 #: view/access-resource/admin/access/browse.phtml:21
 #: view/access-resource/admin/access/browse.phtml:70
 #: view/access-resource/admin/access/show-details.phtml:44
 msgid "Enabled"
-msgstr ""
+msgstr "Activé"
 
 #: view/access-resource/admin/access/browse.phtml:33
 #: view/access-resource/admin/access/browse.phtml:74
 msgid "Token"
-msgstr ""
+msgstr "Jeton"
 
 #: view/access-resource/admin/access/browse.phtml:37
 #: view/access-resource/admin/access/browse.phtml:76
 msgid "Start date"
-msgstr ""
+msgstr "Date de début"
 
 #: view/access-resource/admin/access/browse.phtml:41
 #: view/access-resource/admin/access/browse.phtml:77
 msgid "End date"
-msgstr ""
+msgstr "Date de fin"
 
 #: view/access-resource/admin/access/browse.phtml:50
 #: view/access-resource/admin/access/edit.phtml:33
 #: view/access-resource/admin/access/edit.phtml:35
 msgid "Access resources"
-msgstr ""
+msgstr "Accès aux ressources"
 
 #: view/access-resource/admin/access/browse.phtml:54
 msgid "Add new access"
-msgstr ""
+msgstr "Ajouter un nouvel accès"
 
 #: view/access-resource/admin/access/browse.phtml:75
 msgid "Temporal"
-msgstr ""
+msgstr "Période"
 
 #: view/access-resource/admin/access/browse.phtml:86
 #: view/access-resource/admin/log/browse.phtml:41
 #: view/access-resource/admin/request/browse.phtml:70
 #: view/access-resource/admin/request/show-details.phtml:18
 msgid "[no user]"
-msgstr ""
+msgstr "[pas d’utilisateur]"
 
 #: view/access-resource/admin/access/browse.phtml:152
 #: view/access-resource/admin/access/browse.phtml:170
 #: view/access-resource/admin/request/browse.phtml:134
 #: view/access-resource/admin/request/browse.phtml:152
 msgid "Delete records"
-msgstr ""
+msgstr "Supprimer les enregistrements"
 
 #: view/access-resource/admin/access/browse.phtml:153
 #: view/access-resource/admin/request/browse.phtml:135
 msgid "Are you sure you would like to delete the selected records?"
-msgstr ""
+msgstr "Êtes-vous sûr de vouloir supprimer les enregistrements sélectionnés ?"
 
 #: view/access-resource/admin/access/browse.phtml:155
 #: view/access-resource/admin/access/browse.phtml:173
@@ -125,6 +127,8 @@ msgstr ""
 msgid ""
 "%s: this action will permanently delete %s records and cannot be undone."
 msgstr ""
+"%s : cette action supprimera définitivement %s enregistrements et ne peut "
+"pas être annulée."
 
 #: view/access-resource/admin/access/browse.phtml:171
 #: view/access-resource/admin/request/browse.phtml:153
@@ -132,377 +136,397 @@ msgid ""
 "Are you sure you would like to delete all records on all pages of this "
 "result?"
 msgstr ""
+"Êtes-vous sûr de vouloir supprimer tous les enregistrements sur toutes les "
+"pages de ce résultat  ?"
 
 #: view/access-resource/admin/access/browse.phtml:209
 #: view/access-resource/admin/log/browse.phtml:59
 #: view/access-resource/admin/request/browse.phtml:191
 msgid "No access records yet."
-msgstr ""
+msgstr "Aucun enregistrement d’accès."
 
 #: view/access-resource/admin/access/browse.phtml:209
 #: view/access-resource/admin/log/browse.phtml:59
 #: view/access-resource/admin/request/browse.phtml:191
 #: view/guest/site/guest/access-resources.phtml:58
 msgid "Refresh page"
-msgstr ""
+msgstr "Rafraîchir la page"
 
 #: view/access-resource/admin/access/edit.phtml:35
 #: view/common/admin/access-resource-list.phtml:161
 msgid "New access"
-msgstr ""
+msgstr "Nouvel accès"
 
 #: view/access-resource/admin/access/edit.phtml:99
 #: view/access-resource/admin/request/edit.phtml:101
 msgid "Change user"
-msgstr ""
+msgstr "Changer l’utilisateur"
 
 #: view/access-resource/admin/access/edit.phtml:99
 #: view/access-resource/admin/request/edit.phtml:101
 #: view/common/admin/access-resource-list.phtml:173
 msgid "Select user"
-msgstr ""
+msgstr "Choisir un utilisateur"
 
 #: view/access-resource/admin/access/edit.phtml:100
 #: view/access-resource/admin/request/edit.phtml:102
 #: view/common/admin/access-resource-list.phtml:174
 msgid "Click on a user to select it."
-msgstr ""
+msgstr "Cliquer sur un utilisateur pour le choisir."
 
 #: view/access-resource/admin/log/browse.phtml:14
 msgid "Access logs"
-msgstr ""
+msgstr "Journaux d’accès"
 
 #: view/access-resource/admin/log/browse.phtml:26
 msgid "Action"
-msgstr ""
+msgstr "Action"
 
 #: view/access-resource/admin/log/browse.phtml:27
 msgid "Record Id"
-msgstr ""
+msgstr "Id de la ressource"
 
 #: view/access-resource/admin/request/browse.phtml:38
 #: view/access-resource/admin/request/edit.phtml:33
 #: view/access-resource/admin/request/edit.phtml:35
 msgid "Access requests"
-msgstr ""
+msgstr "Demandes d’accès"
 
 #: view/access-resource/admin/request/browse.phtml:42
 msgid "Add new request"
-msgstr ""
+msgstr "Ajouter une nouvelle demande"
 
 #: view/access-resource/admin/request/edit.phtml:35
 msgid "New access request"
-msgstr ""
+msgstr "Nouvelle demande d’accès"
 
 #: view/common/admin/access-resource-list.phtml:27
 msgid "User requests"
-msgstr ""
+msgstr "Requêtes utilisateur"
 
 #: view/common/admin/access-resource-list.phtml:32
 msgid "There are no requests for this resource."
-msgstr ""
+msgstr "Aucune demande pour cette ressource."
 
 #: view/common/admin/access-resource-list.phtml:52
 #: view/common/admin/access-resource-list.phtml:107
 #, php-format
 msgid "user: %s"
-msgstr ""
+msgstr "utilisateur : %s"
 
 #: view/common/admin/access-resource-list.phtml:62
 #: view/common/admin/access-resource-list.phtml:63
 msgid "Toggle request"
-msgstr ""
+msgstr "Inverser la requête"
 
 #: view/common/admin/access-resource-list.phtml:67
 #: view/common/admin/access-resource-list.phtml:68
 msgid "Remove request"
-msgstr ""
+msgstr "Supprimer la requête"
 
 #: view/common/admin/access-resource-list.phtml:83
 msgid "Accesses"
-msgstr ""
+msgstr "Accès"
 
 #: view/common/admin/access-resource-list.phtml:88
 msgid "There are no access for this resource."
-msgstr ""
+msgstr "Aucun accès à cette ressource."
 
 #: view/common/admin/access-resource-list.phtml:117
 #: view/common/admin/access-resource-list.phtml:118
 msgid "Toggle access"
-msgstr ""
+msgstr "Inverser l’accès"
 
 #: view/common/admin/access-resource-list.phtml:122
 #: view/common/admin/access-resource-list.phtml:123
 msgid "Remove access"
-msgstr ""
+msgstr "Supprimer l’ accès"
 
 #: view/common/admin/access-resource-list.phtml:138
 msgid "Add an access"
-msgstr ""
+msgstr "Ajouter un accès"
 
 #: view/common/admin/access-resource-list.phtml:143
 msgid "This resource is public: no access is needed to view it."
 msgstr ""
+"Cette ressource est publique : aucun droit n'est nécessaire pour la "
+"consulter."
 
 #: view/common/admin/access-resource-list.phtml:149
 msgid ""
 "This resource is private and not marked reservable: no access is possible."
 msgstr ""
+"La ressource est privée et n’est pas marquée comme étant réservable : aucun "
+"accès n’est possible."
 
 #: view/common/admin/access-resource-list.phtml:177
 msgid "Add access"
-msgstr ""
+msgstr "Ajouter un accès"
 
 #: view/common/helper/request-resource-access-form.phtml:19
 msgid "Request resource access"
-msgstr ""
+msgstr "Demande d’accès à une ressource"
 
 #: view/common/helper/request-resource-access-form.phtml:28
 msgid "Request Access"
-msgstr ""
+msgstr "Demande d’accès"
 
 #: view/common/helper/request-resource-access-form.phtml:56
 #, php-format
 msgid "To request access please %s or contact the publisher!"
-msgstr ""
+msgstr "Pour demander un accès, merci de %s ou de contacter l’administrateur !"
 
 #: view/common/helper/request-resource-access-form.phtml:57
 #: view/common/helper/request-resource-access-form.phtml:63
 msgid "Login"
-msgstr ""
+msgstr "Identifiez-vous"
 
 #: view/common/helper/request-resource-access-form.phtml:61
 #, php-format
 msgid "To request access please %s or %s!"
-msgstr ""
+msgstr "Pour demander un accès, merci de %s ou de %s !"
 
 #: view/common/helper/request-resource-access-form.phtml:62
 msgid "Register"
-msgstr ""
+msgstr "Inscrivez-vous"
 
 #: view/error/403-access-resource.phtml:4
 msgid "Access Forbidden"
-msgstr ""
+msgstr "Accès interdit"
 
 #: view/guest/site/guest/access-resources.phtml:16
 msgid "Resource access dashboard"
-msgstr ""
+msgstr "Tableau de bord des accès aux ressources"
 
 #: view/guest/site/guest/access-resources.phtml:58
 msgid "No request records yet."
-msgstr ""
+msgstr "Aucune demande."
 
 #: view/guest/site/guest/widget/access-resource.phtml:13
 msgid "Dashboard"
-msgstr ""
+msgstr "Tableau de bord"
 
 #: Module.php:372
 msgid "Access"
-msgstr ""
+msgstr "Accès"
 
 #: Module.php:521
 msgid "Curation"
-msgstr ""
+msgstr "Curation"
 
 #: Module.php:522
 msgid "Curation of resource access"
-msgstr ""
+msgstr "Gestion des accès aux ressources"
 
 #: Module.php:527
 msgid "Reserved Access"
-msgstr ""
+msgstr "Accès restreint"
 
 #: Module.php:528
 msgid "Gives an ability for private resource to be listed (previewed)."
-msgstr ""
+msgstr "Permet aux ressources privées d’être listée (prévisualisées)."
 
 #: src/Form/AccessRequestForm.php:28
 msgid "Request"
-msgstr ""
+msgstr "Requête"
 
 #: src/Form/SettingsFieldset.php:10
 msgid "Access resource"
-msgstr ""
+msgstr "Accès à la ressource"
 
 #: src/Form/SettingsFieldset.php:18
 msgid "Send email to admin and user on access request or update"
 msgstr ""
+"Envoyer un mail à l’administrateur et à l’utilisateur lors des demandes "
+"d’accès ou les mises à jour"
 
 #: src/Form/SettingsFieldset.php:29
 msgid "Admin email subject"
-msgstr ""
+msgstr "Sujet du mail admin"
 
 #: src/Form/SettingsFieldset.php:39
 msgid "Message to admin for new request"
-msgstr ""
+msgstr "Message à l’admin pour une nouvelle demande"
 
 #: src/Form/SettingsFieldset.php:49
 msgid "Message to admin for updated request"
-msgstr ""
+msgstr "Message à l’admin pour une demande mise à jour"
 
 #: src/Form/SettingsFieldset.php:60
 msgid "User email subject"
-msgstr ""
+msgstr "Sujet du mail utilisateur"
 
 #: src/Form/SettingsFieldset.php:70
 msgid "Message to user for new request"
-msgstr ""
+msgstr "Message à l’utilisateur pour une nouvelle demande"
 
 #: src/Form/SettingsFieldset.php:80
 msgid "Message to user for updated request"
-msgstr ""
+msgstr "Message à l’utilisateur pour une demande mise à jour"
 
 #: src/Form/ConfigForm.php:16
 msgid "Restricted access mode (to be set in config/local.config.php)"
-msgstr ""
+msgstr "Mode d’accès restreint (à définir dans config/local.config.php)"
 
 #: src/Form/ConfigForm.php:17
 msgid ""
 "Access to a media is \"reserved\" when it has the property \"curation:"
 "reservedAccess\" filled."
 msgstr ""
+"L’accès au média est \"restreint\" quand la propriété \"curation:"
+"reservedAccess\" est remplie."
 
 #: src/Form/ConfigForm.php:20
 msgid "Global: all users, included guests, have access to all reserved medias"
 msgstr ""
+"Global : tous les utilisateurs, y compris les invités, on accès à tous les "
+"médias restreints"
 
 #: src/Form/ConfigForm.php:21
 msgid "Individual: guests should request access to each reserved media"
 msgstr ""
+"Individuel : les invités doivent demander un accès pour chaque média à accès "
+"restreint"
 
 #: src/Form/Admin/AccessRequestForm.php:24
 msgid " Status"
-msgstr ""
+msgstr " Statut"
 
 #: src/Form/Admin/AccessRequestForm.php:50
 #: src/Api/Representation/AccessRequestRepresentation.php:13
 msgid "New"
-msgstr ""
+msgstr "Nouveau"
 
 #: src/Form/Admin/AccessRequestForm.php:51
 #: src/Api/Representation/AccessRequestRepresentation.php:14
 msgid "Renew"
-msgstr ""
+msgstr "Renouveler"
 
 #: src/Form/Admin/AccessRequestForm.php:52
 #: src/Api/Representation/AccessRequestRepresentation.php:15
 msgid "Accepted"
-msgstr ""
+msgstr "Accepté"
 
 #: src/Form/Admin/AccessRequestForm.php:53
 #: src/Api/Representation/AccessRequestRepresentation.php:16
 msgid "Rejected"
-msgstr ""
+msgstr "Rejeté"
 
 #: src/Form/Admin/AccessResourceForm.php:35
 msgid "Will be automatically set"
-msgstr ""
+msgstr "Défini automatiquement"
 
 #: src/Form/Admin/AccessResourceForm.php:50
 msgid " Format: 2000-01-01 00:00"
-msgstr ""
+msgstr " Format : 2000-01-01 00:00"
 
 #: src/Form/Admin/AccessResourceForm.php:64
 msgid "Format: 2000-01-01 00:00"
-msgstr ""
+msgstr "Format : 2000-01-01 00:00"
 
 #: src/Controller/AccessResourceController.php:316
 msgid "File does not exist."
-msgstr ""
+msgstr "Le fichier n’existe pas."
 
 #: src/Controller/AccessResourceController.php:407
 msgid "Access forbidden"
-msgstr ""
+msgstr "Accès interdit"
 
 #: src/Controller/Admin/AccessController.php:58
 #, php-format
 msgid "Access record with id #%s does not exist"
-msgstr ""
+msgstr "L’enregistrement avec l’identifiant #%s n’existe pas"
 
 #: src/Controller/Admin/AccessController.php:137
 msgid "Access record successfully saved"
-msgstr ""
+msgstr "Enregistrement sauvegardé avec succès"
 
 #: src/Controller/Admin/AccessController.php:168
 msgid "access record"
-msgstr ""
+msgstr "enregistrement des accès"
 
 #: src/Controller/Admin/AccessController.php:205
 msgid "Access record successfully deleted"
-msgstr ""
+msgstr "Enregistrement supprimé avec succès"
 
 #: src/Controller/Admin/RequestController.php:58
 #, php-format
 msgid "Access request record with id #%s does not exist"
-msgstr ""
+msgstr "La demande d’accès avec l’identifiant #%s n’existe pas"
 
 #: src/Controller/Admin/RequestController.php:117
 msgid "Access request record successfully saved"
-msgstr ""
+msgstr "Demande d’accès enregistrée avec succés"
 
 #: src/Controller/Admin/RequestController.php:148
 msgid "access request record"
-msgstr ""
+msgstr "enregistrement de demande d’accès"
 
 #: src/Controller/Admin/RequestController.php:163
 msgid "Access request record successfully deleted"
-msgstr ""
+msgstr "Demande d’accès supprimée avec succés"
 
 #: src/Entity/AccessRequest.php:17
 msgid "new"
-msgstr ""
+msgstr "nouveau"
 
 #: src/Entity/AccessRequest.php:18
 msgid "renew"
-msgstr ""
+msgstr "renouveler"
 
 #: src/Entity/AccessRequest.php:19
 msgid "accepted"
-msgstr ""
+msgstr "accepté"
 
 #: src/Entity/AccessRequest.php:20
 msgid "rejected"
-msgstr ""
+msgstr "rejeté"
 
 #: config/module.config.individual.php:175
 msgid "Access Resources"
-msgstr ""
+msgstr "Accès aux ressources"
 
 #: config/module.config.individual.php:180
 msgid "Access Management"
-msgstr ""
+msgstr "Gestion des accès"
 
 #: config/module.config.individual.php:198
 msgid "Requests"
-msgstr ""
+msgstr "Requêtes"
 
 #: config/module.config.individual.php:216
 msgid "Logs"
-msgstr ""
+msgstr "Journaux"
 
 #: config/module.config.individual.php:249
 #: config/module.config.individual.php:252 config/module.config.php:68
 #: config/module.config.php:71
 msgid "New request status!"
-msgstr ""
+msgstr "Nouveau statut de demande !"
 
 #: config/module.config.individual.php:250 config/module.config.php:69
 msgid ""
 "User created new request to AccessResource. Please, check request dashboard."
 msgstr ""
+"Un utilisateur a formulé une nouvelle demande pour accéder à une ressource. "
+"Merci de consulter le tableau de bord des requêtes."
 
 #: config/module.config.individual.php:251 config/module.config.php:70
 msgid "User request to resource access is updated."
-msgstr ""
+msgstr "La demande utilisateur pour accéder à une ressource a été mise à jour."
 
 #: config/module.config.individual.php:253 config/module.config.php:72
 msgid ""
 "Your request is sent to administrator. You will be inform when your request "
 "will change."
 msgstr ""
+"Votre demande a été envoyé à l’administrateur. Vous sereze informer quand "
+"elle sera prise en compte."
 
 #: config/module.config.individual.php:254 config/module.config.php:73
 msgid ""
 "Your request to resource access is updated. You can check guest user "
 "requests dashboard."
 msgstr ""
+"Votre demande d’accès une ressource a été mise à jour. Vous pouvez les "
+"vérifier dans votre tableau de bord."
