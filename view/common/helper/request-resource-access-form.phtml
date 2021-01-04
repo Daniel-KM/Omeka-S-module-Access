@@ -34,7 +34,7 @@ $formSubmitUrl = $this->url('site/access-resource-request', [], true);
                 <?php if ($visitorHasIdentity): ?>
 
                     <?= $this->form()->openTag($form) ?>
-                    <?php foreach($resources as $resource): ?>
+                    <?php foreach ($resources as $resource): ?>
                 <div>
                     <label>
                         <input type="checkbox" name="resources[]" value="<?= $resource->id() ?>">
@@ -54,13 +54,13 @@ $formSubmitUrl = $this->url('site/access-resource-request', [], true);
                     if ($this->setting('guest_open') === 'close'):
                         echo sprintf(
                             $translate('To request access please %s or contact the publisher!'),
-                            $hyperlink($translate('Login'), $this->url('site/guest/anonymous', ['action' =>'login'], true))
+                            $hyperlink($translate('Login'), $this->url('site/guest/anonymous', ['action' => 'login'], true))
                         );
                     else:
                         echo sprintf(
                             $translate('To request access please %s or %s!'),
-                            $hyperlink($translate('Register'), $this->url('site/guest/anonymous', ['action' =>'register'], true)),
-                            $hyperlink($translate('Login'), $this->url('site/guest/anonymous', ['action' =>'login'], true))
+                            $hyperlink($translate('Register'), $this->url('site/guest/anonymous', ['action' => 'register'], true)),
+                            $hyperlink($translate('Login'), $this->url('site/guest/anonymous', ['action' => 'login'], true))
                         );
                     endif;
                 ?>
