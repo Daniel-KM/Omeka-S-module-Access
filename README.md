@@ -1,6 +1,10 @@
 Access Resource (module for Omeka S)
 ====================================
 
+> __New versions of this module and support for Omeka S version 3.0 and above
+> are available on [GitLab], which seems to respect users and privacy better
+> than the previous repository.__
+
 [Access Resource] is a module for [Omeka S] that allows to protect files to be
 accessed from the anonymous visitors, but nevertheless available for some guest
 users, on identification or by token.
@@ -204,4 +208,5 @@ Copyright
 [OSI]: http://opensource.org
 [Locked file]: http://www.iconarchive.com/show/nuoveXT-icons-by-saki/Mimetypes-file-locked-icon.html
 [Saki]: http://www.iconarchive.com/artist/saki.html
+[GitLab]: https://gitlab.com/Daniel-KM
 [Daniel-KM]: https://github.com/Daniel-KM "Daniel Berthereau"
