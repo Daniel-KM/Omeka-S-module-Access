@@ -234,7 +234,7 @@ class Module extends AbstractModule
         );
     }
 
-    protected function prepareDataToPopulate(SettingsInterface $settings, $settingsType)
+    protected function prepareDataToPopulate(SettingsInterface $settings, string $settingsType): ?array
     {
         $data = parent::prepareDataToPopulate($settings, $settingsType);
         $data['accessresource_access_mode'] = $this->accessMode;
@@ -260,9 +260,6 @@ class Module extends AbstractModule
             return;
         }
 
-        $isOldOmeka = \Omeka\Module::VERSION < 2;
-        $alias = $isOldOmeka ? \Omeka\Entity\Media::class : 'omeka_root';
-
         /** @var \Omeka\Api\Adapter\MediaAdapter $adapter */
         $adapter = $event->getTarget();
 
@@ -272,7 +269,7 @@ class Module extends AbstractModule
         $expr = $qb->expr();
 
         $itemAlias = $adapter->createAlias();
-        $qb->innerJoin($alias . '.item', $itemAlias);
+        $qb->innerJoin('omeka_root.item', $itemAlias);
 
         // Users can view media they do not own that belong to public items.
         $conditions = [
@@ -291,7 +288,7 @@ class Module extends AbstractModule
 
             // Users can view some media if they have access by token.
             if ($access) {
-                $conditions[] = $expr->eq($alias . '.id', $access->getResource()->getId());
+                $conditions[] = $expr->eq('omeka_root.id', $access->getResource()->getId());
             }
 
             // Users can view all media in private items with special property.
@@ -306,10 +303,10 @@ class Module extends AbstractModule
                     $adapter->createNamedParameter($qb, $property->getId())
                 ));
 
-            $conditions[] = $expr->in($itemAlias . '.id', $qbs->getDQL());
+            $conditions[] = $expr->in('omeka_root.id', $qbs->getDQL());
         } elseif ($access) {
             // Users can view some media if they have access by token.
-            $conditions[] = $expr->eq($alias . '.id', $access->getResource()->getId());
+            $conditions[] = $expr->eq('omeka_root.id', $access->getResource()->getId());
         }
 
         $expression = $expr->orX();
@@ -333,10 +330,8 @@ class Module extends AbstractModule
         $query = $request->getContent();
         // Ability to filter by storage_id.
         if (isset($query['storage_id'])) {
-            $isOldOmeka = \Omeka\Module::VERSION < 2;
-            $alias = $isOldOmeka ? \Omeka\Entity\Media::class : 'omeka_root';
             $qb->andWhere($qb->expr()->eq(
-                $alias . '.storageId',
+                'omeka_root.storageId',
                 $adapter->createNamedParameter($qb, $query['storage_id'])
             ));
         }

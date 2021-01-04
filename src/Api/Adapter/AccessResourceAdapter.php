@@ -59,21 +59,12 @@ class AccessResourceAdapter extends AbstractEntityAdapter
 
     public function buildQuery(QueryBuilder $qb, array $query): void
     {
-        $isOldOmeka = \Omeka\Module::VERSION < 2;
-        $alias = $isOldOmeka ? $this->getEntityClass() : 'omeka_root';
         $expr = $qb->expr();
-
-        if (isset($query['id'])) {
-            $qb->andWhere($expr->eq(
-                $alias . '.id',
-                $this->createNamedParameter($qb, $query['id'])
-            ));
-        }
 
         if (isset($query['resource_id'])) {
             $resourceAlias = $this->createAlias();
             $qb->innerJoin(
-                $alias . '.resource',
+                'omeka_root.resource',
                 $resourceAlias
             );
             if (!is_array($query['resource_id'])) {
@@ -88,7 +79,7 @@ class AccessResourceAdapter extends AbstractEntityAdapter
         if (isset($query['user_id'])) {
             $userAlias = $this->createAlias();
             $qb->innerJoin(
-                $alias . '.user',
+                'omeka_root.user',
                 $userAlias
             );
             $qb->andWhere($expr->eq(
@@ -99,14 +90,14 @@ class AccessResourceAdapter extends AbstractEntityAdapter
 
         if (isset($query['enabled'])) {
             $qb->andWhere($expr->eq(
-                $alias . '.enabled',
+                'omeka_root.enabled',
                 $this->createNamedParameter($qb, $query['enabled'])
             ));
         }
 
         if (isset($query['modified'])) {
             $qb->andWhere($expr->eq(
-                $alias . '.modified',
+                'omeka_root.modified',
                 $this->createNamedParameter($qb, $query['modified'])
             ));
         }
