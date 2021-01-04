@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Db\Filter;
 
 use AccessResource\Service\Property\ReservedAccess as PropertyReservedAccess;

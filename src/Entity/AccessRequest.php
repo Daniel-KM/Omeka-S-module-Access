@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Entity;
 
 use DateTime;
@@ -132,7 +132,7 @@ class AccessRequest extends AbstractEntity
     /**
      * @PrePersist
      */
-    public function prePersist(LifecycleEventArgs $eventArgs)
+    public function prePersist(LifecycleEventArgs $eventArgs): void
     {
         $this->created = $this->modified = new DateTime('now');
     }
@@ -140,7 +140,7 @@ class AccessRequest extends AbstractEntity
     /**
      * @PreUpdate
      */
-    public function preUpdate(PreUpdateEventArgs $eventArgs)
+    public function preUpdate(PreUpdateEventArgs $eventArgs): void
     {
         $this->modified = new \DateTime('now');
     }

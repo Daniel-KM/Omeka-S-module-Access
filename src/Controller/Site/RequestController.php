@@ -1,11 +1,11 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Controller\Site;
 
 use AccessResource\Entity\AccessRequest;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
-use Omeka\Mvc\Exception\PermissionDeniedException;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\JsonModel;
+use Omeka\Mvc\Exception\PermissionDeniedException;
 
 class RequestController extends AbstractActionController
 {

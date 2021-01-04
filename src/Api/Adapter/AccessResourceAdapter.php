@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Api\Adapter;
 
 use Doctrine\Common\Inflector\Inflector;
@@ -34,7 +34,7 @@ class AccessResourceAdapter extends AbstractEntityAdapter
         return \AccessResource\Entity\AccessResource::class;
     }
 
-    public function hydrate(Request $request, EntityInterface $entity, ErrorStore $errorStore)
+    public function hydrate(Request $request, EntityInterface $entity, ErrorStore $errorStore): void
     {
         /** @var \AccessResource\Entity\AccessResource $entity */
         $data = $request->getContent();
@@ -57,7 +57,7 @@ class AccessResourceAdapter extends AbstractEntityAdapter
         }
     }
 
-    public function buildQuery(QueryBuilder $qb, array $query)
+    public function buildQuery(QueryBuilder $qb, array $query): void
     {
         $isOldOmeka = \Omeka\Module::VERSION < 2;
         $alias = $isOldOmeka ? $this->getEntityClass() : 'omeka_root';

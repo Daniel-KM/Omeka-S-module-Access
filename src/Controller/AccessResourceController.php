@@ -1,13 +1,13 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace AccessResource\Controller;
 
 use AccessResource\Entity\AccessLog;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Doctrine\Common\Collections\ArrayCollection;
-use Omeka\Mvc\Exception;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
+use Omeka\Mvc\Exception;
 
 class AccessResourceController extends AbstractActionController
 {

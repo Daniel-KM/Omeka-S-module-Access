@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Service;
 
 use AccessResource\Mail\RequestMailer;

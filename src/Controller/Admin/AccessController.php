@@ -1,13 +1,13 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Controller\Admin;
 
 use AccessResource\Entity\AccessLog;
 use AccessResource\Form\Admin\AccessResourceForm;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
-use Omeka\Form\ConfirmForm;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\JsonModel;
 use Laminas\View\Model\ViewModel;
+use Omeka\Form\ConfirmForm;
 
 class AccessController extends AbstractActionController
 {
@@ -306,8 +306,12 @@ class AccessController extends AbstractActionController
         $repository = $entityManager->getRepository(\AccessResource\Entity\AccessResource::class);
 
         $tokenString = PHP_VERSION_ID < 70000
-            ? function() { return sha1(mt_rand()); }
-            : function() { return substr(str_replace(['+', '/', '-', '='], '', base64_encode(random_bytes(16))), 0, 10); };
+            ? function () {
+                return sha1(mt_rand());
+            }
+        : function () {
+            return substr(str_replace(['+', '/', '-', '='], '', base64_encode(random_bytes(16))), 0, 10);
+        };
 
         // Check if the token is unique.
         do {

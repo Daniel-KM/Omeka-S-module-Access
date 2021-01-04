@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Api\Representation;
 
 use AccessResource\Entity\AccessRequest;

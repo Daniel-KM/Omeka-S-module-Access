@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Form\Admin;
 
 use AccessResource\Entity\AccessRequest;
@@ -11,7 +11,7 @@ class AccessRequestForm extends Form
 {
     use ServiceLocatorAwareTrait;
 
-    public function init()
+    public function init(): void
     {
         parent::init();
 

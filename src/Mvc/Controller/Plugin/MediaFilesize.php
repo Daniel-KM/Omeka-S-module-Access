@@ -1,10 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Mvc\Controller\Plugin;
 
+use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Omeka\Api\Representation\MediaRepresentation;
 use Omeka\Mvc\Exception\RuntimeException;
-use Omeka\Stdlib\Message;
-use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 
 class MediaFilesize extends AbstractPlugin
 {

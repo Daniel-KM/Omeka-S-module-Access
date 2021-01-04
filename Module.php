@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource;
 
 if (!class_exists(\Generic\AbstractModule::class)) {
@@ -8,12 +8,12 @@ if (!class_exists(\Generic\AbstractModule::class)) {
 }
 
 use Generic\AbstractModule;
-use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
-use Omeka\Settings\SettingsInterface;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\MvcEvent;
 use Laminas\ServiceManager\ServiceLocatorInterface;
+use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
+use Omeka\Settings\SettingsInterface;
 
 class Module extends AbstractModule
 {
@@ -35,7 +35,7 @@ class Module extends AbstractModule
             : include __DIR__ . '/config/module.config.php';
     }
 
-    public function onBootstrap(MvcEvent $event)
+    public function onBootstrap(MvcEvent $event): void
     {
         parent::onBootstrap($event);
 
@@ -46,7 +46,7 @@ class Module extends AbstractModule
         }
     }
 
-    public function install(ServiceLocatorInterface $serviceLocator)
+    public function install(ServiceLocatorInterface $serviceLocator): void
     {
         parent::install($serviceLocator);
         $this->installVocabulary();
@@ -55,7 +55,7 @@ class Module extends AbstractModule
     /**
      * Add ACL role and rules for this module.
      */
-    protected function addAclRoleAndRulesGlobally()
+    protected function addAclRoleAndRulesGlobally(): void
     {
         $this->getServiceLocator()->get('Omeka\Acl')
             ->allow(
@@ -69,7 +69,7 @@ class Module extends AbstractModule
     /**
      * Add ACL role and rules for this module.
      */
-    protected function addAclRoleAndRulesIndividually()
+    protected function addAclRoleAndRulesIndividually(): void
     {
         /** @var \Omeka\Permissions\Acl $acl */
         $services = $this->getServiceLocator();
@@ -117,7 +117,7 @@ class Module extends AbstractModule
         ;
     }
 
-    public function attachListeners(SharedEventManagerInterface $sharedEventManager)
+    public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
         // Bypass the core filter for media (detach two events of Omeka\Module).
         $listenersByEvent = [];
@@ -246,13 +246,13 @@ class Module extends AbstractModule
      *
      * @param Event $event
      */
-    public function filterMedia(Event $event)
+    public function filterMedia(Event $event): void
     {
         $this->filterMediaOverride($event);
         $this->filterMediaAdditional($event);
     }
 
-    protected function filterMediaOverride(Event $event)
+    protected function filterMediaOverride(Event $event): void
     {
         $services = $this->getServiceLocator();
         $acl = $services->get('Omeka\Acl');
@@ -320,7 +320,7 @@ class Module extends AbstractModule
         $qb->andWhere($expression);
     }
 
-    protected function filterMediaAdditional(Event $event)
+    protected function filterMediaAdditional(Event $event): void
     {
         $adapter = $event->getTarget();
         /** @var \Doctrine\ORM\QueryBuilder $qb */
@@ -342,7 +342,7 @@ class Module extends AbstractModule
         }
     }
 
-    public function handlerRequestCreated(Event $event)
+    public function handlerRequestCreated(Event $event): void
     {
         $services = $this->getServiceLocator();
         if (!$services->get('Omeka\Settings')->get('accessresource_message_send')) {
@@ -354,7 +354,7 @@ class Module extends AbstractModule
         $requestMailer->sendMailToUser('created');
     }
 
-    public function handlerRequestUpdated(Event $event)
+    public function handlerRequestUpdated(Event $event): void
     {
         $services = $this->getServiceLocator();
         if (!$services->get('Omeka\Settings')->get('accessresource_message_send')) {
@@ -371,7 +371,7 @@ class Module extends AbstractModule
      *
      * @param Event $event
      */
-    public function addAccessTab(Event $event)
+    public function addAccessTab(Event $event): void
     {
         $sectionNav = $event->getParam('section_nav');
         $sectionNav['access'] = 'Access'; // @translate
@@ -383,7 +383,7 @@ class Module extends AbstractModule
      *
      * @param Event $event
      */
-    public function displayListAndForm(Event $event)
+    public function displayListAndForm(Event $event): void
     {
         $request = $this->getServiceLocator()->get('Request');
 
@@ -422,7 +422,7 @@ class Module extends AbstractModule
     protected function displayAccessesAccessResource(
         Event $event,
         AbstractResourceEntityRepresentation $resource
-    ) {
+    ): void {
         $services = $this->getServiceLocator();
         $api = $services->get('Omeka\ApiManager');
 
@@ -440,7 +440,7 @@ class Module extends AbstractModule
         );
     }
 
-    public function manageAccessByRequest(Event $event)
+    public function manageAccessByRequest(Event $event): void
     {
         $entity = $event->getTarget();
 
@@ -475,20 +475,20 @@ class Module extends AbstractModule
         }
     }
 
-    public function handleViewBrowseAfterItem(Event $event)
+    public function handleViewBrowseAfterItem(Event $event): void
     {
         // Note: there is no item-set show, but a special case for items browse.
         $view = $event->getTarget();
         echo $view->requestResourceAccessForm($view->items);
     }
 
-    public function handleViewBrowseAfterItemSet(Event $event)
+    public function handleViewBrowseAfterItemSet(Event $event): void
     {
         $view = $event->getTarget();
         echo $view->requestResourceAccessForm($view->itemSets);
     }
 
-    public function handleViewShowAfterItem(Event $event)
+    public function handleViewShowAfterItem(Event $event): void
     {
         $view = $event->getTarget();
         $resources = [$view->item];
@@ -496,14 +496,14 @@ class Module extends AbstractModule
         echo $view->requestResourceAccessForm($resources);
     }
 
-    public function handleViewShowAfterMedia(Event $event)
+    public function handleViewShowAfterMedia(Event $event): void
     {
         $view = $event->getTarget();
         $resources = [$view->media->item(), $view->media];
         echo $view->requestResourceAccessForm($resources);
     }
 
-    public function handleGuestWidgets(Event $event)
+    public function handleGuestWidgets(Event $event): void
     {
         $widgets = $event->getParam('widgets');
         $viewHelpers = $this->getServiceLocator()->get('ViewHelperManager');
@@ -518,7 +518,7 @@ class Module extends AbstractModule
         $event->setParam('widgets', $widgets);
     }
 
-    protected function installVocabulary()
+    protected function installVocabulary(): void
     {
         $vocabulary = [
             'o:namespace_uri' => 'https://curation.omeka.org',

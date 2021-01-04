@@ -1,9 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Mail;
 
 use AccessResource\Traits\ServiceLocatorAwareTrait;
-use Omeka\Entity\User;
 use Laminas\ServiceManager\ServiceLocatorInterface;
+use Omeka\Entity\User;
 
 class RequestMailer
 {
@@ -29,7 +29,7 @@ class RequestMailer
     /**
      * @param string $action "created" or "updated".
      */
-    public function sendMailToAdmin($action)
+    public function sendMailToAdmin($action): void
     {
         if (!isset($action)) {
             return;
@@ -61,7 +61,7 @@ class RequestMailer
     /**
      * @param string $action "created" or "updated".
      */
-    public function sendMailToUser($action)
+    public function sendMailToUser($action): void
     {
         if (!isset($action)) {
             return;

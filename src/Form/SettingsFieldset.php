@@ -1,15 +1,15 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Form;
 
-use Omeka\Form\Element\CkeditorInline;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
+use Omeka\Form\Element\CkeditorInline;
 
 class SettingsFieldset extends Fieldset
 {
     protected $label = 'Access resource'; // @translate
 
-    public function init()
+    public function init(): void
     {
         $this->add([
             'name' => 'accessresource_message_send',

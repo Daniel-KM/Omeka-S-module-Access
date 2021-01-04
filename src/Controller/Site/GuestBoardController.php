@@ -1,10 +1,10 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Controller\Site;
 
 use AccessResource\Traits\ServiceLocatorAwareTrait;
-use Omeka\Mvc\Exception\PermissionDeniedException;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
+use Omeka\Mvc\Exception\PermissionDeniedException;
 
 class GuestBoardController extends AbstractActionController
 {

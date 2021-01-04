@@ -1,13 +1,13 @@
-<?php
+<?php declare(strict_types=1);
 namespace AccessResource\Controller\Admin;
 
 use AccessResource\Entity\AccessLog;
 use AccessResource\Form\Admin\AccessRequestForm;
 use AccessResource\Traits\ServiceLocatorAwareTrait;
-use Omeka\Form\ConfirmForm;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\JsonModel;
 use Laminas\View\Model\ViewModel;
+use Omeka\Form\ConfirmForm;
 
 class RequestController extends AbstractActionController
 {
