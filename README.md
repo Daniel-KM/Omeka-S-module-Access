@@ -189,7 +189,7 @@ The image [Locked file] is licensed under [GNU/GPL].
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2019 (see [Daniel-KM] on GitLab)
+* Copyright Daniel Berthereau, 2019-2021 (see [Daniel-KM] on GitLab)
 * Copyright Saki (image [Locked file], see [Saki])
 
 
