@@ -147,7 +147,7 @@ your archives regularly so you can roll back if needed.
 Troubleshooting
 ---------------
 
-See online issues on the [module issues] page on GitHub.
+See online issues on the [module issues] page on GitLab.
 
 
 License
@@ -155,7 +155,7 @@ License
 
 ### Module
 
-This module is published under the [CeCILL v2.1] licence, compatible with
+This module is published under the [CeCILL v2.1] license, compatible with
 [GNU/GPL] and approved by [FSF] and [OSI].
 
 This software is governed by the CeCILL license under French law and abiding by
@@ -189,19 +189,19 @@ The image [Locked file] is licensed under [GNU/GPL].
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2019 (see [Daniel-KM] on GitHub)
+* Copyright Daniel Berthereau, 2019 (see [Daniel-KM] on GitLab)
 * Copyright Saki (image [Locked file], see [Saki])
 
 
-[Access Resource]: https://github.com/Daniel-KM/Omeka-S-module-AccessResource
+[Access Resource]: https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource
 [Omeka S]: https://omeka.org/s
-[Generic]: https://github.com/Daniel-KM/Omeka-S-module-Generic
-[Guest]: https://github.com/Daniel-KM/Omeka-S-module-Guest
-[Blocks Disposition]: https://github.com/Daniel-KM/Omeka-S-module-BlocksDisposition
-[Contact Us]: https://github.com/Daniel-KM/Omeka-S-module-ContactUs
+[Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
+[Guest]: https://gitlab.com/Daniel-KM/Omeka-S-module-Guest
+[Blocks Disposition]: https://gitlab.com/Daniel-KM/Omeka-S-module-BlocksDisposition
+[Contact Us]: https://gitlab.com/Daniel-KM/Omeka-S-module-ContactUs
 [Installing a module]: http://dev.omeka.org/docs/s/user-manual/modules/#installing-modules
-[`AccessResource.zip`]: https://github.com/Daniel-KM/Omeka-S-module-AccessResource/releases
-[module issues]: https://github.com/Daniel-KM/Omeka-S-module-AccessResource/issues
+[`AccessResource.zip`]: https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource/-/releases
+[module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource/-/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org
@@ -209,4 +209,4 @@ Copyright
 [Locked file]: http://www.iconarchive.com/show/nuoveXT-icons-by-saki/Mimetypes-file-locked-icon.html
 [Saki]: http://www.iconarchive.com/artist/saki.html
 [GitLab]: https://gitlab.com/Daniel-KM
-[Daniel-KM]: https://github.com/Daniel-KM "Daniel Berthereau"
+[Daniel-KM]: https://gitlab.com/Daniel-KM "Daniel Berthereau"
