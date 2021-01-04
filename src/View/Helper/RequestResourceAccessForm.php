@@ -26,7 +26,7 @@ class RequestResourceAccessForm extends AbstractHelper
 
     public function __invoke($resources = null)
     {
-        if (!$resources) {
+        if (is_null($resources)) {
             return $this;
         }
         if (!is_array($resources)) {
