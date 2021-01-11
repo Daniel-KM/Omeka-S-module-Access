@@ -164,13 +164,25 @@ class AccessResourceController extends AbstractActionController
             ? mb_substr($filename, 0, -mb_strlen($extension) - 1)
             : $filename;
 
-        /** @var \Omeka\Api\Representation\MediaRepresentation $value */
-        $value = $storageId
-            ? $this->api()->searchOne('media', ['storage_id' => $storageId])->getContent()
-            : null;
+        // "storage_id" is not available through default api, so use core entity
+        // manager. Nevertheless, the call to the api allows to check rights.
+        if ($storageId) {
+            $services = $this->getServiceLocator();
+            $media = $services->get('Omeka\EntityManager')
+                ->getRepository(\Omeka\Entity\Media::class)
+                ->findOneBy(['storageId' => $storageId]);
+            if ($media) {
+                /** @var \Omeka\Api\Representation\MediaRepresentation $media */
+                // TODO Check if getting representation from adapter is enough to check rights and really quicker.
+                // $media = $services->get('Omeka\ApiAdapterManager')->get('media')->getRepresentation($media);
+                $media = $this->api()->read('media', $media->getId(), ['initialize' => false])->getContent();
+            }
+        } else {
+            $media = null;
+        }
 
-        $this->data->set($key, $value);
-        return $value;
+        $this->data->set($key, $media);
+        return $media;
     }
 
     protected function getMediaAccess()
@@ -205,7 +217,7 @@ class AccessResourceController extends AbstractActionController
             } elseif (!is_null($user)) {
                 $accessResource = $entityManager
                     ->getRepository(\AccessResource\Entity\AccessResource::class)
-                    ->findOneBy(['resource' => $media->id()]);
+                    ->findOneBy(['user' => $user->getId(), 'resource' => $media->id()]);
             }
 
             // Deny for visitor without token.
