@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\Db\Filter;
 
 use AccessResource\Service\Property\ReservedAccess as PropertyReservedAccess;
-use Doctrine\DBAL\Types\Type;
 use Omeka\Db\Filter\ResourceVisibilityFilter as BaseResourceVisibilityFilter;
 
 /**
@@ -29,16 +29,20 @@ class ReservedResourceVisibilityFilter extends BaseResourceVisibilityFilter
         // Resource should be private.
         $reservedConstraints[] = sprintf('%s.is_public = 0', $alias);
 
-        // Resource should have property 'curation:reservedAccess'.
+        // Resource should have property 'curation:reservedAccess', not empty.
         $property = $this->serviceLocator->get(PropertyReservedAccess::class);
         $reservedConstraints[] = sprintf(
-            '%s.id IN (SELECT `value`.`resource_id` FROM `value` WHERE `value`.`property_id` = %s)',
+            '%s.id IN (
+    SELECT `value`.`resource_id`
+    FROM `value`
+    WHERE `value`.`property_id` = %s
+        AND `value`.`value` IS NOT NULL
+        AND `value`.`value` != "0"
+)',
             $alias,
-            $this->getConnection()->quote($property->getId(), Type::INTEGER)
+            (int) $property->getId()
         );
 
-        $constraints .= sprintf(' OR (%s)', implode(' AND ', $reservedConstraints));
-
-        return $constraints;
+        return $constraints . sprintf(' OR (%s)', implode(' AND ', $reservedConstraints));
     }
 }
