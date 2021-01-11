@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\View\Helper;
 
 use AccessResource\Form\AccessRequestForm;
@@ -12,7 +13,7 @@ class RequestResourceAccessForm extends AbstractHelper
     /**
      * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[]
      */
-    protected $resources;
+    protected $resources = [];
 
     /**
      * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[]
@@ -24,6 +25,12 @@ class RequestResourceAccessForm extends AbstractHelper
      */
     protected $inaccessibleReservedResources;
 
+    /**
+     * Prepare the user request resource access form.
+     *
+     * @param \Omeka\Api\Representation\AbstractResourceEntityRepresentation[]|\Omeka\Api\Representation\AbstractResourceEntityRepresentation|null $resources
+     * @return self|string
+     */
     public function __invoke($resources = null)
     {
         if (is_null($resources)) {
@@ -38,31 +45,43 @@ class RequestResourceAccessForm extends AbstractHelper
         return $this->render();
     }
 
-    public function setResources(array $resources)
+    /**
+     * @param \Omeka\Api\Representation\AbstractResourceEntityRepresentation[] $resources
+     */
+    public function setResources(array $resources): self
     {
         $this->resources = $resources;
         return $this;
     }
 
-    public function getResources()
+    /**
+     * @return \Omeka\Api\Representation\AbstractResourceEntityRepresentation[]
+     */
+    public function getResources(): array
     {
         return $this->resources;
     }
 
-    public function setReservedResources(array $reservedResources)
+    /**
+     * @param \Omeka\Api\Representation\AbstractResourceEntityRepresentation[] $reservedResources
+     */
+    public function setReservedResources(array $reservedResources): self
     {
         $this->reservedResources = $reservedResources;
         return $this;
     }
 
-    public function getReservedResources()
+    /**
+     * @return \Omeka\Api\Representation\AbstractResourceEntityRepresentation[]
+     */
+    public function getReservedResources(): array
     {
         if (is_array($this->reservedResources)) {
             return $this->reservedResources;
         }
 
         // Check if there is any private resources with reservedAccess property.
-        $reservedResources = [];
+        $reserveds = [];
         /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource */
         foreach ($this->getResources() as $resource) {
             if ($resource->isPublic()) {
@@ -73,37 +92,46 @@ class RequestResourceAccessForm extends AbstractHelper
             if (!$value) {
                 continue;
             }
-
-            $reservedResources[] = $resource;
+            $reserveds[] = $resource;
         }
 
-        $this->setReservedResources($reservedResources);
-        return $reservedResources;
+        $this->setReservedResources($reserveds);
+        return $reserveds;
     }
 
-    public function setInaccessibleReservedResources(array $inaccessibleReservedResources)
+    /**
+     * @param \Omeka\Api\Representation\AbstractResourceEntityRepresentation[] $inaccessibleReservedResources
+     */
+    public function setInaccessibleReservedResources(array $inaccessibleReservedResources): self
     {
         $this->inaccessibleReservedResources = $inaccessibleReservedResources;
         return $this;
     }
 
-    public function getInaccessibleReservedResources()
+    /**
+     * @return \Omeka\Api\Representation\AbstractResourceEntityRepresentation[]
+     */
+    public function getInaccessibleReservedResources(): array
     {
         if (is_array($this->inaccessibleReservedResources)) {
             return $this->inaccessibleReservedResources;
         }
 
-        $services = $this->getServiceLocator();
-        $reservedResources = $this->getReservedResources();
-
-        /** @var \Omeka\Entity\User $user */
-        $user = $services->get('Omeka\AuthenticationService')->getIdentity();
-        if (!$user) {
-            $this->setInaccessibleReservedResources($reservedResources);
+        $reserveds = $this->getReservedResources();
+        if (!count($reserveds)) {
+            $this->setInaccessibleReservedResources([]);
             return $this->inaccessibleReservedResources;
         }
 
-        $acl = $this->getServiceLocator()->get('Omeka\Acl');
+        /** @var \Omeka\Entity\User $user */
+        $user = $this->getView()->identity();
+        if (!$user) {
+            $this->setInaccessibleReservedResources($reserveds);
+            return $this->inaccessibleReservedResources;
+        }
+
+        $services = $this->getServiceLocator();
+        $acl = $services->get('Omeka\Acl');
         if ($acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
             $this->setInaccessibleReservedResources([]);
             return $this->inaccessibleReservedResources;
@@ -111,13 +139,12 @@ class RequestResourceAccessForm extends AbstractHelper
 
         $reservedResourcesIds = array_map(function ($v) {
             return $v->id();
-        }, $reservedResources);
+        }, $reserveds);
 
+        // The view api cannot manage options.
         /** @var \Omeka\Api\Manager $api */
         $api = $services->get('Omeka\ApiManager');
-
-        // TODO Output column directly (see AbstractEntityAdapoter with getAssociationNames().
-        $accessRecords = $api
+        $accessResourceIds = $api
             ->search(
                 'access_resources',
                 [
@@ -125,62 +152,63 @@ class RequestResourceAccessForm extends AbstractHelper
                     'resource_id' => $reservedResourcesIds,
                     'enabled' => true,
                 ],
-                ['responseContent' => 'resource']
+                [
+                    'initialize' => false,
+                    'finalize' => false,
+                    // Returns the associated resource ids.
+                    'returnScalar' => 'resource',
+                ]
             )
             ->getContent();
-        $accessRecordsIds = array_map(function ($v) {
-            return $v->getResource()->getId();
-        }, $accessRecords);
 
-        $inaccessibleReservedResources = array_filter($reservedResources, function ($v) use ($accessRecordsIds) {
-            return !in_array($v->id(), $accessRecordsIds);
+        $inaccessibleReserveds = array_filter($reserveds, function ($v) use ($accessResourceIds) {
+            return !in_array($v->id(), $accessResourceIds);
         });
 
-        $this->setInaccessibleReservedResources($inaccessibleReservedResources);
-        return $inaccessibleReservedResources;
+        $this->setInaccessibleReservedResources($inaccessibleReserveds);
+        return $inaccessibleReserveds;
     }
 
-    public function form()
+    public function form(): AccessRequestForm
     {
-        $form = $this->getServiceLocator()->get('FormElementManager')->get(AccessRequestForm::class);
-        return $form;
+        return $this->getServiceLocator()->get('FormElementManager')->get(AccessRequestForm::class);
     }
 
-    public function canSendRequest()
+    public function canSendRequest(): bool
     {
         // Users with access to view all resources should not be able to send
         // access requests.
         $acl = $this->getServiceLocator()->get('Omeka\Acl');
-        if ($acl->userIsAllowed('Omeka\Entity\Resource', 'view-all')) {
+        if ($acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
             return false;
         }
 
         // If there are no reserved resources on a page, user should not be able
         // to send access requests.
-        $reservedResources = $this->getReservedResources();
-        if (!count($reservedResources)) {
+        $reserveds = $this->getReservedResources();
+        if (!count($reserveds)) {
             return false;
         }
 
         // If user already has access to all reserved resources he should not be
         // able to send access requests.
-        $inaccessibleReservedResources = $this->getInaccessibleReservedResources();
-        if (!count($inaccessibleReservedResources)) {
+        $inaccessibleReserveds = $this->getInaccessibleReservedResources();
+        if (!count($inaccessibleReserveds)) {
             return false;
         }
 
         return true;
     }
 
-    public function render()
+    public function render(): string
     {
         if (!$this->canSendRequest()) {
-            return null;
+            return '';
         }
 
         // Visitors without user account should not be able to send access
         // requests.
-        $user = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
+        $user = $this->getView()->identity();
 
         return $this->getView()->partial(
             'common/helper/request-resource-access-form',
