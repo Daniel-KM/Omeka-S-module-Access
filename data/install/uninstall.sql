@@ -1,5 +1,5 @@
 SET FOREIGN_KEY_CHECKS=0;
-DROP TABLE access_log;
-DROP TABLE access_request;
-DROP TABLE access_resource;
+DROP TABLE IF EXISTS `access_log`;
+DROP TABLE IF EXISTS `access_request`;
+DROP TABLE IF EXISTS `access_resource`;
 SET FOREIGN_KEY_CHECKS=1;

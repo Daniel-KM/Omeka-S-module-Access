@@ -17,7 +17,9 @@ class AccessLog extends AbstractEntity
     /**
      * @var int
      * @Id
-     * @Column(type="integer")
+     * @Column(
+     *     type="integer"
+     * )
      * @GeneratedValue
      */
     protected $id;
@@ -29,7 +31,7 @@ class AccessLog extends AbstractEntity
      *     targetEntity="Omeka\Entity\User"
      * )
      * @JoinColumn(
-     *     onDelete="SET NULL"),
+     *     onDelete="SET NULL",
      *    nullable=true
      * )
      */
@@ -37,27 +39,38 @@ class AccessLog extends AbstractEntity
 
     /**
      * @var string
-     * @Column(type="string")
+     * @Column(
+     *     type="string",
+     *     length=190
+     * )
      */
     protected $action;
 
     /**
      * @todo Use true record as id and make it nullable? Or deletable? (this is the access or the request id).
      * @var int
-     * @Column(type="integer")
+     * @Column(
+     *     type="integer"
+     * )
      */
     protected $recordId;
 
     /**
      * This is "access" or "request".
      * @var string
-     * @Column(type="string")
+     * @Column(
+     *     type="string",
+     *     length=190
+     * )
      */
     protected $type;
 
     /**
      * @var \DateTime
-     * @Column(type="datetime", nullable=true)
+     * @Column(
+     *     type="datetime",
+     *     nullable=true
+     * )
      */
     protected $date;
 
@@ -66,57 +79,57 @@ class AccessLog extends AbstractEntity
         return $this->id;
     }
 
-    public function setUser(User $user = null)
+    public function setUser(?User $user = null): self
     {
         $this->user = $user;
         return $this;
     }
 
-    public function getUser()
+    public function getUser(): ?User
     {
         return $this->user;
     }
 
-    public function setAction($action)
+    public function setAction(string $action): self
     {
         $this->action = $action;
         return $this;
     }
 
-    public function getAction()
+    public function getAction(): ?string
     {
         return $this->action;
     }
 
-    public function setRecordId($recordId)
+    public function setRecordId(int $recordId): self
     {
         $this->recordId = $recordId;
         return $this;
     }
 
-    public function getRecordId()
+    public function getRecordId(): ?int
     {
         return $this->recordId;
     }
 
-    public function setType($type)
+    public function setType(string $type): self
     {
         $this->type = $type;
         return $this;
     }
 
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
 
-    public function setDate(DateTime $date = null)
+    public function setDate(?DateTime $date = null): self
     {
         $this->date = $date;
         return $this;
     }
 
-    public function getDate()
+    public function getDate(): ?DateTime
     {
         return $this->date;
     }

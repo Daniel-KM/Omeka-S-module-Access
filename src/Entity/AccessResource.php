@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\Entity;
 
 use DateTime;
@@ -48,43 +49,66 @@ class AccessResource extends AbstractEntity
 
     /**
      * @var string
-     * @Column(type="string", nullable=true)
+     * @Column(
+     *     type="string",
+     *     length=190,
+     *     nullable=true
+     * )
      */
     protected $token;
 
     /**
      * @var bool
-     * @Column(type="boolean", nullable=false, options={"default": false})
+     * @Column(
+     *     type="boolean",
+     *     nullable=false,
+     *     options={"default": false}
+     * )
      */
     protected $enabled = false;
 
     /**
      * @var bool
-     * @Column(type="boolean", nullable=false, options={"default": false})
+     * @Column(
+     *     type="boolean",
+     *     nullable=false,
+     *     options={"default": false}
+     * )
      */
     protected $temporal = false;
 
     /**
      * @var DateTime
-     * @Column(type="datetime", nullable=true)
+     * @Column(
+     *     type="datetime",
+     *     nullable=true
+     * )
      */
     protected $startDate;
 
     /**
      * @var DateTime
-     * @Column(type="datetime", nullable=true)
+     * @Column(
+     *     type="datetime",
+     *     nullable=true
+     * )
      */
     protected $endDate;
 
     /**
      * @var \DateTime
-     * @Column(type="datetime")
+     * @Column(
+     *     type="datetime"
+     * )
      */
     protected $created;
 
     /**
      * @var \DateTime
-     * @Column(type="datetime", nullable=true)
+     * @Column(
+     *     type="datetime",
+     *     nullable=true
+     * )
      */
     protected $modified;
 
@@ -93,101 +117,101 @@ class AccessResource extends AbstractEntity
         return $this->id;
     }
 
-    public function setResource(Resource $resource)
+    public function setResource(Resource $resource): self
     {
         $this->resource = $resource;
         return $this;
     }
 
-    public function getResource()
+    public function getResource(): Resource
     {
         return $this->resource;
     }
 
-    public function setUser(User $user = null)
+    public function setUser(?User $user = null): self
     {
         $this->user = $user;
         return $this;
     }
 
-    public function getUser()
+    public function getUser(): ?User
     {
         return $this->user;
     }
 
-    public function setToken($token)
+    public function setToken(string $token): self
     {
         $this->token = $token;
         return $this;
     }
 
-    public function getToken()
+    public function getToken(): string
     {
         return $this->token;
     }
 
-    public function setEnabled($enabled)
+    public function setEnabled($enabled): self
     {
-        $this->enabled = $enabled;
+        $this->enabled = (bool) $enabled;
         return $this;
     }
 
-    public function getEnabled()
+    public function getEnabled(): bool
     {
         return $this->enabled;
     }
 
-    public function setTemporal($temporal)
+    public function setTemporal($temporal): self
     {
-        $this->temporal = $temporal;
+        $this->temporal = (bool) $temporal;
         return $this;
     }
 
-    public function getTemporal()
+    public function getTemporal(): bool
     {
         return $this->temporal;
     }
 
-    public function setStartDate(DateTime $startDate = null)
+    public function setStartDate(?DateTime $startDate = null): self
     {
         $this->startDate = $startDate;
         return $this;
     }
 
-    public function getStartDate()
+    public function getStartDate(): ?DateTime
     {
         return $this->startDate;
     }
 
-    public function setEndDate(DateTime $endDate = null)
+    public function setEndDate(?DateTime $endDate = null): self
     {
         $this->endDate = $endDate;
         return $this;
     }
 
-    public function getEndDate()
+    public function getEndDate(): ?DateTime
     {
         return $this->endDate;
     }
 
-    public function setCreated(DateTime $dateTime)
+    public function setCreated(DateTime $dateTime): self
     {
         $this->created = $dateTime;
         return $this;
     }
 
-    public function getCreated()
+    public function getCreated(): DateTime
     {
         return $this->created;
     }
 
-    public function setModified(DateTime $dateTime = null)
+    public function setModified(?DateTime $dateTime = null): self
     {
         $this->modified = $dateTime;
         return $this;
     }
 
-    public function getModified()
+    public function getModified(): ?DateTime
     {
         return $this->modified;
     }
@@ -205,6 +229,6 @@ class AccessResource extends AbstractEntity
      */
     public function preUpdate(PreUpdateEventArgs $eventArgs): void
     {
-        $this->modified = new \DateTime('now');
+        $this->modified = new DateTime('now');
     }
 }

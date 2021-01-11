@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\Entity;
 
 use DateTime;
@@ -22,7 +23,9 @@ class AccessRequest extends AbstractEntity
     /**
      * @int
      * @Id
-     * @Column(type="integer")
+     * @Column(
+     *     type="integer"
+     * )
      * @GeneratedValue
      */
     protected $id;
@@ -53,19 +56,29 @@ class AccessRequest extends AbstractEntity
 
     /**
      * @var string
-     * @Column(type="string", nullable=false, options={"default": "new"})
+     * @Column(
+     *     type="string",
+     *     nullable=false,
+     *     length=190,
+     *     options={"default": "new"}
+     * )
      */
     protected $status = self::STATUS_NEW;
 
     /**
      * @var \DateTime
-     * @Column(type="datetime")
+     * @Column(
+     *     type="datetime"
+     * )
      */
     protected $created;
 
     /**
      * @var \DateTime
-     * @Column(type="datetime", nullable=true)
+     * @Column(
+     *     type="datetime",
+     *     nullable=true
+     * )
      */
     protected $modified;
 
@@ -74,57 +87,57 @@ class AccessRequest extends AbstractEntity
         return $this->id;
     }
 
-    public function setResource(Resource $resource)
+    public function setResource(Resource $resource): self
     {
         $this->resource = $resource;
         return $this;
     }
 
-    public function getResource()
+    public function getResource(): Resource
     {
         return $this->resource;
     }
 
-    public function setUser(User $user)
+    public function setUser(User $user): self
     {
         $this->user = $user;
         return $this;
     }
 
-    public function getUser()
+    public function getUser(): User
     {
         return $this->user;
     }
 
-    public function setStatus($status)
+    public function setStatus(string $status): self
     {
         $this->status = $status;
         return $this;
     }
 
-    public function getStatus()
+    public function getStatus(): string
     {
         return $this->status;
     }
 
-    public function setCreated(DateTime $dateTime)
+    public function setCreated(DateTime $dateTime): self
     {
         $this->created = $dateTime;
         return $this;
     }
 
-    public function getCreated()
+    public function getCreated(): DateTime
     {
         return $this->created;
     }
 
-    public function setModified(DateTime $dateTime = null)
+    public function setModified(?DateTime $dateTime = null): self
     {
         $this->modified = $dateTime;
         return $this;
     }
 
-    public function getModified()
+    public function getModified(): ?DateTime
     {
         return $this->modified;
     }
@@ -142,6 +155,6 @@ class AccessRequest extends AbstractEntity
      */
     public function preUpdate(PreUpdateEventArgs $eventArgs): void
     {
-        $this->modified = new \DateTime('now');
+        $this->modified = new DateTime('now');
     }
 }
