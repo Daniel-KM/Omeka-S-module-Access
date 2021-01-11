@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\Controller\Admin;
 
 use AccessResource\Entity\AccessLog;
@@ -51,8 +52,8 @@ class LogController extends AbstractActionController
 
         $this->paginator($log_count[1], $page, $perPage);
 
-        $view = new ViewModel();
-        $view->setVariable('logs', $logs);
-        return $view;
+        return new ViewModel([
+            'logs' => $logs,
+        ]);
     }
 }

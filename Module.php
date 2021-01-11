@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource;
 
 if (!class_exists(\Generic\AbstractModule::class)) {

@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\Controller\Admin;
 
 use AccessResource\Entity\AccessLog;
@@ -36,9 +37,9 @@ class RequestController extends AbstractActionController
 
         $this->paginator($response->getTotalResults(), $page);
 
-        $view = new ViewModel;
-        $view->setVariable('accessRequests', $response->getContent());
-        return $view;
+        return new ViewModel([
+            'accessRequests' => $response->getContent(),
+        ]);
     }
 
     public function addAction()
@@ -102,7 +103,7 @@ class RequestController extends AbstractActionController
                         ->setAction('update_to_' . $accessRequest->status())
                         ->setUser($accessUser)
                         ->setRecordId($accessRequest->id())
-                        ->setType('request')
+                        ->setType(AccessLog::TYPE_REQUEST)
                         ->setDate(new \DateTime());
                     $entityManager->flush();
 
@@ -124,13 +125,12 @@ class RequestController extends AbstractActionController
 
         $dataType = $services->get('Omeka\DataTypeManager')->get('resource');
 
-        $view = new ViewModel;
-        $view
-            ->setVariable('dataType', $dataType)
-            ->setVariable('accessRequest', $accessRequest)
-            ->setVariable('requestedResource', $requestedResource)
-            ->setVariable('form', $form);
-        return $view;
+        return new ViewModel([
+            'dataType' => $dataType,
+            'accessRequest' => $accessRequest,
+            'requestedResource' => $requestedResource,
+            'form' => $form,
+        ]);
     }
 
     public function deleteConfirmAction()
@@ -140,16 +140,16 @@ class RequestController extends AbstractActionController
         $resource = $response->getContent();
         $values = ['@id' => $resource->id()];
 
-        $view = new ViewModel;
-        $view
+        $view = new ViewModel([
+            'resource' => $resource,
+            'resourceLabel' => 'access request record', // @translate
+            'partialPath' => 'access-resource/admin/request/show-details',
+            'linkTitle' => $linkTitle,
+            'values' => json_encode($values),
+        ]);
+        return $view
             ->setTerminal(true)
-            ->setTemplate('common/delete-confirm-details')
-            ->setVariable('resource', $resource)
-            ->setVariable('resourceLabel', 'access request record') // @translate
-            ->setVariable('partialPath', 'access-resource/admin/request/show-details')
-            ->setVariable('linkTitle', $linkTitle)
-            ->setVariable('values', json_encode($values));
-        return $view;
+            ->setTemplate('common/delete-confirm-details');
     }
 
     public function deleteAction()
@@ -180,7 +180,7 @@ class RequestController extends AbstractActionController
     public function toggleAction()
     {
         if ($this->getRequest()->isPost()) {
-            $userRole = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity()->getRole();
+            $userRole = $this->identity()->getRole();
             // TODO Use the permission check.
             $isAdmin = in_array($userRole, [\Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN, \Omeka\Permissions\Acl::ROLE_SITE_ADMIN]);
             if ($isAdmin) {

@@ -11,6 +11,9 @@ use Omeka\Entity\User;
  */
 class AccessLog extends AbstractEntity
 {
+    const TYPE_ACCESS = 'access'; // @translate
+    const TYPE_REQUEST = 'request'; // @translate
+
     /**
      * @var int
      * @Id

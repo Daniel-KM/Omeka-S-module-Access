@@ -1,19 +1,17 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\Controller\Site;
 
 use AccessResource\Entity\AccessRequest;
-use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\JsonModel;
 use Omeka\Mvc\Exception\PermissionDeniedException;
 
 class RequestController extends AbstractActionController
 {
-    use ServiceLocatorAwareTrait;
-
     public function submitAction()
     {
-        $user = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
+        $user = $this->identity();
         if (!$user) {
             throw new PermissionDeniedException;
         }
@@ -53,10 +51,12 @@ class RequestController extends AbstractActionController
             }
         }
 
-        $result = new JsonModel();
-        $result
-            ->setVariable('status', \Laminas\Http\Response::STATUS_CODE_200)
-            ->setVariable('data', ['success' => true]);
+        $result = new JsonModel([
+            'status' => \Laminas\Http\Response::STATUS_CODE_200,
+            'data' => [
+                'success' => true,
+            ],
+        ]);
 
         // $event = new Event('AccessResource\Controller\RequestController', $this);
         // $event->setName('view.handle.after');

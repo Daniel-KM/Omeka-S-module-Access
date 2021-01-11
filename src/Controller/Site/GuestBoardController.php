@@ -1,15 +1,13 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\Controller\Site;
 
-use AccessResource\Traits\ServiceLocatorAwareTrait;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 use Omeka\Mvc\Exception\PermissionDeniedException;
 
 class GuestBoardController extends AbstractActionController
 {
-    use ServiceLocatorAwareTrait;
-
     public function indexAction()
     {
         $params = $this->params()->fromRoute();
@@ -19,7 +17,7 @@ class GuestBoardController extends AbstractActionController
 
     public function browseAction()
     {
-        $user = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
+        $user = $this->identity();
         // To simplify routing, check of rights is done here.
         if (!$user) {
             throw new PermissionDeniedException();
@@ -40,10 +38,10 @@ class GuestBoardController extends AbstractActionController
 
         $this->paginator($requests->getTotalResults(), $page, $perPage);
 
-        $view = new ViewModel();
-        $view
-            ->setTemplate('guest/site/guest/access-resources')
-            ->setVariable('accessRequests', $requests->getContent());
-        return $view;
+        $view = new ViewModel([
+            'accessRequests' => $requests->getContent(),
+        ]);
+        return $view
+            ->setTemplate('guest/site/guest/access-resources');
     }
 }

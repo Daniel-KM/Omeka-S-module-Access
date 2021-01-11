@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource;
 
 return [
@@ -45,13 +46,15 @@ return [
         ],
     ],
     'controllers' => [
+        'invokables' => [
+            'AccessResource\Controller\Site\GuestBoard' => Controller\Site\GuestBoardController::class,
+            'AccessResource\Controller\Site\Request' => Controller\Site\RequestController::class,
+        ],
         'factories' => [
             'AccessResource\Controller\AccessResource' => Service\Controller\ControllerFactory::class,
             'AccessResource\Controller\Admin\Access' => Service\Controller\ControllerFactory::class,
             'AccessResource\Controller\Admin\Log' => Service\Controller\ControllerFactory::class,
             'AccessResource\Controller\Admin\Request' => Service\Controller\ControllerFactory::class,
-            'AccessResource\Controller\Site\GuestBoard' => Service\Controller\ControllerFactory::class,
-            'AccessResource\Controller\Site\Request' => Service\Controller\ControllerFactory::class,
         ],
     ],
     'controller_plugins' => [

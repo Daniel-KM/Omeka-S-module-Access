@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\Controller\Admin;
 
 use AccessResource\Entity\AccessLog;
@@ -35,9 +36,9 @@ class AccessController extends AbstractActionController
 
         $this->paginator($response->getTotalResults(), $page);
 
-        $view = new ViewModel;
-        $view->setVariable('accessResources', $response->getContent());
-        return $view;
+        return new ViewModel([
+            'accessResources' => $response->getContent(),
+        ]);
     }
 
     public function addAction()
@@ -105,7 +106,7 @@ class AccessController extends AbstractActionController
                         ->setAction('update')
                         ->setUser($accessUser)
                         ->setRecordId($accessResource->id())
-                        ->setType('access')
+                        ->setType(AccessLog::TYPE_ACCESS)
                         ->setDate(new \DateTime());
                     $entityManager->flush();
                 } else {
@@ -126,7 +127,7 @@ class AccessController extends AbstractActionController
                         ->setAction('create')
                         ->setUser($accessUser)
                         ->setRecordId($accessResource->id())
-                        ->setType('access')
+                        ->setType(AccessLog::TYPE_ACCESS)
                         ->setDate(new \DateTime());
                     $entityManager->flush();
 
@@ -144,13 +145,12 @@ class AccessController extends AbstractActionController
 
         $dataType = $services->get('Omeka\DataTypeManager')->get('resource');
 
-        $view = new ViewModel;
-        $view
-            ->setVariable('dataType', $dataType)
-            ->setVariable('accessResource', $accessResource)
-            ->setVariable('requestedResource', $requestedResource)
-            ->setVariable('form', $form);
-        return $view;
+        return new ViewModel([
+            'dataType' => $dataType,
+            'accessResource' => $accessResource,
+            'requestedResource' => $requestedResource,
+            'form' => $form,
+        ]);
     }
 
     public function deleteConfirmAction()
@@ -160,16 +160,16 @@ class AccessController extends AbstractActionController
         $resource = $response->getContent();
         $values = ['@id' => $resource->id()];
 
-        $view = new ViewModel;
-        $view
+        $view = new ViewModel([
+            'resource' => $resource,
+            'resourceLabel' => 'access record', // @translate
+            'partialPath' => 'access-resource/admin/access/show-details',
+            'linkTitle' => $linkTitle,
+            'values' => json_encode($values),
+        ]);
+        return $view
             ->setTerminal(true)
-            ->setTemplate('common/delete-confirm-details')
-            ->setVariable('resource', $resource)
-            ->setVariable('resourceLabel', 'access record') // @translate
-            ->setVariable('partialPath', 'access-resource/admin/access/show-details')
-            ->setVariable('linkTitle', $linkTitle)
-            ->setVariable('values', json_encode($values));
-        return $view;
+            ->setTemplate('common/delete-confirm-details');
     }
 
     public function deleteAction()
@@ -198,7 +198,7 @@ class AccessController extends AbstractActionController
                         ->setAction('delete')
                         ->setUser($accessUser)
                         ->setRecordId($id)
-                        ->setType('access')
+                        ->setType(AccessLog::TYPE_ACCESS)
                         ->setDate(new \DateTime());
                     $entityManager->flush();
 
@@ -229,7 +229,7 @@ class AccessController extends AbstractActionController
                             ->setAction('delete')
                             ->setUser($accessUser)
                             ->setRecordId($id)
-                            ->setType('access')
+                            ->setType(AccessLog::TYPE_ACCESS)
                             ->setDate(new \DateTime());
                         $entityManager->flush();
                     }
@@ -253,7 +253,7 @@ class AccessController extends AbstractActionController
         $enabled = 1;
 
         if ($this->getRequest()->isPost()) {
-            $userRole = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity()->getRole();
+            $userRole = $this->identity()->getRole();
             $isAdmin = in_array($userRole, [\Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN, \Omeka\Permissions\Acl::ROLE_SITE_ADMIN]);
             if ($isAdmin) {
                 $api = $this->api();

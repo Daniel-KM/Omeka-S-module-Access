@@ -50,7 +50,7 @@ class AccessResourceController extends AbstractActionController
         }
 
         $services = $this->getServiceLocator();
-        $user = $services->get('Omeka\AuthenticationService')->getIdentity();
+        $user = $this->identity();
 
         $accessMode = $this->getAccessMode();
         if ($accessMode === 'global') {
@@ -78,7 +78,7 @@ class AccessResourceController extends AbstractActionController
                         ->setAction('no_access')
                         ->setUser($user)
                         ->setRecordId($media->id())
-                        ->setType('access')
+                        ->setType(AccessLog::TYPE_ACCESS)
                         ->setDate(new \DateTime());
                     $entityManager->flush();
                 }
@@ -94,7 +94,7 @@ class AccessResourceController extends AbstractActionController
                 ->setAction('accessed')
                 ->setUser($user)
                 ->setRecordId($media->id())
-                ->setType('access')
+                ->setType(AccessLog::TYPE_ACCESS)
                 ->setDate(new \DateTime());
             $entityManager->flush();
         }
@@ -201,7 +201,7 @@ class AccessResourceController extends AbstractActionController
             if (!is_null($token)) {
                 $accessResource = $entityManager
                     ->getRepository(\AccessResource\Entity\AccessResource::class)
-                    ->findOneBy(["token" => $token]);
+                    ->findOneBy(['token' => $token]);
             } elseif (!is_null($user)) {
                 $accessResource = $entityManager
                     ->getRepository(\AccessResource\Entity\AccessResource::class)
@@ -325,18 +325,18 @@ class AccessResourceController extends AbstractActionController
 
         $dispositionMode = 'inline';
 
-        // Write headers.
+        /** @var \Laminas\Http\PhpEnvironment\Response $response */
         $response = $this->getResponse();
-        $headers = $response->getHeaders();
-        $headers->addHeaderLine(sprintf('Content-type: %s', $mediaType));
-        $headers->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', $dispositionMode, $filename));
-        $headers->addHeaderLine(sprintf('Content-length: %s', $filesize));
-        // Use this to open files directly.
-        $headers->addHeaderLine('Cache-control: private');
-
+        // Write headers.
+        $response->getHeaders()
+            ->addHeaderLine(sprintf('Content-type: %s', $mediaType))
+            ->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', $dispositionMode, $filename))
+            ->addHeaderLine(sprintf('Content-length: %s', $filesize))
+            // Use this to open files directly.
+            ->addHeaderLine('Cache-control: private');
         // Send headers separately to handle large files.
         $response->sendHeaders();
-        // TODO Use a redirect and a temp storage hard link for big files.
+        // FIXME Use a redirect and a temp storage hard link for big files.
         $response->setContent(readfile($filepath));
 
         // Return Response to avoid default view rendering
@@ -401,9 +401,10 @@ class AccessResourceController extends AbstractActionController
             )
         );
 
-        $view = new ViewModel;
+        $view = new ViewModel([
+            'exception' => new Exception\PermissionDeniedException('Access forbidden'), // @translate
+        ]);
         return $view
-            ->setTemplate('error/403-access-resource')
-            ->setVariable('exception', new Exception\PermissionDeniedException('Access forbidden')); // @translate
+            ->setTemplate('error/403-access-resource');
     }
 }
