@@ -11,7 +11,9 @@ if (!class_exists(\Generic\AbstractModule::class)) {
 use Generic\AbstractModule;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
+use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
+use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 use Omeka\Settings\SettingsInterface;
 
@@ -226,6 +228,32 @@ class Module extends AbstractModule
             'form.add_elements',
             [$this, 'handleMainSettings']
         );
+    }
+
+    public function getConfigForm(PhpRenderer $renderer)
+    {
+        $this->warnIfNotConfigured();
+        return parent::getConfigForm($renderer);
+    }
+
+    public function handleConfigForm(AbstractController $controller)
+    {
+        $this->warnIfNotConfigured();
+        return parent::handleConfigForm($controller);
+    }
+
+    protected function warnIfNotConfigured(): void
+    {
+        $config = include OMEKA_PATH . '/config/local.config.php';
+        if (empty($config['accessresource']['access_mode'])) {
+            $services = $this->getServiceLocator();
+            $translator = $services->get('MvcTranslator');
+            $message = new \Omeka\Stdlib\Message(
+                $translator->translate('The module is not configured: the key "[accessresource][access_mode]" should be set in the main config file of Omeka "config/local.config.php".') // @translate
+            );
+            $messenger = new \Omeka\Mvc\Controller\Plugin\Messenger();
+            $messenger->addWarning($message);
+        }
     }
 
     protected function prepareDataToPopulate(SettingsInterface $settings, string $settingsType): ?array
