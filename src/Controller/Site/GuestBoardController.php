@@ -25,8 +25,7 @@ class GuestBoardController extends AbstractActionController
 
         $params = $this->params();
         $page = $params->fromQuery('page', 1);
-        // TODO Use the standard params for per page.
-        $perPage = 25;
+        $perPage = $this->siteSettings()->get('pagination_per_page') ?: $this->settings()->get('pagination_per_page', 25);
         $query = $params->fromQuery() + [
             'page' => $page,
             'per_page' => $perPage,

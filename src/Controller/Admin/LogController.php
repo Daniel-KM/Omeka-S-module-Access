@@ -3,7 +3,7 @@
 namespace AccessResource\Controller\Admin;
 
 use AccessResource\Entity\AccessLog;
-use AccessResource\Traits\ServiceLocatorAwareTrait;
+use AccessResource\Service\ServiceLocatorAwareTrait;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 
@@ -22,8 +22,7 @@ class LogController extends AbstractActionController
     {
         $params = $this->params();
         $page = $params->fromQuery('page', 1);
-        // TODO Use the standard params for per page.
-        $perPage = 25;
+        $perPage = $this->settings()->get('pagination_per_page', 25);
 
         $query = $params->fromQuery() + [
             'page' => $page,
