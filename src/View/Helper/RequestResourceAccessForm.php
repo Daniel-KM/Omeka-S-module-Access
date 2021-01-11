@@ -2,7 +2,7 @@
 namespace AccessResource\View\Helper;
 
 use AccessResource\Form\AccessRequestForm;
-use AccessResource\Traits\ServiceLocatorAwareTrait;
+use AccessResource\Service\ServiceLocatorAwareTrait;
 use Laminas\View\Helper\AbstractHelper;
 
 class RequestResourceAccessForm extends AbstractHelper

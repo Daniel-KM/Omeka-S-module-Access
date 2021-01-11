@@ -3,7 +3,7 @@
 namespace AccessResource\Controller;
 
 use AccessResource\Entity\AccessLog;
-use AccessResource\Traits\ServiceLocatorAwareTrait;
+use AccessResource\Service\ServiceLocatorAwareTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;

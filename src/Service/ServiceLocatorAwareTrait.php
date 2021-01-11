@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
-namespace AccessResource\Traits;
+
+namespace AccessResource\Service;
 
 use Laminas\ServiceManager\ServiceLocatorInterface;
 
@@ -12,21 +13,18 @@ trait ServiceLocatorAwareTrait
 
     /**
      * Get the service locator.
-     *
-     * @return ServiceLocatorInterface
      */
-    public function getServiceLocator()
+    public function getServiceLocator(): ServiceLocatorInterface
     {
         return $this->serviceLocator;
     }
 
     /**
      * Set the service locator.
-     *
-     * @param ServiceLocatorInterface $serviceLocator
      */
-    public function setServiceLocator(ServiceLocatorInterface $serviceLocator): void
+    public function setServiceLocator(ServiceLocatorInterface $serviceLocator): self
     {
         $this->serviceLocator = $serviceLocator;
+        return $this;
     }
 }

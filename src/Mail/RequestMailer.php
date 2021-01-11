@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 namespace AccessResource\Mail;
 
-use AccessResource\Traits\ServiceLocatorAwareTrait;
+use AccessResource\Service\ServiceLocatorAwareTrait;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Omeka\Entity\User;
 

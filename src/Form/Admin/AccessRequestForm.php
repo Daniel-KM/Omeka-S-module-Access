@@ -2,7 +2,7 @@
 namespace AccessResource\Form\Admin;
 
 use AccessResource\Entity\AccessRequest;
-use AccessResource\Traits\ServiceLocatorAwareTrait;
+use AccessResource\Service\ServiceLocatorAwareTrait;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 use Laminas\Form\Form;

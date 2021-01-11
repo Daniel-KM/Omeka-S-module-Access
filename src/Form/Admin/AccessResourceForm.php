@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 namespace AccessResource\Form\Admin;
 
-use AccessResource\Traits\ServiceLocatorAwareTrait;
+use AccessResource\Service\ServiceLocatorAwareTrait;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 use Laminas\Form\Form;

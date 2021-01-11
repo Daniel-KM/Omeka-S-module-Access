@@ -4,7 +4,7 @@ namespace AccessResource\Controller\Admin;
 
 use AccessResource\Entity\AccessLog;
 use AccessResource\Form\Admin\AccessResourceForm;
-use AccessResource\Traits\ServiceLocatorAwareTrait;
+use AccessResource\Service\ServiceLocatorAwareTrait;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\JsonModel;
 use Laminas\View\Model\ViewModel;
