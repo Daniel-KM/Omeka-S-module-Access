@@ -12,7 +12,6 @@ use Generic\AbstractModule;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\MvcEvent;
-use Laminas\ServiceManager\ServiceLocatorInterface;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 use Omeka\Settings\SettingsInterface;
 
@@ -45,12 +44,6 @@ class Module extends AbstractModule
         } else {
             $this->addAclRoleAndRulesGlobally();
         }
-    }
-
-    public function install(ServiceLocatorInterface $serviceLocator): void
-    {
-        parent::install($serviceLocator);
-        $this->installVocabulary();
     }
 
     /**
@@ -512,40 +505,5 @@ class Module extends AbstractModule
         $widgets['access'] = $widget;
 
         $event->setParam('widgets', $widgets);
-    }
-
-    protected function installVocabulary(): void
-    {
-        $vocabulary = [
-            'o:namespace_uri' => 'https://curation.omeka.org',
-            'o:prefix' => 'curation',
-            'o:label' => 'Curation', // @translate
-            'o:comment' => 'Curation of resource access', // @translate
-            'o:class' => [],
-            'o:property' => [
-                [
-                    'o:local_name' => 'reservedAccess',
-                    'o:label' => 'Reserved Access', // @translate
-                    'o:comment' => 'Gives an ability for private resource to be listed (previewed).', // @translate
-                ],
-            ],
-        ];
-
-        $api = $this->getServiceLocator()->get('Omeka\ApiManager');
-
-        $existingVocabList = $api
-            ->search(
-                'vocabularies',
-                [
-                    'namespace_uri' => $vocabulary['o:namespace_uri'],
-                    'limit' => 1,
-                ]
-            )
-            ->getContent();
-        $existingVocab = is_array($existingVocabList) && count($existingVocabList) ? $existingVocabList[0] : null;
-
-        if (!$existingVocab) {
-            $api->create('vocabularies', $vocabulary);
-        }
     }
 }

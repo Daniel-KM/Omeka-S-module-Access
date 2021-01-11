@@ -1,0 +1,11 @@
+{
+    "vocabulary": {
+        "o:namespace_uri": "https://curation.omeka.org/",
+        "o:prefix": "curation",
+        "o:label": "Curation",
+        "o:comment": "Curation of resource access."
+    },
+    "strategy": "file",
+    "file": "access_resource_curation.ttl",
+    "format": "turtle"
+}
