@@ -232,17 +232,17 @@ class Module extends AbstractModule
 
     public function getConfigForm(PhpRenderer $renderer)
     {
-        $this->warnIfNotConfigured();
+        $this->warnConfig();
         return parent::getConfigForm($renderer);
     }
 
     public function handleConfigForm(AbstractController $controller)
     {
-        $this->warnIfNotConfigured();
+        $this->warnConfig();
         return parent::handleConfigForm($controller);
     }
 
-    protected function warnIfNotConfigured(): void
+    protected function warnConfig(): void
     {
         $config = include OMEKA_PATH . '/config/local.config.php';
         if (empty($config['accessresource']['access_mode'])) {
@@ -253,6 +253,16 @@ class Module extends AbstractModule
             );
             $messenger = new \Omeka\Mvc\Controller\Plugin\Messenger();
             $messenger->addWarning($message);
+        }
+
+        if ($this->isModuleActive('Group')) {
+            $services = $this->getServiceLocator();
+            $translator = $services->get('MvcTranslator');
+            $message = new \Omeka\Stdlib\Message(
+                $translator->translate('This module is currently not compatible with module Group, that should be disabled.') // @translate
+            );
+            $messenger = new \Omeka\Mvc\Controller\Plugin\Messenger();
+            $messenger->addError($message);
         }
     }
 
