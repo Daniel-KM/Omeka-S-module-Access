@@ -81,10 +81,14 @@ class AccessResourceController extends AbstractActionController
         }
 
         // IP: any admin or any users with listed ips can see any restricted resource.
+        // This mode is compatible with mode "individual, so the check can be
+        // done separately.
+        if ($this->isSiteIp()) {
+            return $this->sendFile();
+        }
+
         if ($accessMode === 'ip') {
-            return $this->isSiteIp()
-                ? $this->sendFile()
-                : $this->sendFakeFile();
+            return $this->sendFakeFile();
         }
 
         /** @var \Doctrine\ORM\EntityManager $entityManager */
@@ -108,6 +112,7 @@ class AccessResourceController extends AbstractActionController
             return $this->sendFakeFile();
         }
 
+        // Don't log derivative files.
         if ($type === 'original') {
             $log = new AccessLog();
             $entityManager->persist($log);
