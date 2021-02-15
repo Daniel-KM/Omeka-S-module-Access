@@ -12,7 +12,7 @@ namespace AccessResource;
  * @var \Doctrine\ORM\EntityManager $entityManager
  * @var \Omeka\Api\Manager $api
  */
-// $settings = $services->get('Omeka\Settings');
+$settings = $services->get('Omeka\Settings');
 // $config = require dirname(__DIR__, 2) . '/config/module.config.php';
 $connection = $services->get('Omeka\Connection');
 // $entityManager = $services->get('Omeka\EntityManager');
@@ -40,4 +40,9 @@ SQL;
     foreach (explode(";\n", $sqls) as $sql) {
         $connection->exec($sql);
     }
+}
+
+if (version_compare($oldVersion, '3.3.0.7', '<')) {
+    $settings->set('accessresource_ip_sites', []);
+    $settings->set('accessresource_ip_reserved', ['sites' => [], 'ranges' => []]);
 }
