@@ -4,6 +4,7 @@ namespace AccessResource\Form;
 
 use Laminas\Form\Element;
 use Laminas\Form\Form;
+use Omeka\Form\Element\ArrayTextarea;
 
 class ConfigForm extends Form
 {
@@ -19,6 +20,7 @@ class ConfigForm extends Form
                     'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource#access-mode',
                     'value_options' => [
                         'global' => 'Global: all users, included guests, have access to all reserved medias', // @translate
+                        'ip' => 'IP: visitors with specified ips have access to all reserved medias', // @translate
                         'individual' => 'Individual: guests should request access to each reserved media', // @translate
                     ],
                 ],
@@ -27,6 +29,20 @@ class ConfigForm extends Form
                     'required' => true,
                     'disabled' => 'disabled',
                     'style' => 'display: block;',
+                ],
+            ])
+            ->add([
+                'name' => 'accessresource_ip_sites',
+                'type' => ArrayTextarea::class,
+                'options' => [
+                    'label' => 'List of ips with open access', // @translate
+                    'info' => 'These ips will have unrestricted access to the associated sites. List them separated by a "=", one by line. Range ip are allowed (formatted as cidr).', // @translate
+                    'as_key_value' => true,
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_ip_sites',
+                    'placeholder' => '12.34.56.78 = main-site
+87.65.43.0/24 = second-site',
                 ],
             ])
         ;

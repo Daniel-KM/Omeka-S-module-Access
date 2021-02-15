@@ -245,7 +245,15 @@ return [
         'config' => [
             // This setting is just for info: it is overridden by [accessresource][access_mode]
             // that should be set in config/local.config.php.
-            'accessresource_access_mode' => 'global',
+            'accessresource_access_mode' => 'individual',
+            'accessresource_ip_sites' => [
+            ],
+            // Hidden settings automatically filled after saving config.
+            // It contains the same data than "accessresource_ip_sites", but
+            // with site ids (not slug) and the numberized ip ranges (cidr) in
+            // order to do a quicker control of rights.
+            'accessresource_ip_reserved' => [
+            ],
         ],
         'settings' => [
             'accessresource_message_send' => true,

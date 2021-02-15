@@ -2,6 +2,12 @@
 
 namespace AccessResource;
 
+use const AccessResource\ACCESS_MODE;
+
+if (ACCESS_MODE === 'individual') {
+    return include __DIR__ . '/module.config.individual.php';
+}
+
 return [
     'entity_manager' => [
         'filters' => [
@@ -40,7 +46,7 @@ return [
                         '__NAMESPACE__' => 'AccessResource\Controller',
                         'controller' => 'AccessResource',
                         'action' => 'files',
-                        'access_mode' => 'global',
+                        'access_mode' => ACCESS_MODE,
                     ],
                 ],
             ],
@@ -63,6 +69,14 @@ return [
             // This setting is just for info: it is overridden by [accessresource][access_mode]
             // that should be set in config/local.config.php.
             'accessresource_access_mode' => 'global',
+            'accessresource_ip_sites' => [
+            ],
+            // Hidden settings automatically filled after saving config.
+            // It contains the same data than "accessresource_ip_sites", but
+            // with site ids (not slug) and the numberized ip ranges (cidr) in
+            // order to do a quicker control of rights.
+            'accessresource_ip_reserved' => [
+            ],
         ],
         'settings' => [
             'accessresource_message_send' => true,

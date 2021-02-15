@@ -2,9 +2,12 @@
 
 namespace AccessResource\Controller;
 
+use const AccessResource\ACCESS_MODE;
+
 use AccessResource\Entity\AccessLog;
 use AccessResource\Service\ServiceLocatorAwareTrait;
 use Doctrine\Common\Collections\ArrayCollection;
+use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 use Omeka\Mvc\Exception;
@@ -43,48 +46,66 @@ class AccessResourceController extends AbstractActionController
             throw new Exception\NotFoundException;
         }
 
-        // If the media is private for the user, it is not available.
+        // When the media is private for the user, it is not available, in any
+        // case. This check is done directly at database level.
         $media = $this->getMedia();
         if (!$media) {
             throw new Exception\NotFoundException;
         }
 
-        $services = $this->getServiceLocator();
+        // Here, the media is restricted or public.
+        // The item rights are not checked.
+
+        $mediaIsPublic = $media->isPublic();
+        if ($mediaIsPublic) {
+            return $this->sendFile();
+        }
+
         $user = $this->identity();
 
+        // No log when the mode is global or ip, or for admins.
+
         $accessMode = $this->getAccessMode();
+        // Global: any authenticated users can see any restricted resource.
         if ($accessMode === 'global') {
-            // No log when the mode is global.
-            if ($user) {
-                return $this->sendFile();
-            } else {
-                return $this->sendFakeFile();
-            }
+            return $user
+                ? $this->sendFile()
+                : $this->sendFakeFile();
+        }
+
+        $services = $this->getServiceLocator();
+
+        // Any admin can see any media in any case, without log.
+        if ($user && $services->get('Omeka\Acl')->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
+            return $this->sendFile();
+        }
+
+        // IP: any admin or any users with listed ips can see any restricted resource.
+        if ($accessMode === 'ip') {
+            return $this->isSiteIp()
+                ? $this->sendFile()
+                : $this->sendFakeFile();
         }
 
         /** @var \Doctrine\ORM\EntityManager $entityManager */
         $entityManager = $services->get('Omeka\EntityManager');
 
         // If without admin permissions, check access.
-        $acl = $services->get('Omeka\Acl');
-        if (!$acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
-            $access = $this->getMediaAccess();
-            if (!$access) {
-                // Log attempt to access original record.
-                if ($type === 'original') {
-                    $log = new AccessLog();
-                    $entityManager->persist($log);
-                    $log
-                        ->setAction('no_access')
-                        ->setUser($user)
-                        ->setRecordId($media->id())
-                        ->setType(AccessLog::TYPE_ACCESS)
-                        ->setDate(new \DateTime());
-                    $entityManager->flush();
-                }
-
-                return $this->sendFakeFile();
+        $access = $this->getMediaAccess();
+        if (!$access) {
+            // Log attempt to access original record without rights.
+            if ($type === 'original') {
+                $log = new AccessLog();
+                $entityManager->persist($log);
+                $log
+                    ->setAction('no_access')
+                    ->setUser($user)
+                    ->setRecordId($media->id())
+                    ->setType(AccessLog::TYPE_ACCESS)
+                    ->setDate(new \DateTime());
+                $entityManager->flush();
             }
+            return $this->sendFakeFile();
         }
 
         if ($type === 'original') {
@@ -173,9 +194,9 @@ class AccessResourceController extends AbstractActionController
                 ->findOneBy(['storageId' => $storageId]);
             if ($media) {
                 /** @var \Omeka\Api\Representation\MediaRepresentation $media */
-                // TODO Check if getting representation from adapter is enough to check rights and really quicker.
-                // $media = $services->get('Omeka\ApiAdapterManager')->get('media')->getRepresentation($media);
-                $media = $this->api()->read('media', $media->getId(), ['initialize' => false])->getContent();
+                // To get representation from adapter is quicker and enough,
+                // because rights are already checked.
+                $media = $services->get('Omeka\ApiAdapterManager')->get('media')->getRepresentation($media);
             }
         } else {
             $media = null;
@@ -207,7 +228,7 @@ class AccessResourceController extends AbstractActionController
         $mediaItemAccess = $media->item()->isPublic();
         $isPublic = $mediaAccess && $mediaItemAccess;
         if (!$isPublic) {
-            $user = $services->get('Omeka\AuthenticationService')->getIdentity();
+            $user = $this->identity();
 
             $accessResource = null;
             if (!is_null($token)) {
@@ -418,5 +439,49 @@ class AccessResourceController extends AbstractActionController
         ]);
         return $view
             ->setTemplate('error/403-access-resource');
+    }
+
+    /**
+     * Get the ip of the client (ipv4 or ipv6), or empty ip ("::").
+     */
+    protected function getClientIp(): string
+    {
+        $ip = (new RemoteAddress())->getIpAddress();
+        // TODO Is the check of ip really needed?
+        return $ip && filter_var($ip, FILTER_VALIDATE_IP)
+            ? $ip
+            : '::';
+    }
+
+    /**
+     * Check if the ip of the user belongs to a site.
+     */
+    protected function isSiteIp(): ?int
+    {
+        $ip = $this->getClientIp();
+        if ($ip === '::') {
+            return null;
+        }
+
+        $reservedIps = $this->getServiceLocator()->get('Omeka\Settings')->get('accessresource_ip_reserved', []);
+        if (empty($reservedIps)) {
+            return null;
+        }
+
+        // Check a single ip.
+        if (isset($reservedIps[$ip])) {
+            return $reservedIps[$ip]['site'];
+        }
+
+        // Check an ip range.
+        // FIXME Fix check of ip for ipv6 (ip2long).
+        $ipLong = ip2long($ip);
+        foreach ($reservedIps as $range) {
+            if ($ipLong >= $range['low'] && $ipLong <= $range['high']) {
+                return $range['site'];
+            }
+        }
+
+        return null;
     }
 }

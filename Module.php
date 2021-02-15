@@ -8,6 +8,8 @@ if (!class_exists(\Generic\AbstractModule::class)) {
         : __DIR__ . '/src/Generic/AbstractModule.php';
 }
 
+use const AccessResource\ACCESS_MODE;
+
 use Generic\AbstractModule;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
@@ -16,14 +18,16 @@ use Laminas\Mvc\MvcEvent;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 use Omeka\Settings\SettingsInterface;
+use Omeka\Stdlib\Message;
 
 class Module extends AbstractModule
 {
     const NAMESPACE = __NAMESPACE__;
 
-    protected $dependency = 'Guest';
-
     /**
+     * The include define the access mode constant "AccessResource::ACCESS_MODE"
+     * that should be used, except to avoid install/update issues.
+     *
      * @var string
      */
     protected $accessMode = 'global';
@@ -32,9 +36,8 @@ class Module extends AbstractModule
     {
         $config = include OMEKA_PATH . '/config/local.config.php';
         $this->accessMode = @$config['accessresource']['access_mode'] ?: 'global';
-        return $this->accessMode === 'individual'
-            ? include __DIR__ . '/config/module.config.individual.php'
-            : include __DIR__ . '/config/module.config.php';
+        require_once __DIR__ . '/config/access_mode.' . $this->accessMode . '.php';
+        return include __DIR__ . '/config/module.config.php';
     }
 
     public function onBootstrap(MvcEvent $event): void
@@ -233,13 +236,107 @@ class Module extends AbstractModule
     public function getConfigForm(PhpRenderer $renderer)
     {
         $this->warnConfig();
-        return parent::getConfigForm($renderer);
+
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $this->initDataToPopulate($settings, 'config');
+        $data = $this->prepareDataToPopulate($settings, 'config');
+
+        /** @var \AccessResource\Form\ConfigForm $form */
+        $form = $services->get('FormElementManager')->get(\AccessResource\Form\ConfigForm::class);
+        $form->init();
+        if ($this->accessMode === 'global') {
+            $form->remove('accessresource_ip_sites');
+        }
+        $form->setData($data);
+        $form->prepare();
+        return $renderer->formCollection($form);
     }
 
     public function handleConfigForm(AbstractController $controller)
     {
         $this->warnConfig();
-        return parent::handleConfigForm($controller);
+
+        $services = $this->getServiceLocator();
+        $params = $controller->getRequest()->getPost();
+
+        $form = $services->get('FormElementManager')->get(\AccessResource\Form\ConfigForm::class);
+        $form->init();
+        $form->setData($params);
+        if (!$form->isValid()) {
+            $controller->messenger()->addErrors($form->getMessages());
+            return false;
+        }
+
+        // Check ips and sites and prepare the quick hidden setting.
+        // Use the controller api to allow to read without exception.
+        $api = $services->get('ControllerPluginManager')->get('api');
+        $hasError = false;
+        $config = $this->getConfig();
+        $params = $form->getData();
+        $settings = $services->get('Omeka\Settings');
+
+        $ipSites = $this->accessMode === 'global'
+            ? $settings->get('accessresource_ip_sites', [])
+            : $params['accessresource_ip_sites'] ?? [];
+        $params['accessresource_ip_sites'] = $ipSites;
+
+        $reservedIps = [];
+        foreach ($ipSites as $ip => $siteSlug) {
+            if (!$ip && !$siteSlug) {
+                continue;
+            }
+            if (!$ip || !filter_var(strtok($ip, '/'), FILTER_VALIDATE_IP)) {
+                $message = new Message(
+                    'The ip "%s" is empty or invalid for site "%s".', // @translate
+                    $ip, $siteSlug
+                );
+                $controller->messenger()->addError($message);
+                $hasError = true;
+                continue;
+            } elseif (!$siteSlug) {
+                $message = new Message(
+                    'The site slug is missing for ip "%s".', // @translate
+                    $ip
+                );
+                $controller->messenger()->addError($message);
+                $hasError = true;
+                continue;
+            } elseif (!($site = $api->searchOne('sites', ['slug' => $siteSlug])->getContent())) {
+                $message = new Message(
+                    'The site slug "%s" for ip "%s" is unknown.', // @translate
+                    $siteSlug, $ip
+                );
+                $controller->messenger()->addError($message);
+                $hasError = true;
+                continue;
+            }
+            $reservedIps[$ip] = $this->cidrToRange($ip);
+            $reservedIps[$ip]['site'] = $site->id();
+        }
+
+        if ($hasError) {
+            return false;
+        }
+
+        // Move the ip 0.0.0.0/0 as last ip, it will be possible to find a
+        // more precise site if any.
+        foreach (['0.0.0.0', '0.0.0.0/0', '::'] as $ip) {
+            if (isset($reservedIps['ranges'][$ip])) {
+                $v = $reservedIps['ranges'][$ip];
+                unset($reservedIps['ranges'][$ip]);
+                $reservedIps['ranges'][$ip] = $v;
+            }
+        }
+
+        $params['accessresource_ip_reserved'] = $reservedIps;
+
+        $defaultSettings = $config['accessresource']['config'];
+        $params = array_intersect_key($params, $defaultSettings);
+        foreach ($params as $name => $value) {
+            $settings->set($name, $value);
+        }
+        return true;
     }
 
     protected function warnConfig(): void
@@ -269,6 +366,7 @@ class Module extends AbstractModule
     protected function prepareDataToPopulate(SettingsInterface $settings, string $settingsType): ?array
     {
         $data = parent::prepareDataToPopulate($settings, $settingsType);
+        // The mode is available only in main config file.
         $data['accessresource_access_mode'] = $this->accessMode;
         return $data;
     }
@@ -543,5 +641,28 @@ class Module extends AbstractModule
         $widgets['access'] = $widget;
 
         $event->setParam('widgets', $widgets);
+    }
+
+    /**
+     * Extract first and last ip from a cidr.
+     *
+     * @param string $cidr
+     * @link https://stackoverflow.com/questions/4931721/getting-list-ips-from-cidr-notation-in-php/4931756#4931756
+     * @return array Associative array with lowest and highest ip (as number).
+     */
+    protected function cidrToRange($cidr)
+    {
+        if (strpos($cidr, '/') === false) {
+            return [
+                'low' => ip2long($cidr),
+                'high' => ip2long($cidr),
+            ];
+        }
+
+        $cidr = explode('/', $cidr);
+        $range = [];
+        $range['low'] = (ip2long($cidr[0])) & ((-1 << (32 - (int) $cidr[1])));
+        $range['high'] = (ip2long(long2ip($range['low']))) + 2 ** (32 - (int) $cidr[1]) - 1;
+        return $range;
     }
 }
