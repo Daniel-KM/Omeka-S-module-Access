@@ -6,18 +6,30 @@ Access Resource (module for Omeka S)
 > than the previous repository.__
 
 [Access Resource] is a module for [Omeka S] that allows to protect files to be
-accessed from the anonymous visitors, but nevertheless available for some guest
-users, on identification or by token.
+accessed from the anonymous visitors, but nevertheless available globally or on
+requests by guests users, reserved to list of ips, or available by a token. The
+metadata of the restricted resources are always available to let the visitors
+know that they exist. The file itself is replaced by a fake file.
 
 
 Installation
 ------------
 
-### Copy of the module
+### Associated modules
 
-The module depends on module [Guest], so install it first. The button in the
+If the access is reserved by ip or by token, the module can be used standalone.
+If the access is reserved globally, the module will need to identify users,
+generally with the module [Guest] or [Guest Role]. If the access is restricted
+individually, the module [Guest] will be needed to manage the requests. The
 public part can be managed easily via the module [Blocks Disposition], or
 directly in the theme.
+
+### Incompatibility
+
+This module is currently incompatible with module [Group], that manages rights
+by a list of group.
+
+### Copy of the module
 
 See general end user documentation for [installing a module].
 
@@ -31,50 +43,24 @@ uncompress it in the `modules` directory.
 If the module was installed from the source, rename the name of the folder of
 the module to `AccessResource`.
 
-### Configuration of the web server (Apache or Nginx)
-
-The Apache file ".htaccess" at the root of Omeka should be updated to avoid
-direct access to files and to redirect requests to the module. See below [Protect original files].
-
-
-Usage
------
-
-Omeka has two modes of visibility: public or private. This module has a third
-mode for the medias, restricted. When enabled, the metadata of the restricted
-private medias are viewable, but not the original files (and eventually the
-large and other derivatives).
-
-### Access mode
-
-Furthermore, the restricted visibility can be managed in two ways:
-- global: all authenticated users have access to all the restricted files. In
-  practice, the guest users have no access to private resources, but they can
-  view all private resources that are marked restricted.
-- individual: each file should be made accessible by a specific user one by one.
-  So the module has some forms to manage individual requests and accesses. This
-  mode requires the admin to set each rights.
-
-The default mode is "global". To set the mode "individual", you should specify
-it in the file `config/local.config.php` of the Omeka directory:
-
-```php
-    'accessresource' => [
-        'access_mode' => 'individual',
-    ],
-```
-
-### Access and protect original files
+### Configuration of the web server
 
 Omeka does not manage the requests of the files of the web server (generally
 Apache or Nginx): they are directly served by it, without any control. To
 protect them, you have to tell the web server to redirect the users requests to
 Omeka, so it can check the rights, before returning the file or a forbidden
-response. For that, you have to adapt the following code to your needs in the
-main [.htaccess] at the root of Omeka, in a `.htaccess` file in the `files`
-directory, or directly in the config of the virtual host of the server (quicker).
-The example below is written for the Omeka [.htaccess] file. If you prefer to
-use other files, adapt the paths.
+response. You can adapt `routes.ini` as you wish too.
+
+#### Apache
+
+The Apache file ".htaccess" at the root of Omeka should be updated to avoid
+direct access to files and to redirect urls to the module.
+
+For that, you have to adapt the following code to your needs in the main [.htaccess]
+at the root of Omeka, in a `.htaccess` file in the `files` directory, or
+directly in the config of the virtual host of the server (quicker). The example
+below is written for the Omeka [.htaccess] file. If you prefer to use other
+files, adapt the paths.
 
 In this example, all original and large files will be protected: a check will be
 done by the module before delivering files. If the user has no access to a file,
@@ -83,9 +69,7 @@ a fake file is displayed.
 The small derivatives files (square and thumbnails), can be protected too, but
 it is generally useless. Anyway, it depends on the original images.
 
-You can adapt `routes.ini` as you wish too.
-
-#### When Omeka S is installed at the root of a domain
+##### When Omeka S is installed at the root of a domain
 
 Insert the following lines at line 4 of [.htaccess], just after `RewriteEngine On`:
 
@@ -97,7 +81,7 @@ RewriteRule ^files/large/(.*)$ /access/files/large/$1 [P]
 #RewriteRule ^files/square/(.*)$ /access/files/square/$1 [P]
 ```
 
-#### When Omeka S is installed in a sub-path (https://example.com/digital-library/)
+##### When Omeka S is installed in a sub-path (https://example.com/digital-library/)
 
 Insert the following lines at line 4 of [.htaccess], just after `RewriteEngine On`,
 adapting it to your real config (here, the sub-path is `digital-library`):
@@ -113,24 +97,62 @@ RewriteCond %{REQUEST_URI}::$1 ^(/.+)/(.*)::/digital-library/access/\2$
 RewriteRule ^(.*) - [E=BASE:%1]
 ```
 
-#### Common issues
+##### Common issues
 
 - Enable to redirect to a virtual proxy with https
 
-  The config below uses flag `[P]` for an internal fake `Proxy`, so Apache
-  rewrites the path like a proxy. So if there is a redirection to a secured
-  server (https), the certificate should be running and up-to-date and the
-  option `SSLProxyEngine on` should be set in the Apache config of the web
-  server. Anyway, if you have access to it, you can include all rules inside it
-  directly. If you don't have access to the Apache config, just use the full
-  unsecure url with `http://` for the internal proxy:
+  The config uses flag `[P]` for an internal fake `Proxy`, so Apache rewrites
+  the path like a proxy. So if there is a redirection to a secured server
+  (https), the certificate should be running and up-to-date and the option
+  `SSLProxyEngine on` should be set in the Apache config of the web server.
+  Anyway, if you have access to it, you can include all rules inside it
+  directly (`ProxyPass`). If you don't have access to the Apache config, just
+  use the full unsecure url with `http://` for the internal proxy. Because it is
+  a fake proxy, it doesn't matter if the internal redirect url is unsecure:
 
   ```Apache
   RewriteRule ^files/original/(.*)$ http://example.org/digital-library/access/files/original/$1 [P]
   RewriteRule ^files/large/(.*)$ http://example.org/digital-library/access/files/large/$1 [P]
   ```
 
-  Because it is an fake proxy, it doesn't matter if the url is `http://` only.
+#### Nginx
+
+The configuration of Apache above should be adapted for Nginx.
+
+
+Usage
+-----
+
+Omeka has two modes of visibility: public or private. This module adds a third
+mode for the medias, restricted. When enabled, the metadata of the restricted
+private medias are viewable, but not the original files (and eventually the
+large and other derivatives files).
+
+### Access mode
+
+The rights to see the files are controlled on the fly. The restricted visibility
+can be managed in three ways:
+
+- `global`: all authenticated users have access to all the restricted files. In
+  practice, the guest users have no access to private resources, but they can
+  view all private resources that are marked restricted.
+- `ip`: all visitors with a specific ip, for example the ip of the physical
+  library or the one of a researcher, can have access to all the restricted
+  files.
+- `individual`: each file should be made accessible by a specific user one by
+  one. So the module has some forms to manage individual requests and accesses.
+  This mode requires the admin to set each right of each resource. This mode can
+  be combined with a list of ips to allow visitors with these ips to access to
+  any files, as above.
+
+The default mode is `global`. To set the mode `ip` or `individual`, you should
+specify it in the file `config/local.config.php` of the Omeka directory:
+
+```php
+    'accessresource' => [
+        'access_mode' => 'individual',
+    ],
+```
 
 ### Identification of the restricted medias
 
@@ -142,14 +164,20 @@ or globally.
 
 To indicate which resources are restricted, simply add a value to the property
 `curation:reservedAccess`, that is created by the module. When a private
-resource has a value for this property, whatever it is (except an empty value),
-it becomes available for all guest users, and all visitors can view it
-automatically too in listings. Preview will be available for media too.
+resource has a value for this property, whatever it is (except empty value `0`),
+it becomes available for all guest users, and all visitors can view its metadata
+automatically too in listings. Preview will be available for media too. The
+value of this property can be private or public.
+
+Important: public medias are never restricted, so you need to set them private.
+Note that a public item can have a private media and vice-versa. So, most of the
+time, the value should be set in the metadata of the media. The value can be
+specified for the item too to simplify management.
 
 ### Management of requests
 
-If you choose the global mode, there is nothing to do more. Once users are
-authenticated as guest, they will be able to see the files.
+If you choose modes `global` or `ip`, there is nothing to do more. Once users
+are authenticated as guest or by ip, they will be able to see the files.
 
 In the case of the individual mode, there are two ways to process.
 
@@ -178,7 +206,10 @@ TODO
 
 - [ ] Make resources available by token in global mode.
 - [ ] Make resources available by token only, not login (like module Contribute).
+- [x] Make non-exclusive mode "ip" and "individual".
+- [ ] Fix ip check for ipv6.
 - [ ] Use Omeka Store instead of local file system.
+- [ ] Manage ip by item set or by user instead of sites?
 
 
 Warning
@@ -243,7 +274,9 @@ Copyright
 [Omeka S]: https://omeka.org/s
 [Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
 [Guest]: https://gitlab.com/Daniel-KM/Omeka-S-module-Guest
+[Guest Role]: https://github.com/biblibre/omeka-s-module-GuestRole
 [Blocks Disposition]: https://gitlab.com/Daniel-KM/Omeka-S-module-BlocksDisposition
+[Group]: https://gitlab.com/Daniel-KM/Omeka-S-module-Group/-/releases
 [Contact Us]: https://gitlab.com/Daniel-KM/Omeka-S-module-ContactUs
 [Installing a module]: http://dev.omeka.org/docs/s/user-manual/modules/#installing-modules
 [AccessResource.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource/-/releases
