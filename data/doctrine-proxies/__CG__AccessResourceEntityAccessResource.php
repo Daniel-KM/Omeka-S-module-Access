@@ -238,7 +238,7 @@ class AccessResource extends \AccessResource\Entity\AccessResource implements \D
     /**
      * {@inheritDoc}
      */
-    public function setToken(string $token): \AccessResource\Entity\AccessResource
+    public function setToken(?string $token): \AccessResource\Entity\AccessResource
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'setToken', [$token]);
@@ -249,7 +249,7 @@ class AccessResource extends \AccessResource\Entity\AccessResource implements \D
     /**
      * {@inheritDoc}
      */
-    public function getToken(): string
+    public function getToken(): ?string
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getToken', []);

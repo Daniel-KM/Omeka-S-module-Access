@@ -271,7 +271,7 @@ class AccessLog extends \AccessResource\Entity\AccessLog implements \Doctrine\OR
     /**
      * {@inheritDoc}
      */
-    public function getType(): string
+    public function getType(): ?string
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getType', []);
