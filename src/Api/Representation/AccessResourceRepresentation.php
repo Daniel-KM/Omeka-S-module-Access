@@ -1,6 +1,8 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\Api\Representation;
 
+use DateTime;
 use Omeka\Api\Representation\AbstractEntityRepresentation;
 
 class AccessResourceRepresentation extends AbstractEntityRepresentation
@@ -62,19 +64,13 @@ class AccessResourceRepresentation extends AbstractEntityRepresentation
         ];
     }
 
-    /**
-     * @return \Omeka\Api\Representation\AbstractResourceEntityRepresentation
-     */
-    public function resource()
+    public function resource(): \Omeka\Api\Representation\AbstractResourceEntityRepresentation
     {
         return $this->getAdapter('resources')
-        ->getRepresentation($this->resource->getResource());
+            ->getRepresentation($this->resource->getResource());
     }
 
-    /**
-     * @return \Omeka\Api\Representation\UserRepresentation|null
-     */
-    public function user()
+    public function user(): ?\Omeka\Api\Representation\UserRepresentation
     {
         $user = $this->resource->getUser();
         return $user
@@ -82,58 +78,37 @@ class AccessResourceRepresentation extends AbstractEntityRepresentation
             : null;
     }
 
-    /**
-     * @return string
-     */
-    public function token()
+    public function token(): ?string
     {
         return $this->resource->getToken();
     }
 
-    /**
-     * @return bool
-     */
-    public function enabled()
+    public function enabled(): bool
     {
         return (bool) $this->resource->getEnabled();
     }
 
-    /**
-     * @return bool
-     */
-    public function temporal()
+    public function temporal(): bool
     {
         return (bool) $this->resource->getTemporal();
     }
 
-    /**
-     * @return \DateTime
-     */
-    public function startDate()
+    public function startDate(): ?DateTime
     {
         return $this->resource->getStartDate();
     }
 
-    /**
-     * @return \DateTime
-     */
-    public function endDate()
+    public function endDate(): ?DateTime
     {
         return $this->resource->getEndDate();
     }
 
-    /**
-     * @return \DateTime
-     */
-    public function created()
+    public function created(): DateTime
     {
         return $this->resource->getCreated();
     }
 
-    /**
-     * @return \DateTime
-     */
-    public function modified()
+    public function modified(): ?DateTime
     {
         return $this->resource->getModified();
     }
@@ -152,14 +127,14 @@ class AccessResourceRepresentation extends AbstractEntityRepresentation
         );
     }
 
-    public function displayTitle($default = null)
+    public function displayTitle($default = null): string
     {
         return sprintf($this->getTranslator()->translate('Access #%d'), $this->id());
     }
 
-    public function displayDescription($default = null)
+    public function displayDescription($default = null): string
     {
-        return $default;
+        return (string) $default;
     }
 
     /**

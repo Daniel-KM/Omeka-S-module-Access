@@ -1,7 +1,9 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\Api\Representation;
 
 use AccessResource\Entity\AccessRequest;
+use DateTime;
 use Omeka\Api\Representation\AbstractEntityRepresentation;
 
 class AccessRequestRepresentation extends AbstractEntityRepresentation
@@ -53,55 +55,36 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
         ];
     }
 
-    /**
-     * @return \Omeka\Api\Representation\AbstractResourceEntityRepresentation
-     */
-    public function resource()
+    public function resource(): \Omeka\Api\Representation\AbstractResourceEntityRepresentation
     {
         return $this->getAdapter('resources')
             ->getRepresentation($this->resource->getResource());
     }
 
-    /**
-     * @return \Omeka\Api\Representation\UserRepresentation
-     */
-    public function user()
+    public function user(): \Omeka\Api\Representation\UserRepresentation
     {
         return $this->getAdapter('users')
             ->getRepresentation($this->resource->getUser());
     }
 
-    /**
-     * @return string
-     */
-    public function status()
+    public function status(): string
     {
         return $this->resource->getStatus();
     }
 
-    /**
-     * @return string
-     */
-    public function statusLabel()
+    public function statusLabel(): string
     {
         $status = $this->resource->getStatus();
-        return isset($this->statusLabels[$status])
-            ? $this->statusLabels[$status]
-            : 'Unknown'; // @translate
+        return $this->statusLabels[$status]
+            ?? 'Unknown'; // @translate
     }
 
-    /**
-     * @return \DateTime
-     */
-    public function created()
+    public function created(): DateTime
     {
         return $this->resource->getCreated();
     }
 
-    /**
-     * @return \DateTime
-     */
-    public function modified()
+    public function modified(): ?DateTime
     {
         return $this->resource->getModified();
     }
@@ -120,14 +103,14 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
         );
     }
 
-    public function displayTitle($default = null)
+    public function displayTitle($default = null): string
     {
         return sprintf($this->getTranslator()->translate('Access request #%d'), $this->id());
     }
 
-    public function displayDescription($default = null)
+    public function displayDescription($default = null): string
     {
-        return $default;
+        return (string) $default;
     }
 
     /**
