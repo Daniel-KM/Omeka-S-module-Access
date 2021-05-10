@@ -1,4 +1,5 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\Mvc\Controller\Plugin;
 
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
@@ -23,12 +24,9 @@ class MediaFilesize extends AbstractPlugin
     /**
      * Get the file size of a media.
      *
-     * @param MediaRepresentation $media
-     * @param string $type
      * @throws RuntimeException
-     * @return int|null
      */
-    public function __invoke(MediaRepresentation $media, $type = 'original')
+    public function __invoke(MediaRepresentation $media, string $type = 'original'): ?int
     {
         if ($type === 'original' && $mediaSize = $media->size()) {
             return $mediaSize;
@@ -50,10 +48,10 @@ class MediaFilesize extends AbstractPlugin
      *
      * @param string $prefix The storage prefix
      * @param string $name The file name, or basename if extension is passed
-     * @param null|string $extension The file extension
+     * @param string|null $extension The file extension
      * @return string
      */
-    protected function getStoragePath($prefix, $name, $extension = '')
+    protected function getStoragePath(string $prefix, string $name, string $extension = ''): string
     {
         return sprintf('%s/%s%s', $prefix, $name, strlen($extension) ? '.' . $extension : '');
     }
