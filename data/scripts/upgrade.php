@@ -16,8 +16,8 @@ $settings = $services->get('Omeka\Settings');
 // $config = require dirname(__DIR__, 2) . '/config/module.config.php';
 $connection = $services->get('Omeka\Connection');
 // $entityManager = $services->get('Omeka\EntityManager');
-// $plugins = $services->get('ControllerPluginManager');
-// $api = $plugins->get('api');
+$plugins = $services->get('ControllerPluginManager');
+$api = $plugins->get('api');
 // $space = strtolower(__NAMESPACE__);
 
 if (version_compare($oldVersion, '3.3.0.6', '<')) {
@@ -37,7 +37,7 @@ ALTER TABLE `access_request`
     CHANGE `status` `status` VARCHAR(190) DEFAULT 'new' NOT NULL,
     CHANGE `modified` `modified` DATETIME DEFAULT NULL;
 SQL;
-    foreach (explode(";\n", $sqls) as $sql) {
+    foreach (array_filter(explode(";\n", $sqls)) as $sql) {
         $connection->exec($sql);
     }
 }
