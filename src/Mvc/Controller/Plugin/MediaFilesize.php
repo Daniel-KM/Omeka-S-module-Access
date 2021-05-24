@@ -28,19 +28,25 @@ class MediaFilesize extends AbstractPlugin
      */
     public function __invoke(MediaRepresentation $media, string $type = 'original'): ?int
     {
-        if ($type === 'original' && $mediaSize = $media->size()) {
-            return $mediaSize;
+        if ($type === 'original') {
+            if ($mediaSize = $media->size()) {
+                return (int) $mediaSize;
+            }
+            if (!$media->hasOriginal()) {
+                return null;
+            }
         }
 
         // The storage adapter should be checked for external storage.
-        $storagePath = $type == 'original'
-            ? $this->getStoragePath($type, $media->filename())
+        $storagePath = $type === 'original'
+            ? $this->getStoragePath($type, $media->storageId())
             : $this->getStoragePath($type, $media->storageId(), 'jpg');
         $filepath = $this->basePath . DIRECTORY_SEPARATOR . $storagePath;
 
-        return file_exists($filepath)
-            ? filesize($filepath)
-            : null;
+        if (file_exists($filepath)) {
+            return filesize($filepath) ?: null;
+        }
+        return null;
     }
 
     /**
