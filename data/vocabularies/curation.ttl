@@ -1,0 +1,51 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix vs: <http://www.w3.org/2003/06/sw-vocab-status/ns#> .
+@prefix oc: <http://omeka.org/s/vocabs/oc#> .
+@prefix curation: <https://omeka.org/s/vocabs/curation/> .
+
+<https://omeka.org/s/vocabs/curation/> a owl:Ontology ;
+    dcterms:title "Curation"@en ;
+    dcterms:title "Curation"@fr ;
+    dcterms:description "Curation of resources."@en ;
+    dcterms:description "Curation des ressources."@fr .
+
+curation:reservedAccess a rdf:Property ;
+    rdfs:label "Reserved access"@en ;
+    rdfs:label "Accès réservé"@fr ;
+    rdfs:comment "Define the resource as a restricted access one as soon a value is set, whatever it is."@en ;
+    rdfs:comment "Place la ressource en accès restreint dès qu‘une valeur quelconque est définie."@fr ;
+    vs:term_status "experimental" .
+
+curation:newResource a rdf:Property ;
+    rdfs:label "New resource"@en ;
+    rdfs:label "Nouvelle ressource"@fr ;
+    rdfs:comment "Mark the resource as a new one as soon as a value is set, whatever it is."@en ;
+    rdfs:comment "Marque la ressource comme nouvelle dès qu‘une valeur quelconque est définie."@fr ;
+    vs:term_status "experimental" .
+
+curation:featured a rdf:Property ;
+    rdfs:label "Featured"@en ;
+    rdfs:label "En vedette"@fr ;
+    rdfs:comment "Mark the resource as a featured one as soon as a value is set, whatever it is."@en ;
+    rdfs:comment "Marque la ressource comme vedette dès qu‘une valeur quelconque est définie."@fr ;
+    vs:term_status "experimental" .
+
+curation:category a rdf:Property ;
+    rdfs:label "Category"@en ;
+    rdfs:label "Catégorie"@fr ;
+    rdfs:comment "Non-standard topic that can be used for some purposes."@en ;
+    rdfs:comment "Thème non-standard pouvant être utilisé dans certains cas."@fr ;
+    rdfs:subPropertyOf dcterms:subject ;
+    vs:term_status "experimental" .
+
+curation:tag a rdf:Property ;
+    rdfs:label "Tag"@en ;
+    rdfs:label "Mot-clé"@fr ;
+    rdfs:comment "Tag that can be used for some purposes or for upgrade from Omeka Classic."@en ;
+    rdfs:comment "Mot-clé pouvant être utilisé dans certains cas ou pour une mise à niveau depuis Omeka Classic."@fr ;
+    rdfs:subPropertyOf dcterms:subject ;
+    owl:sameAs oc:tag ;
+    vs:term_status "experimental" .

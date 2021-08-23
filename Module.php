@@ -40,6 +40,11 @@ class Module extends AbstractModule
         return include __DIR__ . '/config/module.config.php';
     }
 
+    protected function preInstall(): void
+    {
+        require_once __DIR__ . '/data/scripts/upgrade_vocabulary.php';
+    }
+
     public function onBootstrap(MvcEvent $event): void
     {
         parent::onBootstrap($event);

@@ -12,13 +12,12 @@ namespace AccessResource;
  * @var \Doctrine\ORM\EntityManager $entityManager
  * @var \Omeka\Api\Manager $api
  */
-$settings = $services->get('Omeka\Settings');
-// $config = require dirname(__DIR__, 2) . '/config/module.config.php';
-$connection = $services->get('Omeka\Connection');
 // $entityManager = $services->get('Omeka\EntityManager');
+$connection = $services->get('Omeka\Connection');
 $plugins = $services->get('ControllerPluginManager');
 $api = $plugins->get('api');
-// $space = strtolower(__NAMESPACE__);
+$settings = $services->get('Omeka\Settings');
+// $config = require dirname(__DIR__, 2) . '/config/module.config.php';
 
 if (version_compare($oldVersion, '3.3.0.6', '<')) {
     $sqls = <<<'SQL'
@@ -45,4 +44,8 @@ SQL;
 if (version_compare($oldVersion, '3.3.0.7', '<')) {
     $settings->set('accessresource_ip_sites', []);
     $settings->set('accessresource_ip_reserved', ['sites' => [], 'ranges' => []]);
+}
+
+if (version_compare($oldVersion, '3.3.0.9', '<')) {
+    require_once __DIR__ . '/upgrade_vocabulary.php';
 }
