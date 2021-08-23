@@ -367,17 +367,23 @@ class AccessResourceController extends AbstractActionController
         $response = $this->getResponse();
         // Write headers.
         $response->getHeaders()
-            ->addHeaderLine(sprintf('Content-type: %s', $mediaType))
+            ->addHeaderLine(sprintf('Content-Type: %s', $mediaType))
             ->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', $dispositionMode, $filename))
-            ->addHeaderLine(sprintf('Content-length: %s', $filesize))
+            ->addHeaderLine(sprintf('Content-Length: %s', $filesize))
+            ->addHeaderLine('Content-Transfer-Encoding', 'binary')
             // Use this to open files directly.
-            ->addHeaderLine('Cache-control: private');
+            ->addHeaderLine('Cache-Control: private');
         // Send headers separately to handle large files.
         $response->sendHeaders();
-        // FIXME Use a redirect and a temp storage hard link for big files.
-        $response->setContent(readfile($filepath));
 
-        // Return Response to avoid default view rendering
+        // Clears all active output buffers to avoid memory overflow.
+        $response->setContent('');
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        readfile($filepath);
+
+        // Return response to avoid default view rendering and to manage events.
         return $response;
     }
 
