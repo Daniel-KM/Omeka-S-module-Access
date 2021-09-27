@@ -473,11 +473,20 @@ class AccessResourceController extends AbstractActionController
      */
     protected function getClientIp(): string
     {
-        $ip = (new RemoteAddress())->getIpAddress();
-        // TODO Is the check of ip really needed?
-        return $ip && filter_var($ip, FILTER_VALIDATE_IP)
-            ? $ip
-            : '::';
+        // Use $_SERVER['REMOTE_ADDR'], the most reliable.
+        $remoteAddress = new RemoteAddress();
+        $ip = $remoteAddress->getIpAddress();
+        if (!$ip) {
+            return '::';
+        }
+
+        // A proxy or a htaccess rule can return the server ip, so check it too.
+        // The server itself is a trusted proxy when used in htacess or config (see RemoteAddress::getIpAddressFromProxy()).
+        $remoteAddress
+            ->setUseProxy(true)
+            ->setTrustedProxies([$_SERVER['SERVER_ADDR']]);
+        return $remoteAddress->getIpAddress()
+            ?: '::';
     }
 
     /**
