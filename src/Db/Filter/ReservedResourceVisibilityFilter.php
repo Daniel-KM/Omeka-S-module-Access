@@ -34,13 +34,15 @@ class ReservedResourceVisibilityFilter extends \Omeka\Db\Filter\ResourceVisibili
         $property = $this->serviceLocator->get(PropertyReservedAccess::class);
 
         $reservedConstraints[] = sprintf(
-            '%s.`id` IN (
+            'EXISTS (
     SELECT `value`.`resource_id`
     FROM `value`
     WHERE `value`.`property_id` = %s
+        AND `value`.`resource_id` = %s.`id`
+        LIMIT 1
 )',
-            $alias,
-            (int) $property->getId()
+            (int) $property->getId(),
+            $alias
         );
 
         return $constraints . sprintf(' OR (%s)', implode(' AND ', $reservedConstraints));
