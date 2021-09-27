@@ -389,12 +389,17 @@ class AccessResourceController extends AbstractActionController
         // Send headers separately to handle large files.
         $response->sendHeaders();
 
+        // TODO Use Laminas stream response.
+
         // Clears all active output buffers to avoid memory overflow.
         $response->setContent('');
         while (ob_get_level()) {
             ob_end_clean();
         }
         readfile($filepath);
+
+        // TODO Fix issue with session. See readme of module XmlViewer.
+        ini_set('display_errors', '0');
 
         // Return response to avoid default view rendering and to manage events.
         return $response;
