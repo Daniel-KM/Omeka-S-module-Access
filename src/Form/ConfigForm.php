@@ -16,7 +16,7 @@ class ConfigForm extends Form
                 'type' => Element\Radio::class,
                 'options' => [
                     'label' => 'Restricted access mode (to be set in config/local.config.php)', // @translate
-                    'info' => 'Access to a media is "reserved" when it has the property "curation:reservedAccess" filled.', // @translate
+                    'info' => 'Access to a media is "reserved" when it has the property "curation:reserved" filled, whatever it is.', // @translate
                     'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource#access-mode',
                     'value_options' => [
                         'global' => 'Global: all users, included guests, have access to all reserved medias', // @translate

@@ -29,7 +29,7 @@ class ReservedResourceVisibilityFilter extends BaseResourceVisibilityFilter
         // Resource should be private.
         $reservedConstraints[] = sprintf('%s.is_public = 0', $alias);
 
-        // Resource should have property 'curation:reservedAccess', not empty.
+        // Resource should have property 'curation:reserved', whatever the value.
         $property = $this->serviceLocator->get(PropertyReservedAccess::class);
         $reservedConstraints[] = sprintf(
             '%s.id IN (

@@ -143,7 +143,7 @@ $this->headScript()
         <p><?= $translate('This resource is public: no access is needed to view it.'); ?></p>
     </div>
 
-    <?php elseif (!$resource->value('curation:reservedAccess')): ?>
+    <?php elseif (!$resource->value('curation:reserved')): ?>
 
     <div class="no-resources">
         <p><?= $translate('This resource is private and not marked reservable: no access is possible.'); ?></p>

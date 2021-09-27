@@ -103,7 +103,7 @@ class RequestResourceAccessForm extends AbstractHelper
                 continue;
             }
             /** @var \Omeka\Api\Representation\ValueRepresentation $value */
-            $value = $resource->value('curation:reservedAccess');
+            $value = $resource->value('curation:reserved');
             if (!$value) {
                 continue;
             }
