@@ -7,9 +7,14 @@ Access Resource (module for Omeka S)
 
 [Access Resource] is a module for [Omeka S] that allows to protect files to be
 accessed from the anonymous visitors, but nevertheless available globally or on
-requests by guests users, reserved to list of ips, or available by a token. The
-metadata of the restricted resources are always available to let the visitors
-know that they exist. The file itself is replaced by a fake file.
+requests by guests users, restricted to a list of ips, or available by a token.
+
+Furthermore, you can set the right to see a resource at the media level, so the
+item metadata are visible and the visitors know that a media exist. The file
+itself (the original one and eventually the large and other derivatives files)
+is replaced by a fake file, unless a specific right is granted.
+
+See [below](#usage) for more information on usage.
 
 
 Installation
@@ -18,6 +23,7 @@ Installation
 ### Associated modules
 
 If the access is reserved by ip or by token, the module can be used standalone.
+
 If the access is reserved globally, the module will need to identify users,
 generally with the module [Guest] or [Guest Role]. If the access is restricted
 individually, the module [Guest] will be needed to manage the requests. The
@@ -49,7 +55,8 @@ Omeka does not manage the requests of the files of the web server (generally
 Apache or Nginx): they are directly served by it, without any control. To
 protect them, you have to tell the web server to redirect the users requests to
 Omeka, so it can check the rights, before returning the file or a forbidden
-response. You can adapt `routes.ini` as you wish too.
+response. You can adapt `routes.ini` as you wish too, but this is useless in
+most of the cases.
 
 #### Apache
 
@@ -69,7 +76,7 @@ a fake file is displayed.
 The small derivatives files (square and thumbnails), can be protected too, but
 it is generally useless. Anyway, it depends on the original images.
 
-##### When Omeka S is installed at the root of a domain
+##### When Omeka S is installed at the root of a domain or a sub-domain
 
 Insert the following lines at line 4 of [.htaccess], just after `RewriteEngine On`:
 
@@ -81,12 +88,12 @@ RewriteRule ^files/large/(.*)$ /access/files/large/$1 [P]
 #RewriteRule ^files/square/(.*)$ /access/files/square/$1 [P]
 ```
 
-##### When Omeka S is installed in a sub-path (https://example.com/digital-library/)
+##### When Omeka S is installed in a sub-path (https://example.org/digital-library/)
 
 Insert the following lines at line 4 of [.htaccess], just after `RewriteEngine On`,
 adapting it to your real config (here, the sub-path is `digital-library`):
 
-```Apache
+```apache
 RewriteRule ^files/original/(.*)$ /digital-library/access/files/original/$1 [P]
 RewriteRule ^files/large/(.*)$ /digital-library/access/files/large/$1 [P]
 # Uncomment the lines below to protect square and medium thumbnails too, if really needed.
@@ -99,21 +106,22 @@ RewriteRule ^(.*) - [E=BASE:%1]
 
 ##### Common issues
 
-- Enable to redirect to a virtual proxy with https
+- Unable to redirect to a virtual proxy with https
 
   The config uses flag `[P]` for an internal fake `Proxy`, so Apache rewrites
   the path like a proxy. So if there is a redirection to a secured server
   (https), the certificate should be running and up-to-date and the option
   `SSLProxyEngine on` should be set in the Apache config of the web server.
+
   Anyway, if you have access to it, you can include all rules inside it
   directly (`ProxyPass`). If you don't have access to the Apache config, just
   use the full unsecure url with `http://` for the internal proxy. Because it is
   a fake proxy, it doesn't matter if the internal redirect url is unsecure:
 
-  ```Apache
-  RewriteRule ^files/original/(.*)$ http://example.org/digital-library/access/files/original/$1 [P]
-  RewriteRule ^files/large/(.*)$ http://example.org/digital-library/access/files/large/$1 [P]
-  ```
+```apache
+RewriteRule ^files/original/(.*)$ http://example.org/digital-library/access/files/original/$1 [P]
+RewriteRule ^files/large/(.*)$ http://example.org/digital-library/access/files/large/$1 [P]
+```
 
 #### Nginx
 
@@ -124,14 +132,20 @@ Usage
 -----
 
 Omeka has two modes of visibility: public or private. This module adds a third
-mode for the medias, restricted. When enabled, the metadata of the restricted
-private medias are viewable, but not the original files (and eventually the
-large and other derivatives files).
+mode for resource: restricted. It is available globally, by ip, or by user. To
+enable this mode of visibility, you should define the access mode and to
+identify the restricted resources.
+
+One important thing to understand is to choose to define the access at the item
+and/or at the media level. If you choose to set the restricted access on the
+item, it will remains private for visitors without rights, even metadata. If you
+choose to set the restricted access on the media, the public item metadata will
+be  viewable by everybody.
 
 ### Access mode
 
 The rights to see the files are controlled on the fly. The restricted visibility
-can be managed in three ways:
+can be managed in three ways, and with or without metadata:
 
 - `global`: all authenticated users have access to all the restricted files. In
   practice, the guest users have no access to private resources, but they can
@@ -154,7 +168,7 @@ specify it in the file `config/local.config.php` of the Omeka directory:
     ],
 ```
 
-### Identification of the restricted medias
+### Identification of the restricted resources
 
 After the configuration, you should identify all medias that you want to make
 available via a restricted access. By default, private resources remain private,
@@ -163,9 +177,9 @@ keep some private resources private, and some other ones available on request,
 or globally.
 
 To indicate which resources are restricted, simply add a value to the property
-`curation:reservedAccess`, that is created by the module. When a private
-resource has a value for this property, whatever it is (except empty value `0`),
-it becomes available for all guest users, and all visitors can view its metadata
+`curation:reserved`, that is created by the module. When a private resource has
+a value for this property, whatever it is (even empty value `0` or `false`), it
+becomes available for all guest users, and all visitors can view its metadata
 automatically too in listings. Preview will be available for media too. The
 value of this property can be private or public.
 
