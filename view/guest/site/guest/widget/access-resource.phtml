@@ -3,13 +3,15 @@
  * @var \Laminas\View\Renderer\PhpRenderer $this
  */
 
-$translate = $this->plugin('translate');
-$urlHelper = $this->plugin('url');
+$plugins = $this->getHelperPluginManager();
+$translate = $plugins->get('translate');
+$urlHelper = $plugins->get('url');
+$hyperlink = $plugins->get('hyperlink');
 ?>
 
 <ul>
     <li>
         <?php $url = $urlHelper('site/guest/access-resource', [], true); ?>
-        <?= $this->hyperlink($translate('Dashboard'), $url) ?>
+        <?= $hyperlink($translate('Dashboard'), $url) ?>
     </li>
 </ul>

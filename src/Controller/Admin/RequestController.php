@@ -4,15 +4,30 @@ namespace AccessResource\Controller\Admin;
 
 use AccessResource\Entity\AccessLog;
 use AccessResource\Form\Admin\AccessRequestForm;
-use AccessResource\Service\ServiceLocatorAwareTrait;
+use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\JsonModel;
 use Laminas\View\Model\ViewModel;
+use Omeka\DataType\Manager as DataTypeManager;
 use Omeka\Form\ConfirmForm;
 
 class RequestController extends AbstractActionController
 {
-    use ServiceLocatorAwareTrait;
+    /**
+     * @var \Doctrine\ORM\EntityManager;
+     */
+    protected $entityManager;
+
+    /**
+     * @var \Omeka\DataType\Manager;
+     */
+    protected $dataTypeManager;
+
+    public function __construct(EntityManager $entityManager, DataTypeManager $dataTypeManager)
+    {
+        $this->entityManager = $entityManager;
+        $this->dataTypeManager = $dataTypeManager;
+    }
 
     public function indexAction()
     {
@@ -65,8 +80,6 @@ class RequestController extends AbstractActionController
             $form->setData($accessRequest->toArray());
         }
 
-        $services = $this->getServiceLocator();
-
         $requestedResource = null;
         if ($accessRequest && $accessRequest->id()) {
             $requestedResource = $accessRequest->resource();
@@ -88,24 +101,22 @@ class RequestController extends AbstractActionController
                 $response = null;
 
                 if ($accessRequest) {
-                    /** @var \Doctrine\ORM\EntityManager $entityManager */
-                    $entityManager = $services->get('Omeka\EntityManager');
                     $response = $this->api($form)->update('access_requests', $accessRequest->id(), $post, [], ['isPartial' => true]);
                     $accessRequest = $response->getContent();
-                    $accessUser = $entityManager
+                    $accessUser = $this->entityManager
                         ->getRepository(\Omeka\Entity\User::class)
                         ->find($accessRequest->user()->id());
 
                     // Log changes to request record.
                     $log = new AccessLog();
-                    $entityManager->persist($log);
+                    $this->entityManager->persist($log);
                     $log
                         ->setAction('update_to_' . $accessRequest->status())
                         ->setUser($accessUser)
                         ->setRecordId($accessRequest->id())
                         ->setType(AccessLog::TYPE_REQUEST)
                         ->setDate(new \DateTime());
-                    $entityManager->flush();
+                        $this->entityManager->flush();
 
                     // Fire send email event.
                     $this->getEventManager()->trigger('accessresource.request.updated');
@@ -123,10 +134,8 @@ class RequestController extends AbstractActionController
             }
         }
 
-        $dataType = $services->get('Omeka\DataTypeManager')->get('resource');
-
         return new ViewModel([
-            'dataType' => $dataType,
+            'dataType' => $this->dataTypeManager->get('resource'),
             'accessRequest' => $accessRequest,
             'requestedResource' => $requestedResource,
             'form' => $form,

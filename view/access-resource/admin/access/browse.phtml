@@ -4,9 +4,10 @@
  * @var \AccessResource\Api\Representation\AccessResourceRepresentation[] $accessResources
  */
 
-$translate = $this->plugin('translate');
-$escape = $this->plugin('escapeHtml');
-$urlHelper = $this->plugin('url');
+$plugins = $this->getHelperPluginManager();
+$translate = $plugins->get('translate');
+$escape = $plugins->get('escapeHtml');
+$urlHelper = $plugins->get('url');
 
 $sortHeadings = [
     [
@@ -120,7 +121,7 @@ $this->htmlElement('body')->appendAttribute('class', 'access-resources browse');
                     </ul>
                 </td>
                 <td><?= $accessResource->created()->format('Y-m-d H:i:s') ?></td>
-                <td><?= $accessResource->modified()->format('Y-m-d H:i:s') ?></td>
+                <td><?= $accessResource->modified() ? $accessResource->modified()->format('Y-m-d H:i:s') : '' ?></td>
                 <td><?= $accessResource->token() ?></td>
                 <td><?= $accessResource->temporal() ? $translate('Yes') : $translate('No') ?></td>
                 <td><?= $accessResource->startDate() ? $accessResource->startDate()->format('Y-m-d H:i') : '' ?></td>

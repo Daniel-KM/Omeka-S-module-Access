@@ -51,7 +51,7 @@ $this->headScript()
         <li class="value tag" data-id="<?= $request->id() ?>">
             <span><?= sprintf($translate('user: %s'), $userText) ?></span>
             <?php if ($updateRight): ?>
-            <span class="single actions"><a href="<?= $url('admin/access-resource/id', ['controller' => 'request', 'id' => $request->id(), 'action' => 'edit']) ?>"
+            <span class="single actions"><a href="<?= $urlHelper('admin/access-resource/id', ['controller' => 'request', 'id' => $request->id(), 'action' => 'edit']) ?>"
                 class="o-icon-edit"
                 aria-label="<?= $escape($translate('Edit')) ?>"
                 title="<?= $escape($translate('Edit')) ?>"></a></span>
@@ -106,7 +106,7 @@ $this->headScript()
         <li class="value tag" data-id="<?= $access->id() ?>">
             <span><?= sprintf($translate('user: %s'), $userText) ?></span>
             <?php if ($updateRight): ?>
-            <span class="single actions"><a href="<?= $url('admin/access-resource/id', ['id' => $access->id(), 'action' => 'edit']) ?>"
+            <span class="single actions"><a href="<?= $urlHelper('admin/access-resource/id', ['id' => $access->id(), 'action' => 'edit']) ?>"
                 class="o-icon-edit"
                 aria-label="<?= $escape($translate('Edit')) ?>"
                 title="<?= $escape($translate('Edit')) ?>"></a></span>

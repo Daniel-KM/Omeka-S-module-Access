@@ -3,13 +3,21 @@
 namespace AccessResource\Controller\Admin;
 
 use AccessResource\Entity\AccessLog;
-use AccessResource\Service\ServiceLocatorAwareTrait;
+use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 
 class LogController extends AbstractActionController
 {
-    use ServiceLocatorAwareTrait;
+    /**
+     * @var \Doctrine\ORM\EntityManager;
+     */
+    protected $entityManager;
+
+    public function __construct(EntityManager $entityManager)
+    {
+        $this->entityManager = $entityManager;
+    }
 
     public function indexAction()
     {
@@ -31,25 +39,24 @@ class LogController extends AbstractActionController
             'sort_order' => $params->fromQuery('sort_order', 'desc'),
         ];
 
-        /** @var \Doctrine\ORM\EntityManager $entityManager */
-        $entityManager = $this->getServiceLocator()->get('Omeka\EntityManager');
-        $qb = $entityManager->createQueryBuilder();
-
-        $log_count = $qb
-            ->select($qb->expr()->count('logs_count.id'))
-            ->from(AccessLog::class, 'logs_count')->getQuery()->getSingleResult();
-
-        $qb = $entityManager->createQueryBuilder();
+        $qb = $this->entityManager->createQueryBuilder();
         $qb
             ->select('logs')
             ->from(AccessLog::class, 'logs')
             ->setFirstResult(((int) $query['page'] - 1) * (int) $query['per_page'])
             ->setMaxResults((int) $query['per_page'])
             ->orderBy('logs.id', 'DESC');
-
         $logs = $qb->getQuery()->getResult();
 
-        $this->paginator($log_count[1], $page, $perPage);
+        $qb = $this->entityManager->createQueryBuilder();
+
+        $logCount = $qb
+            ->select($qb->expr()->count('logs_count.id'))
+            ->from(AccessLog::class, 'logs_count')
+            ->getQuery()
+            ->getSingleResult();
+
+        $this->paginator($logCount, $page, $perPage);
 
         return new ViewModel([
             'logs' => $logs,

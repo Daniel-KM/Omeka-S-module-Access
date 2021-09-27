@@ -34,29 +34,6 @@ class AccessResourceAdapter extends AbstractEntityAdapter
         return \AccessResource\Entity\AccessResource::class;
     }
 
-    public function hydrate(Request $request, EntityInterface $entity, ErrorStore $errorStore): void
-    {
-        /** @var \AccessResource\Entity\AccessResource $entity */
-        $data = $request->getContent();
-        foreach ($data as $key => $value) {
-            $method = 'set' . ucfirst(Inflector::camelize($key));
-            if (!method_exists($entity, $method)) {
-                continue;
-            }
-            $entity->$method($value);
-        }
-
-        if (isset($data['resource_id'])) {
-            $resource = $this->getAdapter('resources')->findEntity($data['resource_id']);
-            $entity->setResource($resource);
-        }
-
-        if (isset($data['user_id'])) {
-            $user = $this->getAdapter('users')->findEntity($data['user_id']);
-            $entity->setUser($user);
-        }
-    }
-
     public function buildQuery(QueryBuilder $qb, array $query): void
     {
         $expr = $qb->expr();
@@ -100,6 +77,29 @@ class AccessResourceAdapter extends AbstractEntityAdapter
                 'omeka_root.modified',
                 $this->createNamedParameter($qb, $query['modified'])
             ));
+        }
+    }
+
+    public function hydrate(Request $request, EntityInterface $entity, ErrorStore $errorStore): void
+    {
+        /** @var \AccessResource\Entity\AccessResource $entity */
+        $data = $request->getContent();
+        foreach ($data as $key => $value) {
+            $method = 'set' . ucfirst(Inflector::camelize($key));
+            if (!method_exists($entity, $method)) {
+                continue;
+            }
+            $entity->$method($value);
+        }
+
+        if (isset($data['resource_id'])) {
+            $resource = $this->getAdapter('resources')->findEntity($data['resource_id']);
+            $entity->setResource($resource);
+        }
+
+        if (isset($data['user_id'])) {
+            $user = $this->getAdapter('users')->findEntity($data['user_id']);
+            $entity->setUser($user);
         }
     }
 }

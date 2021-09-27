@@ -4,15 +4,31 @@ namespace AccessResource\Controller\Admin;
 
 use AccessResource\Entity\AccessLog;
 use AccessResource\Form\Admin\AccessResourceForm;
-use AccessResource\Service\ServiceLocatorAwareTrait;
+use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\JsonModel;
 use Laminas\View\Model\ViewModel;
+use Omeka\DataType\Manager as DataTypeManager;
 use Omeka\Form\ConfirmForm;
+use Omeka\Stdlib\Message;
 
 class AccessController extends AbstractActionController
 {
-    use ServiceLocatorAwareTrait;
+    /**
+     * @var \Doctrine\ORM\EntityManager;
+     */
+    protected $entityManager;
+
+    /**
+     * @var \Omeka\DataType\Manager;
+     */
+    protected $dataTypeManager;
+
+    public function __construct(EntityManager $entityManager, DataTypeManager $dataTypeManager)
+    {
+        $this->entityManager = $entityManager;
+        $this->dataTypeManager = $dataTypeManager;
+    }
 
     public function indexAction()
     {
@@ -64,9 +80,6 @@ class AccessController extends AbstractActionController
         if ($accessResource) {
             $form->setData($accessResource->toArray());
         }
-
-        $services = $this->getServiceLocator();
-
         $requestedResource = null;
         if ($accessResource && $accessResource->id()) {
             $requestedResource = $accessResource->resource();
@@ -84,52 +97,50 @@ class AccessController extends AbstractActionController
             // TODO Use getData().
             $form->setData($post);
 
-            if ($form->isValid()) {
+            if ($form->isValid() && !empty($post['resource_id'])) {
                 $response = null;
 
                 $post['startDate'] = new \DateTime($post['startDate']);
                 $post['endDate'] = new \DateTime($post['endDate']);
 
                 if ($accessResource) {
-                    /** @var \Doctrine\ORM\EntityManager $entityManager */
-                    $entityManager = $services->get('Omeka\EntityManager');
                     $response = $this->api($form)->update('access_resources', $accessResource->id(), $post, [], ['isPartial' => true]);
+                    /** @var \AccessResource\Api\Representation\AccessResourceRepresentation $accessResource */
                     $accessResource = $response->getContent();
-                    $accessUser = $entityManager
+                    $accessUser = $this->entityManager
                         ->getRepository(\Omeka\Entity\User::class)
                         ->find($accessResource->user()->id());
 
                     // Log changes to access record.
                     $log = new AccessLog();
-                    $entityManager->persist($log);
+                    $this->entityManager->persist($log);
                     $log
                         ->setAction('update')
                         ->setUser($accessUser)
                         ->setRecordId($accessResource->id())
                         ->setType(AccessLog::TYPE_ACCESS)
                         ->setDate(new \DateTime());
-                    $entityManager->flush();
+                    $this->entityManager->flush();
                 } else {
                     $post['token'] = $this->createToken();
 
-                    /** @var \Doctrine\ORM\EntityManager $entityManager */
-                    $entityManager = $services->get('Omeka\EntityManager');
+                    /** @var \AccessResource\Api\Representation\AccessResourceRepresentation $accessResource */
                     $response = $this->api($form)->create('access_resources', $post);
                     $accessResource = $response->getContent();
-                    $accessUser = $entityManager
+                    $accessUser = $this->entityManager
                         ->getRepository(\Omeka\Entity\User::class)
                         ->find($accessResource->user()->id());
 
                     // Log changes to access record.
                     $log = new AccessLog();
-                    $entityManager->persist($log);
+                    $this->entityManager->persist($log);
                     $log
                         ->setAction('create')
                         ->setUser($accessUser)
                         ->setRecordId($accessResource->id())
                         ->setType(AccessLog::TYPE_ACCESS)
                         ->setDate(new \DateTime());
-                    $entityManager->flush();
+                    $this->entityManager->flush();
 
                     return $this->redirect()->toUrl($this->getRequest()->getHeader('Referer')->getUri());
                 }
@@ -138,15 +149,17 @@ class AccessController extends AbstractActionController
                     $this->messenger()->addSuccess('Access record successfully saved'); // @translate
                     return $this->redirect()->toUrl($response->getContent()->url('edit'));
                 }
+            } elseif (empty($post['resource_id'])) {
+                $this->messenger()->addError(new Message(
+                    'Resource is undefined.', // @translate
+                ));
             } else {
                 $this->messenger()->addFormErrors($form);
             }
         }
 
-        $dataType = $services->get('Omeka\DataTypeManager')->get('resource');
-
         return new ViewModel([
-            'dataType' => $dataType,
+            'dataType' => $this->dataTypeManager->get('resource'),
             'accessResource' => $accessResource,
             'requestedResource' => $requestedResource,
             'form' => $form,
@@ -175,7 +188,6 @@ class AccessController extends AbstractActionController
     public function deleteAction()
     {
         if ($this->getRequest()->isPost()) {
-            $services = $this->getServiceLocator();
             $id = $this->params('id');
 
             $form = $this->getForm(ConfirmForm::class);
@@ -184,23 +196,21 @@ class AccessController extends AbstractActionController
                 $response = $this->api($form)->delete('access_resources', $id);
 
                 if ($response) {
-                    /** @var \Doctrine\ORM\EntityManager $entityManager */
-                    $entityManager = $services->get('Omeka\EntityManager');
                     $accessResource = $response->getContent();
-                    $accessUser = $entityManager
+                    $accessUser = $this->entityManager
                         ->getRepository(\Omeka\Entity\User::class)
                         ->find($accessResource->user()->id());
 
                     // Log changes to access record.
                     $log = new AccessLog();
-                    $entityManager->persist($log);
+                    $this->entityManager->persist($log);
                     $log
                         ->setAction('delete')
                         ->setUser($accessUser)
                         ->setRecordId($id)
                         ->setType(AccessLog::TYPE_ACCESS)
                         ->setDate(new \DateTime());
-                    $entityManager->flush();
+                    $this->entityManager->flush();
 
                     $this->messenger()->addSuccess('Access record successfully deleted'); // @translate
                 }
@@ -209,29 +219,31 @@ class AccessController extends AbstractActionController
             }
 
             if ($this->getRequest()->isXmlHttpRequest()) {
-                $userRole = $services->get('Omeka\AuthenticationService')->getIdentity()->getRole();
-                $isAdmin = in_array($userRole, [\Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN, \Omeka\Permissions\Acl::ROLE_SITE_ADMIN]);
+                $user = $this->identity();
+                $userRole = $user ? $user->getRole() : null;
+                $isAdmin = in_array($userRole, [
+                    \Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN,
+                    \Omeka\Permissions\Acl::ROLE_SITE_ADMIN,
+                ]);
                 if ($isAdmin) {
                     $response = $this->api($form)->delete('access_resources', $id);
 
                     if ($response) {
                         // Log changes to access record.
-                        /** @var \Doctrine\ORM\EntityManager $entityManager */
-                        $entityManager = $services->get('Omeka\EntityManager');
                         $accessResource = $response->getContent();
-                        $accessUser = $entityManager
+                        $accessUser = $this->entityManager
                             ->getRepository(\Omeka\Entity\User::class)
                             ->find($accessResource->user()->id());
 
                         $log = new AccessLog();
-                        $entityManager->persist($log);
+                        $this->entityManager->persist($log);
                         $log
                             ->setAction('delete')
                             ->setUser($accessUser)
                             ->setRecordId($id)
                             ->setType(AccessLog::TYPE_ACCESS)
                             ->setDate(new \DateTime());
-                        $entityManager->flush();
+                        $this->entityManager->flush();
                     }
                 }
                 return true;
@@ -299,18 +311,10 @@ class AccessController extends AbstractActionController
      */
     protected function createToken()
     {
-        $services = $this->getServiceLocator();
-        /** @var \Doctrine\ORM\EntityManager $entityManager */
-        $entityManager = $services->get('Omeka\EntityManager');
+        $repository = $this->entityManager->getRepository(\AccessResource\Entity\AccessResource::class);
 
-        $repository = $entityManager->getRepository(\AccessResource\Entity\AccessResource::class);
-
-        $tokenString = PHP_VERSION_ID < 70000
-            ? function () {
-                return sha1(mt_rand());
-            }
-        : function () {
-            return substr(str_replace(['+', '/', '-', '='], '', base64_encode(random_bytes(16))), 0, 10);
+        $tokenString = function () {
+            return substr(str_replace(['+', '/', '-', '='], '', base64_encode(random_bytes(24))), 0, 10);
         };
 
         // Check if the token is unique.

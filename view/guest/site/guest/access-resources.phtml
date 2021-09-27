@@ -46,7 +46,7 @@ $this->htmlElement('body')->appendAttribute('class', 'sites browse');
                 <td class="resource <?= $resourceType; ?>"><?= $resourceText ?></td>
                 <td><?= $translate($accessRequest->statusLabel()) ?></td>
                 <td><?= $accessRequest->created()->format('Y-m-d H:i:s') ?></td>
-                <td><?= $accessRequest->modified()->format('Y-m-d H:i:s') ?></td>
+                <td><?= $accessRequest->modified() ? $accessRequest->modified()->format('Y-m-d H:i:s') : '' ?></td>
             </tr>
         <?php endforeach; ?>
         </tbody>

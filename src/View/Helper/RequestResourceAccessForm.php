@@ -3,12 +3,21 @@
 namespace AccessResource\View\Helper;
 
 use AccessResource\Form\AccessRequestForm;
-use AccessResource\Service\ServiceLocatorAwareTrait;
+use Laminas\Form\FormElementManager\FormElementManagerV3Polyfill as FormElementManager;
 use Laminas\View\Helper\AbstractHelper;
+use Omeka\Mvc\Controller\Plugin\Api;
 
 class RequestResourceAccessForm extends AbstractHelper
 {
-    use ServiceLocatorAwareTrait;
+    /**
+     * @var \Omeka\Mvc\Controller\Plugin\Api
+     */
+    protected $api;
+
+    /**
+     * @var \Laminas\Form\FormElementManager\FormElementManagerV3Polyfill
+     */
+    protected $formElementManager;
 
     /**
      * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[]
@@ -24,6 +33,12 @@ class RequestResourceAccessForm extends AbstractHelper
      * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[]
      */
     protected $inaccessibleReservedResources;
+
+    public function __construct(Api $api, FormElementManager $formElementManager)
+    {
+        $this->api = $api;
+        $this->formElementManager = $formElementManager;
+    }
 
     /**
      * Prepare the user request resource access form.
@@ -41,7 +56,7 @@ class RequestResourceAccessForm extends AbstractHelper
         }
         $this->setResources($resources);
 
-        // $currentTheme = $serviceLocator->get('Omeka\Site\ThemeManager')->getCurrentTheme();
+        // $currentTheme = $services->get('Omeka\Site\ThemeManager')->getCurrentTheme();
         return $this->render();
     }
 
@@ -124,15 +139,13 @@ class RequestResourceAccessForm extends AbstractHelper
         }
 
         /** @var \Omeka\Entity\User $user */
-        $user = $this->getView()->identity();
+        $user = $this->view->identity();
         if (!$user) {
             $this->setInaccessibleReservedResources($reserveds);
             return $this->inaccessibleReservedResources;
         }
 
-        $services = $this->getServiceLocator();
-        $acl = $services->get('Omeka\Acl');
-        if ($acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
+        if ($this->view->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
             $this->setInaccessibleReservedResources([]);
             return $this->inaccessibleReservedResources;
         }
@@ -142,9 +155,7 @@ class RequestResourceAccessForm extends AbstractHelper
         }, $reserveds);
 
         // The view api cannot manage options.
-        /** @var \Omeka\Api\Manager $api */
-        $api = $services->get('Omeka\ApiManager');
-        $accessResourceIds = $api
+        $accessResourceIds = $this->api
             ->search(
                 'access_resources',
                 [
@@ -171,15 +182,15 @@ class RequestResourceAccessForm extends AbstractHelper
 
     public function form(): AccessRequestForm
     {
-        return $this->getServiceLocator()->get('FormElementManager')->get(AccessRequestForm::class);
+        return $this->formElementManager->get(AccessRequestForm::class);
     }
 
     public function canSendRequest(): bool
     {
         // Users with access to view all resources should not be able to send
         // access requests.
-        $acl = $this->getServiceLocator()->get('Omeka\Acl');
-        if ($acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
+        $user = $this->view->identity();
+        if ($user && $this->view->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
             return false;
         }
 
@@ -208,9 +219,9 @@ class RequestResourceAccessForm extends AbstractHelper
 
         // Visitors without user account should not be able to send access
         // requests.
-        $user = $this->getView()->identity();
+        $user = $this->view->identity();
 
-        return $this->getView()->partial(
+        return $this->view->partial(
             'common/helper/request-resource-access-form',
             [
                 'resources' => $this->getInaccessibleReservedResources(),

@@ -38,7 +38,7 @@ $user = $accessRequest ? $accessRequest->user() : null;
 <div id="page-actions">
     <?php
         echo $deleteButton;
-        echo $this->hyperlink(
+        echo $hyperlink(
             $translate('Cancel'),
             $urlHelper('admin/access-resource/default', ['controller' => 'request', 'action' => 'browse']),
             ['class' => 'button']
@@ -47,34 +47,33 @@ $user = $accessRequest ? $accessRequest->user() : null;
 </div>
 
 <?php $this->trigger('view.edit.before'); ?>
-<?php
-    echo $this->form()->openTag($form);
-?>
+<?= $this->form()->openTag($form) ?>
+    <?php // Use the same template than the resource form to keep the css and simpler js. ?>
     <div class="resource-values field">
         <div class="field-meta">
             <div class="field-label"><?= $translate('Resource') ?></div>
         </div>
         <div class="inputs">
             <div class="values">
-                <div class="value value-resource" data-data-type="resource" data-name-prefix="resource">
+                <div class="value value-resource resource" data-data-type="resource" data-data-type-label="resource" data-data-type-icon="resource" data-name-prefix="resource" role="group">
                     <div class="input-body">
                         <span class="default"><?= $translate('No resource selected') ?></span>
                         <p class="selected-resource">
                             <span class="o-title"></span>
-                            <input type="hidden" class="value to-require" required="required" data-value-key="value_resource_id" value="<?php $requestedResource ? $requestedResource->id() : null ?>">
+                            <input type="hidden" class="value to-require" data-value-key="value_resource_id">
                         </p>
                         <?php
-                            echo $this->hyperlink($translate('Item'), '#item-resource-select', [
+                            echo $hyperlink($translate('Item'), '#item-resource-select', [
                                 'class' => 'o-icon-items button resource-select',
                                 'data-sidebar-content-url' => $urlHelper('admin/default', ['controller' => 'item', 'action' => 'sidebar-select'], false),
                             ]);
 
-                            echo $this->hyperlink($translate('Item set'), '#itemset-resource-select', [
+                            echo $hyperlink($translate('Item set'), '#itemset-resource-select', [
                                 'class' => 'o-icon-item-sets button resource-select',
                                 'data-sidebar-content-url' => $urlHelper('admin/default', ['controller' => 'item-set', 'action' => 'sidebar-select'], false),
                             ]);
 
-                            echo $this->hyperlink($translate('Media'), '#media-resource-select', [
+                            echo $hyperlink($translate('Media'), '#media-resource-select', [
                                 'class' => 'o-icon-media button resource-select',
                                 'data-sidebar-content-url' => $urlHelper('admin/default', ['controller' => 'media', 'action' => 'sidebar-select'], $mediaContentUrlOptions, false),
                             ]);
@@ -94,7 +93,7 @@ $user = $accessRequest ? $accessRequest->user() : null;
             <div class="selected-user">
                 <?php
                     if ($user):
-                        echo $this->hyperlink($user->name(), $user->adminUrl(), ['target' => '_blank']);
+                        echo $hyperlink($user->name(), $user->adminUrl(), ['target' => '_blank']);
                     endif;
                 ?>
             </div>

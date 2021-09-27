@@ -22,7 +22,7 @@ return [
     ],
     'controllers' => [
         'factories' => [
-            'AccessResource\Controller\AccessResource' => Service\Controller\ControllerFactory::class,
+            'AccessResource\Controller\AccessResource' => Service\Controller\AccessResourceControllerFactory::class,
         ],
     ],
     'controller_plugins' => [

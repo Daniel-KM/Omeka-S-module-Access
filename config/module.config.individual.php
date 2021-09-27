@@ -31,18 +31,16 @@ return [
     ],
     'view_helpers' => [
         'factories' => [
-            'requestResourceAccessForm' => Service\ViewHelper\ViewHelperFactory::class,
+            'requestResourceAccessForm' => Service\ViewHelper\RequestResourceAccessFormFactory::class,
         ],
     ],
     'form_elements' => [
         'invokables' => [
+            Form\Admin\AccessRequestForm::class => Form\Admin\AccessRequestForm::class,
+            Form\Admin\AccessResourceForm::class => Form\Admin\AccessResourceForm::class,
+            Form\AccessRequestForm::class => Form\AccessRequestForm::class,
             Form\ConfigForm::class => Form\ConfigForm::class,
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,
-        ],
-        'factories' => [
-            Form\Admin\AccessRequestForm::class => Service\Form\FormFactory::class,
-            Form\Admin\AccessResourceForm::class => Service\Form\FormFactory::class,
-            Form\AccessRequestForm::class => Service\Form\FormFactory::class,
         ],
     ],
     'controllers' => [
@@ -51,21 +49,21 @@ return [
             'AccessResource\Controller\Site\Request' => Controller\Site\RequestController::class,
         ],
         'factories' => [
-            'AccessResource\Controller\AccessResource' => Service\Controller\ControllerFactory::class,
-            'AccessResource\Controller\Admin\Access' => Service\Controller\ControllerFactory::class,
-            'AccessResource\Controller\Admin\Log' => Service\Controller\ControllerFactory::class,
-            'AccessResource\Controller\Admin\Request' => Service\Controller\ControllerFactory::class,
+            'AccessResource\Controller\AccessResource' => Service\Controller\AccessResourceControllerFactory::class,
+            'AccessResource\Controller\Admin\Access' => Service\Controller\AccessControllerFactory::class,
+            'AccessResource\Controller\Admin\Log' => Service\Controller\LogControllerFactory::class,
+            'AccessResource\Controller\Admin\Request' => Service\Controller\RequestControllerFactory::class,
         ],
     ],
     'controller_plugins' => [
         'factories' => [
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
+            'requestMailer' => Service\ControllerPlugin\RequestMailerFactory::class,
         ],
     ],
     'service_manager' => [
         'factories' => [
             Service\Property\ReservedAccess::class => Service\Property\ReservedAccess::class,
-            Service\RequestMailerFactory::class => Service\RequestMailerFactory::class,
         ],
     ],
     'router' => [

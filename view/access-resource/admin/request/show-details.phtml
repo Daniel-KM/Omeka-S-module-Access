@@ -6,8 +6,9 @@
  * @var string $linkTitle
  */
 
-$translate = $this->plugin('translate');
-$escape = $this->plugin('escapeHtml');
+$plugins = $this->getHelperPluginManager();
+$translate = $plugins->get('translate');
+$escape = $plugins->get('escapeHtml');
 
 /** @var \AccessResource\Api\Representation\AccessResourceRepresentation $accessRequest */
 $accessRequest = $resource;
@@ -20,6 +21,7 @@ endif;
 ?>
 
 <div class="resource-details" data-resource-values="<?= $escape($values) ?>">
+
     <?php if ($linkTitle): ?>
     <h3 class="o-title"><?= $resource->link($resource->displayTitle()) ?></h3>
     <?php else: ?>

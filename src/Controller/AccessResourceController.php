@@ -5,24 +5,52 @@ namespace AccessResource\Controller;
 use const AccessResource\ACCESS_MODE;
 
 use AccessResource\Entity\AccessLog;
-use AccessResource\Service\ServiceLocatorAwareTrait;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\EntityManager;
 use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
+use Omeka\Api\Adapter\MediaAdapter;
+use Omeka\DataType\Manager as DataTypeManager;
 use Omeka\Mvc\Exception;
 
 class AccessResourceController extends AbstractActionController
 {
-    use ServiceLocatorAwareTrait;
+    /**
+     * @var \Doctrine\ORM\EntityManager;
+     */
+    protected $entityManager;
+
+    /**
+     * @var \Omeka\DataType\Manager;
+     */
+    protected $dataTypeManager;
+
+    /**
+     * @var \Omeka\Api\Adapter\MediaAdapter;
+     */
+    protected $mediaAdapter;
+
+    /**
+     * @var string
+     */
+    protected $basePath;
 
     /**
      * @var ArrayCollection
      */
     protected $data;
 
-    public function __construct()
-    {
+    public function __construct(
+        EntityManager $entityManager,
+        DataTypeManager $dataTypeManager,
+        MediaAdapter $mediaAdapter,
+        string $basePath
+    ) {
+        $this->entityManager = $entityManager;
+        $this->dataTypeManager = $dataTypeManager;
+        $this->mediaAdapter = $mediaAdapter;
+        $this->basePath = $basePath;
         $this->data = new ArrayCollection();
     }
 
@@ -73,10 +101,8 @@ class AccessResourceController extends AbstractActionController
                 : $this->sendFakeFile();
         }
 
-        $services = $this->getServiceLocator();
-
         // Any admin can see any media in any case, without log.
-        if ($user && $services->get('Omeka\Acl')->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
+        if ($user && $this->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
             return $this->sendFile();
         }
 
@@ -91,23 +117,20 @@ class AccessResourceController extends AbstractActionController
             return $this->sendFakeFile();
         }
 
-        /** @var \Doctrine\ORM\EntityManager $entityManager */
-        $entityManager = $services->get('Omeka\EntityManager');
-
         // If without admin permissions, check access.
-        $access = $this->getMediaAccess();
+        $access = $this->hasMediaAccess();
         if (!$access) {
             // Log attempt to access original record without rights.
             if ($type === 'original') {
                 $log = new AccessLog();
-                $entityManager->persist($log);
+                $this->entityManager->persist($log);
                 $log
                     ->setAction('no_access')
                     ->setUser($user)
                     ->setRecordId($media->id())
                     ->setType(AccessLog::TYPE_ACCESS)
                     ->setDate(new \DateTime());
-                $entityManager->flush();
+                $this->entityManager->flush();
             }
             return $this->sendFakeFile();
         }
@@ -115,14 +138,14 @@ class AccessResourceController extends AbstractActionController
         // Don't log derivative files.
         if ($type === 'original') {
             $log = new AccessLog();
-            $entityManager->persist($log);
+            $this->entityManager->persist($log);
             $log
                 ->setAction('accessed')
                 ->setUser($user)
                 ->setRecordId($media->id())
                 ->setType(AccessLog::TYPE_ACCESS)
                 ->setDate(new \DateTime());
-            $entityManager->flush();
+            $this->entityManager->flush();
         }
 
         return $this->sendFile();
@@ -170,10 +193,8 @@ class AccessResourceController extends AbstractActionController
 
     /**
      * Get Media Representation.
-     *
-     * @return \Omeka\Api\Representation\MediaRepresentation|null
      */
-    protected function getMedia()
+    protected function getMedia(): ?\Omeka\Api\Representation\MediaRepresentation
     {
         $key = 'media';
         $value = $this->data->get($key);
@@ -193,15 +214,14 @@ class AccessResourceController extends AbstractActionController
         // "storage_id" is not available through default api, so use core entity
         // manager. Nevertheless, the call to the api allows to check rights.
         if ($storageId) {
-            $services = $this->getServiceLocator();
-            $media = $services->get('Omeka\EntityManager')
+            $media = $this->entityManager
                 ->getRepository(\Omeka\Entity\Media::class)
                 ->findOneBy(['storageId' => $storageId]);
             if ($media) {
                 /** @var \Omeka\Api\Representation\MediaRepresentation $media */
                 // To get representation from adapter is quicker and enough,
                 // because rights are already checked.
-                $media = $services->get('Omeka\ApiAdapterManager')->get('media')->getRepresentation($media);
+                $media = $this->mediaAdapter->getRepresentation($media);
             }
         } else {
             $media = null;
@@ -211,7 +231,7 @@ class AccessResourceController extends AbstractActionController
         return $media;
     }
 
-    protected function getMediaAccess()
+    protected function hasMediaAccess(): bool
     {
         $key = 'mediaAccess';
         $value = $this->data->get($key);
@@ -224,9 +244,6 @@ class AccessResourceController extends AbstractActionController
             return false;
         }
 
-        /** @var \Doctrine\ORM\EntityManager $entityManager */
-        $services = $this->getServiceLocator();
-        $entityManager = $services->get('Omeka\EntityManager');
         $token = $this->params()->fromQuery('token');
 
         $mediaAccess = $media->isPublic();
@@ -237,11 +254,11 @@ class AccessResourceController extends AbstractActionController
 
             $accessResource = null;
             if (!is_null($token)) {
-                $accessResource = $entityManager
+                $accessResource = $this->entityManager
                     ->getRepository(\AccessResource\Entity\AccessResource::class)
                     ->findOneBy(['token' => $token]);
             } elseif (!is_null($user)) {
-                $accessResource = $entityManager
+                $accessResource = $this->entityManager
                     ->getRepository(\AccessResource\Entity\AccessResource::class)
                     ->findOneBy(['user' => $user->getId(), 'resource' => $media->id()]);
             }
@@ -293,7 +310,7 @@ class AccessResourceController extends AbstractActionController
                     'enabled' => 1,
                 ])->getContent();
             }
-            $value = ($mediaAccess && $mediaItemAccess);
+            $value = $mediaAccess && $mediaItemAccess;
         } else {
             $value = true;
         }
@@ -304,10 +321,8 @@ class AccessResourceController extends AbstractActionController
 
     /**
      * Get filepath.
-     *
-     * @return string|null Path to the file.
      */
-    protected function getFilepath()
+    protected function getFilepath(): ?string
     {
         $key = 'filepath';
         $value = $this->data->get($key);
@@ -332,9 +347,7 @@ class AccessResourceController extends AbstractActionController
             $filename = $media->storageId() . '.jpg';
         }
 
-        $config = $this->getServiceLocator()->get('Config');
-        $basePath = $config['file_store']['local']['base_path'] ?: OMEKA_PATH . '/files';
-        $value = sprintf('%s/%s/%s', $basePath, $storageType, $filename);
+        $value = sprintf('%s/%s/%s', $this->basePath, $storageType, $filename);
         if (!is_readable($value)) {
             return null;
         }
@@ -347,7 +360,7 @@ class AccessResourceController extends AbstractActionController
      * This is the 'file' action that is invoked when a user wants to download
      * the given file.
      */
-    protected function sendFile()
+    protected function sendFile(): \Laminas\Http\PhpEnvironment\Response
     {
         $filepath = $this->getFilepath();
         if (!$filepath) {
@@ -424,10 +437,8 @@ class AccessResourceController extends AbstractActionController
      *
      * It avoids to throw an exception, since it's not really an error and trace
      * is useless.
-     *
-     * @return ViewModel
      */
-    public function permissionDeniedAction()
+    public function permissionDeniedAction(): ViewModel
     {
         $event = $this->getEvent();
         $routeMatch = $event->getRouteMatch();
@@ -436,7 +447,7 @@ class AccessResourceController extends AbstractActionController
         $response = $event->getResponse();
         $response->setStatusCode(403);
 
-        $user = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
+        $user = $this->identity();
 
         $this->logger()->warn(
             sprintf('Access to private resource "%s" by user "%s".', // $translate
@@ -474,7 +485,7 @@ class AccessResourceController extends AbstractActionController
             return null;
         }
 
-        $reservedIps = $this->getServiceLocator()->get('Omeka\Settings')->get('accessresource_ip_reserved', []);
+        $reservedIps = $this->settings()->get('accessresource_ip_reserved', []);
         if (empty($reservedIps)) {
             return null;
         }

@@ -1,31 +1,52 @@
 <?php declare(strict_types=1);
-namespace AccessResource\Mail;
 
-use AccessResource\Service\ServiceLocatorAwareTrait;
-use Laminas\ServiceManager\ServiceLocatorInterface;
+namespace AccessResource\Mvc\Controller\Plugin;
+
+use Laminas\Authentication\AuthenticationService;
+use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Omeka\Entity\User;
+use Omeka\Settings\Settings;
+use Omeka\Stdlib\Mailer;
 
-class RequestMailer
+class RequestMailer extends AbstractPlugin
 {
-    use ServiceLocatorAwareTrait;
-    protected $config;
-    protected $entityManager;
-    protected $admin_user;
+    /**
+     * @var \Omeka\Stdlib\Mailer
+     */
     protected $mailer;
+
+    /**
+     * @var \Omeka\Settings;
+     */
     protected $settings;
 
-    public function __construct(ServiceLocatorInterface $services)
-    {
-        $this->setServiceLocator($services);
-        $this->config = $services->get('Config');
-        $this->entityManager = $this->getServiceLocator()->get('Omeka\EntityManager');
-        if ($site_admin = $this->entityManager->getRepository(User::class)->findOneByRole('site_admin')) {
-            $this->admin_user = $site_admin;
-        } else {
-            $this->admin_user = $this->entityManager->getRepository(User::class)->findOneByRole('global_admin');
-        }
-        $this->mailer = $this->getServiceLocator()->get('Omeka\Mailer');
-        $this->settings = $this->getServiceLocator()->get('Omeka\Settings');
+    /**
+     * @var AuthenticationService
+     */
+    protected $authenticationService;
+
+    /**
+     * @var array
+     */
+    protected $config;
+
+    /**
+     * @var \Omeka\Entity\User
+     */
+    protected $adminUser;
+
+    public function __construct(
+        Mailer $mailer,
+        Settings $settings,
+        AuthenticationService $authenticationService,
+        array $config,
+        User $adminUser
+    ) {
+        $this->mailer = $mailer;
+        $this->settings = $settings;
+        $this->authenticationService = $authenticationService;
+        $this->config = $config;
+        $this->adminUser = $adminUser;
     }
 
     /**
@@ -39,10 +60,10 @@ class RequestMailer
 
         // Mail to administrator.
         $mail = [];
-        $mail['from'] = $this->admin_user->getEmail();
-        $mail['fromName'] = $this->admin_user->getName();
-        $mail['to'] = $this->admin_user->getEmail();
-        $mail['toName'] = $this->admin_user->getName();
+        $mail['from'] = $this->adminUser->getEmail();
+        $mail['fromName'] = $this->adminUser->getName();
+        $mail['to'] = $this->adminUser->getEmail();
+        $mail['toName'] = $this->adminUser->getName();
         if ($action === 'created') {
             $mail['subject'] = $this->settings->get('accessresource_message_admin_subject', $this->config['accessresource']['settings']['accessresource_message_admin_subject']);
             $mail['body'] = $this->settings->get('accessresource_message_admin_request_created', $this->config['accessresource']['settings']['accessresource_message_admin_request_created']);
@@ -70,10 +91,9 @@ class RequestMailer
         }
 
         // Mail to user.
-        $user = $this->serviceLocator->get('Omeka\AuthenticationService')->getIdentity();
-        $mail = [];
-        $mail['from'] = $this->admin_user->getEmail();
-        $mail['fromName'] = $this->admin_user->getName();
+        $user = $this->authenticationService->getIdentity();
+        $mail['from'] = $this->adminUser->getEmail();
+        $mail['fromName'] = $this->adminUser->getName();
         $mail['to'] = $user->getEmail();
         $mail['toName'] = $user->getName();
         if ($action === 'created') {

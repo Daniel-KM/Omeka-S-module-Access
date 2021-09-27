@@ -479,7 +479,7 @@ class Module extends AbstractModule
             return;
         }
 
-        $requestMailer = $services->get(\AccessResource\Service\RequestMailerFactory::class);
+        $requestMailer = $services->get('ControllerPluginManager')->get('requestMailer');
         $requestMailer->sendMailToAdmin('created');
         $requestMailer->sendMailToUser('created');
     }
@@ -491,7 +491,7 @@ class Module extends AbstractModule
             return;
         }
 
-        $requestMailer = $services->get(\AccessResource\Service\RequestMailerFactory::class);
+        $requestMailer = $services->get('ControllerPluginManager')->get('requestMailer');
         // $requestMailer->sendMailToAdmin('updated');
         $requestMailer->sendMailToUser('updated');
     }
