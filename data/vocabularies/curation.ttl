@@ -12,20 +12,6 @@
     dcterms:description "Curation of resources."@en ;
     dcterms:description "Curation des ressources."@fr .
 
-curation:reservedAccess a rdf:Property ;
-    rdfs:label "Reserved access"@en ;
-    rdfs:label "Accès réservé"@fr ;
-    rdfs:comment "Define the resource as a restricted access one as soon a value is set, whatever it is."@en ;
-    rdfs:comment "Place la ressource en accès restreint dès qu‘une valeur quelconque est définie."@fr ;
-    vs:term_status "experimental" .
-
-curation:newResource a rdf:Property ;
-    rdfs:label "New resource"@en ;
-    rdfs:label "Nouvelle ressource"@fr ;
-    rdfs:comment "Mark the resource as a new one as soon as a value is set, whatever it is."@en ;
-    rdfs:comment "Marque la ressource comme nouvelle dès qu‘une valeur quelconque est définie."@fr ;
-    vs:term_status "experimental" .
-
 curation:featured a rdf:Property ;
     rdfs:label "Featured"@en ;
     rdfs:label "En vedette"@fr ;
@@ -33,11 +19,33 @@ curation:featured a rdf:Property ;
     rdfs:comment "Marque la ressource comme vedette dès qu‘une valeur quelconque est définie."@fr ;
     vs:term_status "experimental" .
 
+curation:new a rdf:Property ;
+    rdfs:label "New"@en ;
+    rdfs:label "Nouveau"@fr ;
+    rdfs:comment "Mark the resource as a new one as soon as a value is set, whatever it is."@en ;
+    rdfs:comment "Marque la ressource comme nouvelle dès qu‘une valeur quelconque est définie."@fr ;
+    vs:term_status "experimental" .
+
+curation:reserved a rdf:Property ;
+    rdfs:label "Reserved"@en ;
+    rdfs:label "Réservé"@fr ;
+    rdfs:comment "Define the resource as a restricted access one as soon a value is set, whatever it is."@en ;
+    rdfs:comment "Place la ressource en accès restreint dès qu‘une valeur quelconque est définie."@fr ;
+    vs:term_status "experimental" .
+
+curation:selected a rdf:Property ;
+    rdfs:label "Selected"@en ;
+    rdfs:label "Sélectionné"@fr ;
+    rdfs:comment "Mark the resource as a selected one as soon as a value is set, whatever it is."@en ;
+    rdfs:comment "Marque la ressource comme sélectionnée dès qu‘une valeur quelconque est définie."@fr ;
+    rdfs:subPropertyOf dcterms:subject ;
+    vs:term_status "experimental" .
+
 curation:category a rdf:Property ;
     rdfs:label "Category"@en ;
     rdfs:label "Catégorie"@fr ;
-    rdfs:comment "Non-standard topic that can be used for some purposes."@en ;
-    rdfs:comment "Thème non-standard pouvant être utilisé dans certains cas."@fr ;
+    rdfs:comment "A topic that can be used for some purposes."@en ;
+    rdfs:comment "Un sujet pouvant être utilisé dans certains cas."@fr ;
     rdfs:subPropertyOf dcterms:subject ;
     vs:term_status "experimental" .
 
@@ -48,4 +56,12 @@ curation:tag a rdf:Property ;
     rdfs:comment "Mot-clé pouvant être utilisé dans certains cas ou pour une mise à niveau depuis Omeka Classic."@fr ;
     rdfs:subPropertyOf dcterms:subject ;
     owl:sameAs oc:tag ;
+    vs:term_status "experimental" .
+
+curation:theme a rdf:Property ;
+    rdfs:label "Theme"@en ;
+    rdfs:label "Thème"@fr ;
+    rdfs:comment "A domain that can be used for some purposes."@en ;
+    rdfs:comment "Un domaine pouvant être utilisé dans certains cas."@fr ;
+    rdfs:subPropertyOf dcterms:subject ;
     vs:term_status "experimental" .

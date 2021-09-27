@@ -10,5 +10,11 @@
         "file": "curation.ttl",
         "format": "turtle"
     },
-    "old_namespace_uri": "https://curation.omeka.org/"
+    "update": {
+        "namespace_uri": "https://curation.omeka.org/",
+        "properties": {
+            "newResource": "new",
+            "reservedAccess": "reserved"
+        }
+    }
 }
