@@ -3,16 +3,17 @@
 namespace AccessResource\Db\Filter;
 
 use AccessResource\Service\Property\ReservedAccess as PropertyReservedAccess;
-use Omeka\Db\Filter\ResourceVisibilityFilter as BaseResourceVisibilityFilter;
 
 /**
  * Filter resources by default rules and user access.
+ * Users can view private resources when they have access to them as globally,
+ * by ip or individually.
  *
- * Users can view private resources when they have access to them.
+ * Warning: this filter can be overridden by module Group, so not compatible.
  *
  * {@inheritdoc}
  */
-class ReservedResourceVisibilityFilter extends BaseResourceVisibilityFilter
+class ReservedResourceVisibilityFilter extends \Omeka\Db\Filter\ResourceVisibilityFilter
 {
     protected function getResourceConstraint($alias)
     {
@@ -27,17 +28,16 @@ class ReservedResourceVisibilityFilter extends BaseResourceVisibilityFilter
         $reservedConstraints = [];
 
         // Resource should be private.
-        $reservedConstraints[] = sprintf('%s.is_public = 0', $alias);
+        $reservedConstraints[] = sprintf('%s.`is_public` = 0', $alias);
 
         // Resource should have property 'curation:reserved', whatever the value.
         $property = $this->serviceLocator->get(PropertyReservedAccess::class);
+
         $reservedConstraints[] = sprintf(
-            '%s.id IN (
+            '%s.`id` IN (
     SELECT `value`.`resource_id`
     FROM `value`
     WHERE `value`.`property_id` = %s
-        AND `value`.`value` IS NOT NULL
-        AND `value`.`value` != "0"
 )',
             $alias,
             (int) $property->getId()

@@ -238,7 +238,7 @@ return [
         ],
     ],
     'accessresource' => [
-        // Can be "global" or "individual".
+        // Access mode may be "global", "ip" or "individual".
         'access_mode' => 'individual',
         'config' => [
             // This setting is just for info: it is overridden by [accessresource][access_mode]

@@ -2,6 +2,7 @@
 
 namespace AccessResource;
 
+// Access mode may be "global", "ip" or "individual".
 use const AccessResource\ACCESS_MODE;
 
 if (ACCESS_MODE === 'individual') {
@@ -63,7 +64,7 @@ return [
         ],
     ],
     'accessresource' => [
-        // Can be "global" or "individual".
+        // Access mode may be "global", "ip" or "individual".
         'access_mode' => 'global',
         'config' => [
             // This setting is just for info: it is overridden by [accessresource][access_mode]

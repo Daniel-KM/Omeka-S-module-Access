@@ -41,6 +41,7 @@ class ConfigForm extends Form
                 ],
                 'attributes' => [
                     'id' => 'accessresource_ip_sites',
+                    'rows' => 12,
                     'placeholder' => '12.34.56.78 = main-site
 87.65.43.0/24 = second-site',
                 ],

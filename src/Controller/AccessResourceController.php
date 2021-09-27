@@ -107,7 +107,7 @@ class AccessResourceController extends AbstractActionController
         }
 
         // IP: any admin or any users with listed ips can see any restricted resource.
-        // This mode is compatible with mode "individual, so the check can be
+        // This mode is compatible with mode "individual", so the check can be
         // done separately.
         if ($this->isSiteIp()) {
             return $this->sendFile();
