@@ -141,13 +141,11 @@ class AccessController extends AbstractActionController
                         ->setType(AccessLog::TYPE_ACCESS)
                         ->setDate(new \DateTime());
                     $this->entityManager->flush();
-
-                    return $this->redirect()->toUrl($this->getRequest()->getHeader('Referer')->getUri());
                 }
 
                 if ($response) {
                     $this->messenger()->addSuccess('Access record successfully saved'); // @translate
-                    return $this->redirect()->toUrl($response->getContent()->url('edit'));
+                    return $this->redirect()->toRoute('admin/access-resource', ['controller' => 'access']);
                 }
             } elseif (empty($post['resource_id'])) {
                 $this->messenger()->addError(new Message(

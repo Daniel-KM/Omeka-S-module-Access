@@ -6,11 +6,13 @@
  * @var bool $visitorHasIdentity
  */
 
-$translate = $this->plugin('translate');
-$hyperlink = $this->plugin('hyperlink');
+$plugins = $this->getHelperPluginManager();
+$translate = $plugins->get('translate');
+$hyperlink = $plugins->get('hyperlink');
+$assetUrl = $plugins->get('assetUrl');
 
-$this->headLink()->appendStylesheet($this->assetUrl('css/helper-request-resource-access-form.css', 'AccessResource'));
-$this->headScript()->appendFile($this->assetUrl('js/helper-request-resource-access-form.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+$this->headLink()->appendStylesheet($assetUrl('css/helper-request-resource-access-form.css', 'AccessResource'));
+$this->headScript()->appendFile($assetUrl('js/helper-request-resource-access-form.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
 
 $formSubmitUrl = $this->url('site/access-resource-request', [], true);
 ?>

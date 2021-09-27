@@ -1,7 +1,8 @@
 <?php declare(strict_types=1);
+
 namespace AccessResource\Api\Adapter;
 
-use Doctrine\Common\Inflector\Inflector;
+use Doctrine\Inflector\InflectorFactory;
 use Doctrine\ORM\QueryBuilder;
 use Omeka\Api\Adapter\AbstractEntityAdapter;
 use Omeka\Api\Request;
@@ -84,8 +85,11 @@ class AccessRequestAdapter extends AbstractEntityAdapter
     {
         /** @var \AccessResource\Entity\AccessRequest $entity */
         $data = $request->getContent();
+        $inflector = InflectorFactory::create()->build();
         foreach ($data as $key => $value) {
-            $method = 'set' . ucfirst(Inflector::camelize($key));
+            $posColon = strpos($key, ':');
+            $keyName = $posColon === false ? $key : substr($key, $posColon + 1);
+            $method = 'set' . ucfirst($inflector->camelize($keyName));
             if (!method_exists($entity, $method)) {
                 continue;
             }

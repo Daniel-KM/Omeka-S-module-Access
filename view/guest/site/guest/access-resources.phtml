@@ -4,11 +4,13 @@
  * @var \AccessResource\Api\Representation\AccessRequestRepresentation[] $accessRequests
  */
 
-$translate = $this->plugin('translate');
-$escape = $this->plugin('escapeHtml');
+$plugins = $this->getHelperPluginManager();
+$translate = $plugins->get('translate');
+$escape = $plugins->get('escapeHtml');
+$assetUrl = $plugins->get('assetUrl');
 
-$this->headLink()->appendStylesheet($this->assetUrl('vendor/tablesaw/tablesaw.stackonly.css', 'Omeka'));
-$this->headScript()->appendFile($this->assetUrl('vendor/tablesaw/tablesaw.stackonly.jquery.js', 'Omeka'), 'text/javascript', ['defer' => 'defer']);
+$this->headLink()->appendStylesheet($assetUrl('vendor/tablesaw/tablesaw.stackonly.css', 'Omeka'));
+$this->headScript()->appendFile($assetUrl('vendor/tablesaw/tablesaw.stackonly.jquery.js', 'Omeka'), 'text/javascript', ['defer' => 'defer']);
 
 $this->htmlElement('body')->appendAttribute('class', 'sites browse');
 ?>

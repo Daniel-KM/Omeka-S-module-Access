@@ -127,7 +127,7 @@ class RequestController extends AbstractActionController
 
                 if ($response) {
                     $this->messenger()->addSuccess('Access request record successfully saved'); // @translate
-                    return $this->redirect()->toUrl($response->getContent()->url('edit'));
+                    return $this->redirect()->toRoute('admin/access-resource', ['controller' => 'request']);
                 }
             } else {
                 $this->messenger()->addFormErrors($form);
