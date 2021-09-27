@@ -39,7 +39,7 @@ class AccessResourceForm extends Form
                 'name' => 'temporal',
                 'type' => Element\Checkbox::class,
                 'options' => [
-                    'label' => 'Temporal', // @translate
+                    'label' => 'Limit to a period', // @translate
                 ],
                 'attributes' => [
                     'id' => 'temporal',

@@ -88,23 +88,25 @@ class AccessController extends AbstractActionController
         if ($this->getRequest()->isPost()) {
             $post = $this->params()->fromPost();
 
-            // Move resource id value.
-            if (isset($post['resource']) && isset($post['resource']['value_resource_id'])) {
-                $post['resource_id'] = $post['resource']['value_resource_id'];
-                unset($post['resource']);
-            }
-
-            // TODO Use getData().
             $form->setData($post);
 
             if ($form->isValid() && !empty($post['resource_id'])) {
+                $data = $form->getData();
+                // Some data are not managed by the form.
+                $data['resource_id'] = (int) $post['resource_id'] ?: null;
+                $data['user_id'] = (int) $post['user_id'] ?: null;
+
                 $response = null;
 
-                $post['startDate'] = new \DateTime($post['startDate']);
-                $post['endDate'] = new \DateTime($post['endDate']);
+                $data['startDate'] = $data['startDate']
+                    ? new \DateTime($data['startDate'])
+                    : null;
+                $data['endDate'] = $data['endDate']
+                    ? new \DateTime($data['endDate'])
+                    : null;
 
                 if ($accessResource) {
-                    $response = $this->api($form)->update('access_resources', $accessResource->id(), $post, [], ['isPartial' => true]);
+                    $response = $this->api($form)->update('access_resources', $accessResource->id(), $data, [], ['isPartial' => true]);
                     /** @var \AccessResource\Api\Representation\AccessResourceRepresentation $accessResource */
                     $accessResource = $response->getContent();
                     $accessUser = $this->entityManager
@@ -122,10 +124,10 @@ class AccessController extends AbstractActionController
                         ->setDate(new \DateTime());
                     $this->entityManager->flush();
                 } else {
-                    $post['token'] = $this->createToken();
+                    $data['token'] = $this->createToken();
 
                     /** @var \AccessResource\Api\Representation\AccessResourceRepresentation $accessResource */
-                    $response = $this->api($form)->create('access_resources', $post);
+                    $response = $this->api($form)->create('access_resources', $data);
                     $accessResource = $response->getContent();
                     $accessUser = $this->entityManager
                         ->getRepository(\Omeka\Entity\User::class)

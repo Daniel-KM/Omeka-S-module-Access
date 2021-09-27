@@ -10,6 +10,7 @@ use Laminas\View\Model\JsonModel;
 use Laminas\View\Model\ViewModel;
 use Omeka\DataType\Manager as DataTypeManager;
 use Omeka\Form\ConfirmForm;
+use Omeka\Stdlib\Message;
 
 class RequestController extends AbstractActionController
 {
@@ -66,6 +67,7 @@ class RequestController extends AbstractActionController
     {
         $id = $this->params('id');
 
+        /** @var \AccessResource\Api\Representation\AccessRequestRepresentation $accessRequest */
         $accessRequest = $id
             ? $this->api()->searchOne('access_requests', ['id' => $id])->getContent()
             : null;
@@ -88,20 +90,18 @@ class RequestController extends AbstractActionController
         if ($this->getRequest()->isPost()) {
             $post = $this->params()->fromPost();
 
-            // Move resource id value.
-            if (isset($post['resource']) && isset($post['resource']['value_resource_id'])) {
-                $post['resource_id'] = $post['resource']['value_resource_id'];
-                unset($post['resource']);
-            }
-
-            // TODO Use getData().
             $form->setData($post);
 
-            if ($form->isValid()) {
+            if ($form->isValid() && !empty($post['resource_id'])) {
+                $data = $form->getData();
+                // Some data are not managed by the form.
+                $data['resource_id'] = (int) $post['resource_id'] ?: null;
+                $data['user_id'] = (int) $post['user_id'] ?: null;
+
                 $response = null;
 
                 if ($accessRequest) {
-                    $response = $this->api($form)->update('access_requests', $accessRequest->id(), $post, [], ['isPartial' => true]);
+                    $response = $this->api($form)->update('access_requests', $accessRequest->id(), $data, [], ['isPartial' => true]);
                     $accessRequest = $response->getContent();
                     $accessUser = $this->entityManager
                         ->getRepository(\Omeka\Entity\User::class)
@@ -120,8 +120,12 @@ class RequestController extends AbstractActionController
 
                     // Fire send email event.
                     $this->getEventManager()->trigger('accessresource.request.updated');
+                } elseif (empty($post['resource_id'])) {
+                    $this->messenger()->addError(new Message(
+                        'Resource is undefined.', // @translate
+                    ));
                 } else {
-                    $response = $this->api($form)->create('access_requests', $post);
+                    $response = $this->api($form)->create('access_requests', $data);
                     $this->getEventManager()->trigger('accessresource.request.created');
                 }
 

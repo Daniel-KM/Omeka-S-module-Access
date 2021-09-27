@@ -147,7 +147,7 @@ class AccessRequest extends AbstractEntity
      */
     public function prePersist(LifecycleEventArgs $eventArgs): void
     {
-        $this->created = $this->modified = new DateTime('now');
+        $this->created = new DateTime('now');
     }
 
     /**
