@@ -19,7 +19,7 @@ $api = $plugins->get('api');
 $settings = $services->get('Omeka\Settings');
 // $config = require dirname(__DIR__, 2) . '/config/module.config.php';
 
-if (version_compare($oldVersion, '3.3.0.6', '<')) {
+if (version_compare((string) $oldVersion, '3.3.0.6', '<')) {
     $sqls = <<<'SQL'
 ALTER TABLE `access_log`
     CHANGE `user_id` `user_id` INT DEFAULT NULL,
@@ -37,19 +37,19 @@ ALTER TABLE `access_request`
     CHANGE `modified` `modified` DATETIME DEFAULT NULL;
 SQL;
     foreach (array_filter(explode(";\n", $sqls)) as $sql) {
-        $connection->exec($sql);
+        $connection->executeStatement($sql);
     }
 }
 
-if (version_compare($oldVersion, '3.3.0.7', '<')) {
+if (version_compare((string) $oldVersion, '3.3.0.7', '<')) {
     $settings->set('accessresource_ip_sites', []);
     $settings->set('accessresource_ip_reserved', ['sites' => [], 'ranges' => []]);
 }
 
-if (version_compare($oldVersion, '3.3.0.10', '<')) {
+if (version_compare((string) $oldVersion, '3.3.0.10', '<')) {
     require_once __DIR__ . '/upgrade_vocabulary.php';
 }
 
-if (version_compare($oldVersion, '3.3.0.11', '<')) {
+if (version_compare((string) $oldVersion, '3.3.0.11', '<')) {
     require_once __DIR__ . '/upgrade_vocabulary.php';
 }

@@ -14,7 +14,6 @@ class AccessResourceControllerFactory implements FactoryInterface
         $basePath = $config['file_store']['local']['base_path'] ?: OMEKA_PATH . '/files';
         return new AccessResourceController(
             $services->get('Omeka\EntityManager'),
-            $services->get('Omeka\DataTypeManager'),
             $services->get('Omeka\ApiAdapterManager')->get('media'),
             $basePath
         );

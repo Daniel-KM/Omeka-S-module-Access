@@ -122,7 +122,7 @@ class RequestController extends AbstractActionController
                     $this->getEventManager()->trigger('accessresource.request.updated');
                 } elseif (empty($post['resource_id'])) {
                     $this->messenger()->addError(new Message(
-                        'Resource is undefined.', // @translate
+                        'Resource is undefined.' // @translate
                     ));
                 } else {
                     $response = $this->api($form)->create('access_requests', $data);

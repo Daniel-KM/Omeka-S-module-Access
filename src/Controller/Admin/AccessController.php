@@ -151,7 +151,7 @@ class AccessController extends AbstractActionController
                 }
             } elseif (empty($post['resource_id'])) {
                 $this->messenger()->addError(new Message(
-                    'Resource is undefined.', // @translate
+                    'Resource is undefined.' // @translate
                 ));
             } else {
                 $this->messenger()->addFormErrors($form);
@@ -314,7 +314,7 @@ class AccessController extends AbstractActionController
         $repository = $this->entityManager->getRepository(\AccessResource\Entity\AccessResource::class);
 
         $tokenString = function () {
-            return substr(str_replace(['+', '/', '-', '='], '', base64_encode(random_bytes(24))), 0, 10);
+            return substr(str_replace(['+', '/', '='], ['', '', ''], base64_encode(random_bytes(128))), 0, 10);
         };
 
         // Check if the token is unique.

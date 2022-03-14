@@ -11,20 +11,17 @@ use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 use Omeka\Api\Adapter\MediaAdapter;
-use Omeka\DataType\Manager as DataTypeManager;
 use Omeka\Mvc\Exception;
 
+/**
+ * @todo Simplify according to Statistics\Controller\DownloadController
+ */
 class AccessResourceController extends AbstractActionController
 {
     /**
      * @var \Doctrine\ORM\EntityManager;
      */
     protected $entityManager;
-
-    /**
-     * @var \Omeka\DataType\Manager;
-     */
-    protected $dataTypeManager;
 
     /**
      * @var \Omeka\Api\Adapter\MediaAdapter;
@@ -43,12 +40,10 @@ class AccessResourceController extends AbstractActionController
 
     public function __construct(
         EntityManager $entityManager,
-        DataTypeManager $dataTypeManager,
         MediaAdapter $mediaAdapter,
         string $basePath
     ) {
         $this->entityManager = $entityManager;
-        $this->dataTypeManager = $dataTypeManager;
         $this->mediaAdapter = $mediaAdapter;
         $this->basePath = $basePath;
         $this->data = new ArrayCollection();
@@ -75,7 +70,7 @@ class AccessResourceController extends AbstractActionController
         }
 
         // When the media is private for the user, it is not available, in any
-        // case. This check is done directly at database level.
+        // case. This check is done automatically directly at database level.
         $media = $this->getMedia();
         if (!$media) {
             throw new Exception\NotFoundException;
@@ -320,7 +315,7 @@ class AccessResourceController extends AbstractActionController
     }
 
     /**
-     * Get filepath.
+     * Get relative filepath.
      */
     protected function getFilepath(): ?string
     {
@@ -383,9 +378,11 @@ class AccessResourceController extends AbstractActionController
             ->addHeaderLine(sprintf('Content-Type: %s', $mediaType))
             ->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', $dispositionMode, $filename))
             ->addHeaderLine(sprintf('Content-Length: %s', $filesize))
-            ->addHeaderLine('Content-Transfer-Encoding', 'binary')
+            ->addHeaderLine('Content-Transfer-Encoding: binary')
             // Use this to open files directly.
-            ->addHeaderLine('Cache-Control: private');
+            // Cache for 30 days.
+            ->addHeaderLine('Cache-Control: private, max-age=2592000, post-check=2592000, pre-check=2592000')
+            ->addHeaderLine(sprintf('Expires: %s', gmdate('D, d M Y H:i:s', time() + 2592000) . ' GMT'));
         // Send headers separately to handle large files.
         $response->sendHeaders();
 
