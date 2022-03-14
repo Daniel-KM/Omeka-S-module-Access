@@ -79,6 +79,11 @@ class AccessResourceController extends AbstractActionController
         // Here, the media is restricted or public.
         // The item rights are not checked.
 
+        // Log the statistic for the url even if the file is missing or protected.
+        if ($type === 'original' && $this->getPluginManager()->has('logCurrentUrl')) {
+            $this->logCurrentUrl();
+        }
+
         $mediaIsPublic = $media->isPublic();
         if ($mediaIsPublic) {
             return $this->sendFile();
