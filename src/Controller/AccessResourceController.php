@@ -434,9 +434,44 @@ class AccessResourceController extends AbstractActionController
                 break;
         }
 
-        $assetUrl = $this->viewHelpers()->get('assetUrl');
-        $filepath = $assetUrl($file, 'AccessResource', true);
-        return $this->redirect()->toUrl($filepath);
+        // Manage custom asset file from the theme.
+        $viewHelpers = $this->viewHelpers();
+        $assetUrl = $viewHelpers->get('assetUrl');
+        $filepath = $assetUrl($file, 'AccessResource', true, false);
+        $serverBasePath = $viewHelpers->get('BasePath')();
+        if ($serverBasePath && $serverBasePath !== '/') {
+            $filepath = mb_substr($filepath, mb_strlen($serverBasePath));
+        }
+        $filepath = OMEKA_PATH . $filepath;
+        $fileSize = file_exists($filepath) ? filesize($filepath) : 0;
+
+        // Everything has been checked.
+        $dispositionMode = 'inline';
+
+        /** @var \Laminas\Http\PhpEnvironment\Response $response */
+        $response = $this->getResponse();
+        // Write headers.
+        $response->getHeaders()
+            ->addHeaderLine(sprintf('Content-Type: %s', $mediaType))
+            ->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', $dispositionMode, pathinfo($filepath, PATHINFO_BASENAME)))
+            ->addHeaderLine(sprintf('Content-Length: %s', $fileSize))
+            ->addHeaderLine('Content-Transfer-Encoding: binary');
+
+        // Send headers separately to handle large files.
+        $response->sendHeaders();
+
+        // Clears all active output buffers to avoid memory overflow.
+        $response->setContent('');
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        readfile($filepath);
+
+        // TODO Fix issue with session. See readme of module XmlViewer.
+        ini_set('display_errors', '0');
+
+        // Return response to avoid default view rendering and to manage events.
+        return $response;
     }
 
     /**
