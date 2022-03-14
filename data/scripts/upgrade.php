@@ -50,6 +50,6 @@ if (version_compare($oldVersion, '3.3.0.10', '<')) {
     require_once __DIR__ . '/upgrade_vocabulary.php';
 }
 
-if (version_compare($oldVersion, '3.3.1.0', '<')) {
+if (version_compare($oldVersion, '3.3.0.11', '<')) {
     require_once __DIR__ . '/upgrade_vocabulary.php';
 }
