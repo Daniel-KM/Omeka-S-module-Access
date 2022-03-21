@@ -248,6 +248,7 @@ return [
             // This setting is just for info: it is overridden by [accessresource][access_mode]
             // that should be set in config/local.config.php.
             'accessresource_access_mode' => 'individual',
+            'accessresource_embargo_bypass' => false,
             'accessresource_ip_sites' => [
             ],
             // Hidden settings automatically filled after saving config.

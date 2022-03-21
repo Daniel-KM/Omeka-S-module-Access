@@ -32,6 +32,16 @@ class ConfigForm extends Form
                 ],
             ])
             ->add([
+                'name' => 'accessresource_embargo_bypass',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Bypass embargo dates for restricted resources', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_embargo_bypass',
+                ],
+            ])
+            ->add([
                 'name' => 'accessresource_ip_sites',
                 'type' => ArrayTextarea::class,
                 'options' => [

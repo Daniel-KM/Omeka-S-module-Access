@@ -119,6 +119,7 @@ class AccessResourceController extends AbstractActionController
             'user' => null,
             'canViewAll' => false,
             'hasMediaAccess' => false,
+            'isUnderEmbargo' => null,
             'filepath' => null,
         ];
 
@@ -171,6 +172,13 @@ class AccessResourceController extends AbstractActionController
         } else {
             $result['hasMediaAccess'] = $this->hasMediaAccess($media, $result['accessMode']);
             if (!$result['hasMediaAccess']) {
+                return $result;
+            }
+
+            // Don't bypass embargo when it is set and not overridable.
+            $bypassEmbargo = $this->settings()->get('accessresource_embargo_bypass');
+            $result['isUnderEmbargo'] = $bypassEmbargo ? null : $this->isUnderEmbargo($media);
+            if ($result['isUnderEmbargo']) {
                 return $result;
             }
         }
