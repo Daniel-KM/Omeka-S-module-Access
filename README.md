@@ -8,6 +8,7 @@ Access Resource (module for Omeka S)
 [Access Resource] is a module for [Omeka S] that allows to protect files to be
 accessed from the anonymous visitors, but nevertheless available globally or on
 requests by guests users, restricted to a list of ips, or available by a token.
+Start and end dates of an embargo can be used too, separately or not.
 
 Furthermore, you can set the right to see a resource at the media level, so the
 item metadata are visible and the visitors know that a media exist. The file
@@ -29,6 +30,9 @@ generally with the module [Guest] or [Guest Role]. If the access is restricted
 individually, the module [Guest] will be needed to manage the requests. The
 public part can be managed easily via the module [Blocks Disposition], or
 directly in the theme.
+
+The module is compatible with the module [Statistics]. It is important to
+redirect download urls to the module (see below config of ".htaccess").
 
 ### Incompatibility
 
@@ -80,7 +84,7 @@ it is generally useless. Anyway, it depends on the original images.
 
 Insert the following lines at line 4 of [.htaccess], just after `RewriteEngine On`:
 
-```Apache
+```apache
 RewriteRule ^files/original/(.*)$ /access/files/original/$1 [P]
 RewriteRule ^files/large/(.*)$ /access/files/large/$1 [P]
 # Uncomment the lines below to protect square and medium thumbnails too, if really needed.
@@ -115,13 +119,37 @@ RewriteRule ^(.*) - [E=BASE:%1]
 
   Anyway, if you have access to it, you can include all rules inside it
   directly (`ProxyPass`). If you don't have access to the Apache config, just
-  use the full unsecure url with `http://` for the internal proxy. Because it is
-  a fake proxy, it doesn't matter if the internal redirect url is unsecure:
+  use the full unsecure url with `http://` (with real domain or `%{HTTP_HOST}`),
+  for the internal proxy. Because it is a fake proxy, it doesn't matter if the
+  internal redirect url is unsecure:
 
 ```apache
-RewriteRule ^files/original/(.*)$ http://example.org/digital-library/access/files/original/$1 [P]
-RewriteRule ^files/large/(.*)$ http://example.org/digital-library/access/files/large/$1 [P]
+RewriteRule ^files/original/(.*)$ http://%{HTTP_HOST}/digital-library/access/files/original/$1 [P]
+RewriteRule ^files/large/(.*)$ http://%{HTTP_HOST}/digital-library/access/files/large/$1 [P]
 ```
+
+#### Compatibility with module Statistics
+
+The module is compatible with the module [Statistics].
+
+Because Omeka doesn't protect files by default, **it is important to redirect the urls of the original files**
+to the routes of the module Access Resource. If you keep the redirection with
+`download`, the check for restricted access won't be done, so **a private file will become public**,
+even if a user as a no restricted access to it. For example:
+
+```apache
+# Redirect direct access to files to the module Access Resource.
+RewriteRule ^files/original/(.*)$ http://%{HTTP_HOST}/access/files/original/$1 [P]
+RewriteRule ^files/large/(.*)$ http://%{HTTP_HOST}/access/files/large/$1 [P]
+
+# Redirect direct download of files to the module Access Resource.
+RewriteRule ^download/files/original/(.*)$ http://%{HTTP_HOST}/access/files/original/$1 [P]
+RewriteRule ^download/files/large/(.*)$ http://%{HTTP_HOST}/access/files/large/$1 [P]
+```
+
+In fact, if not redirected, it acts the same way than a direct access to a
+private file in Omeka: they are not protected and everybody who knows the url,
+in particular Google via Gmail, Chrome, etc., will have access to it.
 
 #### Nginx
 
@@ -140,7 +168,10 @@ One important thing to understand is to choose to define the access at the item
 and/or at the media level. If you choose to set the restricted access on the
 item, it will remains private for visitors without rights, even metadata. If you
 choose to set the restricted access on the media, the public item metadata will
-be  viewable by everybody.
+be viewable by everybody.
+
+When an embargo is set, it can be bypassed, or not, for the users. Only files
+can be under embargo currently.
 
 ### Access mode
 
@@ -214,6 +245,31 @@ the "individual" mode currently. You can find them on access view/edit page.
 In public front-end, a dashboard is added for guest users. The link is available
 in the guest user board (`/s/my-site/guest/access-resource`).
 
+### Embargo
+
+The embargo works only on the media files currently: metadata are always visible.
+
+An option in the config can be used to use it with or without the restricted
+access.
+
+To create an embargo on a file, simply set the dates in `curation:dateStart`
+and/or `curation:dateEnd`.
+
+It is recommended to use the datatype "numeric timestamp" from the module [Numeric Datatypes],
+but a literal is fine. The date must be an iso one (`2022-03-14`). A time can be
+set too (`2022-03-14T12:34:56`).
+
+A check is automatically done when an anonymous visitor or a restricted user is
+accessing a restricted file. In that case, the media may be set public
+automatically when the embargo is finished. For all other cases, a job may be
+run, for example once a day. A cron task can be used through the script designed
+to run task of the module [Easy Admin].
+
+The job does not update the resource when the visibility is not logical, for
+example when the resource have been set public with a date of end of embargo.
+Of course, don't set a date of end of embargo if the record is not ready or when
+it should remain private.
+
 
 TODO
 ----
@@ -224,6 +280,8 @@ TODO
 - [ ] Fix ip check for ipv6.
 - [ ] Use Omeka Store instead of local file system.
 - [ ] Manage ip by item set or by user instead of sites?
+- [ ] Store openess in a specific table for performance and to manage embargo easier.
+- [ ] Manage the case where the embargo dates are private.
 
 
 Warning
@@ -280,7 +338,7 @@ The image [Locked file] is licensed under [GNU/GPL].
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2019-2021 (see [Daniel-KM] on GitLab)
+* Copyright Daniel Berthereau, 2019-2022 (see [Daniel-KM] on GitLab)
 * Copyright Saki (image [Locked file], see [Saki])
 
 
@@ -292,6 +350,9 @@ Copyright
 [Blocks Disposition]: https://gitlab.com/Daniel-KM/Omeka-S-module-BlocksDisposition
 [Group]: https://gitlab.com/Daniel-KM/Omeka-S-module-Group/-/releases
 [Contact Us]: https://gitlab.com/Daniel-KM/Omeka-S-module-ContactUs
+[Numeric Datatypes]: https://github.com/omeka-s-modules/NumericDatatypes
+[Easy Admin]: https://gitlab.com/Daniel-KM/Omeka-S-module-EasyAdmin
+[Statistics]: https://gitlab.com/Daniel-KM/Omeka-S-module-Statistics
 [Installing a module]: http://dev.omeka.org/docs/s/user-manual/modules/#installing-modules
 [AccessResource.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource/-/releases
 [Protect original files]: #protect-original-files
