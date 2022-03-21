@@ -45,6 +45,19 @@ class Module extends AbstractModule
         require_once __DIR__ . '/data/scripts/upgrade_vocabulary.php';
     }
 
+    protected function postInstall(): void
+    {
+        $services = $this->getServiceLocator();
+        $translator = $services->get('MvcTranslator');
+        $message = new \Omeka\Stdlib\Message(
+            $translator->translate('To control access to files, you must add a rule in file .htaccess at the root of Omeka. See %sreadme%s.'), // @translate
+            '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource" target="_blank">', '</a>'
+        );
+        $message->setEscapeHtml(false);
+        $messenger = new \Omeka\Mvc\Controller\Plugin\Messenger;
+        $messenger->addWarning($message);
+    }
+
     public function onBootstrap(MvcEvent $event): void
     {
         parent::onBootstrap($event);
