@@ -79,6 +79,7 @@ return [
             // that should be set in config/local.config.php.
             'accessresource_access_mode' => 'global',
             'accessresource_embargo_bypass' => false,
+            'accessresource_embargo_auto_update' => false,
             'accessresource_ip_sites' => [
             ],
             // Hidden settings automatically filled after saving config.

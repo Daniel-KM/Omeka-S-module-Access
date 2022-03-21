@@ -172,8 +172,11 @@ class AccessResourceController extends AbstractActionController
         } else {
             // The embargo may be finished, but not updated (for example a cron
             // issue), so it is checked when needed.
-            $bypassEmbargo = (bool) $this->settings()->get('accessresource_embargo_bypass');
-            $result['isUnderEmbargo'] = $bypassEmbargo ? null : $this->isUnderEmbargo($media, true);
+            $settings = $this->settings();
+            $bypassEmbargo = (bool) $settings->get('accessresource_embargo_bypass');
+            $result['isUnderEmbargo'] = $bypassEmbargo
+                ? null
+                : $this->isUnderEmbargo($media, (bool) $settings->get('accessresource_embargo_auto_update'));
             // When here, the resource has been automatically updated, so no
             // more check since the resource is public.
             $result['hasMediaAccess'] = $result['isUnderEmbargo'] === false

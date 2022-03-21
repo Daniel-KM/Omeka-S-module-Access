@@ -42,6 +42,16 @@ class ConfigForm extends Form
                 ],
             ])
             ->add([
+                'name' => 'accessresource_embargo_auto_update',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Automatically update visibility status', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_embargo_auto_update',
+                ],
+            ])
+            ->add([
                 'name' => 'accessresource_ip_sites',
                 'type' => ArrayTextarea::class,
                 'options' => [
