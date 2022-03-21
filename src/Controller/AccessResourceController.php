@@ -5,12 +5,12 @@ namespace AccessResource\Controller;
 use const AccessResource\ACCESS_MODE;
 
 use AccessResource\Entity\AccessLog;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 use Omeka\Api\Adapter\MediaAdapter;
+use Omeka\Api\Representation\MediaRepresentation;
 use Omeka\Mvc\Exception;
 
 /**
@@ -33,11 +33,6 @@ class AccessResourceController extends AbstractActionController
      */
     protected $basePath;
 
-    /**
-     * @var ArrayCollection
-     */
-    protected $data;
-
     public function __construct(
         EntityManager $entityManager,
         MediaAdapter $mediaAdapter,
@@ -46,7 +41,6 @@ class AccessResourceController extends AbstractActionController
         $this->entityManager = $entityManager;
         $this->mediaAdapter = $mediaAdapter;
         $this->basePath = $basePath;
-        $this->data = new ArrayCollection();
     }
 
     /**
@@ -63,15 +57,24 @@ class AccessResourceController extends AbstractActionController
 
     public function filesAction()
     {
-        $type = $this->getStorageType();
-        $file = $this->getFilename();
-        if (empty($type) || empty($file)) {
+        /**
+         * @var string $storageType
+         * @var string $filename
+         * @var MediaRepresentation $media
+         * @var string $accessMode
+         * @var \Omeka\Entity\User $user
+         * @var bool $canViewAll
+         * @var bool $hasMediaAccess
+         * @var string $filepath
+         */
+        $data = $this->getDataFile();
+        extract($data);
+        if (empty($storageType) || empty($filename)) {
             throw new Exception\NotFoundException;
         }
 
         // When the media is private for the user, it is not available, in any
         // case. This check is done automatically directly at database level.
-        $media = $this->getMedia();
         if (!$media) {
             throw new Exception\NotFoundException;
         }
@@ -80,67 +83,20 @@ class AccessResourceController extends AbstractActionController
         // The item rights are not checked.
 
         // Log the statistic for the url even if the file is missing or protected.
-        if ($type === 'original' && $this->getPluginManager()->has('logCurrentUrl')) {
+        /// Admin requests are automatically skipped.
+        if ($this->getPluginManager()->has('logCurrentUrl')) {
             $this->logCurrentUrl();
         }
 
-        $mediaIsPublic = $media->isPublic();
-        if ($mediaIsPublic) {
-            return $this->sendFile();
-        }
-
-        $user = $this->identity();
-
-        // No log when the mode is global or ip, or for admins.
-
-        $accessMode = $this->getAccessMode();
-        // Global: any authenticated users can see any restricted resource.
-        if ($accessMode === 'global') {
-            return $user
-                ? $this->sendFile()
-                : $this->sendFakeFile();
-        }
-
-        // Any admin can see any media in any case, without log.
-        if ($user && $this->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
-            return $this->sendFile();
-        }
-
-        // IP: any admin or any users with listed ips can see any restricted resource.
-        // This mode is compatible with mode "individual", so the check can be
-        // done separately.
-        if ($this->isSiteIp()) {
-            return $this->sendFile();
-        }
-
-        if ($accessMode === 'ip') {
-            return $this->sendFakeFile();
-        }
-
-        // If without admin permissions, check access.
-        $access = $this->hasMediaAccess();
-        if (!$access) {
-            // Log attempt to access original record without rights.
-            if ($type === 'original') {
-                $log = new AccessLog();
-                $this->entityManager->persist($log);
-                $log
-                    ->setAction('no_access')
-                    ->setUser($user)
-                    ->setRecordId($media->id())
-                    ->setType(AccessLog::TYPE_ACCESS)
-                    ->setDate(new \DateTime());
-                $this->entityManager->flush();
-            }
-            return $this->sendFakeFile();
-        }
-
-        // Don't log derivative files.
-        if ($type === 'original') {
+        // Log only non-admin individual access to original records.
+        if ($accessMode === 'individual'
+            && $storageType === 'original'
+            && !$canViewAll
+        ) {
             $log = new AccessLog();
             $this->entityManager->persist($log);
             $log
-                ->setAction('accessed')
+                ->setAction(empty($filepath) ? 'no_access' : 'accessed')
                 ->setUser($user)
                 ->setRecordId($media->id())
                 ->setType(AccessLog::TYPE_ACCESS)
@@ -148,211 +104,200 @@ class AccessResourceController extends AbstractActionController
             $this->entityManager->flush();
         }
 
-        return $this->sendFile();
+        return $filepath
+            ? $this->sendFile($filepath, null, $filename, 'inline', false, $media, $storageType)
+            : $this->sendFakeFile($media, $filename);
     }
 
-    protected function getAccessMode()
+    protected function getDataFile(): array
     {
-        $key = 'accessMode';
-        $value = $this->data->get($key);
-        if ($value) {
-            return $value;
+        $result = [
+            'storageType' => null,
+            'filename' => null,
+            'media' => null,
+            'accessMode' => null,
+            'user' => null,
+            'canViewAll' => false,
+            'hasMediaAccess' => false,
+            'filepath' => null,
+        ];
+
+        $routeParams = $this->params()->fromRoute();
+        $result['storageType'] = $routeParams['type'] ?? null;
+        if (!$result['storageType']) {
+            return $result;
         }
 
-        $value = $this->params('access_mode');
-        $this->data->set($key, $value);
-        return $value;
-    }
-
-    protected function getFilename()
-    {
-        $key = 'filename';
-        $value = $this->data->get($key);
-        if ($value) {
-            return $value;
+        $result['filename'] = $routeParams['file'] ?? null;;
+        if (!$result['filename']) {
+            return $result;
         }
 
-        $value = $this->params('file');
-        $this->data->set($key, $value);
-        return $value;
-    }
-
-    protected function getStorageType()
-    {
-        $key = 'storageType';
-        $value = $this->data->get($key);
-        if ($value) {
-            return $value;
-        }
-
-        $value = $this->params('type');
-
-        $this->data->set($key, $value);
-        return $value;
-    }
-
-    /**
-     * Get Media Representation.
-     */
-    protected function getMedia(): ?\Omeka\Api\Representation\MediaRepresentation
-    {
-        $key = 'media';
-        $value = $this->data->get($key);
-        if ($value) {
-            return $value;
-        }
-
-        $filename = $this->getFilename();
         // For compatibility with module ArchiveRepertory, don't take the
         // filename, but remove the extension.
         // $storageId = pathinfo($filename, PATHINFO_FILENAME);
-        $extension = pathinfo($filename, PATHINFO_EXTENSION);
+        $extension = pathinfo($result['filename'], PATHINFO_EXTENSION);
         $storageId = mb_strlen($extension)
-            ? mb_substr($filename, 0, -mb_strlen($extension) - 1)
-            : $filename;
+            ? mb_substr($result['filename'], 0, -mb_strlen($extension) - 1)
+            : $result['filename'];
+        if (!$storageId) {
+            return $result;
+        }
 
         // "storage_id" is not available through default api, so use core entity
         // manager. Nevertheless, the call to the api allows to check rights.
-        if ($storageId) {
-            $media = $this->entityManager
-                ->getRepository(\Omeka\Entity\Media::class)
-                ->findOneBy(['storageId' => $storageId]);
-            if ($media) {
-                /** @var \Omeka\Api\Representation\MediaRepresentation $media */
-                // To get representation from adapter is quicker and enough,
-                // because rights are already checked.
-                $media = $this->mediaAdapter->getRepresentation($media);
-            }
-        } else {
-            $media = null;
+        $media = $this->entityManager
+            ->getRepository(\Omeka\Entity\Media::class)
+            ->findOneBy(['storageId' => $storageId]);
+        if (!$media) {
+            return $result;
         }
 
-        $this->data->set($key, $media);
-        return $media;
+        /** @var \Omeka\Api\Representation\MediaRepresentation $media */
+        // To get representation from adapter is quicker and enough, because
+        // rights are already checked.
+        $result['media'] = $media = $this->mediaAdapter->getRepresentation($media);
+
+        $result['accessMode'] = $routeParams['access_mode'] ?? null;
+
+        $result['user'] = $this->identity();
+        $result['canViewAll'] = $result['user']
+            // Slower but manage extra roles and modules permissions.
+            // && in_array($result['user']->getRole(), ['global_admin', 'site_admin', 'editor', 'reviewer']);
+            && $this->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all');
+
+        if ($result['canViewAll']) {
+            $result['hasMediaAccess'] = true;
+        } else {
+            $result['hasMediaAccess'] = $this->hasMediaAccess($media, $result['accessMode']);
+            if (!$result['hasMediaAccess']) {
+                return $result;
+            }
+        }
+
+        $result['filepath'] = $this->getFilepath($media, $result['storageType']);
+
+        return $result;
     }
 
-    protected function hasMediaAccess(): bool
+    protected function hasMediaAccess(?MediaRepresentation $media, ?string $accessMode): bool
     {
-        $key = 'mediaAccess';
-        $value = $this->data->get($key);
-        if ($value) {
-            return $value;
-        }
-
-        $media = $this->getMedia();
-        if (!$media) {
+        if (!$media || !$accessMode) {
             return false;
         }
-
-        $token = $this->params()->fromQuery('token');
 
         $mediaAccess = $media->isPublic();
         $mediaItemAccess = $media->item()->isPublic();
         $isPublic = $mediaAccess && $mediaItemAccess;
-        if (!$isPublic) {
-            $user = $this->identity();
+        if ($isPublic) {
+            return true;
+        }
 
-            $accessResource = null;
-            if (!is_null($token)) {
-                $accessResource = $this->entityManager
-                    ->getRepository(\AccessResource\Entity\AccessResource::class)
-                    ->findOneBy(['token' => $token]);
-            } elseif (!is_null($user)) {
-                $accessResource = $this->entityManager
-                    ->getRepository(\AccessResource\Entity\AccessResource::class)
-                    ->findOneBy(['user' => $user->getId(), 'resource' => $media->id()]);
-            }
+        $user = $this->identity();
+        if ($accessMode === 'global') {
+            return !empty($user);
+        }
 
-            // Deny for visitor without token.
-            if (!$user && is_null($token) && is_null($accessResource)) {
-                $this->data->set($key, false);
-                return false;
-            }
+        // Any admin can see any media in any case.
+        if ($user && $this->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
+            return true;
+        }
 
-            // Deny for guest who has not access.
-            if ($user && is_null($token) && is_null($accessResource)) {
-                $this->data->set($key, false);
-                return false;
-            }
+        // Mode "ip" is compatible with mode "individual", so the check can be
+        // done separately.
+        if ($this->isSiteIp()) {
+            return true;
+        }
 
-            // Deny for token with not equal id media.
-            if ($token && $accessResource) {
-                if ($media->id() !== $accessResource->resource()->id()) {
-                    $this->data->set($key, false);
-                    return false;
-                }
-            }
+        if ($accessMode === 'ip') {
+            return false;
+        }
 
-            // Deny if time access is before start or after end.
-            if ($token && $accessResource->getTemporal()) {
-                if (strtotime($accessResource->getStartDate()->format('Y-m-d H:i')) <= time()
-                    || strtotime($accessResource->getEndDate()->format('Y-m-d H:i')) >= time()
-                ) {
-                    $this->data->set($key, false);
-                    return false;
-                }
-            }
+        // Check individual access with or without token.
 
-            $api = $this->api();
-            $access = $api->searchOne('access_resources', [
-                'resource_id' => $media->id(),
+        $token = $this->params()->fromQuery('token');
+
+        $accessResource = null;
+        if (!is_null($token)) {
+            $accessResource = $this->entityManager
+                ->getRepository(\AccessResource\Entity\AccessResource::class)
+                ->findOneBy(['token' => $token]);
+        } elseif (!is_null($user)) {
+            $accessResource = $this->entityManager
+                ->getRepository(\AccessResource\Entity\AccessResource::class)
+                ->findOneBy(['user' => $user->getId(), 'resource' => $media->id()]);
+        }
+
+        // Deny for visitor without token.
+        if (!$user && is_null($token) && is_null($accessResource)) {
+            return false;
+        }
+
+        // Deny for guest who has not access.
+        if ($user && is_null($token) && is_null($accessResource)) {
+            return false;
+        }
+
+        // Deny for token with not equal id media.
+        if ($token && $accessResource && $media->id() !== $accessResource->resource()->id()) {
+            return false;
+        }
+
+        // Deny if time access is before start or after end.
+        if ($token
+            && $accessResource->getTemporal()
+            && (
+                strtotime($accessResource->getStartDate()->format('Y-m-d H:i')) <= time()
+                || strtotime($accessResource->getEndDate()->format('Y-m-d H:i')) >= time()
+            )
+        ) {
+            return false;
+        }
+
+        $api = $this->api();
+        $access = $api->searchOne('access_resources', [
+            'resource_id' => $media->id(),
+            'user_id' => $user ? $user->getId() : null,
+            'enabled' => 1,
+        ])->getContent();
+        if (!$mediaAccess) {
+            $mediaAccess = (bool) $access;
+        }
+
+        if (!$mediaItemAccess) {
+            $mediaItemAccess = (bool) $api->searchOne('access_resources', [
+                'resource_id' => $media->item()->id(),
                 'user_id' => $user ? $user->getId() : null,
                 'enabled' => 1,
             ])->getContent();
-            if (!$mediaAccess) {
-                $mediaAccess = (bool) $access;
-            }
-
-            if (!$mediaItemAccess) {
-                $mediaItemAccess = (bool) $api->searchOne('access_resources', [
-                    'resource_id' => $media->item()->id(),
-                    'user_id' => $user ? $user->getId() : null,
-                    'enabled' => 1,
-                ])->getContent();
-            }
-            $value = $mediaAccess && $mediaItemAccess;
-        } else {
-            $value = true;
         }
 
-        $this->data->set($key, $value);
-        return $value;
+        return $mediaAccess && $mediaItemAccess;
     }
 
     /**
-     * Get relative filepath.
+     * Check and get relative filepath.
+     *
+     * @throws \Omeka\Mvc\Exception\NotFoundException
      */
-    protected function getFilepath(): ?string
+    protected function getFilepath(MediaRepresentation $media, string $storageType): ?string
     {
-        $key = 'filepath';
-        $value = $this->data->get($key);
-        if ($value) {
-            return $value;
-        }
-
-        $media = $this->getMedia();
-        if (!$media) {
-            return null;
-        }
-
-        $storageType = $this->getStorageType();
         if ($storageType === 'original') {
             if (!$media->hasOriginal()) {
-                return null;
+                throw new Exception\NotFoundException('File does not exist.'); // @translate
             }
             $filename = $media->filename();
         } elseif (!$media->hasThumbnails()) {
-            return null;
+            throw new Exception\NotFoundException('File does not exist.'); // @translate
         } else {
             $filename = $media->storageId() . '.jpg';
         }
 
         $value = sprintf('%s/%s/%s', $this->basePath, $storageType, $filename);
         if (!is_readable($value)) {
-            return null;
+            throw new Exception\NotFoundException('File does not exist.'); // @translate
         }
 
-        $this->data->set($key, $value);
         return $value;
     }
 
@@ -360,34 +305,40 @@ class AccessResourceController extends AbstractActionController
      * This is the 'file' action that is invoked when a user wants to download
      * the given file.
      */
-    protected function sendFile(): \Laminas\Http\PhpEnvironment\Response
-    {
-        $filepath = $this->getFilepath();
-        if (!$filepath) {
-            throw new Exception\NotFoundException('File does not exist.'); // @translate
+    protected function sendFile(
+        string $filepath,
+        ?string $mediaType = null,
+        ?string $filename = null,
+        ?string $dispositionMode = 'inline',
+        ?bool $cache = false,
+        ?MediaRepresentation $media = null,
+        ?string $storageType = null
+    ): \Laminas\Http\PhpEnvironment\Response {
+        if (!$mediaType) {
+            $mediaType = $storageType === 'original' ? $media->mediaType() : 'image/jpeg';
         }
-
-        $media = $this->getMedia();
-
-        $filename = $media->source();
-        $storageType = $this->data->get('storageType');
-        $mediaType = $storageType === 'original' ? $media->mediaType() : 'image/jpeg';
-        $filesize = $this->mediaFilesize($media, $storageType);
-
-        $dispositionMode = 'inline';
+        $filename = $filename ?: basename($filepath);
+        $filesize = $media && $storageType !== 'asset'
+            ? $this->mediaFilesize($media, $storageType)
+            : (file_exists($filepath) ? (int) filesize($filepath) : 0);
 
         /** @var \Laminas\Http\PhpEnvironment\Response $response */
         $response = $this->getResponse();
+
         // Write headers.
-        $response->getHeaders()
+        $headers = $response->getHeaders()
             ->addHeaderLine(sprintf('Content-Type: %s', $mediaType))
             ->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', $dispositionMode, $filename))
             ->addHeaderLine(sprintf('Content-Length: %s', $filesize))
-            ->addHeaderLine('Content-Transfer-Encoding: binary')
+            ->addHeaderLine('Content-Transfer-Encoding: binary');
+        if ($cache) {
             // Use this to open files directly.
             // Cache for 30 days.
-            ->addHeaderLine('Cache-Control: private, max-age=2592000, post-check=2592000, pre-check=2592000')
-            ->addHeaderLine(sprintf('Expires: %s', gmdate('D, d M Y H:i:s', time() + 2592000) . ' GMT'));
+            $headers
+                ->addHeaderLine('Cache-Control: private, max-age=2592000, post-check=2592000, pre-check=2592000')
+                ->addHeaderLine(sprintf('Expires: %s', gmdate('D, d M Y H:i:s', time() + 2592000) . ' GMT'));
+        }
+
         // Send headers separately to handle large files.
         $response->sendHeaders();
 
@@ -411,9 +362,8 @@ class AccessResourceController extends AbstractActionController
      * This is the 'file' action that is invoked when a user wants to download
      * the given file, but he has no rights.
      */
-    protected function sendFakeFile()
+    protected function sendFakeFile(?MediaRepresentation $media, ?string $filename = null)
     {
-        $media = $this->getMedia();
         $mediaType = $media ? $media->mediaType() : 'image/png';
         switch ($mediaType) {
             case strtok($mediaType, '/') === 'image':
@@ -424,6 +374,7 @@ class AccessResourceController extends AbstractActionController
                 break;
             case strtok($mediaType, '/') === 'audio':
             case strtok($mediaType, '/') === 'video':
+                $mediaType = 'video/mp4';
                 $file = 'img/locked-file.mp4';
                 break;
             case 'application/vnd.oasis.opendocument.text':
@@ -443,35 +394,9 @@ class AccessResourceController extends AbstractActionController
             $filepath = mb_substr($filepath, mb_strlen($serverBasePath));
         }
         $filepath = OMEKA_PATH . $filepath;
-        $fileSize = file_exists($filepath) ? filesize($filepath) : 0;
 
-        // Everything has been checked.
-        $dispositionMode = 'inline';
-
-        /** @var \Laminas\Http\PhpEnvironment\Response $response */
-        $response = $this->getResponse();
-        // Write headers.
-        $response->getHeaders()
-            ->addHeaderLine(sprintf('Content-Type: %s', $mediaType))
-            ->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', $dispositionMode, pathinfo($filepath, PATHINFO_BASENAME)))
-            ->addHeaderLine(sprintf('Content-Length: %s', $fileSize))
-            ->addHeaderLine('Content-Transfer-Encoding: binary');
-
-        // Send headers separately to handle large files.
-        $response->sendHeaders();
-
-        // Clears all active output buffers to avoid memory overflow.
-        $response->setContent('');
-        while (ob_get_level()) {
-            ob_end_clean();
-        }
-        readfile($filepath);
-
-        // TODO Fix issue with session. See readme of module XmlViewer.
-        ini_set('display_errors', '0');
-
-        // Return response to avoid default view rendering and to manage events.
-        return $response;
+        // "asset" means theme asset, not Asset entity.
+        return $this->sendFile($filepath, $mediaType, $filename, 'inline', false, $media, 'asset');
     }
 
     /**
@@ -489,11 +414,12 @@ class AccessResourceController extends AbstractActionController
         $response = $event->getResponse();
         $response->setStatusCode(403);
 
+        $data = $this->getDataFile();
         $user = $this->identity();
 
         $this->logger()->warn(
             sprintf('Access to private resource "%s" by user "%s".', // $translate
-                $this->data['storageType'] . '/' . $this->data['filename'],
+                $data['storageType'] . '/' . $data['filename'],
                 $user ? $user->getId() : 'unidentified'
             )
         );
