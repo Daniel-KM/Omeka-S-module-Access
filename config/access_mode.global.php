@@ -3,3 +3,5 @@
 namespace AccessResource;
 
 const ACCESS_MODE = 'global';
+
+const PROPERTY_RESERVED = 'curation:reserved';

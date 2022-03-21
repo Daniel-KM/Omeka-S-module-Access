@@ -1,4 +1,7 @@
 <?php
+
+use const AccessResource\PROPERTY_RESERVED;
+
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var \AccessResource\Api\Representation\AccessResourceRepresentation[] $accesses
@@ -144,7 +147,7 @@ $this->headScript()
         <p><?= $translate('This resource is public: no access is needed to view it.'); ?></p>
     </div>
 
-    <?php elseif (!$resource->value('curation:reserved')): ?>
+    <?php elseif (!$resource->value(PROPERTY_RESERVED)): ?>
 
     <div class="no-resources">
         <p><?= $translate('This resource is private and not marked reservable: no access is possible.'); ?></p>

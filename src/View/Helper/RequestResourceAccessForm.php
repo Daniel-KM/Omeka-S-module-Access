@@ -2,6 +2,8 @@
 
 namespace AccessResource\View\Helper;
 
+use const AccessResource\PROPERTY_RESERVED;
+
 use AccessResource\Form\AccessRequestForm;
 use Laminas\Form\FormElementManager\FormElementManagerV3Polyfill as FormElementManager;
 use Laminas\View\Helper\AbstractHelper;
@@ -103,7 +105,7 @@ class RequestResourceAccessForm extends AbstractHelper
                 continue;
             }
             /** @var \Omeka\Api\Representation\ValueRepresentation $value */
-            $value = $resource->value('curation:reserved');
+            $value = $resource->value(PROPERTY_RESERVED);
             if (!$value) {
                 continue;
             }

@@ -2,6 +2,8 @@
 
 namespace AccessResource\Service\Property;
 
+use const AccessResource\PROPERTY_RESERVED;
+
 use Interop\Container\ContainerInterface;
 
 class ReservedAccess
@@ -10,6 +12,6 @@ class ReservedAccess
     {
         /** @var \Omeka\Api\Adapter\MediaAdapter $adapter */
         $adapter = $services->get('Omeka\ApiAdapterManager')->get('media');
-        return $adapter->getPropertyByTerm('curation:reserved');
+        return $adapter->getPropertyByTerm(PROPERTY_RESERVED);
     }
 }
