@@ -170,15 +170,18 @@ class AccessResourceController extends AbstractActionController
         if ($result['canViewAll']) {
             $result['hasMediaAccess'] = true;
         } else {
-            $result['hasMediaAccess'] = $this->hasMediaAccess($media, $result['accessMode']);
-            if (!$result['hasMediaAccess']) {
-                return $result;
-            }
-
-            // Don't bypass embargo when it is set and not overridable.
-            $bypassEmbargo = $this->settings()->get('accessresource_embargo_bypass');
-            $result['isUnderEmbargo'] = $bypassEmbargo ? null : $this->isUnderEmbargo($media);
-            if ($result['isUnderEmbargo']) {
+            // The embargo may be finished, but not updated (for example a cron
+            // issue), so it is checked when needed.
+            $bypassEmbargo = (bool) $this->settings()->get('accessresource_embargo_bypass');
+            $result['isUnderEmbargo'] = $bypassEmbargo ? null : $this->isUnderEmbargo($media, true);
+            // When here, the resource has been automatically updated, so no
+            // more check since the resource is public.
+            $result['hasMediaAccess'] = $result['isUnderEmbargo'] === false
+                || $this->hasMediaAccess($media, $result['accessMode']);
+            if (!$result['hasMediaAccess']
+                // Don't bypass embargo when it is set and not overridable.
+                || $result['isUnderEmbargo']
+            ) {
                 return $result;
             }
         }

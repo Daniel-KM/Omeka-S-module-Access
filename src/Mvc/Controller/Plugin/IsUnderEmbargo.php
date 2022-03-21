@@ -14,10 +14,14 @@ class IsUnderEmbargo extends AbstractPlugin
     /**
      * Check if a resource has an embargo start or end date set and check it.
      *
+     * When the visibility of the resource is not up-to-date, it may be updated.
+     * The update is done via a direct sql without entity manager refresh, so
+     * don't process more the resource after the check.
+     *
      * @return bool|null Null if the embargo dates are not set, true if resource
      * is under embargo, else false.
      */
-    public function __invoke(?AbstractResourceEntityRepresentation $resource): ?bool
+    public function __invoke(?AbstractResourceEntityRepresentation $resource, bool $updateResource = false): ?bool
     {
         if (is_null($resource)) {
             return null;
@@ -42,13 +46,13 @@ class IsUnderEmbargo extends AbstractPlugin
             if ($end->type() === 'numeric:timestamp') {
                 $endDate = \NumericDataTypes\DataType\Timestamp::getDateTimeFromValue((string) $end->value());
                 if ($now < $endDate) {
-                    return true;
+                    return $updateResource ? $this->updateVisibilityForEmbargo($resource, true) : true;
                 }
             } else {
                 try {
                     $endDate = new DateTime((string) $end);
                     if ($now < $endDate) {
-                        return true;
+                        return $updateResource ? $this->updateVisibilityForEmbargo($resource, true) : true;
                     }
                 } catch (\Exception $e) {
                     $end = null;
@@ -60,13 +64,13 @@ class IsUnderEmbargo extends AbstractPlugin
             if ($start->type() === 'numeric:timestamp') {
                 $startDate = \NumericDataTypes\DataType\Timestamp::getDateTimeFromValue((string) $start->value());
                 if ($now >= $startDate) {
-                    return true;
+                    return $updateResource ? $this->updateVisibilityForEmbargo($resource, true) : true;
                 }
             } else {
                 try {
                     $startDate = new DateTime((string) $start);
                     if ($now >= $startDate) {
-                        return true;
+                        return $updateResource ? $this->updateVisibilityForEmbargo($resource, true) : true;
                     }
                 } catch (\Exception $e) {
                     $start = null;
@@ -74,6 +78,24 @@ class IsUnderEmbargo extends AbstractPlugin
             }
         }
 
-        return false;
+        // Don't update when dates are invalid.
+        return $updateResource && ($start || $end)
+            ? $this->updateVisibilityForEmbargo($resource, false)
+            : false;
+    }
+
+    protected function updateVisibilityForEmbargo(AbstractResourceEntityRepresentation $resource, bool $isUnderEmbargo): bool
+    {
+        // Any visitor can update visibility according to the embargo, since it
+        // is an automatic process, so use a direct sql to skip rights check.
+        $isPublic = $resource->isPublic();
+        if ($isUnderEmbargo === $isPublic) {
+            $resource->getServiceLocator()->get('Omeka\Connection')->executeStatement(
+                'UPDATE `resource` SET `is_public` = :is_public WHERE `id` = :id',
+                ['id' => (int) $resource->id(), 'is_public' => (int) !$isUnderEmbargo],
+                ['id' => \Doctrine\DBAL\ParameterType::INTEGER, 'is_public' => \Doctrine\DBAL\ParameterType::INTEGER]
+            );
+        }
+        return $isUnderEmbargo;
     }
 }
