@@ -44,18 +44,18 @@ class AccessResourceController extends AbstractActionController
     }
 
     /**
-     * Forward to the 'files' action
+     * Forward to the action "file".
      *
      * @see self::filesAction()
      */
     public function indexAction()
     {
         $params = $this->params()->fromRoute();
-        $params['action'] = 'files';
+        $params['action'] = 'file';
         return $this->forward()->dispatch(__CLASS__, $params);
     }
 
-    public function filesAction()
+    public function fileAction()
     {
         /**
          * @var string $storageType
@@ -129,7 +129,7 @@ class AccessResourceController extends AbstractActionController
             return $result;
         }
 
-        $result['filename'] = $routeParams['file'] ?? null;;
+        $result['filename'] = $routeParams['filename'] ?? null;;
         if (!$result['filename']) {
             return $result;
         }
@@ -374,7 +374,7 @@ class AccessResourceController extends AbstractActionController
 
     /**
      * This is the 'file' action that is invoked when a user wants to download
-     * the given file, but he has no rights.
+     * the given file without rights.
      */
     protected function sendFakeFile(?MediaRepresentation $media, ?string $filename = null)
     {

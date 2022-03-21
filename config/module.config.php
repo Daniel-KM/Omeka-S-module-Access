@@ -49,12 +49,18 @@ return [
             'access-resource-file' => [
                 'type' => \Laminas\Router\Http\Segment::class,
                 'options' => [
-                    // The "{?}" allows to use module Archive Repertory and a full filepath.
-                    'route' => '/access/files/:type/:file{?}',
+                    // See module Statistics too.
+                    // Manage module Archive repertory, that can use real names and subdirectories.
+                    // For any filename, either use `:filename{?}`, or add a constraint `'filename' => '.+'`.
+                    'route' => '/access/files/:type/:filename{?}',
+                    'constraints' => [
+                        'type' => '[^/]+',
+                        'filename' => '.+',
+                    ],
                     'defaults' => [
                         '__NAMESPACE__' => 'AccessResource\Controller',
                         'controller' => 'AccessResource',
-                        'action' => 'files',
+                        'action' => 'file',
                         'access_mode' => ACCESS_MODE,
                     ],
                 ],

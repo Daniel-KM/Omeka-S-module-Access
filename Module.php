@@ -64,8 +64,7 @@ class Module extends AbstractModule
         $this->getServiceLocator()->get('Omeka\Acl')
             ->allow(
                 null,
-                ['AccessResource\Controller\AccessResource'],
-                ['index', 'files']
+                ['AccessResource\Controller\AccessResource']
             )
         ;
     }
@@ -88,8 +87,7 @@ class Module extends AbstractModule
         $acl
             ->allow(
                 null,
-                ['AccessResource\Controller\AccessResource'],
-                ['index', 'files']
+                ['AccessResource\Controller\AccessResource']
             )
             ->allow(
                 null,
