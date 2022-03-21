@@ -5,3 +5,5 @@ namespace AccessResource;
 const ACCESS_MODE = 'ip';
 
 const PROPERTY_RESERVED = 'curation:reserved';
+const PROPERTY_EMBARGO_START = 'curation:dateStart';
+const PROPERTY_EMBARGO_END = 'curation:dateEnd';

@@ -16,6 +16,11 @@ return [
             'resource_visibility' => Db\Filter\ReservedResourceVisibilityFilter::class,
         ],
     ],
+    'view_helpers' => [
+        'factories' => [
+            'isUnderEmbargo' => Service\ViewHelper\IsUnderEmbargoFactory::class,
+        ],
+    ],
     'form_elements' => [
         'invokables' => [
             Form\ConfigForm::class => Form\ConfigForm::class,
@@ -27,6 +32,9 @@ return [
         ],
     ],
     'controller_plugins' => [
+        'invokables' => [
+            'isUnderEmbargo' => Mvc\Controller\Plugin\IsUnderEmbargo::class,
+        ],
         'factories' => [
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
         ],

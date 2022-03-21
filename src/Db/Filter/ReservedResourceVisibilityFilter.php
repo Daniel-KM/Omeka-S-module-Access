@@ -31,6 +31,8 @@ class ReservedResourceVisibilityFilter extends \Omeka\Db\Filter\ResourceVisibili
         $reservedConstraints[] = sprintf('%s.`is_public` = 0', $alias);
 
         // Resource should have property 'curation:reserved', whatever the value.
+        // The embargo is checked separately to avoid complex request.
+        // @todo Use a simple join with a table that index the openness (and embargo dates?) of resources.
         $property = $this->serviceLocator->get(PropertyReservedAccess::class);
 
         $reservedConstraints[] = sprintf(

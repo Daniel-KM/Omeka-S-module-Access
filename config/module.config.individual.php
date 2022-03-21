@@ -31,6 +31,7 @@ return [
     ],
     'view_helpers' => [
         'factories' => [
+            'isUnderEmbargo' => Service\ViewHelper\IsUnderEmbargoFactory::class,
             'requestResourceAccessForm' => Service\ViewHelper\RequestResourceAccessFormFactory::class,
         ],
     ],
@@ -56,6 +57,9 @@ return [
         ],
     ],
     'controller_plugins' => [
+        'invokables' => [
+            'isUnderEmbargo' => Mvc\Controller\Plugin\IsUnderEmbargo::class,
+        ],
         'factories' => [
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
             'requestMailer' => Service\ControllerPlugin\RequestMailerFactory::class,
