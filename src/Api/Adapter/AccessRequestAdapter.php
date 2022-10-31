@@ -20,6 +20,15 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         'modified' => 'modified',
     ];
 
+    protected $scalarFields = [
+        'id' => 'id',
+        'resource' => 'resource',
+        'user' => 'user',
+        'status' => 'status',
+        'created' => 'created',
+        'modified' => 'modified',
+    ];
+
     public function getResourceName()
     {
         return 'access_requests';

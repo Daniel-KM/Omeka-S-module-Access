@@ -16,6 +16,22 @@ class AccessResourceAdapter extends AbstractEntityAdapter
         'resource' => 'resource',
         'user' => 'user',
         'enabled' => 'enabled',
+        'temporal' => 'temporal',
+        'start_date' => 'startDate',
+        'end_date' => 'endDate',
+        'created' => 'created',
+        'modified' => 'modified',
+    ];
+
+    protected $scalarFields = [
+        'id' => 'id',
+        'resource' => 'resource',
+        'user' => 'user',
+        'token' => 'token',
+        'enabled' => 'enabled',
+        'temporal' => 'temporal',
+        'start_date' => 'startDate',
+        'end_date' => 'endDate',
         'created' => 'created',
         'modified' => 'modified',
     ];
