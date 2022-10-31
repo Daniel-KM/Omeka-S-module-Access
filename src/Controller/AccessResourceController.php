@@ -251,7 +251,7 @@ class AccessResourceController extends AbstractActionController
 
         // Mode "ip" is compatible with mode "individual", so the check can be
         // done separately.
-        if ($this->isSiteIp()) {
+        if ($this->isReservedIp()) {
             return true;
         }
 
@@ -448,7 +448,7 @@ class AccessResourceController extends AbstractActionController
     /**
      * Check if the ip of the user belongs to a site.
      */
-    protected function isSiteIp(): ?int
+    protected function isReservedIp(): ?int
     {
         $ip = $this->getClientIp();
         if ($ip === '::') {
@@ -462,7 +462,7 @@ class AccessResourceController extends AbstractActionController
 
         // Check a single ip.
         if (isset($reservedIps[$ip])) {
-            return $reservedIps[$ip]['site'];
+            return $reservedIps[$ip]['reserved'];
         }
 
         // Check an ip range.
@@ -470,7 +470,7 @@ class AccessResourceController extends AbstractActionController
         $ipLong = ip2long($ip);
         foreach ($reservedIps as $range) {
             if ($ipLong >= $range['low'] && $ipLong <= $range['high']) {
-                return $range['site'];
+                return $range['reserved'];
             }
         }
 

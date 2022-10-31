@@ -293,7 +293,7 @@ class Module extends AbstractModule
         $settings = $services->get('Omeka\Settings');
 
         $ipSites = $this->accessMode === 'global'
-            ? $settings->get('accessresource_ip_sites', [])
+            ? []
             : $params['accessresource_ip_sites'] ?? [];
         $params['accessresource_ip_sites'] = $ipSites;
 
@@ -328,7 +328,7 @@ class Module extends AbstractModule
                 continue;
             }
             $reservedIps[$ip] = $this->cidrToRange($ip);
-            $reservedIps[$ip]['site'] = $site->id();
+            $reservedIps[$ip]['reserved'] = $site->id();
         }
 
         if ($hasError) {
@@ -338,10 +338,10 @@ class Module extends AbstractModule
         // Move the ip 0.0.0.0/0 as last ip, it will be possible to find a
         // more precise site if any.
         foreach (['0.0.0.0', '0.0.0.0/0', '::'] as $ip) {
-            if (isset($reservedIps['ranges'][$ip])) {
-                $v = $reservedIps['ranges'][$ip];
-                unset($reservedIps['ranges'][$ip]);
-                $reservedIps['ranges'][$ip] = $v;
+            if (isset($reservedIps[$ip])) {
+                $v = $reservedIps[$ip];
+                unset($reservedIps[$ip]);
+                $reservedIps[$ip] = $v;
             }
         }
 
@@ -660,13 +660,13 @@ class Module extends AbstractModule
     }
 
     /**
-     * Extract first and last ip from a cidr.
+     * Extract first and last ip as number from a an ip/cidr.
      *
-     * @param string $cidr
+     * @param string $cidr Checked ip with or without cidr.
      * @link https://stackoverflow.com/questions/4931721/getting-list-ips-from-cidr-notation-in-php/4931756#4931756
-     * @return array Associative array with lowest and highest ip (as number).
+     * @return array Associative array with lowest and highest ip as number.
      */
-    protected function cidrToRange($cidr)
+    protected function cidrToRange($cidr): array
     {
         if (strpos($cidr, '/') === false) {
             return [

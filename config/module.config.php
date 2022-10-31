@@ -92,6 +92,18 @@ return [
             // with site ids (not slug) and the numberized ip ranges (cidr) in
             // order to do a quicker control of rights.
             'accessresource_ip_reserved' => [
+                /*
+                '123.45.67.89' => [
+                    'low' => 2066563929,
+                    'high' => 2066563929,
+                    'reserved' => 1,
+                ],
+                '123.45.68.0/24' => [
+                    'low' => 2066564096,
+                    'high' => 2066564351,
+                    'reserved' => 2,
+                ],
+                */
             ],
         ],
         'settings' => [
