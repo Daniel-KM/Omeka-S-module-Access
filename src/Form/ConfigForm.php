@@ -2,6 +2,10 @@
 
 namespace AccessResource\Form;
 
+use const AccessResource\ACCESS_MODE_GLOBAL;
+use const AccessResource\ACCESS_MODE_IP;
+use const AccessResource\ACCESS_MODE_INDIVIDUAL;
+
 use Laminas\Form\Element;
 use Laminas\Form\Form;
 use Omeka\Form\Element\ArrayTextarea;
@@ -19,9 +23,9 @@ class ConfigForm extends Form
                     'info' => 'Access to a media is "reserved" when it has the property "curation:reserved" filled, whatever it is.', // @translate
                     'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource#access-mode',
                     'value_options' => [
-                        'global' => 'Global: all users, included guests, have access to all reserved medias', // @translate
-                        'ip' => 'IP: visitors with specified ips have access to all reserved medias', // @translate
-                        'individual' => 'Individual: guests should request access to each reserved media', // @translate
+                        ACCESS_MODE_GLOBAL => 'Global: all users, included guests, have access to all reserved medias', // @translate
+                        ACCESS_MODE_IP => 'IP: visitors with specified ips have access to all reserved medias', // @translate
+                        ACCESS_MODE_INDIVIDUAL => 'Individual: guests should request access to each reserved media', // @translate
                     ],
                 ],
                 'attributes' => [

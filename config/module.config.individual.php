@@ -87,7 +87,7 @@ return [
                         '__NAMESPACE__' => 'AccessResource\Controller',
                         'controller' => 'AccessResource',
                         'action' => 'file',
-                        'access_mode' => 'individual',
+                        'access_mode' => ACCESS_MODE_INDIVIDUAL,
                     ],
                 ],
             ],
@@ -253,7 +253,7 @@ return [
         'config' => [
             // This setting is just for info: it is overridden by [accessresource][access_mode]
             // that should be set in config/local.config.php.
-            'accessresource_access_mode' => 'individual',
+            'accessresource_access_mode' => ACCESS_MODE_INDIVIDUAL,
             'accessresource_embargo_bypass' => false,
             'accessresource_embargo_auto_update' => false,
             'accessresource_ip_sites' => [],

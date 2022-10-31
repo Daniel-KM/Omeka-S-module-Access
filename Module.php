@@ -8,6 +8,10 @@ if (!class_exists(\Generic\AbstractModule::class)) {
         : __DIR__ . '/src/Generic/AbstractModule.php';
 }
 
+const ACCESS_MODE_GLOBAL = 'global';
+const ACCESS_MODE_IP = 'ip';
+const ACCESS_MODE_INDIVIDUAL = 'individual';
+
 use const AccessResource\ACCESS_MODE;
 
 use Generic\AbstractModule;
@@ -30,12 +34,12 @@ class Module extends AbstractModule
      *
      * @var string
      */
-    protected $accessMode = 'global';
+    protected $accessMode = ACCESS_MODE_GLOBAL;
 
     public function getConfig()
     {
         $config = include OMEKA_PATH . '/config/local.config.php';
-        $this->accessMode = @$config['accessresource']['access_mode'] ?: 'global';
+        $this->accessMode = $config['accessresource']['access_mode'] ?? ACCESS_MODE_GLOBAL;
         require_once __DIR__ . '/config/access_mode.' . $this->accessMode . '.php';
         return include __DIR__ . '/config/module.config.php';
     }
@@ -62,7 +66,7 @@ class Module extends AbstractModule
     {
         parent::onBootstrap($event);
 
-        if ($this->accessMode === 'individual') {
+        if ($this->accessMode === ACCESS_MODE_INDIVIDUAL) {
             $this->addAclRoleAndRulesIndividually();
         } else {
             $this->addAclRoleAndRulesGlobally();
@@ -162,7 +166,7 @@ class Module extends AbstractModule
         );
 
         // No more event when access is global: no form, requests, checks…
-        if ($this->accessMode !== 'individual') {
+        if ($this->accessMode !== ACCESS_MODE_INDIVIDUAL) {
             return;
         }
 
@@ -261,7 +265,7 @@ class Module extends AbstractModule
         /** @var \AccessResource\Form\ConfigForm $form */
         $form = $services->get('FormElementManager')->get(\AccessResource\Form\ConfigForm::class);
         $form->init();
-        if ($this->accessMode === 'global') {
+        if ($this->accessMode === ACCESS_MODE_GLOBAL) {
             $form->remove('accessresource_ip_sites');
         }
         $form->setData($data);

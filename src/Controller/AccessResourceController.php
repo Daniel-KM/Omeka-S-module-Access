@@ -3,6 +3,9 @@
 namespace AccessResource\Controller;
 
 use const AccessResource\ACCESS_MODE;
+use const AccessResource\ACCESS_MODE_GLOBAL;
+use const AccessResource\ACCESS_MODE_IP;
+use const AccessResource\ACCESS_MODE_INDIVIDUAL;
 
 use AccessResource\Entity\AccessLog;
 use Doctrine\ORM\EntityManager;
@@ -89,7 +92,7 @@ class AccessResourceController extends AbstractActionController
         }
 
         // Log only non-admin individual access to original records.
-        if ($accessMode === 'individual'
+        if ($accessMode === ACCESS_MODE_INDIVIDUAL
             && $storageType === 'original'
             && !$canViewAll
         ) {
@@ -240,7 +243,7 @@ class AccessResourceController extends AbstractActionController
         }
 
         $user = $this->identity();
-        if ($accessMode === 'global') {
+        if ($accessMode === ACCESS_MODE_GLOBAL) {
             return !empty($user);
         }
 
@@ -255,7 +258,7 @@ class AccessResourceController extends AbstractActionController
             return true;
         }
 
-        if ($accessMode === 'ip') {
+        if ($accessMode === ACCESS_MODE_IP) {
             return false;
         }
 

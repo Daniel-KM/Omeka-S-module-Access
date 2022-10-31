@@ -5,7 +5,7 @@ namespace AccessResource;
 // Access mode may be "global", "ip" or "individual".
 use const AccessResource\ACCESS_MODE;
 
-if (ACCESS_MODE === 'individual') {
+if (ACCESS_MODE === ACCESS_MODE_INDIVIDUAL) {
     return include __DIR__ . '/module.config.individual.php';
 }
 
@@ -83,7 +83,7 @@ return [
         'config' => [
             // This setting is just for info: it is overridden by [accessresource][access_mode]
             // that should be set in config/local.config.php.
-            'accessresource_access_mode' => 'global',
+            'accessresource_access_mode' => ACCESS_MODE_GLOBAL,
             'accessresource_embargo_bypass' => false,
             'accessresource_embargo_auto_update' => false,
             'accessresource_ip_sites' => [],
