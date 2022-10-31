@@ -2,22 +2,28 @@
 
 namespace AccessResource;
 
+use Omeka\Stdlib\Message;
+
 /**
  * @var Module $this
  * @var \Laminas\ServiceManager\ServiceLocatorInterface $services
- * @var string $newVersion
  * @var string $oldVersion
- *
- * @var \Doctrine\DBAL\Connection $connection
- * @var \Doctrine\ORM\EntityManager $entityManager
- * @var \Omeka\Api\Manager $api
+ * @var string $newVersion
  */
-// $entityManager = $services->get('Omeka\EntityManager');
-$connection = $services->get('Omeka\Connection');
+
+/**
+ * @var \Doctrine\DBAL\Connection $connection
+ * @var array $config
+ * @var \Omeka\Mvc\Controller\Plugin\Api $api
+ * @var \Omeka\Settings\Settings $settings
+ * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
+ */
 $plugins = $services->get('ControllerPluginManager');
 $api = $plugins->get('api');
-$settings = $services->get('Omeka\Settings');
 // $config = require dirname(__DIR__, 2) . '/config/module.config.php';
+$settings = $services->get('Omeka\Settings');
+$connection = $services->get('Omeka\Connection');
+$messenger = $plugins->get('messenger');
 
 if (version_compare((string) $oldVersion, '3.3.0.6', '<')) {
     $sqls = <<<'SQL'
@@ -48,4 +54,21 @@ if (version_compare((string) $oldVersion, '3.3.0.7', '<')) {
 
 if (version_compare((string) $oldVersion, '3.3.0.11', '<')) {
     require_once __DIR__ . '/upgrade_vocabulary.php';
+}
+
+if (version_compare((string) $oldVersion, '3.3.0.12', '<')) {
+    $settings->set('accessresource_ip_item_sets', $settings->get('accessresource_ip_sites', []) ?: []);
+    $settings->delete('accessresource_ip_sites', []);
+
+    $reservedIps = $settings->get('accessresource_ip_reserved') ?: [];
+    foreach (array_keys($reservedIps) as $ip) {
+        unset($reservedIps[$ip]['site'], $reservedIps[$ip]['ranges']);
+        $reservedIps[$ip]['reserved'] = [];
+    }
+    $settings->set('accessresource_ip_reserved', $reservedIps);
+
+    $message = new Message(
+        'The reserved access by ip by site has been replaced by a reserved acces by ip by item set. You should check and resave your config if needed and eventually create item sets.' // @translate
+    );
+    $messenger->addWarning($message);
 }
