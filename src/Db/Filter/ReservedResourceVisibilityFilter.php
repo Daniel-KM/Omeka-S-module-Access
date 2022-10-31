@@ -2,21 +2,24 @@
 
 namespace AccessResource\Db\Filter;
 
-use AccessResource\Service\Property\ReservedAccess as PropertyReservedAccess;
+use Omeka\Db\Filter\ResourceVisibilityFilter;
 
 /**
  * Filter resources by default rules and user access.
- * Users can view private resources when they have access to them as globally,
- * by ip or individually.
+ *
+ * Any user can view restricted resources metadata.
+ * Access to files is managed in the controller.
  *
  * Warning: this filter can be overridden by module Group, so not compatible.
  *
  * {@inheritdoc}
  */
-class ReservedResourceVisibilityFilter extends \Omeka\Db\Filter\ResourceVisibilityFilter
+class ReservedResourceVisibilityFilter extends ResourceVisibilityFilter
 {
     protected function getResourceConstraint($alias)
     {
+        static $reservedAccessPropertyId;
+
         // Check rights from the core resource visibility filter.
         $constraints = parent::getResourceConstraint($alias);
 
@@ -25,15 +28,17 @@ class ReservedResourceVisibilityFilter extends \Omeka\Db\Filter\ResourceVisibili
             return $constraints;
         }
 
+        // Resource should have property 'curation:reserved', whatever the value.
+        // The embargo is checked separately to avoid complex request.
+        // @todo Use a simple join with a table that index the openness (and embargo dates?) of resources.
+        if (is_null($reservedAccessPropertyId)) {
+            $reservedAccessPropertyId = $this->serviceLocator->get('ControllerPluginManager')->get('reservedAccessPropertyId')->__invoke();
+        }
+
         $reservedConstraints = [];
 
         // Resource should be private.
         $reservedConstraints[] = sprintf('%s.`is_public` = 0', $alias);
-
-        // Resource should have property 'curation:reserved', whatever the value.
-        // The embargo is checked separately to avoid complex request.
-        // @todo Use a simple join with a table that index the openness (and embargo dates?) of resources.
-        $property = $this->serviceLocator->get(PropertyReservedAccess::class);
 
         $reservedConstraints[] = sprintf(
             'EXISTS (
@@ -43,7 +48,7 @@ class ReservedResourceVisibilityFilter extends \Omeka\Db\Filter\ResourceVisibili
         AND `value`.`resource_id` = %s.`id`
         LIMIT 1
 )',
-            (int) $property->getId(),
+            $reservedAccessPropertyId,
             $alias
         );
 

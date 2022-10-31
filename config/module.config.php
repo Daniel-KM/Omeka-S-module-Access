@@ -37,11 +37,8 @@ return [
         ],
         'factories' => [
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
-        ],
-    ],
-    'service_manager' => [
-        'factories' => [
-            Service\Property\ReservedAccess::class => Service\Property\ReservedAccess::class,
+            // TODO Store the reserved access property id as a constant to avoid to get it each request.
+            'reservedAccessPropertyId' => Service\ControllerPlugin\ReservedAccessPropertyIdFactory::class,
         ],
     ],
     'router' => [

@@ -442,7 +442,7 @@ class Module extends AbstractModule
             }
 
             // Users can view all media in private items with special property.
-            $property = $services->get(\AccessResource\Service\Property\ReservedAccess::class);
+            $reservedAccessPropertyId = $this->serviceLocator->get('ControllerPluginManager')->get('reservedAccessPropertyId')->__invoke();
             $qbs = $em->createQueryBuilder();
             $valueAlias = $adapter->createAlias();
             $qbs
@@ -450,7 +450,7 @@ class Module extends AbstractModule
                 ->from('Omeka\Entity\Value', $valueAlias)
                 ->where($expr->eq(
                     "IDENTITY($valueAlias.property)",
-                    $adapter->createNamedParameter($qb, $property->getId())
+                    $adapter->createNamedParameter($qb, $reservedAccessPropertyId)
                 ));
 
             $conditions[] = $expr->in('omeka_root.id', $qbs->getDQL());
