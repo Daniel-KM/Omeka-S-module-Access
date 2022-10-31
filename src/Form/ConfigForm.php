@@ -19,7 +19,7 @@ class ConfigForm extends Form
                 'name' => 'accessresource_access_mode',
                 'type' => Element\Radio::class,
                 'options' => [
-                    'label' => 'Restricted access mode (to be set in config/local.config.php)', // @translate
+                    'label' => 'Reserved access mode (to be set in config/local.config.php)', // @translate
                     'info' => 'Access to a media is "reserved" when it has the property "curation:reserved" filled, whatever it is.', // @translate
                     'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource#access-mode',
                     'value_options' => [
@@ -39,7 +39,7 @@ class ConfigForm extends Form
                 'name' => 'accessresource_embargo_bypass',
                 'type' => Element\Checkbox::class,
                 'options' => [
-                    'label' => 'Bypass embargo dates for restricted resources', // @translate
+                    'label' => 'Bypass embargo dates for reserved resources', // @translate
                 ],
                 'attributes' => [
                     'id' => 'accessresource_embargo_bypass',

@@ -7,7 +7,7 @@ use Omeka\Db\Filter\ResourceVisibilityFilter;
 /**
  * Filter resources by default rules and user access.
  *
- * Any user can view restricted resources metadata.
+ * Any user can view reserved resources metadata.
  * Access to files is managed in the controller.
  *
  * Warning: this filter can be overridden by module Group, so not compatible.
