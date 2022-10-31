@@ -302,37 +302,29 @@ class Module extends AbstractModule
         $params['accessresource_ip_sites'] = $ipSites;
 
         $reservedIps = [];
-        foreach ($ipSites as $ip => $siteSlug) {
-            if (!$ip && !$siteSlug) {
+        foreach ($ipSites as $ip => $siteSlugOrId) {
+            if (!$ip && !$siteSlugOrId) {
                 continue;
             }
             if (!$ip || !filter_var(strtok($ip, '/'), FILTER_VALIDATE_IP)) {
                 $message = new Message(
                     'The ip "%1$s" is empty or invalid for site "%2$s".', // @translate
-                    $ip, $siteSlug
+                    $ip, $siteSlugOrId
                 );
                 $controller->messenger()->addError($message);
                 $hasError = true;
                 continue;
-            } elseif (!$siteSlug) {
+            } elseif ($siteSlugOrId && !($site = $api->searchOne('sites', is_numeric($siteSlugOrId) ? ['id' => $siteSlugOrId] : ['slug' => $siteSlugOrId])->getContent())) {
                 $message = new Message(
-                    'The site slug is missing for ip "%s".', // @translate
-                    $ip
-                );
-                $controller->messenger()->addError($message);
-                $hasError = true;
-                continue;
-            } elseif (!($site = $api->searchOne('sites', ['slug' => $siteSlug])->getContent())) {
-                $message = new Message(
-                    'The site slug "%1$s" for ip "%2$s" is unknown.', // @translate
-                    $siteSlug, $ip
+                    'The site "%1$s" for ip "%2$s" is unknown.', // @translate
+                    $siteSlugOrId, $ip
                 );
                 $controller->messenger()->addError($message);
                 $hasError = true;
                 continue;
             }
             $reservedIps[$ip] = $this->cidrToRange($ip);
-            $reservedIps[$ip]['reserved'] = $site->id();
+            $reservedIps[$ip]['reserved'] = $site ? $site->id() : null;
         }
 
         if ($hasError) {

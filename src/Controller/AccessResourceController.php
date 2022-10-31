@@ -254,7 +254,7 @@ class AccessResourceController extends AbstractActionController
 
         // Mode "ip" is compatible with mode "individual", so the check can be
         // done separately.
-        if ($this->isReservedIp()) {
+        if (is_int($this->isReservedIp())) {
             return true;
         }
 
@@ -453,6 +453,9 @@ class AccessResourceController extends AbstractActionController
      */
     protected function isReservedIp(): ?int
     {
+        // This method is called one time for each file, but each file is
+        // called by a difrerent request.
+
         $ip = $this->getClientIp();
         if ($ip === '::') {
             return null;
@@ -465,7 +468,7 @@ class AccessResourceController extends AbstractActionController
 
         // Check a single ip.
         if (isset($reservedIps[$ip])) {
-            return $reservedIps[$ip]['reserved'];
+            return (int) $reservedIps[$ip]['reserved'];
         }
 
         // Check an ip range.
@@ -473,7 +476,7 @@ class AccessResourceController extends AbstractActionController
         $ipLong = ip2long($ip);
         foreach ($reservedIps as $range) {
             if ($ipLong >= $range['low'] && $ipLong <= $range['high']) {
-                return $range['reserved'];
+                return (int) $range['reserved'];
             }
         }
 
