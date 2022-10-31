@@ -109,6 +109,38 @@ class AccessResourceController extends AbstractActionController
             : $this->sendFakeFile($media, $filename);
     }
 
+    /**
+     * Action called if media is not available for the user.
+     *
+     * It avoids to throw an exception, since it's not really an error and trace
+     * is useless.
+     */
+    public function permissionDeniedAction(): ViewModel
+    {
+        $event = $this->getEvent();
+        $routeMatch = $event->getRouteMatch();
+        $routeMatch->setParam('action', 'forbidden');
+
+        $response = $event->getResponse();
+        $response->setStatusCode(403);
+
+        $data = $this->getDataFile();
+        $user = $this->identity();
+
+        $this->logger()->warn(
+            new \Omeka\Stdlib\Message('Access to private resource "%s" by user "%s".', // $translate
+                $data['storageType'] . '/' . $data['filename'],
+                $user ? $user->getId() : 'unidentified'
+            )
+        );
+
+        $view = new ViewModel([
+            'exception' => new Exception\PermissionDeniedException('Access forbidden'), // @translate
+        ]);
+        return $view
+            ->setTemplate('error/403-access-resource');
+    }
+
     protected function getDataFile(): array
     {
         $result = [
@@ -414,59 +446,6 @@ class AccessResourceController extends AbstractActionController
     }
 
     /**
-     * Action called if media is not available for the user.
-     *
-     * It avoids to throw an exception, since it's not really an error and trace
-     * is useless.
-     */
-    public function permissionDeniedAction(): ViewModel
-    {
-        $event = $this->getEvent();
-        $routeMatch = $event->getRouteMatch();
-        $routeMatch->setParam('action', 'forbidden');
-
-        $response = $event->getResponse();
-        $response->setStatusCode(403);
-
-        $data = $this->getDataFile();
-        $user = $this->identity();
-
-        $this->logger()->warn(
-            sprintf('Access to private resource "%s" by user "%s".', // $translate
-                $data['storageType'] . '/' . $data['filename'],
-                $user ? $user->getId() : 'unidentified'
-            )
-        );
-
-        $view = new ViewModel([
-            'exception' => new Exception\PermissionDeniedException('Access forbidden'), // @translate
-        ]);
-        return $view
-            ->setTemplate('error/403-access-resource');
-    }
-
-    /**
-     * Get the ip of the client (ipv4 or ipv6), or empty ip ("::").
-     */
-    protected function getClientIp(): string
-    {
-        // Use $_SERVER['REMOTE_ADDR'], the most reliable.
-        $remoteAddress = new RemoteAddress();
-        $ip = $remoteAddress->getIpAddress();
-        if (!$ip) {
-            return '::';
-        }
-
-        // A proxy or a htaccess rule can return the server ip, so check it too.
-        // The server itself is a trusted proxy when used in htacess or config (see RemoteAddress::getIpAddressFromProxy()).
-        $remoteAddress
-            ->setUseProxy(true)
-            ->setTrustedProxies([$_SERVER['SERVER_ADDR']]);
-        return $remoteAddress->getIpAddress()
-            ?: '::';
-    }
-
-    /**
      * Check if the ip of the user belongs to a site.
      */
     protected function isSiteIp(): ?int
@@ -496,5 +475,26 @@ class AccessResourceController extends AbstractActionController
         }
 
         return null;
+    }
+
+    /**
+     * Get the ip of the client (ipv4 or ipv6), or empty ip ("::").
+     */
+    protected function getClientIp(): string
+    {
+        // Use $_SERVER['REMOTE_ADDR'], the most reliable.
+        $remoteAddress = new RemoteAddress();
+        $ip = $remoteAddress->getIpAddress();
+        if (!$ip) {
+            return '::';
+        }
+
+        // A proxy or a htaccess rule can return the server ip, so check it too.
+        // The server itself is a trusted proxy when used in htacess or config (see RemoteAddress::getIpAddressFromProxy()).
+        $remoteAddress
+            ->setUseProxy(true)
+            ->setTrustedProxies([$_SERVER['SERVER_ADDR']]);
+        return $remoteAddress->getIpAddress()
+            ?: '::';
     }
 }

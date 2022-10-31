@@ -304,7 +304,7 @@ class Module extends AbstractModule
             }
             if (!$ip || !filter_var(strtok($ip, '/'), FILTER_VALIDATE_IP)) {
                 $message = new Message(
-                    'The ip "%s" is empty or invalid for site "%s".', // @translate
+                    'The ip "%1$s" is empty or invalid for site "%2$s".', // @translate
                     $ip, $siteSlug
                 );
                 $controller->messenger()->addError($message);
@@ -320,7 +320,7 @@ class Module extends AbstractModule
                 continue;
             } elseif (!($site = $api->searchOne('sites', ['slug' => $siteSlug])->getContent())) {
                 $message = new Message(
-                    'The site slug "%s" for ip "%s" is unknown.', // @translate
+                    'The site slug "%1$s" for ip "%2$s" is unknown.', // @translate
                     $siteSlug, $ip
                 );
                 $controller->messenger()->addError($message);
@@ -364,7 +364,7 @@ class Module extends AbstractModule
             $message = new \Omeka\Stdlib\Message(
                 $translator->translate('The module is not configured: the key "[accessresource][access_mode]" should be set in the main config file of Omeka "config/local.config.php".') // @translate
             );
-            $messenger = new \Omeka\Mvc\Controller\Plugin\Messenger();
+            $messenger = $services->get('ControllerPluginManager')->get('messenger');
             $messenger->addWarning($message);
         }
 
@@ -374,7 +374,7 @@ class Module extends AbstractModule
             $message = new \Omeka\Stdlib\Message(
                 $translator->translate('This module is currently not compatible with module Group, that should be disabled.') // @translate
             );
-            $messenger = new \Omeka\Mvc\Controller\Plugin\Messenger();
+            $messenger = $services->get('ControllerPluginManager')->get('messenger');
             $messenger->addError($message);
         }
     }

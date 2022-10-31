@@ -27,7 +27,7 @@ $data = file_get_contents($filepath);
 $data = json_decode($data, true);
 $installResources->createOrUpdateVocabulary($data, $module);
 
-$messenger = new Messenger();
+$messenger = $services->get('ControllerPluginManager')->get('messenger');
 $message = new Message(
     'The vocabulary "%s" was updated successfully.', // @translate
     pathinfo($filepath, PATHINFO_FILENAME)

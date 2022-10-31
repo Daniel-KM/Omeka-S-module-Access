@@ -86,8 +86,7 @@ return [
             'accessresource_access_mode' => 'global',
             'accessresource_embargo_bypass' => false,
             'accessresource_embargo_auto_update' => false,
-            'accessresource_ip_sites' => [
-            ],
+            'accessresource_ip_sites' => [],
             // Hidden settings automatically filled after saving config.
             // It contains the same data than "accessresource_ip_sites", but
             // with site ids (not slug) and the numberized ip ranges (cidr) in

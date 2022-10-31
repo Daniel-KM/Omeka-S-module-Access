@@ -46,10 +46,6 @@ if (version_compare((string) $oldVersion, '3.3.0.7', '<')) {
     $settings->set('accessresource_ip_reserved', ['sites' => [], 'ranges' => []]);
 }
 
-if (version_compare((string) $oldVersion, '3.3.0.10', '<')) {
-    require_once __DIR__ . '/upgrade_vocabulary.php';
-}
-
 if (version_compare((string) $oldVersion, '3.3.0.11', '<')) {
     require_once __DIR__ . '/upgrade_vocabulary.php';
 }
