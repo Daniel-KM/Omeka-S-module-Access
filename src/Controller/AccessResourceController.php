@@ -254,8 +254,19 @@ class AccessResourceController extends AbstractActionController
 
         // Mode "ip" is compatible with mode "individual", so the check can be
         // done separately.
-        if (is_int($this->isReservedIp())) {
-            return true;
+
+        $reservedItemSetsForClientIp = $this->reservedItemSetsForClientIp();
+        if (is_array($reservedItemSetsForClientIp)) {
+            if (count($reservedItemSetsForClientIp)) {
+                $isMediaInItemSets = $this->isMediaInItemSets($media, $reservedItemSetsForClientIp);
+                // For ip and individuals.
+                if ($isMediaInItemSets) {
+                    return true;
+                }
+            } elseif ($accessMode === ACCESS_MODE_IP) {
+                return true;
+            }
+            // Individual user rights (request or token) checked below.
         }
 
         if ($accessMode === ACCESS_MODE_IP) {
@@ -448,10 +459,22 @@ class AccessResourceController extends AbstractActionController
         return $this->sendFile($filepath, $mediaType, $filename, 'inline', false, $media, 'asset');
     }
 
+    protected function isMediaInItemSets(?MediaRepresentation $media, ?array $itemSetIds): bool
+    {
+        if (!$media || !$itemSetIds) {
+            return false;
+        }
+        $mediaItemSetIds = array_keys($media->item()->itemSets());
+        return (bool) array_intersect($mediaItemSetIds, $itemSetIds);
+    }
+
     /**
-     * Check if the ip of the user belongs to a site.
+     * Check if the ip of the user is reserved and limited to some item sets.
+     *
+     * @return array|null Null if the user is not listed in reserved ips, else
+     *   array of item sets, that may be empty.
      */
-    protected function isReservedIp(): ?int
+    protected function reservedItemSetsForClientIp(): ?array
     {
         // This method is called one time for each file, but each file is
         // called by a difrerent request.
@@ -468,7 +491,7 @@ class AccessResourceController extends AbstractActionController
 
         // Check a single ip.
         if (isset($reservedIps[$ip])) {
-            return (int) $reservedIps[$ip]['reserved'];
+            return $reservedIps[$ip]['reserved'];
         }
 
         // Check an ip range.
@@ -476,7 +499,7 @@ class AccessResourceController extends AbstractActionController
         $ipLong = ip2long($ip);
         foreach ($reservedIps as $range) {
             if ($ipLong >= $range['low'] && $ipLong <= $range['high']) {
-                return (int) $range['reserved'];
+                return $range['reserved'];
             }
         }
 

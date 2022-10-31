@@ -56,18 +56,19 @@ class ConfigForm extends Form
                 ],
             ])
             ->add([
-                'name' => 'accessresource_ip_sites',
+                'name' => 'accessresource_ip_item_sets',
                 'type' => ArrayTextarea::class,
                 'options' => [
-                    'label' => 'List of ips with open access', // @translate
-                    'info' => 'These ips will have unrestricted access to the associated sites. List them separated by a "=", one by line. Range ip are allowed (formatted as cidr).', // @translate
+                    'label' => 'List of ips with open access, eventually limited to selected item sets', // @translate
+                    'info' => 'These ips will have unrestricted access to all resources or only resources of the specified item sets. List them separated by a "=", one by line. Range ip are allowed (formatted as cidr).', // @translate
                     'as_key_value' => true,
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_ip_sites',
+                    'id' => 'accessresource_ip_item_sets',
                     'rows' => 12,
-                    'placeholder' => '12.34.56.78 = main-site
-87.65.43.0/24 = second-site',
+                    'placeholder' => '12.34.56.78
+124.8.16.32 = 1 2 5
+87.65.43.0/24 = 1 7',
                 ],
             ])
         ;

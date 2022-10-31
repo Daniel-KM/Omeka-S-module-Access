@@ -253,22 +253,22 @@ return [
             'accessresource_access_mode' => ACCESS_MODE_INDIVIDUAL,
             'accessresource_embargo_bypass' => false,
             'accessresource_embargo_auto_update' => false,
-            'accessresource_ip_sites' => [],
+            'accessresource_ip_item_sets' => [],
             // Hidden settings automatically filled after saving config.
-            // It contains the same data than "accessresource_ip_sites", but
-            // with site ids (not slug) and the numberized ip ranges (cidr) in
-            // order to do a quicker control of rights.
+            // It contains the same data than "accessresource_ip_item_sets", but
+            // with numberized ip ranges (cidr) in order to do a quicker control
+            // of rights.
             'accessresource_ip_reserved' => [
                 /*
                 '123.45.67.89' => [
                     'low' => 2066563929,
                     'high' => 2066563929,
-                    'reserved' => null,
+                    'reserved' => [],
                 ],
                 '123.45.68.0/24' => [
                     'low' => 2066564096,
                     'high' => 2066564351,
-                    'reserved' => 2,
+                    'reserved' => [2],
                 ],
                 */
             ],

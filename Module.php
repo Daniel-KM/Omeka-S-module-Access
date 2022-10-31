@@ -266,7 +266,7 @@ class Module extends AbstractModule
         $form = $services->get('FormElementManager')->get(\AccessResource\Form\ConfigForm::class);
         $form->init();
         if ($this->accessMode === ACCESS_MODE_GLOBAL) {
-            $form->remove('accessresource_ip_sites');
+            $form->remove('accessresource_ip_item_sets');
         }
         $form->setData($data);
         $form->prepare();
@@ -288,51 +288,64 @@ class Module extends AbstractModule
             return false;
         }
 
-        // Check ips and sites and prepare the quick hidden setting.
-        // Use the controller api to allow to read without exception.
-        $api = $services->get('ControllerPluginManager')->get('api');
+        // Check ips and item sets and prepare the quick hidden setting.
+        $api = $services->get('Omeka\ApiManager');
         $hasError = false;
         $config = $this->getConfig();
         $params = $form->getData();
         $settings = $services->get('Omeka\Settings');
 
-        $ipSites = $this->accessMode === 'global'
+        $ipItemSets = $this->accessMode === ACCESS_MODE_GLOBAL
             ? []
-            : $params['accessresource_ip_sites'] ?? [];
-        $params['accessresource_ip_sites'] = $ipSites;
+            : $params['accessresource_ip_item_sets'] ?? [];
+        $params['accessresource_ip_item_sets'] = $ipItemSets;
 
         $reservedIps = [];
-        foreach ($ipSites as $ip => $siteSlugOrId) {
-            if (!$ip && !$siteSlugOrId) {
+        foreach ($ipItemSets as $ip => $itemSetIds) {
+            $itemSets = [];
+            if (!$ip && !$itemSetIds) {
                 continue;
             }
             if (!$ip || !filter_var(strtok($ip, '/'), FILTER_VALIDATE_IP)) {
                 $message = new Message(
-                    'The ip "%1$s" is empty or invalid for site "%2$s".', // @translate
-                    $ip, $siteSlugOrId
+                    'The ip "%s" is empty or invalid.', // @translate
+                    $ip
                 );
                 $controller->messenger()->addError($message);
                 $hasError = true;
                 continue;
-            } elseif ($siteSlugOrId && !($site = $api->searchOne('sites', is_numeric($siteSlugOrId) ? ['id' => $siteSlugOrId] : ['slug' => $siteSlugOrId])->getContent())) {
-                $message = new Message(
-                    'The site "%1$s" for ip "%2$s" is unknown.', // @translate
-                    $siteSlugOrId, $ip
-                );
-                $controller->messenger()->addError($message);
-                $hasError = true;
-                continue;
+            } elseif ($itemSetIds) {
+                $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace( '/\D/', ' ', $itemSetIds))));
+                if (!$itemSetIdsArray) {
+                    $message = new Message(
+                        'The item sets list "%1$s" for ip "%2$s" is invalid: they should be numeric ids.', // @translate
+                        $itemSetIds, $ip
+                    );
+                    $controller->messenger()->addError($message);
+                    $hasError = true;
+                    continue;
+                }
+                $itemSets = $api->search('item_sets', ['id' => $itemSetIdsArray], ['returnScalar' => 'id'])->getContent();
+                if (count($itemSets) !== count($itemSetIdsArray)) {
+                    $message = new Message(
+                        'The item sets list "%1$s" for ip "%2$s" contains unknown item sets (%3$s).', // @translate
+                        $itemSetIds, $ip, implode(', ', array_diff($itemSetIdsArray, $itemSets))
+                    );
+                    $controller->messenger()->addError($message);
+                    $hasError = true;
+                    continue;
+                }
             }
             $reservedIps[$ip] = $this->cidrToRange($ip);
-            $reservedIps[$ip]['reserved'] = $site ? $site->id() : null;
+            $reservedIps[$ip]['reserved'] = $itemSets;
         }
 
         if ($hasError) {
             return false;
         }
 
-        // Move the ip 0.0.0.0/0 as last ip, it will be possible to find a
-        // more precise site if any.
+        // Move the ip 0.0.0.0/0 as last ip, it will be possible to find a more
+        // precise rule if any.
         foreach (['0.0.0.0', '0.0.0.0/0', '::'] as $ip) {
             if (isset($reservedIps[$ip])) {
                 $v = $reservedIps[$ip];
