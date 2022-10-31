@@ -11,9 +11,9 @@ requests by guests users, restricted to a list of ips, or available by a token.
 Start and end dates of an embargo can be used too, separately or not.
 
 Furthermore, you can set the right to see a resource at the media level, so the
-item metadata are visible and the visitors know that a media exist. The file
-itself (the original one and eventually the large and other derivatives files)
-is replaced by a fake file, unless a specific right is granted.
+item and media metadata are visible and the visitors know that a media exist.
+The file itself (the original one and eventually the large and other derivatives
+files) is replaced by a fake file, unless a specific right is granted.
 
 See [below](#usage) for more information on usage.
 
@@ -219,6 +219,32 @@ Note that a public item can have a private media and vice-versa. So, most of the
 time, the value should be set in the metadata of the media. The value can be
 specified for the item too to simplify management.
 
+### Embargo
+
+By construction, the embargo works only on the media files: metadata are always
+visible for public and restricted resources.
+
+An option in the config can be used to use it with or without the restricted
+access.
+
+To create an embargo on a file, simply set the dates in `curation:dateStart`
+and/or `curation:dateEnd`.
+
+It is recommended to use the datatype "numeric timestamp" from the module [Numeric Datatypes],
+but a literal is fine. The date must be an iso one (`2022-03-14`). A time can be
+set too (`2022-03-14T12:34:56`).
+
+A check is automatically done when an anonymous visitor or a restricted user is
+accessing a restricted file. In that case, the media may be set public
+automatically when the embargo is finished. For all other cases, a job may be
+run, for example once a day. A cron task can be used through the script designed
+to run task of the module [Easy Admin].
+
+The job does not update the resource when the visibility is not logical, for
+example when the resource have been set public with a date of end of embargo.
+Of course, don't set a date of end of embargo if the record is not ready or when
+it should remain private.
+
 ### Management of requests
 
 If you choose modes `global` or `ip`, there is nothing to do more. Once users
@@ -245,43 +271,20 @@ the "individual" mode currently. You can find them on access view/edit page.
 In public front-end, a dashboard is added for guest users. The link is available
 in the guest user board (`/s/my-site/guest/access-resource`).
 
-### Embargo
-
-The embargo works only on the media files currently: metadata are always visible.
-
-An option in the config can be used to use it with or without the restricted
-access.
-
-To create an embargo on a file, simply set the dates in `curation:dateStart`
-and/or `curation:dateEnd`.
-
-It is recommended to use the datatype "numeric timestamp" from the module [Numeric Datatypes],
-but a literal is fine. The date must be an iso one (`2022-03-14`). A time can be
-set too (`2022-03-14T12:34:56`).
-
-A check is automatically done when an anonymous visitor or a restricted user is
-accessing a restricted file. In that case, the media may be set public
-automatically when the embargo is finished. For all other cases, a job may be
-run, for example once a day. A cron task can be used through the script designed
-to run task of the module [Easy Admin].
-
-The job does not update the resource when the visibility is not logical, for
-example when the resource have been set public with a date of end of embargo.
-Of course, don't set a date of end of embargo if the record is not ready or when
-it should remain private.
-
 
 TODO
 ----
 
+- [ ] Make metadata or resource hidden, not only files (so a more restricted type of access).
 - [ ] Make resources available by token in global mode.
 - [ ] Make resources available by token only, not login (like module Contribute).
 - [x] Make non-exclusive mode "ip" and "individual".
 - [ ] Fix ip check for ipv6.
 - [ ] Use Omeka Store instead of local file system.
-- [ ] Manage ip by item set or by user instead of sites?
+- [x] Manage ip by item set or by user instead of sites?
 - [ ] Store openess in a specific table for performance and to manage embargo easier.
 - [ ] Manage the case where the embargo dates are private.
+- [ ] Add a mode to check for a specific value in the reserved access property instead of exist/not exist.
 
 
 Warning
