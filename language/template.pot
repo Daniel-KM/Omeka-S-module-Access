@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-10-31 00:00+0000\n"
+"POT-Creation-Date: 2023-01-09 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,26 +17,43 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: Module.php:57
+#: Module.php:71
 #, php-format
 msgid ""
 "To control access to files, you must add a rule in file .htaccess at the "
 "root of Omeka. See %sreadme%s."
 msgstr ""
 
-#: Module.php:374
+#: Module.php:449
 msgid ""
 "The module is not configured: the key \"[accessresource][access_mode]\" "
 "should be set in the main config file of Omeka \"config/local.config.php\"."
 msgstr ""
 
-#: Module.php:384
+#: Module.php:459
 msgid ""
 "This module is currently not compatible with module Group, that should be "
 "disabled."
 msgstr ""
 
-#: Module.php:664
+#: Module.php:732
+msgid "Access resource"
+msgstr ""
+
+#: Module.php:734
+#, php-format
+msgid "Is restricted %s"
+msgstr ""
+
+#: Module.php:735
+msgid "resource"
+msgstr ""
+
+#: Module.php:737
+msgid "Is not restricted"
+msgstr ""
+
+#: Module.php:839
 msgid "Resource access"
 msgstr ""
 
@@ -61,37 +78,38 @@ msgstr ""
 msgid "Method should be post."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:80 src/Generic/AbstractModule.php:774
+#: src/Generic/AbstractModule.php:80 src/Generic/AbstractModule.php:88
+#: src/Generic/AbstractModule.php:861
 #, php-format
 msgid "This module requires the module \"%s\"."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:87
+#: src/Generic/AbstractModule.php:93
 #, php-format
 msgid "This module requires modules \"%s\"."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:94
+#: src/Generic/AbstractModule.php:101
 msgid "This module has resources that cannot be installed."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:101
+#: src/Generic/AbstractModule.php:108
 msgid ""
 "This module cannot install its tables, because they exist already. Try to "
 "remove them first."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:362
+#: src/Generic/AbstractModule.php:369
 #, php-format
 msgid "The module removed tables \"%s\" from a previous broken install."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:769
+#: src/Generic/AbstractModule.php:856
 #, php-format
 msgid "This module requires the module \"%1$s\", version %2$s or above."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:866
+#: src/Generic/AbstractModule.php:953
 #, php-format
 msgid ""
 "The module \"%s\" was automatically deactivated because the dependencies are "
@@ -182,7 +200,7 @@ msgid "Refresh page"
 msgstr ""
 
 #: view/access-resource/admin/access/edit.phtml:43
-#: view/common/admin/access-resource-list.phtml:165
+#: view/common/admin/access-resource-list.phtml:164
 msgid "New access"
 msgstr ""
 
@@ -193,13 +211,13 @@ msgstr ""
 
 #: view/access-resource/admin/access/edit.phtml:106
 #: view/access-resource/admin/request/edit.phtml:108
-#: view/common/admin/access-resource-list.phtml:177
+#: view/common/admin/access-resource-list.phtml:176
 msgid "Select user"
 msgstr ""
 
 #: view/access-resource/admin/access/edit.phtml:107
 #: view/access-resource/admin/request/edit.phtml:109
-#: view/common/admin/access-resource-list.phtml:178
+#: view/common/admin/access-resource-list.phtml:177
 msgid "Click on a user to select it."
 msgstr ""
 
@@ -229,90 +247,90 @@ msgstr ""
 msgid "New access request"
 msgstr ""
 
-#: view/common/admin/access-resource-list.phtml:31
-msgid "User requests"
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:36
-msgid "There are no requests for this resource."
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:56
-#: view/common/admin/access-resource-list.phtml:111
-#, php-format
-msgid "user: %s"
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:66
-#: view/common/admin/access-resource-list.phtml:67
-msgid "Toggle request"
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:71
-#: view/common/admin/access-resource-list.phtml:72
-msgid "Remove request"
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:87
-msgid "Accesses"
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:92
-msgid "There are no access for this resource."
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:121
-#: view/common/admin/access-resource-list.phtml:122
-msgid "Toggle access"
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:126
-#: view/common/admin/access-resource-list.phtml:127
-msgid "Remove access"
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:142
-msgid "Add an access"
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:147
-msgid "This resource is public: no access is needed to view it."
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:153
-msgid ""
-"This resource is private and not marked reservable: no access is possible."
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:181
-msgid "Add access"
-msgstr ""
-
-#: view/common/helper/request-resource-access-form.phtml:21
+#: view/common/access-resource-request-form.phtml:21
 msgid "Request resource access"
 msgstr ""
 
-#: view/common/helper/request-resource-access-form.phtml:30
+#: view/common/access-resource-request-form.phtml:30
 msgid "Request Access"
 msgstr ""
 
-#: view/common/helper/request-resource-access-form.phtml:58
+#: view/common/access-resource-request-form.phtml:58
 #, php-format
 msgid "To request access please %s or contact the publisher!"
 msgstr ""
 
-#: view/common/helper/request-resource-access-form.phtml:59
-#: view/common/helper/request-resource-access-form.phtml:65
+#: view/common/access-resource-request-form.phtml:59
+#: view/common/access-resource-request-form.phtml:65
 msgid "Login"
 msgstr ""
 
-#: view/common/helper/request-resource-access-form.phtml:63
+#: view/common/access-resource-request-form.phtml:63
 #, php-format
 msgid "To request access please %s or %s!"
 msgstr ""
 
-#: view/common/helper/request-resource-access-form.phtml:64
+#: view/common/access-resource-request-form.phtml:64
 msgid "Register"
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:30
+msgid "User requests"
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:35
+msgid "There are no requests for this resource."
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:55
+#: view/common/admin/access-resource-list.phtml:110
+#, php-format
+msgid "user: %s"
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:65
+#: view/common/admin/access-resource-list.phtml:66
+msgid "Toggle request"
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:70
+#: view/common/admin/access-resource-list.phtml:71
+msgid "Remove request"
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:86
+msgid "Accesses"
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:91
+msgid "There are no access for this resource."
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:120
+#: view/common/admin/access-resource-list.phtml:121
+msgid "Toggle access"
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:125
+#: view/common/admin/access-resource-list.phtml:126
+msgid "Remove access"
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:141
+msgid "Add an access"
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:146
+msgid "This resource is public: no access is needed to view it."
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:152
+msgid ""
+"This resource is private and not marked reservable: no access is possible."
+msgstr ""
+
+#: view/common/admin/access-resource-list.phtml:180
+msgid "Add access"
 msgstr ""
 
 #: view/error/403-access-resource.phtml:4
@@ -331,52 +349,203 @@ msgstr ""
 msgid "Dashboard"
 msgstr ""
 
-#: data/scripts/upgrade_vocabulary.php:16
-#, php-format
-msgid "This module requires module %s version %s or greater."
-msgstr ""
-
-#: data/scripts/upgrade_vocabulary.php:32
-#, php-format
-msgid "The vocabulary \"%s\" was updated successfully."
-msgstr ""
-
-#: data/scripts/upgrade.php:71
-msgid ""
-"The reserved access by ip by site has been replaced by a reserved acces by "
-"ip by item set. You should check and resave your config if needed and "
-"eventually create item sets."
-msgstr ""
-
-#: Module.php:311
+#: Module.php:386
 #, php-format
 msgid "The ip \"%s\" is empty or invalid."
 msgstr ""
 
-#: Module.php:321
+#: Module.php:396
 #, php-format
 msgid ""
 "The item sets list \"%1$s\" for ip \"%2$s\" is invalid: they should be "
 "numeric ids."
 msgstr ""
 
-#: Module.php:331
+#: Module.php:406
 #, php-format
 msgid ""
 "The item sets list \"%1$s\" for ip \"%2$s\" contains unknown item sets "
 "(%3$s)."
 msgstr ""
 
-#: Module.php:527
+#: Module.php:649
 msgid "Access"
 msgstr ""
 
-#: src/Form/AccessRequestForm.php:28
-msgid "Request"
+#: Module.php:695
+msgid "Is restricted (requires the resource to be private)"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:11
-msgid "Access resource"
+#: Module.php:703
+#, php-format
+msgid "Restricted access (managed via property \"%s\")"
+msgstr ""
+
+#: Module.php:704
+msgid "Restricted access"
+msgstr ""
+
+#: src/Job/UpdateVisibilityForEmbargo.php:27
+#, php-format
+msgid "The property \"%s\" for start embargo is missing"
+msgstr ""
+
+#: src/Job/UpdateVisibilityForEmbargo.php:34
+#, php-format
+msgid "The property \"%s\" for end embargo is missing"
+msgstr ""
+
+#: src/Job/UpdateVisibilityForEmbargo.php:92
+#, php-format
+msgid "A total of %d resources have been marked private for start embargo."
+msgstr ""
+
+#: src/Job/UpdateVisibilityForEmbargo.php:122
+#, php-format
+msgid "A total of %d resources have been marked public for end of embargo."
+msgstr ""
+
+#: src/Job/UpdateVisibilityForEmbargo.php:165
+#, php-format
+msgid ""
+"A total of %d resources have been marked private for start/end of embargo."
+msgstr ""
+
+#: src/Generic/InstallResources.php:84
+#, php-format
+msgid ""
+"An error occured when loading vocabulary \"%s\": file has no json content."
+msgstr ""
+
+#: src/Generic/InstallResources.php:91
+#, php-format
+msgid ""
+"An error occured when adding the prefix \"%s\": another vocabulary exists. "
+"Resolve the conflict before installing this module."
+msgstr ""
+
+#: src/Generic/InstallResources.php:103
+#, php-format
+msgid ""
+"A custom vocab exists for \"%s\". Remove it or rename it before installing "
+"this module."
+msgstr ""
+
+#: src/Generic/InstallResources.php:114
+#, php-format
+msgid ""
+"A resource template exists for %s. Rename it or remove it before installing "
+"this module."
+msgstr ""
+
+#: src/Generic/InstallResources.php:318
+#, php-format
+msgid "The vocabulary \"%s\" was already installed and was kept."
+msgstr ""
+
+#: src/Generic/InstallResources.php:327
+#, php-format
+msgid ""
+"An error occured when adding the prefix \"%s\": another vocabulary exists "
+"with the same prefix. Resolve the conflict before installing this module."
+msgstr ""
+
+#: src/Generic/InstallResources.php:339
+#, php-format
+msgid ""
+"An error occured when adding the prefix \"%s\" and the associated "
+"properties: %s"
+msgstr ""
+
+#: src/Generic/InstallResources.php:419 src/Generic/InstallResources.php:429
+#, php-format
+msgid ""
+"An error occured when updating vocabulary \"%s\" and the associated "
+"properties: %s"
+msgstr ""
+
+#: src/Generic/InstallResources.php:523
+#, php-format
+msgid "The following \"%1$s\" of the vocabulary \"%2$s\" were replaced: %3$s"
+msgstr ""
+
+#: src/Generic/InstallResources.php:532
+msgid ""
+"Resources, values and templates were updated, but you may check settings "
+"where the old ones were used."
+msgstr ""
+
+#: src/Generic/InstallResources.php:558
+#, php-format
+msgid "The resource template named \"%s\" is already available and is skipped."
+msgstr ""
+
+#: src/Generic/InstallResources.php:830
+#, php-format
+msgid "The custom vocab named \"%s\" is not available."
+msgstr ""
+
+#: src/Generic/InstallResources.php:1035
+msgid "No file or url set for the vocabulary."
+msgstr ""
+
+#: src/Generic/InstallResources.php:1045
+#, php-format
+msgid "The file \"%s\" cannot be read. Check the url."
+msgstr ""
+
+#: src/Generic/InstallResources.php:1055
+#, php-format
+msgid "The file \"%s\" cannot be read. Check the file."
+msgstr ""
+
+#: src/Generic/InstallResources.php:1076
+msgid "A vocabulary must have a namespace uri and a prefix."
+msgstr ""
+
+#: src/Form/ConfigForm.php:22
+msgid "Reserved access mode (to be set in config/local.config.php)"
+msgstr ""
+
+#: src/Form/ConfigForm.php:23
+msgid ""
+"Access to a media is \"reserved\" when it has the property \"curation:"
+"reserved\" filled, whatever it is."
+msgstr ""
+
+#: src/Form/ConfigForm.php:26
+msgid "Global: all users, included guests, have access to all reserved medias"
+msgstr ""
+
+#: src/Form/ConfigForm.php:27
+msgid "IP: visitors with specified ips have access to all reserved medias"
+msgstr ""
+
+#: src/Form/ConfigForm.php:28
+msgid "Individual: guests should request access to each reserved media"
+msgstr ""
+
+#: src/Form/ConfigForm.php:42
+msgid "Set access via property (to be set in config/local.config.php)"
+msgstr ""
+
+#: src/Form/ConfigForm.php:53
+msgid "Bypass embargo dates for reserved resources"
+msgstr ""
+
+#: src/Form/ConfigForm.php:63
+msgid "Automatically update visibility status"
+msgstr ""
+
+#: src/Form/ConfigForm.php:73
+msgid "List of ips with open access, eventually limited to selected item sets"
+msgstr ""
+
+#: src/Form/ConfigForm.php:74
+msgid ""
+"These ips will have unrestricted access to all resources or only resources "
+"of the specified item sets. List them separated by a \"=\", one by line. "
+"Range ip are allowed (formatted as cidr)."
 msgstr ""
 
 #: src/Form/SettingsFieldset.php:20
@@ -407,45 +576,24 @@ msgstr ""
 msgid "Message to user for updated request"
 msgstr ""
 
-#: src/Form/ConfigForm.php:22
-msgid "Reserved access mode (to be set in config/local.config.php)"
+#: src/Form/AccessRequestForm.php:28
+msgid "Request"
 msgstr ""
 
-#: src/Form/ConfigForm.php:23
-msgid ""
-"Access to a media is \"reserved\" when it has the property \"curation:"
-"reserved\" filled, whatever it is."
+#: src/Form/Admin/AccessResourceForm.php:35
+msgid "Will be automatically set"
 msgstr ""
 
-#: src/Form/ConfigForm.php:26
-msgid "Global: all users, included guests, have access to all reserved medias"
+#: src/Form/Admin/AccessResourceForm.php:42
+msgid "Limit to a period"
 msgstr ""
 
-#: src/Form/ConfigForm.php:27
-msgid "IP: visitors with specified ips have access to all reserved medias"
+#: src/Form/Admin/AccessResourceForm.php:53
+msgid " Format: 2000-01-01 00:00"
 msgstr ""
 
-#: src/Form/ConfigForm.php:28
-msgid "Individual: guests should request access to each reserved media"
-msgstr ""
-
-#: src/Form/ConfigForm.php:42
-msgid "Bypass embargo dates for reserved resources"
-msgstr ""
-
-#: src/Form/ConfigForm.php:52
-msgid "Automatically update visibility status"
-msgstr ""
-
-#: src/Form/ConfigForm.php:62
-msgid "List of ips with open access, eventually limited to selected item sets"
-msgstr ""
-
-#: src/Form/ConfigForm.php:63
-msgid ""
-"These ips will have unrestricted access to all resources or only resources "
-"of the specified item sets. List them separated by a \"=\", one by line. "
-"Range ip are allowed (formatted as cidr)."
+#: src/Form/Admin/AccessResourceForm.php:68
+msgid "Format: 2000-01-01 00:00"
 msgstr ""
 
 #: src/Form/Admin/AccessRequestForm.php:21
@@ -472,97 +620,6 @@ msgstr ""
 msgid "Rejected"
 msgstr ""
 
-#: src/Form/Admin/AccessResourceForm.php:35
-msgid "Will be automatically set"
-msgstr ""
-
-#: src/Form/Admin/AccessResourceForm.php:42
-msgid "Limit to a period"
-msgstr ""
-
-#: src/Form/Admin/AccessResourceForm.php:53
-msgid " Format: 2000-01-01 00:00"
-msgstr ""
-
-#: src/Form/Admin/AccessResourceForm.php:68
-msgid "Format: 2000-01-01 00:00"
-msgstr ""
-
-#: src/Controller/AccessResourceController.php:141
-msgid "Access forbidden"
-msgstr ""
-
-#: src/Controller/AccessResourceController.php:347
-#: src/Controller/AccessResourceController.php:351
-#: src/Controller/AccessResourceController.php:358
-msgid "File does not exist."
-msgstr ""
-
-#: src/Controller/Admin/AccessController.php:75
-#, php-format
-msgid "Access record with id #%s does not exist"
-msgstr ""
-
-#: src/Controller/Admin/AccessController.php:149
-msgid "Access record successfully saved"
-msgstr ""
-
-#: src/Controller/Admin/AccessController.php:154
-#: src/Controller/Admin/RequestController.php:125
-msgid "Resource is undefined."
-msgstr ""
-
-#: src/Controller/Admin/AccessController.php:178
-msgid "access record"
-msgstr ""
-
-#: src/Controller/Admin/AccessController.php:215
-msgid "Access record successfully deleted"
-msgstr ""
-
-#: src/Controller/Admin/RequestController.php:76
-#, php-format
-msgid "Access request record with id #%s does not exist"
-msgstr ""
-
-#: src/Controller/Admin/RequestController.php:133
-msgid "Access request record successfully saved"
-msgstr ""
-
-#: src/Controller/Admin/RequestController.php:158
-msgid "access request record"
-msgstr ""
-
-#: src/Controller/Admin/RequestController.php:176
-msgid "Access request record successfully deleted"
-msgstr ""
-
-#: src/Job/UpdateVisibilityForEmbargo.php:27
-#, php-format
-msgid "The property \"%s\" for start embargo is missing"
-msgstr ""
-
-#: src/Job/UpdateVisibilityForEmbargo.php:34
-#, php-format
-msgid "The property \"%s\" for end embargo is missing"
-msgstr ""
-
-#: src/Job/UpdateVisibilityForEmbargo.php:92
-#, php-format
-msgid "A total of %d resources have been marked private for start embargo."
-msgstr ""
-
-#: src/Job/UpdateVisibilityForEmbargo.php:122
-#, php-format
-msgid "A total of %d resources have been marked public for end of embargo."
-msgstr ""
-
-#: src/Job/UpdateVisibilityForEmbargo.php:165
-#, php-format
-msgid ""
-"A total of %d resources have been marked private for start/end of embargo."
-msgstr ""
-
 #: src/Entity/AccessLog.php:14
 msgid "access"
 msgstr ""
@@ -587,137 +644,131 @@ msgstr ""
 msgid "rejected"
 msgstr ""
 
-#: src/Generic/InstallResources.php:84
+#: src/Controller/AccessResourceController.php:141
+msgid "Access forbidden"
+msgstr ""
+
+#: src/Controller/AccessResourceController.php:347
+#: src/Controller/AccessResourceController.php:351
+#: src/Controller/AccessResourceController.php:358
+msgid "File does not exist."
+msgstr ""
+
+#: src/Controller/Admin/RequestController.php:76
 #, php-format
-msgid ""
-"An error occured when loading vocabulary \"%s\": file has no json content."
+msgid "Access request record with id #%s does not exist"
 msgstr ""
 
-#: src/Generic/InstallResources.php:91
+#: src/Controller/Admin/RequestController.php:125
+#: src/Controller/Admin/AccessController.php:154
+msgid "Resource is undefined."
+msgstr ""
+
+#: src/Controller/Admin/RequestController.php:133
+msgid "Access request record successfully saved"
+msgstr ""
+
+#: src/Controller/Admin/RequestController.php:158
+msgid "access request record"
+msgstr ""
+
+#: src/Controller/Admin/RequestController.php:176
+msgid "Access request record successfully deleted"
+msgstr ""
+
+#: src/Controller/Admin/AccessController.php:75
 #, php-format
-msgid ""
-"An error occured when adding the prefix \"%s\": another vocabulary exists. "
-"Resolve the conflict before installing this module."
+msgid "Access record with id #%s does not exist"
 msgstr ""
 
-#: src/Generic/InstallResources.php:103
-#, php-format
-msgid ""
-"A custom vocab exists for \"%s\". Remove it or rename it before installing "
-"this module."
+#: src/Controller/Admin/AccessController.php:149
+msgid "Access record successfully saved"
 msgstr ""
 
-#: src/Generic/InstallResources.php:114
-#, php-format
-msgid ""
-"A resource template exists for %s. Rename it or remove it before installing "
-"this module."
+#: src/Controller/Admin/AccessController.php:178
+msgid "access record"
 msgstr ""
 
-#: src/Generic/InstallResources.php:303
-#, php-format
-msgid "The vocabulary \"%s\" was already installed and was kept."
+#: src/Controller/Admin/AccessController.php:215
+msgid "Access record successfully deleted"
 msgstr ""
 
-#: src/Generic/InstallResources.php:312
-#, php-format
-msgid ""
-"An error occured when adding the prefix \"%s\": another vocabulary exists "
-"with the same prefix. Resolve the conflict before installing this module."
-msgstr ""
-
-#: src/Generic/InstallResources.php:324
-#, php-format
-msgid ""
-"An error occured when adding the prefix \"%s\" and the associated "
-"properties: %s"
-msgstr ""
-
-#: src/Generic/InstallResources.php:404 src/Generic/InstallResources.php:414
-#, php-format
-msgid ""
-"An error occured when updating vocabulary \"%s\" and the associated "
-"properties: %s"
-msgstr ""
-
-#: src/Generic/InstallResources.php:508
-#, php-format
-msgid "The following \"%1$s\" of the vocabulary \"%2$s\" were replaced: %3$s"
-msgstr ""
-
-#: src/Generic/InstallResources.php:517
-msgid ""
-"Resources, values and templates were updated, but you may check settings "
-"where the old ones were used."
-msgstr ""
-
-#: src/Generic/InstallResources.php:543
-#, php-format
-msgid "The resource template named \"%s\" is already available and is skipped."
-msgstr ""
-
-#: src/Generic/InstallResources.php:807
-#, php-format
-msgid "The custom vocab named \"%s\" is not available."
-msgstr ""
-
-#: src/Generic/InstallResources.php:913
-msgid "No file or url set for the vocabulary."
-msgstr ""
-
-#: src/Generic/InstallResources.php:923
-#, php-format
-msgid "The file \"%s\" cannot be read. Check the url."
-msgstr ""
-
-#: src/Generic/InstallResources.php:933
-#, php-format
-msgid "The file \"%s\" cannot be read. Check the file."
-msgstr ""
-
-#: src/Generic/InstallResources.php:954
-msgid "A vocabulary must have a namespace uri and a prefix."
-msgstr ""
-
-#: config/module.config.individual.php:183
-msgid "Access Resources"
-msgstr ""
-
-#: config/module.config.individual.php:188
-msgid "Access Management"
-msgstr ""
-
-#: config/module.config.individual.php:206
-msgid "Requests"
-msgstr ""
-
-#: config/module.config.individual.php:224
-msgid "Logs"
-msgstr ""
-
-#: config/module.config.individual.php:278
-#: config/module.config.individual.php:281 config/module.config.php:108
-#: config/module.config.php:111
+#: config/module.config.php:118 config/module.config.php:121
+#: config/module.config.individual.php:287
+#: config/module.config.individual.php:290
 msgid "New request status!"
 msgstr ""
 
-#: config/module.config.individual.php:279 config/module.config.php:109
+#: config/module.config.php:119 config/module.config.individual.php:288
 msgid ""
 "User created new request to AccessResource. Please, check request dashboard."
 msgstr ""
 
-#: config/module.config.individual.php:280 config/module.config.php:110
+#: config/module.config.php:120 config/module.config.individual.php:289
 msgid "User request to resource access is updated."
 msgstr ""
 
-#: config/module.config.individual.php:282 config/module.config.php:112
+#: config/module.config.php:122 config/module.config.individual.php:291
 msgid ""
 "Your request is sent to administrator. You will be inform when your request "
 "will change."
 msgstr ""
 
-#: config/module.config.individual.php:283 config/module.config.php:113
+#: config/module.config.php:123 config/module.config.individual.php:292
 msgid ""
 "Your request to resource access is updated. You can check guest user "
 "requests dashboard."
+msgstr ""
+
+#: config/module.config.individual.php:185
+msgid "Access Resources"
+msgstr ""
+
+#: config/module.config.individual.php:190
+msgid "Access Management"
+msgstr ""
+
+#: config/module.config.individual.php:208
+msgid "Requests"
+msgstr ""
+
+#: config/module.config.individual.php:226
+msgid "Logs"
+msgstr ""
+
+#: data/scripts/upgrade.php:71
+msgid ""
+"The reserved access by ip by site has been replaced by a reserved acces by "
+"ip by item set. You should check and resave your config if needed and "
+"eventually create item sets."
+msgstr ""
+
+#: data/scripts/upgrade.php:144
+msgid ""
+"A new option allows to set the access restricted status via a simple radio "
+"in resource form instead of a property."
+msgstr ""
+
+#: data/scripts/upgrade.php:149
+msgid ""
+"Warning: to use only the button is the default behavior. To keep the old "
+"behavior via the property, you must set the param access_via_property to "
+"true in the file config/local.config.php."
+msgstr ""
+
+#: data/scripts/upgrade.php:154
+msgid ""
+"Warning: if you use specific properties (not \"curation:reserved\", "
+"\"curation:dateStart\", \"curation:dateEnd\"), you need to update the table "
+"\"access_reserved\"."
+msgstr ""
+
+#: data/scripts/upgrade_vocabulary.php:15
+#, php-format
+msgid "This module requires module %s version %s or greater."
+msgstr ""
+
+#: data/scripts/upgrade_vocabulary.php:31
+#, php-format
+msgid "The vocabulary \"%s\" was updated successfully."
 msgstr ""
