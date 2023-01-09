@@ -18,6 +18,7 @@ return [
     ],
     'view_helpers' => [
         'factories' => [
+            'isReservedResource' => Service\ViewHelper\IsReservedResourceFactory::class,
             'isUnderEmbargo' => Service\ViewHelper\IsUnderEmbargoFactory::class,
         ],
     ],

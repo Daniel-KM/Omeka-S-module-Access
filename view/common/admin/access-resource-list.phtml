@@ -1,7 +1,5 @@
 <?php
 
-use const AccessResource\PROPERTY_RESERVED;
-
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var \AccessResource\Api\Representation\AccessResourceRepresentation[] $accesses
@@ -10,11 +8,12 @@ use const AccessResource\PROPERTY_RESERVED;
  */
 
 $plugins = $this->getHelperPluginManager();
-$translate = $plugins->get('translate');
 $escape = $plugins->get('escapeHtml');
+$assetUrl = $plugins->get('assetUrl');
+$translate = $plugins->get('translate');
 $hyperlink = $plugins->get('hyperlink');
 $urlHelper = $plugins->get('url');
-$assetUrl = $plugins->get('assetUrl');
+$isReservedResource = $plugins->get('isReservedResource');
 
 $this->headLink()
     ->appendStylesheet($assetUrl('css/access-resource-admin.css', 'AccessResource'));
@@ -147,7 +146,7 @@ $this->headScript()
         <p><?= $translate('This resource is public: no access is needed to view it.'); ?></p>
     </div>
 
-    <?php elseif (!$resource->value(PROPERTY_RESERVED)): ?>
+    <?php elseif (!$isReservedResource($resource)): ?>
 
     <div class="no-resources">
         <p><?= $translate('This resource is private and not marked reservable: no access is possible.'); ?></p>

@@ -228,6 +228,16 @@ class Module extends AbstractModule
                 'view.edit.form.advanced',
                 [$this, 'addAccessElements']
             );
+            $sharedEventManager->attach(
+                $controller,
+                'view.show.sidebar',
+                [$this, 'handleViewShowAfter']
+            );
+            $sharedEventManager->attach(
+                $controller,
+                'view.details',
+                [$this, 'handleViewShowAfter']
+            );
         }
 
         // No more event when access is global: no form, requests, checks…
@@ -693,6 +703,39 @@ class Module extends AbstractModule
             ? $element->setLabel(sprintf('Restricted access (managed via property "%s")', PROPERTY_RESERVED)) // @translate
             : $element->setLabel('Restricted access'); // @translate
         echo $view->formRow($element);
+    }
+
+    public function handleViewShowAfter(Event $event): void
+    {
+        $view = $event->getTarget();
+        $plugins = $view->getHelperPluginManager();
+        $translate = $plugins->get('translate');
+        $isReservedResource = $plugins->get('isReservedResource');
+        $vars = $view->vars();
+        $resource = $vars->offsetGet('resource');
+
+        $isReserved = $isReservedResource($resource);
+
+        $resourceTypes = [
+            \Omeka\Api\Representation\ItemRepresentation::class => 'item',
+            \Omeka\Api\Representation\MediaRepresentation::class => 'media',
+            \Omeka\Api\Representation\ItemSetRepresentation::class => 'item set',
+            \Omeka\Entity\Item::class => 'item',
+            \Omeka\Entity\Media::class => 'media',
+            \Omeka\Entity\ItemSet::class => 'item set',
+        ];
+
+        echo sprintf('<div class="meta-group">'
+            . '<h4>%s</h4>'
+            . '<div class="value">%s</div>'
+            . '</div>',
+            $translate('Access resource'), // @translate
+            $isReserved
+                ? sprintf($translate('Is restricted %s'), // @translate
+                    $translate($resourceTypes[get_class($resource)] ?? 'resource')
+                )
+                : $translate('Is not restricted') // @translate
+        );
     }
 
     /**

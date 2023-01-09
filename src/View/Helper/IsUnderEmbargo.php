@@ -28,6 +28,6 @@ class IsUnderEmbargo extends AbstractHelper
      */
     public function __invoke(?AbstractResourceEntityRepresentation $resource): ?bool
     {
-        return $this->isUnderEmbargoPlugin($resource);
+        return $this->isUnderEmbargoPlugin->__invoke($resource);
     }
 }
