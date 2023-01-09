@@ -9,7 +9,7 @@ use Laminas\Form\FormElementManager;
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Mvc\Controller\Plugin\Api;
 
-class RequestResourceAccessForm extends AbstractHelper
+class AccessResourceRequestForm extends AbstractHelper
 {
     /**
      * @var \Omeka\Mvc\Controller\Plugin\Api
@@ -224,7 +224,7 @@ class RequestResourceAccessForm extends AbstractHelper
         $user = $this->view->identity();
 
         return $this->view->partial(
-            'common/helper/request-resource-access-form',
+            'common/access-resource-request-form',
             [
                 'resources' => $this->getInaccessibleReservedResources(),
                 'form' => $this->form(),

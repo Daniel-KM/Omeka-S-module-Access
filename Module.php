@@ -623,13 +623,13 @@ class Module extends AbstractModule
     {
         // Note: there is no item-set show, but a special case for items browse.
         $view = $event->getTarget();
-        echo $view->requestResourceAccessForm($view->items);
+        echo $view->accessResourceRequestForm($view->items);
     }
 
     public function handleViewBrowseAfterItemSet(Event $event): void
     {
         $view = $event->getTarget();
-        echo $view->requestResourceAccessForm($view->itemSets);
+        echo $view->accessResourceRequestForm($view->itemSets);
     }
 
     public function handleViewShowAfterItem(Event $event): void
@@ -637,14 +637,14 @@ class Module extends AbstractModule
         $view = $event->getTarget();
         $resources = [$view->item];
         $resources += $view->item->media();
-        echo $view->requestResourceAccessForm($resources);
+        echo $view->accessResourceRequestForm($resources);
     }
 
     public function handleViewShowAfterMedia(Event $event): void
     {
         $view = $event->getTarget();
         $resources = [$view->media->item(), $view->media];
-        echo $view->requestResourceAccessForm($resources);
+        echo $view->accessResourceRequestForm($resources);
     }
 
     public function handleGuestWidgets(Event $event): void

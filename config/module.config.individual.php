@@ -32,7 +32,7 @@ return [
     'view_helpers' => [
         'factories' => [
             'isUnderEmbargo' => Service\ViewHelper\IsUnderEmbargoFactory::class,
-            'requestResourceAccessForm' => Service\ViewHelper\RequestResourceAccessFormFactory::class,
+            'accessResourceRequestForm' => Service\ViewHelper\AccessResourceRequestFormFactory::class,
         ],
     ],
     'form_elements' => [
