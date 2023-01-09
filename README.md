@@ -37,7 +37,7 @@ redirect download urls to the module (see below config of ".htaccess").
 ### Incompatibility
 
 This module is currently incompatible with module [Group], that manages rights
-by a list of group.
+by a list of groups.
 
 ### Copy of the module
 
@@ -180,10 +180,11 @@ can be managed in three ways, and with or without metadata:
 
 - `global`: all authenticated users have access to all the restricted files. In
   practice, the guest users have no access to private resources, but they can
-  view all private resources that are marked restricted.
+  view all private resources that are marked restricted. Of course, anonymous
+  don't see media.
 - `ip`: all visitors with a specific ip, for example the ip of the physical
   library or the one of a researcher, can have access to all the restricted
-  files.
+  files. Ip can be configured to access specific item sets.
 - `individual`: each file should be made accessible by a specific user one by
   one. So the module has some forms to manage individual requests and accesses.
   This mode requires the admin to set each right of each resource. This mode can
@@ -207,12 +208,29 @@ so you need to allow visitors to know that they exist. That is to say you can
 keep some private resources private, and some other ones available on request,
 or globally.
 
-To indicate which resources are restricted, simply add a value to the property
-`curation:reserved`, that is created by the module. When a private resource has
-a value for this property, whatever it is (even empty value `0` or `false`), it
-becomes available for all guest users, and all visitors can view its metadata
-automatically too in listings. Preview will be available for media too. The
-value of this property can be private or public.
+There are two ways to indicate which resources are restricted.
+
+- By default, it is a specific param available as a radio button in the advanced
+  tab of the resource form.
+- The second way is to add a value to the property `curation:reserved`, that is
+  created by the module. The value can be whatever you want, even empty value `0`
+  or `false`, but it is not recommended: use `yes` or something else.
+
+To set the mode, update the file `config/config.local.php` in the Omeka
+directory:
+
+```php
+    'accessresource' => [
+        'access_mode' => 'individual', // or whatever you choose.
+        'access_via_property' => true,
+    ],
+```
+
+When a private resource has the value set in the advanced tab (in default mode)
+or has a value for this property (in property mode), it becomes available for
+all guest users, and all visitors can view its metadata automatically too in
+listings. Preview will be available for media too. The value of this property
+can be private or public.
 
 **Important**: public medias are never restricted, so you need to set them
 private.
@@ -343,7 +361,7 @@ The image [Locked file] is licensed under [GNU/GPL].
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2019-2022 (see [Daniel-KM] on GitLab)
+* Copyright Daniel Berthereau, 2019-2023 (see [Daniel-KM] on GitLab)
 * Copyright Saki (image [Locked file], see [Saki])
 
 
@@ -358,7 +376,7 @@ Copyright
 [Numeric Datatypes]: https://github.com/omeka-s-modules/NumericDatatypes
 [Easy Admin]: https://gitlab.com/Daniel-KM/Omeka-S-module-EasyAdmin
 [Statistics]: https://gitlab.com/Daniel-KM/Omeka-S-module-Statistics
-[Installing a module]: http://dev.omeka.org/docs/s/user-manual/modules/#installing-modules
+[Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [AccessResource.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource/-/releases
 [Protect original files]: #protect-original-files
 [.htaccess]: https://github.com/omeka/omeka-s/blob/develop/.htaccess.dist#L4
