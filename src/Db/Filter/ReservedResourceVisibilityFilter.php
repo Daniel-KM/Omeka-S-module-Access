@@ -18,8 +18,6 @@ class ReservedResourceVisibilityFilter extends ResourceVisibilityFilter
 {
     protected function getResourceConstraint($alias)
     {
-        static $reservedAccessPropertyId;
-
         // Check rights from the core resource visibility filter.
         $constraints = parent::getResourceConstraint($alias);
 
@@ -30,25 +28,22 @@ class ReservedResourceVisibilityFilter extends ResourceVisibilityFilter
 
         // Resource should have property 'curation:reserved', whatever the value.
         // The embargo is checked separately to avoid complex request.
-        // @todo Use a simple join with a table that index the openness (and embargo dates?) of resources.
-        if (is_null($reservedAccessPropertyId)) {
-            $reservedAccessPropertyId = $this->serviceLocator->get('ControllerPluginManager')->get('reservedAccessPropertyId')->__invoke();
-        }
+        // @todo Check embargo in visibility filter (don't take embargo option in account?).
 
         $reservedConstraints = [];
 
         // Resource should be private.
         $reservedConstraints[] = sprintf('%s.`is_public` = 0', $alias);
 
+        // And listed in the table access_reserved.
+        // @todo Use a simple join with table "access_resource" (and embargo dates?) of resources.
         $reservedConstraints[] = sprintf(
             'EXISTS (
-    SELECT `value`.`resource_id`
-    FROM `value`
-    WHERE `value`.`property_id` = %s
-        AND `value`.`resource_id` = %s.`id`
-        LIMIT 1
+    SELECT `access_reserved`.`id`
+    FROM `access_reserved`
+    WHERE `access_reserved`.`id` = `%s`.`id`
+    LIMIT 1
 )',
-            $reservedAccessPropertyId,
             $alias
         );
 

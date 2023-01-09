@@ -13,7 +13,9 @@ const ACCESS_MODE_IP = 'ip';
 const ACCESS_MODE_INDIVIDUAL = 'individual';
 
 use const AccessResource\ACCESS_MODE;
+use const AccessResource\PROPERTY_RESERVED;
 
+use AccessResource\Entity\AccessReserved;
 use Generic\AbstractModule;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
@@ -163,6 +165,38 @@ class Module extends AbstractModule
             \Omeka\Api\Adapter\MediaAdapter::class,
             'api.find.query',
             [$this, 'filterMedia']
+        );
+
+        // Store status reserved.
+        $sharedEventManager->attach(
+            'Omeka\Api\Adapter\ItemAdapter',
+            'api.create.post',
+            [$this, 'updateAccessReserved']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Api\Adapter\ItemAdapter',
+            'api.update.post',
+            [$this, 'updateAccessReserved']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Api\Adapter\MediaAdapter',
+            'api.create.post',
+            [$this, 'updateAccessReserved']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Api\Adapter\MediaAdapter',
+            'api.update.post',
+            [$this, 'updateAccessReserved']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Api\Adapter\ItemSetAdapter',
+            'api.create.post',
+            [$this, 'updateAccessReserved']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Api\Adapter\ItemSetAdapter',
+            'api.update.post',
+            [$this, 'updateAccessReserved']
         );
 
         // No more event when access is global: no form, requests, checks…
@@ -487,6 +521,45 @@ class Module extends AbstractModule
                 'omeka_root.storageId',
                 $adapter->createNamedParameter($qb, $query['storage_id'])
             ));
+        }
+    }
+
+    public function updateAccessReserved(Event $event): void
+    {
+        /** @var \Doctrine\ORM\EntityManager $entityManager */
+        $services = $this->getServiceLocator();
+        $entityManager = $services->get('Omeka\EntityManager');
+        $resource = $event->getParam('response')->getContent();
+        if ($resource instanceof \Omeka\Api\Representation\AbstractResourceEntityRepresentation) {
+            /** @var \Omeka\Entity\Resource $resource */
+            $resourceRepr = $resource;
+            $resource = $entityManager->find(\Omeka\Entity\Resource::class, $resource->id());
+        }
+
+        if ($resource->isPublic()) {
+            $isReserved = false;
+        } else {
+            if (empty($resourceRepr)) {
+                $resourceRepr = $services->get('Omeka\ApiManager')
+                    ->read($resource->getResourceName(), ['id' => $resource->getId()], ['initialize' => false, 'finalize' => false])->getContent();
+            }
+            $isReserved = $resourceRepr->value(PROPERTY_RESERVED);
+        }
+
+        // Get current access reserved.
+        $accessReserved = $entityManager->find(AccessReserved::class, $resource->getId());
+        if (!$isReserved) {
+            if ($accessReserved) {
+                $entityManager->remove($accessReserved);
+                $entityManager->flush();
+            }
+            return;
+        }
+
+        if (!$accessReserved) {
+            $accessReserved = new AccessReserved($resource);
+            $entityManager->persist($accessReserved);
+            $entityManager->flush();
         }
     }
 
