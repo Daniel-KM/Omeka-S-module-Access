@@ -5,7 +5,7 @@ namespace AccessResource\View\Helper;
 use const AccessResource\PROPERTY_RESERVED;
 
 use AccessResource\Form\AccessRequestForm;
-use Laminas\Form\FormElementManager\FormElementManagerV3Polyfill as FormElementManager;
+use Laminas\Form\FormElementManager;
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Mvc\Controller\Plugin\Api;
 
@@ -17,7 +17,7 @@ class RequestResourceAccessForm extends AbstractHelper
     protected $api;
 
     /**
-     * @var \Laminas\Form\FormElementManager\FormElementManagerV3Polyfill
+     * @var \Laminas\Form\FormElementManager;
      */
     protected $formElementManager;
 
