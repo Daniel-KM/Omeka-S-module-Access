@@ -72,3 +72,86 @@ if (version_compare((string) $oldVersion, '3.3.0.12', '<')) {
     );
     $messenger->addWarning($message);
 }
+
+if (version_compare((string) $oldVersion, '3.4.0.13', '<')) {
+    // Prepare the table.
+    $sqls = <<<'SQL'
+CREATE TABLE `access_reserved` (
+    `id` INT NOT NULL,
+    `start_date` DATETIME DEFAULT NULL,
+    `end_date` DATETIME DEFAULT NULL,
+    PRIMARY KEY(`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
+ALTER TABLE `access_reserved` ADD CONSTRAINT FK_EDF218C689329D25 FOREIGN KEY(`id`) REFERENCES `resource` (`id`) ON DELETE CASCADE;
+SQL;
+    foreach (array_filter(explode(";\n", $sqls)) as $sql) {
+        $connection->executeStatement($sql);
+    }
+
+    // Fill the table with all private resources that have the restricted value.
+    $reservedPropertyId = (int) $api->searchOne('properties', ['term' => 'curation:reserved'])->getContent()->id();
+    $sql = <<<SQL
+INSERT INTO `access_reserved` (id)
+SELECT DISTINCT `resource`.`id`
+FROM `resource`
+JOIN `value` ON `value`.`resource_id` = `resource`.`id` AND `value`.`property_id` = $reservedPropertyId
+WHERE
+    `resource`.`is_public` = 0
+;
+SQL;
+    $connection->executeStatement($sql);
+
+    // Invalid dates are skipped.
+    $dateStartPropertyId = (int) $api->searchOne('properties', ['term' => 'curation:dateStart'])->getContent()->id();
+    $sql = <<<SQL
+UPDATE `access_reserved`
+INNER JOIN `resource` ON `resource`.`id` = `access_reserved`.`id`
+INNER JOIN `value`
+    ON `value`.`resource_id` = `resource`.`id`
+    AND `value`.`property_id` = $dateStartPropertyId
+    AND `value`.`type` = "numeric:timestamp"
+    AND `value`.`value` != ""
+SET `start_date` =
+    CASE
+        WHEN LENGTH(`value`.`value`) = 19 THEN `value`.`value`
+        WHEN LENGTH(`value`.`value`) = 10 THEN CONCAT(`value`.`value`, " 00:00:00")
+        ELSE NULL
+    END
+;
+SQL;
+    $connection->executeStatement($sql);
+
+    $dateEndPropertyId = (int) $api->searchOne('properties', ['term' => 'curation:dateEnd'])->getContent()->id();
+    $sql = <<<SQL
+UPDATE `access_reserved`
+INNER JOIN `resource` ON `resource`.`id` = `access_reserved`.`id`
+INNER JOIN `value`
+    ON `value`.`resource_id` = `resource`.`id`
+    AND `value`.`property_id` = $dateEndPropertyId
+    AND `value`.`type` = "numeric:timestamp"
+    AND `value`.`value` != ""
+SET `end_date` =
+    CASE
+        WHEN LENGTH(`value`.`value`) = 19 THEN `value`.`value`
+        WHEN LENGTH(`value`.`value`) = 10 THEN CONCAT(`value`.`value`, " 00:00:00")
+        ELSE NULL
+    END
+;
+SQL;
+    $connection->executeStatement($sql);
+
+    $message = new Message(
+        'A new option allows to set the access restricted status via a simple radio in resource form instead of a property.' // @translate
+    );
+    $messenger->addSuccess($message);
+
+    $message = new Message(
+        'Warning: to use only the button is the default behavior. To keep the old behavior via the property, you must set the param access_via_property to true in the file config/local.config.php.' // @translate
+    );
+    $messenger->addWarning($message);
+
+    $message = new Message(
+        'Warning: if you use specific properties (not "curation:reserved", "curation:dateStart", "curation:dateEnd"), you need to update the table "access_reserved".' // @translate
+    );
+    $messenger->addWarning($message);
+}
