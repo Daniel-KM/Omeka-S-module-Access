@@ -58,6 +58,9 @@ class AccessResourceController extends AbstractActionController
         return $this->forward()->dispatch(__CLASS__, $params);
     }
 
+    /**
+     * @todo Use plugin isForbiddenFile.
+     */
     public function fileAction()
     {
         /**

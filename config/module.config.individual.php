@@ -62,6 +62,7 @@ return [
             'isUnderEmbargo' => Mvc\Controller\Plugin\IsUnderEmbargo::class,
         ],
         'factories' => [
+            'isForbiddenFile' => Service\ControllerPlugin\IsForbiddenFileFactory::class,
             'isReservedResource' => Service\ControllerPlugin\IsReservedResourceFactory::class,
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
             'requestMailer' => Service\ControllerPlugin\RequestMailerFactory::class,

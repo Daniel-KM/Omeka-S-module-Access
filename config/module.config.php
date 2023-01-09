@@ -38,6 +38,7 @@ return [
             'isUnderEmbargo' => Mvc\Controller\Plugin\IsUnderEmbargo::class,
         ],
         'factories' => [
+            'isForbiddenFile' => Service\ControllerPlugin\IsForbiddenFileFactory::class,
             'isReservedResource' => Service\ControllerPlugin\IsReservedResourceFactory::class,
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
             // TODO Store the reserved access property id as a constant to avoid to get it each request.
