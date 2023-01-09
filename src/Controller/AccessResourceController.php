@@ -425,15 +425,17 @@ class AccessResourceController extends AbstractActionController
     protected function sendFakeFile(?MediaRepresentation $media, ?string $filename = null)
     {
         $mediaType = $media ? $media->mediaType() : 'image/png';
+        $mediaTypeMain = strtok($mediaType, '/');
         switch ($mediaType) {
-            case strtok($mediaType, '/') === 'image':
+            case $mediaTypeMain === 'image':
+                $mediaType = 'image/png';
                 $file = 'img/locked-file.png';
                 break;
             case 'application/pdf':
                 $file = 'img/locked-file.pdf';
                 break;
-            case strtok($mediaType, '/') === 'audio':
-            case strtok($mediaType, '/') === 'video':
+            case $mediaTypeMain === 'audio':
+            case $mediaTypeMain === 'video':
                 $mediaType = 'video/mp4';
                 $file = 'img/locked-file.mp4';
                 break;
@@ -441,6 +443,7 @@ class AccessResourceController extends AbstractActionController
                 $file = 'img/locked-file.odt';
                 break;
             default:
+                $mediaType = 'image/png';
                 $file = 'img/locked-file.png';
                 break;
         }

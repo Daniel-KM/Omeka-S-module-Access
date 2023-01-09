@@ -22,6 +22,7 @@ class AccessRequest extends AbstractEntity
 
     /**
      * @int
+     *
      * @Id
      * @Column(
      *     type="integer"
@@ -32,6 +33,7 @@ class AccessRequest extends AbstractEntity
 
     /**
      * @var \Omeka\Entity\Resource
+     *
      * @ManyToOne(
      *     targetEntity="Omeka\Entity\Resource"
      * )
@@ -44,6 +46,7 @@ class AccessRequest extends AbstractEntity
 
     /**
      * @var \Omeka\Entity\User
+     *
      * @ManyToOne(
      *     targetEntity="Omeka\Entity\User"
      * )
@@ -56,6 +59,7 @@ class AccessRequest extends AbstractEntity
 
     /**
      * @var string
+     *
      * @Column(
      *     type="string",
      *     nullable=false,
@@ -67,6 +71,7 @@ class AccessRequest extends AbstractEntity
 
     /**
      * @var \DateTime
+     *
      * @Column(
      *     type="datetime"
      * )
@@ -75,6 +80,7 @@ class AccessRequest extends AbstractEntity
 
     /**
      * @var \DateTime
+     *
      * @Column(
      *     type="datetime",
      *     nullable=true

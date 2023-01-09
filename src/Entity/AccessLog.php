@@ -16,6 +16,7 @@ class AccessLog extends AbstractEntity
 
     /**
      * @var int
+     *
      * @Id
      * @Column(
      *     type="integer"
@@ -27,6 +28,7 @@ class AccessLog extends AbstractEntity
     /**
      * @todo Use simple id? This is a log.
      * @var \Omeka\Entity\User
+     *
      * @ManyToOne(
      *     targetEntity="Omeka\Entity\User"
      * )
@@ -39,6 +41,7 @@ class AccessLog extends AbstractEntity
 
     /**
      * @var string
+     *
      * @Column(
      *     type="string",
      *     length=190
@@ -49,6 +52,7 @@ class AccessLog extends AbstractEntity
     /**
      * @todo Use true record as id and make it nullable? Or deletable? (this is the access or the request id).
      * @var int
+     *
      * @Column(
      *     type="integer"
      * )
@@ -58,6 +62,7 @@ class AccessLog extends AbstractEntity
     /**
      * This is "access" or "request".
      * @var string
+     *
      * @Column(
      *     type="string",
      *     length=190
@@ -67,6 +72,7 @@ class AccessLog extends AbstractEntity
 
     /**
      * @var \DateTime
+     *
      * @Column(
      *     type="datetime",
      *     nullable=true

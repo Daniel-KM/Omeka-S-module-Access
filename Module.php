@@ -29,7 +29,7 @@ class Module extends AbstractModule
     const NAMESPACE = __NAMESPACE__;
 
     /**
-     * The include define the access mode constant "AccessResource::ACCESS_MODE"
+     * The include defines the access mode constant "AccessResource::ACCESS_MODE"
      * that should be used, except to avoid install/update issues.
      *
      * @var string
@@ -58,7 +58,7 @@ class Module extends AbstractModule
             '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource" target="_blank">', '</a>'
         );
         $message->setEscapeHtml(false);
-        $messenger = new \Omeka\Mvc\Controller\Plugin\Messenger;
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
         $messenger->addWarning($message);
     }
 
@@ -211,13 +211,13 @@ class Module extends AbstractModule
         $sharedEventManager->attach(
             \AccessResource\Controller\Site\RequestController::class,
             'accessresource.request.created',
-            [$this, 'handlerRequestCreated']
+            [$this, 'handleRequestCreated']
         );
 
         $sharedEventManager->attach(
             \AccessResource\Controller\Admin\RequestController::class,
             'accessresource.request.updated',
-            [$this, 'handlerRequestUpdated']
+            [$this, 'handleRequestUpdated']
         );
 
         // Attach tab to Item and Media resource.
@@ -398,8 +398,6 @@ class Module extends AbstractModule
 
     /**
      * Logic for media filter.
-     *
-     * @param Event $event
      */
     public function filterMedia(Event $event): void
     {
@@ -492,7 +490,7 @@ class Module extends AbstractModule
         }
     }
 
-    public function handlerRequestCreated(Event $event): void
+    public function handleRequestCreated(Event $event): void
     {
         $services = $this->getServiceLocator();
         if (!$services->get('Omeka\Settings')->get('accessresource_message_send')) {
@@ -504,7 +502,7 @@ class Module extends AbstractModule
         $requestMailer->sendMailToUser('created');
     }
 
-    public function handlerRequestUpdated(Event $event): void
+    public function handleRequestUpdated(Event $event): void
     {
         $services = $this->getServiceLocator();
         if (!$services->get('Omeka\Settings')->get('accessresource_message_send')) {
@@ -518,8 +516,6 @@ class Module extends AbstractModule
 
     /**
      * Add a tab to section navigation.
-     *
-     * @param Event $event
      */
     public function addAccessTab(Event $event): void
     {
@@ -530,8 +526,6 @@ class Module extends AbstractModule
 
     /**
      * Display a partial for a resource.
-     *
-     * @param Event $event
      */
     public function displayListAndForm(Event $event): void
     {

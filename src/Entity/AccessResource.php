@@ -17,6 +17,7 @@ class AccessResource extends AbstractEntity
 {
     /**
      * @var int
+     *
      * @Id
      * @Column(type="integer")
      * @GeneratedValue
@@ -25,6 +26,7 @@ class AccessResource extends AbstractEntity
 
     /**
      * @var \Omeka\Entity\Resource
+     *
      * @ManyToOne(
      *     targetEntity="Omeka\Entity\Resource"
      * )
@@ -37,6 +39,7 @@ class AccessResource extends AbstractEntity
 
     /**
      * @var \Omeka\Entity\User
+     *
      * @ManyToOne(
      *     targetEntity="Omeka\Entity\User"
      * )
@@ -49,6 +52,7 @@ class AccessResource extends AbstractEntity
 
     /**
      * @var string
+     *
      * @Column(
      *     type="string",
      *     length=190,
@@ -59,6 +63,7 @@ class AccessResource extends AbstractEntity
 
     /**
      * @var bool
+     *
      * @Column(
      *     type="boolean",
      *     nullable=false,
@@ -69,6 +74,7 @@ class AccessResource extends AbstractEntity
 
     /**
      * @var bool
+     *
      * @Column(
      *     type="boolean",
      *     nullable=false,
@@ -79,6 +85,7 @@ class AccessResource extends AbstractEntity
 
     /**
      * @var DateTime
+     *
      * @Column(
      *     type="datetime",
      *     nullable=true
@@ -88,6 +95,7 @@ class AccessResource extends AbstractEntity
 
     /**
      * @var DateTime
+     *
      * @Column(
      *     type="datetime",
      *     nullable=true
@@ -97,6 +105,7 @@ class AccessResource extends AbstractEntity
 
     /**
      * @var \DateTime
+     *
      * @Column(
      *     type="datetime"
      * )
@@ -105,6 +114,7 @@ class AccessResource extends AbstractEntity
 
     /**
      * @var \DateTime
+     *
      * @Column(
      *     type="datetime",
      *     nullable=true
