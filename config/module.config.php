@@ -23,6 +23,7 @@ return [
     ],
     'form_elements' => [
         'invokables' => [
+            Form\Element\OptionalRadio::class => Form\Element\OptionalRadio::class,
             Form\ConfigForm::class => Form\ConfigForm::class,
         ],
     ],
@@ -36,6 +37,7 @@ return [
             'isUnderEmbargo' => Mvc\Controller\Plugin\IsUnderEmbargo::class,
         ],
         'factories' => [
+            'isReservedResource' => Service\ControllerPlugin\IsReservedResourceFactory::class,
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
             // TODO Store the reserved access property id as a constant to avoid to get it each request.
             'reservedAccessPropertyId' => Service\ControllerPlugin\ReservedAccessPropertyIdFactory::class,
@@ -77,10 +79,17 @@ return [
     'accessresource' => [
         // Access mode may be "global", "ip" or "individual".
         'access_mode' => 'global',
+        // The access right can be set via a property (curation:reserved by default)
+        // to simplify some workflows, in particular for import.
+        // In all cases, the access right is stored in the table "access_reserved".
+        'access_via_property' => false,
         'config' => [
             // This setting is just for info: it is overridden by [accessresource][access_mode]
             // that should be set in config/local.config.php.
             'accessresource_access_mode' => ACCESS_MODE_GLOBAL,
+            // This setting is just for info: it is overridden by [accessresource][access_via_property]
+            // that should be set in config/local.config.php.
+            'accessresource_access_via_property' => false,
             'accessresource_embargo_bypass' => false,
             'accessresource_embargo_auto_update' => false,
             'accessresource_ip_item_sets' => [],

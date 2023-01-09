@@ -4,6 +4,8 @@ namespace AccessResource;
 
 const ACCESS_MODE = 'global';
 
-const PROPERTY_RESERVED = 'curation:reserved';
+const ACCESS_VIA_PROPERTY = false;
+
+const PROPERTY_RESERVED = null;
 const PROPERTY_EMBARGO_START = 'curation:dateStart';
 const PROPERTY_EMBARGO_END = 'curation:dateEnd';

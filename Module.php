@@ -38,11 +38,23 @@ class Module extends AbstractModule
      */
     protected $accessMode = ACCESS_MODE_GLOBAL;
 
+    /**
+     * The include defines the access mode constant "AccessResource::ACCESS_VIA_PROPERTY"
+     * that should be used, except to avoid install/update issues.
+     *
+     * @var bool
+     */
+    protected $accessViaProperty = false;
+
     public function getConfig()
     {
         $config = include OMEKA_PATH . '/config/local.config.php';
         $this->accessMode = $config['accessresource']['access_mode'] ?? ACCESS_MODE_GLOBAL;
-        require_once __DIR__ . '/config/access_mode.' . $this->accessMode . '.php';
+        $this->accessViaProperty = !empty($config['accessresource']['access_via_property']);
+        require_once __DIR__ . '/config/access_mode.'
+            . $this->accessMode
+            . ($this->accessViaProperty ? '.property' : '')
+            . '.php';
         return include __DIR__ . '/config/module.config.php';
     }
 
@@ -198,6 +210,25 @@ class Module extends AbstractModule
             'api.update.post',
             [$this, 'updateAccessReserved']
         );
+
+        // Attach tab to Item and Media resource.
+        $controllers = [
+            'Omeka\Controller\Admin\Item',
+            'Omeka\Controller\Admin\Media',
+            'Omeka\Controller\Admin\ItemSet',
+        ];
+        foreach ($controllers as $controller) {
+            $sharedEventManager->attach(
+                $controller,
+                'view.add.form.advanced',
+                [$this, 'addAccessElements']
+            );
+            $sharedEventManager->attach(
+                $controller,
+                'view.edit.form.advanced',
+                [$this, 'addAccessElements']
+            );
+        }
 
         // No more event when access is global: no form, requests, checks…
         if ($this->accessMode !== ACCESS_MODE_INDIVIDUAL) {
@@ -534,16 +565,28 @@ class Module extends AbstractModule
             /** @var \Omeka\Entity\Resource $resource */
             $resourceRepr = $resource;
             $resource = $entityManager->find(\Omeka\Entity\Resource::class, $resource->id());
+        } else {
+
         }
 
-        if ($resource->isPublic()) {
-            $isReserved = false;
-        } else {
-            if (empty($resourceRepr)) {
-                $resourceRepr = $services->get('Omeka\ApiManager')
-                    ->read($resource->getResourceName(), ['id' => $resource->getId()], ['initialize' => false, 'finalize' => false])->getContent();
+        // When option is to use property, set the visibility according to it.
+        // Else, use the option from the params or from the resource itself.
+        if ($this->accessViaProperty) {
+            if ($resource->isPublic()) {
+                $isReserved = false;
+            } else {
+                if (empty($resourceRepr)) {
+                    $resourceRepr = $services->get('Omeka\ApiManager')
+                        ->read($resource->getResourceName(), ['id' => $resource->getId()], ['initialize' => false, 'finalize' => false])->getContent();
+                }
+                $isReserved = $resourceRepr->value(PROPERTY_RESERVED);
             }
-            $isReserved = $resourceRepr->value(PROPERTY_RESERVED);
+        } else {
+            $isReserved = !$resource->isPublic();
+            if ($isReserved) {
+                $resourceData = $event->getParam('request')->getContent();
+                $isReserved = !empty($resourceData['o-module-access-resource:reserved']);
+            }
         }
 
         // Get current access reserved.
@@ -629,6 +672,28 @@ class Module extends AbstractModule
         return $controller->formCollection(new \AccessResource\Form\Admin\AddAccessForm());
     }
     */
+
+    public function addAccessElements(Event $event): void
+    {
+        $view = $event->getTarget();
+        $isReservedResource = $this->getServiceLocator()->get('ControllerPluginManager')->get('isReservedResource');
+        $isReserved = $isReservedResource($view->resource);
+        $element = new \AccessResource\Form\Element\OptionalRadio('o-module-access-resource:reserved');
+        $element
+            ->setValueOptions([
+                '0' => 'Is not restricted', // @translate'
+                '1' => 'Is restricted (requires the resource to be private)', // @translate
+            ])
+            ->setAttributes([
+                'id' => 'o-module-access-resource-restricted',
+                'value' => $isReserved,
+                'disabled' => $this->accessViaProperty,
+            ]);
+        $this->accessViaProperty
+            ? $element->setLabel(sprintf('Restricted access (managed via property "%s")', PROPERTY_RESERVED)) // @translate
+            : $element->setLabel('Restricted access'); // @translate
+        echo $view->formRow($element);
+    }
 
     /**
      * Helper to display the access for a resource.

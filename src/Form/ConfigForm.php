@@ -36,6 +36,17 @@ class ConfigForm extends Form
                 ],
             ])
             ->add([
+                'name' => 'accessresource_access_via_property',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Set access via property (to be set in config/local.config.php)', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_access_via_property',
+                    'disabled' => 'disabled',
+                ],
+            ])
+            ->add([
                 'name' => 'accessresource_embargo_bypass',
                 'type' => Element\Checkbox::class,
                 'options' => [
