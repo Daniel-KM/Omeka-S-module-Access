@@ -214,7 +214,9 @@ becomes available for all guest users, and all visitors can view its metadata
 automatically too in listings. Preview will be available for media too. The
 value of this property can be private or public.
 
-Important: public medias are never restricted, so you need to set them private.
+**Important**: public medias are never restricted, so you need to set them
+private.
+
 Note that a public item can have a private media and vice-versa. So, most of the
 time, the value should be set in the metadata of the media. The value can be
 specified for the item too to simplify management.
