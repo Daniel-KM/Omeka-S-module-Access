@@ -43,7 +43,9 @@ class IsReservedResource extends AbstractPlugin
             return false;
         }
 
-        $accessReserved = $this->entityManager->find(AccessReserved::class, $resourceId);
+        // Normally, the check of "is public" is useless.
+
+        $accessReserved = $this->entityManager->getReference(AccessReserved::class, $resourceId);
         return !empty($accessReserved);
     }
 }
