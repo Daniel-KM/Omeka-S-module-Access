@@ -11,6 +11,13 @@ if (ACCESS_MODE === ACCESS_MODE_INDIVIDUAL) {
 
 return [
     'entity_manager' => [
+        // Only for AccessReserved.
+        'mapping_classes_paths' => [
+            dirname(__DIR__) . '/src/Entity',
+        ],
+        'proxy_paths' => [
+            dirname(__DIR__) . '/data/doctrine-proxies',
+        ],
         'filters' => [
             // Override Omeka core resource visibility with a new condition.
             'resource_visibility' => Db\Filter\ReservedResourceVisibilityFilter::class,
