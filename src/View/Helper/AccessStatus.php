@@ -21,9 +21,6 @@ class AccessStatus extends AbstractHelper
     /**
      * Get the access status of a resource (free, reserved or forbidden).
      *
-     * For a boolean status, less clear (reserved or not):
-     * @see \AccessResource\Mvc\Controller\Plugin\IsReservedResource
-     *
      * @uses \AccessResource\Mvc\Controller\Plugin\AccessStatus
      */
     public function __invoke(?AbstractResourceEntityRepresentation $resource): string

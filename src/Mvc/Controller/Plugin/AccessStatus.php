@@ -25,9 +25,6 @@ class AccessStatus extends AbstractPlugin
 
     /**
      * Get the access status of a resource (free, reserved or forbidden).
-     *
-     * For a boolean status, less clear (reserved or not):
-     * @see \AccessResource\Mvc\Controller\Plugin\IsReservedResource
      */
     public function __invoke($resource): string
     {
