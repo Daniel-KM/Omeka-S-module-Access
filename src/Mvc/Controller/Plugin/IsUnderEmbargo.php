@@ -88,6 +88,7 @@ class IsUnderEmbargo extends AbstractPlugin
     {
         // Any visitor can update visibility according to the embargo, since it
         // is an automatic process, so use a direct sql to skip rights check.
+        // TODO Nevertheless, the events should be triggered (indexation).
         $isPublic = $resource->isPublic();
         if ($isUnderEmbargo === $isPublic) {
             $resource->getServiceLocator()->get('Omeka\Connection')->executeStatement(

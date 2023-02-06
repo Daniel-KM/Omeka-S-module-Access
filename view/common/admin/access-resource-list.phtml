@@ -31,50 +31,50 @@ $this->headScript()
 
     <?php if (empty($requests)): ?>
 
-    <div class="no-resources">
-        <p><?= $translate('There are no requests for this resource.') ?></p>
-    </div>
+        <div class="no-resources">
+            <p><?= $translate('There are no requests for this resource.') ?></p>
+        </div>
 
     <?php else: ?>
 
-    <?php
-    // TODO Add a button to clean all access to public resources (and mutiple toggle/deletion anyway).
-
-    // $resourceName = $resource->getControllerName();
-    $updateRight = $this->userIsAllowed(\AccessResource\Entity\AccessRequest::class, 'update');
-    ?>
-    <ul>
-    <?php foreach ($requests as $request): ?>
         <?php
-            $user = $request->user();
-            $userText = $user ? $hyperlink($user->name(), $user->adminUrl()) : '';
-            $status = $request->status();
-        ?>
+        // TODO Add a button to clean all access to public resources (and mutiple toggle/deletion anyway).
 
-        <li class="value tag" data-id="<?= $request->id() ?>">
-            <span><?= sprintf($translate('user: %s'), $userText) ?></span>
-            <?php if ($updateRight): ?>
-            <span class="single actions"><a href="<?= $urlHelper('admin/access-resource/id', ['controller' => 'request', 'id' => $request->id(), 'action' => 'edit']) ?>"
-                class="o-icon-edit"
-                aria-label="<?= $escape($translate('Edit')) ?>"
-                title="<?= $escape($translate('Edit')) ?>"></a></span>
-            <span class="single actions"><a href="#"
-                class="status-toggle-access-resource o-icon-<?= $status ?>"
-                data-status-toggle-url="<?= $this->url("admin/access-resource/id", ['controller' => 'request', 'id' => $request->id(), 'action' => "toggle" ]) ?>"
-                data-status="<?= $status ?>"
-                aria-label="<?= $escape($translate('Toggle request')) ?>"
-                title="<?= $escape($translate('Toggle request')) ?>"></a></span>
-            <span class="single actions"><a href="#"
-                class="o-icon-delete"
-                data-status-toggle-url="<?= $this->url('admin/access-resource/id', ['controller' => 'request', 'id' => $request->id(), 'action' => 'delete']) ?>"
-                aria-label="<?= $escape($translate('Remove request')) ?>"
-                title="<?= $escape($translate('Remove request')) ?>"></a></span>
-            <?php else: ?>
-            <span class="no-action o-icon-<?= $status ?>"></span>
-            <?php endif; ?>
-        </li>
-    <?php endforeach; ?>
-    </ul>
+        // $resourceName = $resource->getControllerName();
+        $updateRight = $this->userIsAllowed(\AccessResource\Entity\AccessRequest::class, 'update');
+        ?>
+        <ul>
+        <?php foreach ($requests as $request): ?>
+            <?php
+                $user = $request->user();
+                $userText = $user ? $hyperlink($user->name(), $user->adminUrl()) : '';
+                $status = $request->status();
+            ?>
+
+            <li class="value tag" data-id="<?= $request->id() ?>">
+                <span><?= sprintf($translate('user: %s'), $userText) ?></span>
+                <?php if ($updateRight): ?>
+                <span class="single actions"><a href="<?= $urlHelper('admin/access-resource/id', ['controller' => 'request', 'id' => $request->id(), 'action' => 'edit']) ?>"
+                    class="o-icon-edit"
+                    aria-label="<?= $escape($translate('Edit')) ?>"
+                    title="<?= $escape($translate('Edit')) ?>"></a></span>
+                <span class="single actions"><a href="#"
+                    class="status-toggle-access-resource o-icon-<?= $status ?>"
+                    data-status-toggle-url="<?= $this->url("admin/access-resource/id", ['controller' => 'request', 'id' => $request->id(), 'action' => "toggle" ]) ?>"
+                    data-status="<?= $status ?>"
+                    aria-label="<?= $escape($translate('Toggle request')) ?>"
+                    title="<?= $escape($translate('Toggle request')) ?>"></a></span>
+                <span class="single actions"><a href="#"
+                    class="o-icon-delete"
+                    data-status-toggle-url="<?= $this->url('admin/access-resource/id', ['controller' => 'request', 'id' => $request->id(), 'action' => 'delete']) ?>"
+                    aria-label="<?= $escape($translate('Remove request')) ?>"
+                    title="<?= $escape($translate('Remove request')) ?>"></a></span>
+                <?php else: ?>
+                <span class="no-action o-icon-<?= $status ?>"></span>
+                <?php endif; ?>
+            </li>
+        <?php endforeach; ?>
+        </ul>
 
     <?php endif; ?>
 
@@ -87,49 +87,49 @@ $this->headScript()
 
     <?php if (empty($accesses)): ?>
 
-    <div class="no-resources">
-        <p><?= $translate('There are no access for this resource.'); ?></p>
-    </div>
+        <div class="no-resources">
+            <p><?= $translate('There are no access for this resource.'); ?></p>
+        </div>
 
     <?php else: ?>
 
-    <?php
-    // TODO Add a button to clean all access to public resources (and mutiple toggle/deletion anyway).
-
-    // $resourceName = $resource->getControllerName();
-    $updateRight = $this->userIsAllowed(\AccessResource\Entity\AccessResource::class, 'update');
-    ?>
-    <ul>
-    <?php foreach ($accesses as $access): ?>
         <?php
-            $user = $access->user();
-            $userText = $user ? $hyperlink($user->name(), $user->adminUrl()) : '';
-        ?>
+        // TODO Add a button to clean all access to public resources (and mutiple toggle/deletion anyway).
 
-        <li class="value tag" data-id="<?= $access->id() ?>">
-            <span><?= sprintf($translate('user: %s'), $userText) ?></span>
-            <?php if ($updateRight): ?>
-            <span class="single actions"><a href="<?= $urlHelper('admin/access-resource/id', ['id' => $access->id(), 'action' => 'edit']) ?>"
-                class="o-icon-edit"
-                aria-label="<?= $escape($translate('Edit')) ?>"
-                title="<?= $escape($translate('Edit')) ?>"></a></span>
-            <span class="single actions"><a href="#"
-                class="status-toggle-access-resource o-icon-<?= $access->enabled() ? 'approved' : 'private' ?>"
-                data-status-toggle-url="<?= $this->url("admin/access-resource/id", ['id' => $access->id(), 'action' => "toggle" ]) ?>"
-                data-status="<?= $access->enabled() ? 'approved' : 'private' ?>"
-                aria-label="<?= $escape($translate('Toggle access')) ?>"
-                title="<?= $escape($translate('Toggle access')) ?>"></a></span>
-            <span class="single actions"><a href="#"
-                class="o-icon-delete"
-                data-status-toggle-url="<?= $this->url('admin/access-resource/id', ['id' => $access->id(), 'action' => 'delete']) ?>"
-                aria-label="<?= $escape($translate('Remove access')) ?>"
-                title="<?= $escape($translate('Remove access')) ?>"></a></span>
-            <?php else: ?>
-            <span class="no-action o-icon-<?= $access->enabled() ?: 'undefined' ?>"></span>
-            <?php endif; ?>
-        </li>
-    <?php endforeach; ?>
-    </ul>
+        // $resourceName = $resource->getControllerName();
+        $updateRight = $this->userIsAllowed(\AccessResource\Entity\AccessResource::class, 'update');
+        ?>
+        <ul>
+        <?php foreach ($accesses as $access): ?>
+            <?php
+                $user = $access->user();
+                $userText = $user ? $hyperlink($user->name(), $user->adminUrl()) : '';
+            ?>
+
+            <li class="value tag" data-id="<?= $access->id() ?>">
+                <span><?= sprintf($translate('user: %s'), $userText) ?></span>
+                <?php if ($updateRight): ?>
+                <span class="single actions"><a href="<?= $urlHelper('admin/access-resource/id', ['id' => $access->id(), 'action' => 'edit']) ?>"
+                    class="o-icon-edit"
+                    aria-label="<?= $escape($translate('Edit')) ?>"
+                    title="<?= $escape($translate('Edit')) ?>"></a></span>
+                <span class="single actions"><a href="#"
+                    class="status-toggle-access-resource o-icon-<?= $access->enabled() ? 'approved' : 'private' ?>"
+                    data-status-toggle-url="<?= $this->url("admin/access-resource/id", ['id' => $access->id(), 'action' => "toggle" ]) ?>"
+                    data-status="<?= $access->enabled() ? 'approved' : 'private' ?>"
+                    aria-label="<?= $escape($translate('Toggle access')) ?>"
+                    title="<?= $escape($translate('Toggle access')) ?>"></a></span>
+                <span class="single actions"><a href="#"
+                    class="o-icon-delete"
+                    data-status-toggle-url="<?= $this->url('admin/access-resource/id', ['id' => $access->id(), 'action' => 'delete']) ?>"
+                    aria-label="<?= $escape($translate('Remove access')) ?>"
+                    title="<?= $escape($translate('Remove access')) ?>"></a></span>
+                <?php else: ?>
+                <span class="no-action o-icon-<?= $access->enabled() ?: 'undefined' ?>"></span>
+                <?php endif; ?>
+            </li>
+        <?php endforeach; ?>
+        </ul>
 
     <?php endif; ?>
 
@@ -142,47 +142,47 @@ $this->headScript()
 
      <?php if ($resource->isPublic()): ?>
 
-    <div class="no-resources">
-        <p><?= $translate('This resource is public: no access is needed to view it.'); ?></p>
-    </div>
+        <div class="no-resources">
+            <p><?= $translate('This resource is public: no access is needed to view it.'); ?></p>
+        </div>
 
     <?php elseif (!$isReservedResource($resource)): ?>
 
-    <div class="no-resources">
-        <p><?= $translate('This resource is private and not marked reservable: no access is possible.'); ?></p>
-    </div>
+        <div class="no-resources">
+            <p><?= $translate('This resource is private and not marked reservable: no access is possible.'); ?></p>
+        </div>
 
     <?php // Manage access to private resource when marked reservable. ?>
     <?php else: ?>
 
-    <form action="<?= $this->url("admin/access-resource/default", [
-        'controller' => 'access',
-        'action' => 'edit',
-    ]) ?>" method="post">
-        <div class="resource-values field">
-            <div class="field-meta">
-                <div class="field-label"><?= $translate('New access') ?></div>
-            </div>
-            <div class="inputs">
-                <input type="hidden" name="csrf" value="<?= (new \Laminas\Form\Element\Csrf('csrf'))->getValue() ?>">
-                <input type="hidden" name="resource_id" value="<?= $resource ? $resource->id() : '' ?>">
-                <input type="hidden" name="user_id" value="">
-                <input type="hidden" name="enabled" value="<?= 1 ?>">
-                <input type="hidden" name="temporal" value="<?= 0 ?>">
-                <input type="hidden" name="startDate" value="<?= (new \DateTime())->format('Y-m-d H:i') ?>">
-                <input type="hidden" name="endDate" value="<?= (new \DateTime())->format('Y-m-d H:i') ?>">
-                <div class="selected-user">
+        <form action="<?= $this->url("admin/access-resource/default", [
+            'controller' => 'access',
+            'action' => 'edit',
+        ]) ?>" method="post">
+            <div class="resource-values field">
+                <div class="field-meta">
+                    <div class="field-label"><?= $translate('New access') ?></div>
                 </div>
-                <button id="user-selector-button"><?= $translate('Select user') ?></button>
-                <?= $this->userSelector($translate('Click on a user to select it.'), false) ?>
+                <div class="inputs">
+                    <input type="hidden" name="csrf" value="<?= (new \Laminas\Form\Element\Csrf('csrf'))->getValue() ?>">
+                    <input type="hidden" name="resource_id" value="<?= $resource ? $resource->id() : '' ?>">
+                    <input type="hidden" name="user_id" value="">
+                    <input type="hidden" name="enabled" value="<?= 1 ?>">
+                    <input type="hidden" name="temporal" value="<?= 0 ?>">
+                    <input type="hidden" name="startDate" value="<?= (new \DateTime())->format('Y-m-d H:i') ?>">
+                    <input type="hidden" name="endDate" value="<?= (new \DateTime())->format('Y-m-d H:i') ?>">
+                    <div class="selected-user">
+                    </div>
+                    <button id="user-selector-button"><?= $translate('Select user') ?></button>
+                    <?= $this->userSelector($translate('Click on a user to select it.'), false) ?>
+                </div>
             </div>
-        </div>
-        <input type="submit" value="<?= $escape($translate('Add access')) ?>">
-    </form>
+            <input type="submit" value="<?= $escape($translate('Add access')) ?>">
+        </form>
 
-    <script>
-    var accessObject = <?= $resource ? json_encode($resource->valueRepresentation()) : 'null' ?>;
-    </script>
+        <script>
+        var accessObject = <?= $resource ? json_encode($resource->valueRepresentation()) : 'null' ?>;
+        </script>
 
     <?php endif; ?>
 

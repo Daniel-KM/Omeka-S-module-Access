@@ -75,8 +75,7 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
     public function statusLabel(): string
     {
         $status = $this->resource->getStatus();
-        return $this->statusLabels[$status]
-            ?? 'Unknown'; // @translate
+        return $this->statusLabels[$status] ?? 'Unknown'; // @translate
     }
 
     public function created(): DateTime
