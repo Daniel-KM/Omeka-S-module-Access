@@ -305,6 +305,7 @@ TODO
 - [ ] Store openess in a specific table for performance and to manage embargo easier.
 - [ ] Manage the case where the embargo dates are private.
 - [ ] Add a mode to check for a specific value in the reserved access property instead of exist/not exist.
+- [x] Reindexation (trigger event) when embargo is updated automatically.
 
 
 Warning
