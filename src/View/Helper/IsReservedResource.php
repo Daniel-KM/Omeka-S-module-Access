@@ -6,6 +6,9 @@ use AccessResource\Mvc\Controller\Plugin\IsReservedResource as IsReservedResourc
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 
+/**
+ * @deprecated Since 3.4.0.14.
+ */
 class IsReservedResource extends AbstractHelper
 {
     /**

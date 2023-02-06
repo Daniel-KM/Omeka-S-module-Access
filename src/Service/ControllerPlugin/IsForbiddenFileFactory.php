@@ -16,7 +16,7 @@ class IsForbiddenFileFactory implements FactoryInterface
         $plugins = $services->get('ControllerPluginManager');
         return new IsForbiddenFile(
             $services->get('Omeka\EntityManager'),
-            $plugins->get('isReservedResource'),
+            $plugins->get('accessStatus'),
             $plugins->get('isUnderEmbargo'),
             $plugins->get('userIsAllowed'),
             $plugins->get('params'),

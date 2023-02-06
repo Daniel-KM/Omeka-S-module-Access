@@ -6,6 +6,9 @@ use AccessResource\Entity\AccessReserved;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 
+/**
+ * @deprecated Since 3.4.0.14.
+ */
 class IsReservedResource extends AbstractPlugin
 {
     /**

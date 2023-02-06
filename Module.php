@@ -12,6 +12,10 @@ const ACCESS_MODE_GLOBAL = 'global';
 const ACCESS_MODE_IP = 'ip';
 const ACCESS_MODE_INDIVIDUAL = 'individual';
 
+const ACCESS_STATUS_FREE = 'free';
+const ACCESS_STATUS_RESERVED = 'reserved';
+const ACCESS_STATUS_FORBIDDEN = 'forbidden';
+
 use const AccessResource\ACCESS_MODE;
 use const AccessResource\ACCESS_VIA_PROPERTY;
 use const AccessResource\PROPERTY_RESERVED;
@@ -583,46 +587,74 @@ class Module extends AbstractModule
             $resourceRepr = $resource;
             $resource = $entityManager->find(\Omeka\Entity\Resource::class, $resource->id());
         } else {
-
+            /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resourceRepr */
+            $resourceRepr = $services->get('Omeka\ApiAdapterManager')->get('resources')->getRepresentation($resource);
         }
 
         // When option is to use property, set the visibility according to it.
         // Else, use the option from the params or from the resource itself.
+        // The plugin AccessStatus may be used because this is a api post event,
+        // but it is simpler to check it here directly from the resource.
+        // @see \AccessResource\Mvc\Controller\Plugin\AccessStatus
+        $isPublic = $resource->isPublic();
+
         if ($this->accessViaProperty) {
-            if ($resource->isPublic()) {
-                $isReserved = false;
+            if ($isPublic) {
+                $resourceAccessStatus = ACCESS_STATUS_FREE;
             } else {
                 if (empty($resourceRepr)) {
                     $resourceRepr = $services->get('Omeka\ApiManager')
                         ->read($resource->getResourceName(), ['id' => $resource->getId()], ['initialize' => false, 'finalize' => false])->getContent();
                 }
-                $isReserved = $resourceRepr->value(PROPERTY_RESERVED);
+                $resourceAccessStatus = $resourceRepr->value(PROPERTY_RESERVED)
+                    ? ACCESS_STATUS_RESERVED
+                    : ACCESS_STATUS_FORBIDDEN;
             }
         } else {
-            $isReserved = !$resource->isPublic();
-            if ($isReserved) {
-                $resourceData = $event->getParam('request')->getContent();
-                $isReserved = !empty($resourceData['o-module-access-resource:reserved']);
+            $resourceData = $event->getParam('request')->getContent();
+            $resourceAccessStatus = $resourceData['o-module-access-resource:status'];
+            if (!in_array($resourceAccessStatus, [ACCESS_STATUS_FREE, ACCESS_STATUS_RESERVED, ACCESS_STATUS_FORBIDDEN])) {
+                $resourceAccessStatus = ACCESS_STATUS_FORBIDDEN;
             }
         }
 
-        // Get current access reserved.
-        $accessReserved = $resource->getId()
+        // Get current access reserved to keep or remove it.
+        $currentAccessReserved = $resource->getId()
             ? $entityManager->find(AccessReserved::class, $resource->getId())
             : null;
-        if (!$isReserved) {
-            if ($accessReserved) {
-                $entityManager->remove($accessReserved);
+
+        $shouldFlush = false;
+
+        if ($resourceAccessStatus !== ACCESS_STATUS_RESERVED) {
+            if ($isPublic && $resourceAccessStatus === ACCESS_STATUS_FORBIDDEN) {
+                $resource->setIsPublic(false);
+                $shouldFlush = true;
+            } else if (!$isPublic && $resourceAccessStatus === ACCESS_STATUS_FREE) {
+                $resource->setIsPublic(true);
+                $shouldFlush = true;
+            }
+            if ($currentAccessReserved) {
+                $entityManager->remove($currentAccessReserved);
+                $shouldFlush = true;
+            }
+            if ($shouldFlush) {
                 $entityManager->flush();
             }
             return;
         }
 
-        if (!$accessReserved) {
-            $accessReserved = new AccessReserved($resource);
-            $entityManager->persist($accessReserved);
-            $entityManager->flush();
+        $resource->setIsPublic(false);
+
+        if ($currentAccessReserved) {
+            if ($isPublic)  {
+                $entityManager->flush();
+            }
+            return;
         }
+
+        $accessReserved = new AccessReserved($resource);
+        $entityManager->persist($accessReserved);
+        $entityManager->flush();
     }
 
     public function handleRequestCreated(Event $event): void
@@ -695,22 +727,24 @@ class Module extends AbstractModule
     public function addAccessElements(Event $event): void
     {
         $view = $event->getTarget();
-        $isReservedResource = $this->getServiceLocator()->get('ControllerPluginManager')->get('isReservedResource');
-        $isReserved = $isReservedResource($view->resource);
-        $element = new \AccessResource\Form\Element\OptionalRadio('o-module-access-resource:reserved');
+        $accessStatus = $this->getServiceLocator()->get('ControllerPluginManager')->get('accessStatus');
+        $resourceAccessStatus = $accessStatus($view->resource);
+        $element = new \AccessResource\Form\Element\OptionalRadio('o-module-access-resource:status');
         $element
+            ->setOption('info', 'This status will override the main visibility (public/private).') // @translate
             ->setValueOptions([
-                '0' => 'Is not restricted', // @translate'
-                '1' => 'Is restricted (requires the resource to be private)', // @translate
+                ACCESS_STATUS_FREE => 'Free access', // @translate'
+                ACCESS_STATUS_RESERVED => 'Restricted access', // @translate
+                ACCESS_STATUS_FORBIDDEN => 'Forbidden access', // @translate
             ])
             ->setAttributes([
-                'id' => 'o-module-access-resource-restricted',
-                'value' => $isReserved,
+                'id' => 'o-module-access-resource-status',
+                'value' => $resourceAccessStatus,
                 'disabled' => $this->accessViaProperty,
             ]);
         $this->accessViaProperty
-            ? $element->setLabel(sprintf('Restricted access (managed via property "%s")', PROPERTY_RESERVED)) // @translate
-            : $element->setLabel('Restricted access'); // @translate
+            ? $element->setLabel(sprintf('Access status is managed via presence of property "%s")', PROPERTY_RESERVED)) // @translate
+            : $element->setLabel('Access status'); // @translate
         echo $view->formRow($element);
     }
 
@@ -719,31 +753,24 @@ class Module extends AbstractModule
         $view = $event->getTarget();
         $plugins = $view->getHelperPluginManager();
         $translate = $plugins->get('translate');
-        $isReservedResource = $plugins->get('isReservedResource');
+        $accessStatus = $plugins->get('accessStatus');
         $vars = $view->vars();
         $resource = $vars->offsetGet('resource');
 
-        $isReserved = $isReservedResource($resource);
+        $resourceAccessStatus = $accessStatus($resource);
 
-        $resourceTypes = [
-            \Omeka\Api\Representation\ItemRepresentation::class => 'item',
-            \Omeka\Api\Representation\MediaRepresentation::class => 'media',
-            \Omeka\Api\Representation\ItemSetRepresentation::class => 'item set',
-            \Omeka\Entity\Item::class => 'item',
-            \Omeka\Entity\Media::class => 'media',
-            \Omeka\Entity\ItemSet::class => 'item set',
+        $accessStatuses = [
+            ACCESS_STATUS_FREE => 'Free access', // @translate'
+            ACCESS_STATUS_RESERVED => 'Reserved access', // @translate
+            ACCESS_STATUS_FORBIDDEN => 'Forbidden access', // @translate
         ];
 
         echo sprintf('<div class="meta-group">'
             . '<h4>%s</h4>'
             . '<div class="value">%s</div>'
             . '</div>',
-            $translate('Access resource'), // @translate
-            $isReserved
-                ? sprintf($translate('Is restricted %s'), // @translate
-                    $translate($resourceTypes[get_class($resource)] ?? 'resource')
-                )
-                : $translate('Is not restricted') // @translate
+            $translate('Access status'), // @translate
+            $translate($accessStatuses[$resourceAccessStatus])
         );
     }
 

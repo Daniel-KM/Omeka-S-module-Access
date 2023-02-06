@@ -33,6 +33,7 @@ return [
         'factories' => [
             'accessResourceRequestForm' => Service\ViewHelper\AccessResourceRequestFormFactory::class,
             'accessStatus' => Service\ViewHelper\AccessStatusFactory::class,
+            /** @deprecated Since 3.4.0.14. */
             'isReservedResource' => Service\ViewHelper\IsReservedResourceFactory::class,
             'isUnderEmbargo' => Service\ViewHelper\IsUnderEmbargoFactory::class,
         ],
@@ -66,6 +67,7 @@ return [
         'factories' => [
             'accessStatus' => Service\ControllerPlugin\AccessStatusFactory::class,
             'isForbiddenFile' => Service\ControllerPlugin\IsForbiddenFileFactory::class,
+            /** @deprecated Since 3.4.0.14. */
             'isReservedResource' => Service\ControllerPlugin\IsReservedResourceFactory::class,
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
             'requestMailer' => Service\ControllerPlugin\RequestMailerFactory::class,

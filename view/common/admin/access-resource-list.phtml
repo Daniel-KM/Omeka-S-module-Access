@@ -13,7 +13,9 @@ $assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
 $hyperlink = $plugins->get('hyperlink');
 $urlHelper = $plugins->get('url');
-$isReservedResource = $plugins->get('isReservedResource');
+$accessStatus = $plugins->get('accessStatus');
+
+$resourceAccessStatus = $accessStatus($resource);
 
 $this->headLink()
     ->appendStylesheet($assetUrl('css/access-resource-admin.css', 'AccessResource'));
@@ -140,19 +142,19 @@ $this->headScript()
     <div>
         <h4><?= $translate('Add an access') ?></h4>
 
-     <?php if ($resource->isPublic()): ?>
+     <?php if ($resourceAccessStatus ===  'free'): ?>
 
         <div class="no-resources">
-            <p><?= $translate('This resource is public: no access is needed to view it.'); ?></p>
+            <p><?= $translate('Free access'); ?></p>
         </div>
 
-    <?php elseif (!$isReservedResource($resource)): ?>
+    <?php elseif ($resourceAccessStatus ===  'forbidden'): ?>
 
         <div class="no-resources">
-            <p><?= $translate('This resource is private and not marked reservable: no access is possible.'); ?></p>
+            <p><?= $translate('Forbidden access'); ?></p>
         </div>
 
-    <?php // Manage access to private resource when marked reservable. ?>
+    <?php // Manage access to reserved resource (resources with other statuses cannot be requested). ?>
     <?php else: ?>
 
         <form action="<?= $this->url("admin/access-resource/default", [

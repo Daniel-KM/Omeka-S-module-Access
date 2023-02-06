@@ -25,9 +25,9 @@ class IsForbiddenFile extends AbstractPlugin
     protected $entityManager;
 
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\IsReservedResource
+     * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus
      */
-    protected $isReservedResource;
+    protected $accessStatus;
 
     /**
      * @var \AccessResource\Mvc\Controller\Plugin\IsUnderEmbargo
@@ -61,7 +61,7 @@ class IsForbiddenFile extends AbstractPlugin
 
     public function __construct(
         EntityManager $entityManager,
-        IsReservedResource $isReservedResource,
+        AccessStatus $accessStatus,
         IsUnderEmbargo $isUnderEmbargo,
         UserIsAllowed $userIsAllowed,
         Params $params,
@@ -70,7 +70,7 @@ class IsForbiddenFile extends AbstractPlugin
         ?User $user
     ) {
         $this->entityManager = $entityManager;
-        $this->isReservedResource = $isReservedResource;
+        $this->accessStatus = $accessStatus;
         $this->isUnderEmbargo = $isUnderEmbargo;
         $this->userIsAllowed = $userIsAllowed;
         $this->params = $params;
