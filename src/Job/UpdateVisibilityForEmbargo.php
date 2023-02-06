@@ -8,6 +8,9 @@ use const AccessResource\PROPERTY_EMBARGO_END;
 use Omeka\Job\AbstractJob;
 use Omeka\Stdlib\Message;
 
+/**
+ * @todo Take care of the current status (property or AccessReserved)?
+ */
 class UpdateVisibilityForEmbargo extends AbstractJob
 {
     public function perform(): void
@@ -47,13 +50,9 @@ class UpdateVisibilityForEmbargo extends AbstractJob
 
         // Quick check.
         $sql = <<<SQL
-SELECT COUNT(`id`) FROM `value` WHERE `property_id` = $startPropertyId LIMIT 1;
+SELECT COUNT(`id`) FROM `value` WHERE `property_id` = :property_id LIMIT 1;
 SQL;
         $hasStart = $connection->executeQuery($sql, ['property_id' => PROPERTY_EMBARGO_START], ['property_id' => \Doctrine\DBAL\ParameterType::INTEGER])->fetchOne();
-
-        $sql = <<<SQL
-SELECT COUNT(`id`) FROM `value` WHERE `property_id` = $endPropertyId LIMIT 1;
-SQL;
         $hasEnd = $connection->executeQuery($sql, ['property_id' => PROPERTY_EMBARGO_END], ['property_id' => \Doctrine\DBAL\ParameterType::INTEGER])->fetchOne();
         if (!$hasStart && !$hasEnd) {
             // No need to log.
@@ -62,31 +61,36 @@ SQL;
 
         // TODO Check if comparaison is working for date without time.
         $now = date('Y-m-d\TH:i:s');
+        $bind = [
+            'start_id' => $startPropertyId,
+            'end_id' => $endPropertyId,
+            'now' =>$now,
+        ];
 
         // The cases are numerous, so only update when the metadata are logical.
 
         // Set private resources with a start date greater than now and no end.
         if ($hasStart) {
-            $sql = <<<SQL
+            $sql = <<<'SQL'
 UPDATE `resource`
 INNER JOIN `value`
     ON `value`.`resource_id` = `resource`.`id`
-    AND `value`.`property_id` = $startPropertyId
+    AND `value`.`property_id` = :start_id
 SET `resource`.`is_public` = 0
 WHERE `resource`.`is_public` = 1
-    AND `value`.`value` >= "$now"
+    AND `value`.`value` >= :now
     AND `resource`.`id` NOT IN (
         SELECT `res`.`id`
         FROM `resource` AS res
         INNER JOIN `value` AS val
             ON `val`.`resource_id` = `res`.`id`
-            AND `val`.`property_id` = $endPropertyId
+            AND `val`.`property_id` = :end_id
         WHERE `res`.`is_public` = 1
-            AND `val`.`value` >= "$now"
+            AND `val`.`value` >= :now
     )
 ;
 SQL;
-            $total = $connection->executeStatement($sql);
+            $total = $connection->executeStatement($sql, $bind);
             if ($total) {
                 $logger->notice(new Message(
                     'A total of %d resources have been marked private for start embargo.', // @translate
@@ -97,26 +101,26 @@ SQL;
 
         // Set public resources with an end date greater than now and no start.
         if ($hasEnd) {
-            $sql = <<<SQL
+            $sql = <<<'SQL'
 UPDATE `resource`
 INNER JOIN `value`
     ON `value`.`resource_id` = `resource`.`id`
-    AND `value`.`property_id` = $endPropertyId
+    AND `value`.`property_id` = :end_id
 SET `resource`.`is_public` = 1
 WHERE `resource`.`is_public` = 0
-    AND `value`.`value` < "$now"
+    AND `value`.`value` < :now
     AND `resource`.`id` NOT IN (
         SELECT `res`.`id`
         FROM `resource` AS res
         INNER JOIN `value` AS val
             ON `val`.`resource_id` = `res`.`id`
-            AND `val`.`property_id` = $startPropertyId
+            AND `val`.`property_id` = :start_id
         WHERE `res`.`is_public` = 0
-            AND `val`.`value` < "$now"
+            AND `val`.`value` < :now
     )
 ;
 SQL;
-            $total = $connection->executeStatement($sql);
+            $total = $connection->executeStatement($sql, $bind);
             if ($total) {
                 $logger->notice(new Message(
                     'A total of %d resources have been marked public for end of embargo.', // @translate
@@ -136,7 +140,7 @@ SQL;
 UPDATE `resource`
 INNER JOIN `value`
     ON `value`.`resource_id` = `resource`.`id`
-    AND `value`.`property_id` IN ($startPropertyId, $endPropertyId)
+    AND `value`.`property_id` IN (:start_id, :end_id)
 SET `resource`.`is_public` = 0
 WHERE `resource`.`is_public` = 1
     AND `resource`.`id` IN (
@@ -144,22 +148,22 @@ WHERE `resource`.`is_public` = 1
         FROM `resource` AS res1
         INNER JOIN `value` AS val1
             ON `val1`.`resource_id` = `res1`.`id`
-            AND `val1`.`property_id` = $startPropertyId
+            AND `val1`.`property_id` = :start_id
         WHERE `res1`.`is_public` = 1
-            AND `val1`.`value` >= "$now"
+            AND `val1`.`value` >= :now
     )
     AND `resource`.`id` IN (
         SELECT `res2`.`id`
         FROM `resource` AS res2
         INNER JOIN `value` AS val2
             ON `val2`.`resource_id` = `res2`.`id`
-            AND `val2`.`property_id` = $endPropertyId
+            AND `val2`.`property_id` = :end_id
         WHERE `res2`.`is_public` = 1
-            AND `val2`.`value` < "$now"
+            AND `val2`.`value` < :now
     )
 ;
 SQL;
-        $total = $connection->executeStatement($sql);
+        $total = $connection->executeStatement($sql, $bind);
         if ($total) {
             $logger->notice(new Message(
                 'A total of %d resources have been marked private for start/end of embargo.', // @translate
