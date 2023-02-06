@@ -13,6 +13,7 @@ const ACCESS_MODE_IP = 'ip';
 const ACCESS_MODE_INDIVIDUAL = 'individual';
 
 use const AccessResource\ACCESS_MODE;
+use const AccessResource\ACCESS_VIA_PROPERTY;
 use const AccessResource\PROPERTY_RESERVED;
 
 use AccessResource\Entity\AccessReserved;
@@ -337,6 +338,9 @@ class Module extends AbstractModule
         $this->initDataToPopulate($settings, 'config');
         $data = $this->prepareDataToPopulate($settings, 'config');
 
+        $data['accessresource_access_mode'] = ACCESS_MODE;
+        $data['accessresource_access_via_property'] = (int) ACCESS_VIA_PROPERTY;
+
         /** @var \AccessResource\Form\ConfigForm $form */
         $form = $services->get('FormElementManager')->get(\AccessResource\Form\ConfigForm::class);
         $form->init();
@@ -354,6 +358,9 @@ class Module extends AbstractModule
 
         $services = $this->getServiceLocator();
         $params = $controller->getRequest()->getPost();
+
+        $params['accessresource_access_mode'] = ACCESS_MODE;
+        $params['accessresource_access_via_property'] = (int) ACCESS_VIA_PROPERTY;
 
         $form = $services->get('FormElementManager')->get(\AccessResource\Form\ConfigForm::class);
         $form->init();

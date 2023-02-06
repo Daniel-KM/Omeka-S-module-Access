@@ -89,6 +89,10 @@ class ConfigForm extends Form
                 'name' => 'accessresource_access_mode',
                 'required' => false,
             ])
+            ->add([
+                'name' => 'accessresource_access_via_property',
+                'required' => false,
+            ])
         ;
     }
 }
