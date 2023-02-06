@@ -13,6 +13,7 @@ class SettingsFieldset extends Fieldset
     public function init(): void
     {
         $this
+            ->setAttribute('id', 'access-resource')
             ->add([
                 'name' => 'accessresource_message_send',
                 'type' => Element\Checkbox::class,
