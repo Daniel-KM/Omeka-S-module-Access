@@ -43,14 +43,12 @@ return [
         ],
     ],
     'controller_plugins' => [
-        'invokables' => [
-            'isUnderEmbargo' => Mvc\Controller\Plugin\IsUnderEmbargo::class,
-        ],
         'factories' => [
             'accessStatus' => Service\ControllerPlugin\AccessStatusFactory::class,
             'isForbiddenFile' => Service\ControllerPlugin\IsForbiddenFileFactory::class,
             /** @deprecated Since 3.4.0.14. */
             'isReservedResource' => Service\ControllerPlugin\IsReservedResourceFactory::class,
+            'isUnderEmbargo' => Service\ControllerPlugin\IsUnderEmbargoFactory::class,
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
             // TODO Store the reserved access property id as a constant to avoid to get it each request.
             'reservedAccessPropertyId' => Service\ControllerPlugin\ReservedAccessPropertyIdFactory::class,
