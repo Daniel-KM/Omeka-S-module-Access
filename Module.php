@@ -187,32 +187,17 @@ class Module extends AbstractModule
         // Store status reserved.
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\ItemAdapter',
-            'api.create.post',
-            [$this, 'updateAccessReserved']
-        );
-        $sharedEventManager->attach(
-            'Omeka\Api\Adapter\ItemAdapter',
-            'api.update.post',
+            'api.hydrate.pre',
             [$this, 'updateAccessReserved']
         );
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\MediaAdapter',
-            'api.create.post',
-            [$this, 'updateAccessReserved']
-        );
-        $sharedEventManager->attach(
-            'Omeka\Api\Adapter\MediaAdapter',
-            'api.update.post',
+            'api.hydrate.pre',
             [$this, 'updateAccessReserved']
         );
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\ItemSetAdapter',
-            'api.create.post',
-            [$this, 'updateAccessReserved']
-        );
-        $sharedEventManager->attach(
-            'Omeka\Api\Adapter\ItemSetAdapter',
-            'api.update.post',
+            'api.hydrate.pre',
             [$this, 'updateAccessReserved']
         );
 
@@ -578,34 +563,33 @@ class Module extends AbstractModule
 
     public function updateAccessReserved(Event $event): void
     {
-        /** @var \Doctrine\ORM\EntityManager $entityManager */
+        /**
+         * @var \Doctrine\ORM\EntityManager $entityManager
+         * @var \Omeka\Entity\Resource $resource
+         * @var \Omeka\Api\Request $request
+         */
         $services = $this->getServiceLocator();
         $entityManager = $services->get('Omeka\EntityManager');
-        $resource = $event->getParam('response')->getContent();
-        if ($resource instanceof \Omeka\Api\Representation\AbstractResourceEntityRepresentation) {
-            /** @var \Omeka\Entity\Resource $resource */
-            $resourceRepr = $resource;
-            $resource = $entityManager->find(\Omeka\Entity\Resource::class, $resource->id());
-        } else {
-            /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resourceRepr */
-            $resourceRepr = $services->get('Omeka\ApiAdapterManager')->get('resources')->getRepresentation($resource);
-        }
+        $resource = $event->getParam('entity');
+        $request = $event->getParam('request');
+
+        // The resource may be partial.
+        $requestContent = $request->getContent();
+
+        $isPublicBeforeUpdate = $resource->isPublic();
+        $isPublicInRequest = $requestContent['o:is_public'] ?? null;
+        $isPublicInRequest = is_null($isPublicInRequest)
+            ? $isPublicBeforeUpdate
+            : (bool) $isPublicInRequest;
 
         // When option is to use property, set the visibility according to it.
         // Else, use the option from the params or from the resource itself.
-        // The plugin AccessStatus may be used because this is a api post event,
-        // but it is simpler to check it here directly from the resource.
-        // @see \AccessResource\Mvc\Controller\Plugin\AccessStatus
-        $isPublic = $resource->isPublic();
-
         if ($this->accessViaProperty) {
-            if ($isPublic) {
+            if ($isPublicInRequest) {
                 $resourceAccessStatus = ACCESS_STATUS_FREE;
             } else {
-                if (empty($resourceRepr)) {
-                    $resourceRepr = $services->get('Omeka\ApiManager')
-                        ->read($resource->getResourceName(), ['id' => $resource->getId()], ['initialize' => false, 'finalize' => false])->getContent();
-                }
+                /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resourceRepr */
+                $resourceRepr = $services->get('Omeka\ApiAdapterManager')->get('resources')->getRepresentation($resource);
                 $resourceAccessStatus = $resourceRepr->value(PROPERTY_RESERVED)
                     ? ACCESS_STATUS_RESERVED
                     : ACCESS_STATUS_FORBIDDEN;
@@ -613,48 +597,34 @@ class Module extends AbstractModule
         } else {
             $resourceData = $event->getParam('request')->getContent();
             $resourceAccessStatus = $resourceData['o-module-access-resource:status'];
+            // TODO Make the access status editable via api (already possible via the key "o-module-access-resource:status" anyway).
             if (!in_array($resourceAccessStatus, [ACCESS_STATUS_FREE, ACCESS_STATUS_RESERVED, ACCESS_STATUS_FORBIDDEN])) {
-                $resourceAccessStatus = ACCESS_STATUS_FORBIDDEN;
+                $resourceAccessStatus = $resource->isPublic()
+                    ? ACCESS_STATUS_FREE
+                    : ACCESS_STATUS_FORBIDDEN;
             }
         }
+
+        // Inside api.hydrate.pre, the request should be updated to be used.
+        $isPublicAfterUpdate = $resourceAccessStatus === ACCESS_STATUS_FREE;
+        $resource->setIsPublic($isPublicAfterUpdate);
+        // Set in all cases because a full update may override it.
+        $requestContent['o:is_public'] = $isPublicAfterUpdate;
+        $request->setContent($requestContent);
 
         // Get current access reserved to keep or remove it.
         $currentAccessReserved = $resource->getId()
             ? $entityManager->find(AccessReserved::class, $resource->getId())
             : null;
 
-        $shouldFlush = false;
-
-        if ($resourceAccessStatus !== ACCESS_STATUS_RESERVED) {
-            if ($isPublic && $resourceAccessStatus === ACCESS_STATUS_FORBIDDEN) {
-                $resource->setIsPublic(false);
-                $shouldFlush = true;
-            } else if (!$isPublic && $resourceAccessStatus === ACCESS_STATUS_FREE) {
-                $resource->setIsPublic(true);
-                $shouldFlush = true;
+        if ($resourceAccessStatus === ACCESS_STATUS_RESERVED) {
+            if (!$currentAccessReserved) {
+                $accessReserved = new AccessReserved($resource);
+                $entityManager->persist($accessReserved);
             }
-            if ($currentAccessReserved) {
-                $entityManager->remove($currentAccessReserved);
-                $shouldFlush = true;
-            }
-            if ($shouldFlush) {
-                $entityManager->flush();
-            }
-            return;
+        } elseif ($currentAccessReserved) {
+            $entityManager->remove($currentAccessReserved);
         }
-
-        $resource->setIsPublic(false);
-
-        if ($currentAccessReserved) {
-            if ($isPublic)  {
-                $entityManager->flush();
-            }
-            return;
-        }
-
-        $accessReserved = new AccessReserved($resource);
-        $entityManager->persist($accessReserved);
-        $entityManager->flush();
     }
 
     public function handleRequestCreated(Event $event): void
