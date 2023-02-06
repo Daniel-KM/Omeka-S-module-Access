@@ -607,7 +607,9 @@ class Module extends AbstractModule
         }
 
         // Get current access reserved.
-        $accessReserved = $entityManager->find(AccessReserved::class, $resource->getId());
+        $accessReserved = $resource->getId()
+            ? $entityManager->find(AccessReserved::class, $resource->getId())
+            : null;
         if (!$isReserved) {
             if ($accessReserved) {
                 $entityManager->remove($accessReserved);
