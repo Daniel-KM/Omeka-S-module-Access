@@ -619,9 +619,9 @@ class Module extends AbstractModule
 
         if ($resourceAccessStatus === ACCESS_STATUS_RESERVED) {
             if (!$currentAccessReserved) {
-                $accessReserved = new AccessReserved($resource);
-                $entityManager->persist($accessReserved);
+                $currentAccessReserved = new AccessReserved($resource);
             }
+            $entityManager->persist($currentAccessReserved);
         } elseif ($currentAccessReserved) {
             $entityManager->remove($currentAccessReserved);
         }
