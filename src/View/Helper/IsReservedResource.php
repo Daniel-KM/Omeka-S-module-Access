@@ -21,6 +21,9 @@ class IsReservedResource extends AbstractHelper
     /**
      * Check if access to a resource is restricted.
      *
+     * For a three state status (free, reserved or forbidden), see
+     * @see \AccessResource\Mvc\Controller\Plugin\AccessStatus
+     *
      * @uses \AccessResource\Mvc\Controller\Plugin\IsReservedResource
      */
     public function __invoke(?AbstractResourceEntityRepresentation $resource): ?bool

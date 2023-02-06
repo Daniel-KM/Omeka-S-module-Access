@@ -25,6 +25,7 @@ return [
     ],
     'view_helpers' => [
         'factories' => [
+            'accessStatus' => Service\ViewHelper\AccessStatusFactory::class,
             'isReservedResource' => Service\ViewHelper\IsReservedResourceFactory::class,
             'isUnderEmbargo' => Service\ViewHelper\IsUnderEmbargoFactory::class,
         ],
@@ -45,6 +46,7 @@ return [
             'isUnderEmbargo' => Mvc\Controller\Plugin\IsUnderEmbargo::class,
         ],
         'factories' => [
+            'accessStatus' => Service\ControllerPlugin\AccessStatusFactory::class,
             'isForbiddenFile' => Service\ControllerPlugin\IsForbiddenFileFactory::class,
             'isReservedResource' => Service\ControllerPlugin\IsReservedResourceFactory::class,
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,

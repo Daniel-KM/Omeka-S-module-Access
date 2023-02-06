@@ -20,6 +20,13 @@ class IsReservedResource extends AbstractPlugin
 
     /**
      * Check if access to a resource is restricted.
+     *
+     * The check of "is public" is useless, since the entity AccessReserved is
+     * stored only when the resource is private and removed else.
+     * So the check of is public is just a quick check.
+     *
+     * For a three state status (free, reserved or forbidden), see
+     * @see \AccessResource\Mvc\Controller\Plugin\AccessStatus
      */
     public function __invoke($resource): ?bool
     {
@@ -42,8 +49,6 @@ class IsReservedResource extends AbstractPlugin
         } else {
             return false;
         }
-
-        // Normally, the check of "is public" is useless.
 
         $accessReserved = $this->entityManager->getReference(AccessReserved::class, $resourceId);
         return !empty($accessReserved);
