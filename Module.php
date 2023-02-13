@@ -596,7 +596,7 @@ class Module extends AbstractModule
             }
         } else {
             $resourceData = $event->getParam('request')->getContent();
-            $resourceAccessStatus = $resourceData['o-module-access-resource:status'];
+            $resourceAccessStatus = $resourceData['o-module-access-resource:status'] ?? null;
             // TODO Make the access status editable via api (already possible via the key "o-module-access-resource:status" anyway).
             if (!in_array($resourceAccessStatus, [ACCESS_STATUS_FREE, ACCESS_STATUS_RESERVED, ACCESS_STATUS_FORBIDDEN])) {
                 $resourceAccessStatus = $resource->isPublic()
