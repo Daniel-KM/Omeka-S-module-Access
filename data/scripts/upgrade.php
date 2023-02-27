@@ -155,3 +155,15 @@ SQL;
     );
     $messenger->addWarning($message);
 }
+
+if (version_compare((string) $oldVersion, '3.4.0.15', '<')) {
+    $message = new Message(
+        'A new option allows to set the access restricted status via a a property with three status (free, reserved, forbidden).' // @translate
+    );
+    $messenger->addSuccess($message);
+
+    $message = new Message(
+        'Warning: if you use the old mode "property", you must update your local.config.php with status "reserved".' // @translate
+    );
+    $messenger->addWarning($message);
+}

@@ -86,17 +86,35 @@ return [
     'accessresource' => [
         // Access mode may be "global", "ip" or "individual".
         'access_mode' => 'global',
-        // The access right can be set via a property (curation:reserved by default)
-        // to simplify some workflows, in particular for import.
+        // The access right can be set via a property to simplify some workflows,
+        // in particular for import.
+        // When the access right is set via a property, there are two modes:
+        // - either the property has a value or not, whatever it is;
+        // - either the property defines three status (free, reserved, forbidden)
+        // to set as a value (default status is the visibility one).
+        // In the first case, the default property is "curation:reserved".
+        // In the second case, the default property is "curation:access".
         // In all cases, the access right is stored in the table "access_reserved".
+        // So this option can be "false" (managed by a specific data), "status"
+        // or "reserved".
         'access_via_property' => false,
+        // In the case the option is property status, the three possible values
+        // should be defined here.
+        'access_via_property_statuses' => [
+            'free' => 'free',
+            'reserved' => 'reserved',
+            'forbidden' => 'forbidden',
+        ],
         'config' => [
-            // This setting is just for info: it is overridden by [accessresource][access_mode]
-            // that should be set in config/local.config.php.
+            // The three first settings are just for info: they are overriden by
+            // the value set above or by config/local.config.php.
             'accessresource_access_mode' => ACCESS_MODE_GLOBAL,
-            // This setting is just for info: it is overridden by [accessresource][access_via_property]
-            // that should be set in config/local.config.php.
             'accessresource_access_via_property' => false,
+            'accessresource_access_via_property_statuses' => [
+                ACCESS_STATUS_FREE => 'free',
+                ACCESS_STATUS_RESERVED => 'reserved',
+                ACCESS_STATUS_FORBIDDEN => 'forbidden',
+            ],
             'accessresource_embargo_bypass' => false,
             'accessresource_embargo_auto_update' => false,
             'accessresource_ip_item_sets' => [],

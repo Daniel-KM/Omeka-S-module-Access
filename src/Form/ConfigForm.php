@@ -8,7 +8,7 @@ use const AccessResource\ACCESS_MODE_INDIVIDUAL;
 
 use Laminas\Form\Element;
 use Laminas\Form\Form;
-use Omeka\Form\Element\ArrayTextarea;
+use Omeka\Form\Element as OmekaElement;
 
 class ConfigForm extends Form
 {
@@ -37,15 +37,40 @@ class ConfigForm extends Form
             ])
             ->add([
                 'name' => 'accessresource_access_via_property',
-                'type' => Element\Checkbox::class,
+                'type' => Element\Radio::class,
                 'options' => [
                     'label' => 'Set access via property (to be set in config/local.config.php)', // @translate
+                    'value_options' => [
+                        '' => 'Do not use property', // @translate
+                        'status' => 'Access via property with mode "status" (three possible values)', // @translate
+                        'reserved' => 'Access via property with mode "reserved" (presence or not of a value)', // @translate
+                    ],
                 ],
                 'attributes' => [
                     'id' => 'accessresource_access_via_property',
+                    'required' => false,
                     'disabled' => 'disabled',
+                    'style' => 'display: block;',
                 ],
             ])
+            ->add([
+                'name' => 'accessresource_access_via_property_statuses',
+                'type' => OmekaElement\ArrayTextarea::class,
+                'options' => [
+                    'label' => 'Labels for the three statuses (for mode property/status)', // @translate
+                    'as_key_value' => true,
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_access_via_property_statuses',
+                    'rows' => 3,
+                    'disabled' => 'disabled',
+                    'placeholder' => 'free = free
+reserved = reserved
+forbidden = forbidden
+',
+                ],
+            ])
+
             ->add([
                 'name' => 'accessresource_embargo_bypass',
                 'type' => Element\Checkbox::class,
@@ -68,7 +93,7 @@ class ConfigForm extends Form
             ])
             ->add([
                 'name' => 'accessresource_ip_item_sets',
-                'type' => ArrayTextarea::class,
+                'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
                     'label' => 'List of ips with open access, eventually limited to selected item sets', // @translate
                     'info' => 'These ips will have unrestricted access to all resources or only resources of the specified item sets. List them separated by a "=", one by line. Range ip are allowed (formatted as cidr).', // @translate

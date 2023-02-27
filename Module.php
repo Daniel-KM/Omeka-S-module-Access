@@ -18,6 +18,8 @@ const ACCESS_STATUS_FORBIDDEN = 'forbidden';
 
 use const AccessResource\ACCESS_MODE;
 use const AccessResource\ACCESS_VIA_PROPERTY;
+
+use const AccessResource\PROPERTY_STATUS;
 use const AccessResource\PROPERTY_RESERVED;
 
 use AccessResource\Entity\AccessReserved;
@@ -47,18 +49,30 @@ class Module extends AbstractModule
      * The include defines the access mode constant "AccessResource::ACCESS_VIA_PROPERTY"
      * that should be used, except to avoid install/update issues.
      *
-     * @var bool
+     * @var bool|string
      */
     protected $accessViaProperty = false;
+
+    /**
+     * For mode property / status, list the possible status.
+     *
+     * @var array
+     */
+    protected $accessViaPropertyStatuses = [
+        ACCESS_STATUS_FREE => 'free',
+        ACCESS_STATUS_RESERVED => 'reserved',
+        ACCESS_STATUS_FORBIDDEN => 'forbidden',
+    ];
 
     public function getConfig()
     {
         $config = include OMEKA_PATH . '/config/local.config.php';
         $this->accessMode = $config['accessresource']['access_mode'] ?? ACCESS_MODE_GLOBAL;
-        $this->accessViaProperty = !empty($config['accessresource']['access_via_property']);
+        $this->accessViaProperty = $config['accessresource']['access_via_property'] ?? false;
+        $this->accessViaPropertyStatuses = $config['accessresource']['access_via_property_statuses'] ?? $this->accessViaPropertyStatuses;
         require_once __DIR__ . '/config/access_mode.'
             . $this->accessMode
-            . ($this->accessViaProperty ? '.property' : '')
+            . ($this->accessViaProperty ? '.property.' . $this->accessViaProperty : '')
             . '.php';
         return include __DIR__ . '/config/module.config.php';
     }
@@ -328,7 +342,8 @@ class Module extends AbstractModule
         $data = $this->prepareDataToPopulate($settings, 'config');
 
         $data['accessresource_access_mode'] = ACCESS_MODE;
-        $data['accessresource_access_via_property'] = (int) ACCESS_VIA_PROPERTY;
+        $data['accessresource_access_via_property'] = (string) ACCESS_VIA_PROPERTY;
+        $data['accessresource_access_via_property_statuses'] = $this->accessViaPropertyStatuses;
 
         /** @var \AccessResource\Form\ConfigForm $form */
         $form = $services->get('FormElementManager')->get(\AccessResource\Form\ConfigForm::class);
@@ -349,7 +364,8 @@ class Module extends AbstractModule
         $params = $controller->getRequest()->getPost();
 
         $params['accessresource_access_mode'] = ACCESS_MODE;
-        $params['accessresource_access_via_property'] = (int) ACCESS_VIA_PROPERTY;
+        $params['accessresource_access_via_property'] = (string) ACCESS_VIA_PROPERTY;
+        $params['accessresource_access_via_property_statuses'] = $this->accessViaPropertyStatuses;
 
         $form = $services->get('FormElementManager')->get(\AccessResource\Form\ConfigForm::class);
         $form->init();
@@ -363,7 +379,10 @@ class Module extends AbstractModule
         $api = $services->get('Omeka\ApiManager');
         $hasError = false;
         $config = $this->getConfig();
+
         $params = $form->getData();
+        $params['accessresource_access_via_property'] = ACCESS_VIA_PROPERTY;
+
         $settings = $services->get('Omeka\Settings');
 
         $ipItemSets = $this->accessMode === ACCESS_MODE_GLOBAL
@@ -521,7 +540,7 @@ class Module extends AbstractModule
             $valueAlias = $adapter->createAlias();
             $qbs
                 ->select("IDENTITY($valueAlias.resource)")
-                ->from('Omeka\Entity\Value', $valueAlias)
+                ->from(\Omeka\Entity\Value::class, $valueAlias)
                 ->where($expr->eq(
                     "IDENTITY($valueAlias.property)",
                     $adapter->createNamedParameter($qb, $reservedAccessPropertyId)
@@ -573,9 +592,10 @@ class Module extends AbstractModule
         $resource = $event->getParam('entity');
         $request = $event->getParam('request');
 
-        // The resource may be partial.
         $requestContent = $request->getContent();
 
+        // The resource may be partial and data should be hydrated or not.
+        // This rule applies only to "is public".
         $isPublicBeforeUpdate = $resource->isPublic();
         $isPublicInRequest = $requestContent['o:is_public'] ?? null;
         $isPublicInRequest = is_null($isPublicInRequest)
@@ -585,14 +605,38 @@ class Module extends AbstractModule
         // When option is to use property, set the visibility according to it.
         // Else, use the option from the params or from the resource itself.
         if ($this->accessViaProperty) {
-            if ($isPublicInRequest) {
-                $resourceAccessStatus = ACCESS_STATUS_FREE;
-            } else {
+            if ($this->accessViaProperty === 'status') {
+                // In api.hydrate.pre, the representation is not yet stored
+                // and the representation cannot be used (it will use the
+                // previous one, even with getRepresentation()) on resource).
                 /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resourceRepr */
-                $resourceRepr = $services->get('Omeka\ApiAdapterManager')->get('resources')->getRepresentation($resource);
-                $resourceAccessStatus = $resourceRepr->value(PROPERTY_RESERVED)
-                    ? ACCESS_STATUS_RESERVED
-                    : ACCESS_STATUS_FORBIDDEN;
+                // $resourceRepr = $services->get('Omeka\ApiAdapterManager')->get('resources')->getRepresentation($resource);
+
+                // Request "isPartial" does not check "should hydrate" for
+                // properties, so properties are always managed.
+                /** @see \Omeka\Api\Adapter\AbstractResourceEntityAdapter::hydrate() */
+                if (empty($requestContent[PROPERTY_STATUS])) {
+                    $resourceAccessStatus = $isPublicInRequest ? ACCESS_STATUS_FREE : ACCESS_STATUS_FORBIDDEN;
+                } else {
+                    // $val = (string) $resourceRepr->value(PROPERTY_STATUS);
+                    $val = (string) (reset($requestContent[PROPERTY_STATUS]))['@value'];
+                    $resourceAccessStatus = array_search($val, $this->accessViaPropertyStatuses)
+                        // If value is not present or invalid, the status is the
+                        // visibility one.
+                        ?: ($isPublicInRequest ? ACCESS_STATUS_FREE : ACCESS_STATUS_FORBIDDEN);
+                }
+            } else {
+                // The mode "property reserved" requires two values to define
+                // the access. The public visibility forces the status.
+                if ($isPublicInRequest) {
+                    $resourceAccessStatus = ACCESS_STATUS_FREE;
+                } else {
+                    // $val = (bool) $resourceRepr->value(PROPERTY_RESERVED);
+                    $val = !empty($requestContent[PROPERTY_RESERVED]);
+                    $resourceAccessStatus = $val
+                        ? ACCESS_STATUS_RESERVED
+                        : ACCESS_STATUS_FORBIDDEN;
+                }
             }
         } else {
             $resourceData = $event->getParam('request')->getContent();
@@ -710,7 +754,7 @@ class Module extends AbstractModule
             ->setAttributes([
                 'id' => 'o-module-access-resource-status',
                 'value' => $resourceAccessStatus,
-                'disabled' => $this->accessViaProperty,
+                'disabled' => (bool) $this->accessViaProperty,
             ]);
         $this->accessViaProperty
             ? $element->setLabel(sprintf('Access status is managed via presence of property "%s")', PROPERTY_RESERVED)) // @translate

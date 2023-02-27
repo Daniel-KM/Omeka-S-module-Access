@@ -4,9 +4,9 @@ namespace AccessResource;
 
 const ACCESS_MODE = 'individual';
 
-const ACCESS_VIA_PROPERTY = false;
+const ACCESS_VIA_PROPERTY = 'status';
 
-const PROPERTY_STATUS = null;
+const PROPERTY_STATUS = 'curation:access';
 const PROPERTY_RESERVED = null;
 
 const PROPERTY_EMBARGO_START = 'curation:dateStart';
