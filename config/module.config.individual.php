@@ -267,6 +267,7 @@ return [
         // In all cases, the access right is stored in the table "access_reserved".
         // So this option can be "false" (managed by a specific data), "status"
         // or "reserved".
+        // When the option is changed, the status must be updated with a job.
         'access_via_property' => false,
         // In the case the option is property status, the three possible values
         // should be defined here.

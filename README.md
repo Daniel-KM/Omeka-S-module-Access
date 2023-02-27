@@ -173,6 +173,10 @@ be viewable by everybody.
 When an embargo is set, it can be bypassed, or not, for the users. Only files
 can be under embargo currently.
 
+**WARNING**: The way to manage visibility of records have been updated since
+last versions, after 3.3.0.10. If you want to keep old behavior, don't update to
+new releases for now.
+
 ### Access mode
 
 The rights to see the files are controlled on the fly. The restricted visibility
@@ -200,6 +204,26 @@ specify it in the file `config/local.config.php` of the Omeka directory:
     ],
 ```
 
+### Selection of content to protect
+
+It is possible to protect some resource only. By default, only medias follow the
+rules and the items and item sets follows the visibility public/private.
+
+To protect items and item sets, add them in option `access_apply` in the file 
+`config/local.config.php` of the Omeka directory (here only medias are
+protected):
+
+```php
+    'accessresource' => [
+        'access_mode' => 'individual',
+        'access_apply' => [
+            // 'items',
+            'media',
+            // 'item_sets',
+        ],
+    ],
+```
+
 ### Identification of the restricted resources
 
 After the configuration, you should identify all medias that you want to make
@@ -208,13 +232,19 @@ so you need to allow visitors to know that they exist. That is to say you can
 keep some private resources private, and some other ones available on request,
 or globally.
 
-There are two ways to indicate which resources are restricted.
+There are three ways to indicate which resources are restricted.
 
 - By default, it is a specific param available as a radio button in the advanced
   tab of the resource form.
-- The second way is to add a value to the property `curation:reserved`, that is
-  created by the module. The value can be whatever you want, even empty value `0`
-  or `false`, but it is not recommended: use `yes` or something else.
+- The second way is to add a value to the property `curation:reserved` (by
+  default), that is created by the module. The value can be whatever you want,
+  even empty value `0` or `false`, but it is not recommended: use `yes` or
+  something else.
+- The third way is to add a specific value to the property `curation:access` (by
+  default), that is created by the module. The specific values can be "free",
+  "reserved" or "restricted". The property and the names can be translated or
+  modified in the config. It is recommended to create a custom vocab and to use
+  it via the resource templates to avoid errors in the values.
 
 To set the mode, update the file `config/config.local.php` in the Omeka
 directory:
@@ -222,15 +252,28 @@ directory:
 ```php
     'accessresource' => [
         'access_mode' => 'individual', // or whatever you choose.
-        'access_via_property' => true,
+        'access_apply' => [ // or whatever you choose.
+            // 'items',
+            'media',
+            // 'item_sets',
+        ],
+        'access_via_property' => 'status', // may be false, "status" or "reserved".
+        'access_via_property_status' => [
+            'free' => 'free',
+            'reserved' => 'reserved',
+            'forbidden' => 'forbidden',
+        ],
     ],
 ```
 
-When a private resource has the value set in the advanced tab (in default mode)
-or has a value for this property (in property mode), it becomes available for
-all guest users, and all visitors can view its metadata automatically too in
-listings. Preview will be available for media too. The value of this property
-can be private or public.
+When a private resource has the status set in the advanced tab (in default mode)
+or has a value for this property (in property reserved mode) or has a value
+restricted (in property status mode), it becomes available for all guest users,
+and all visitors can view its metadata automatically too in listings. Preview
+will be available for media too. The value of this property can be private or public.
+
+**Important**: when the mode is updated, the statuses of the resource must be
+updated to follow the new rules.
 
 **Important**: public medias are never restricted, so you need to set them
 private.
@@ -306,6 +349,7 @@ TODO
 - [ ] Manage the case where the embargo dates are private.
 - [ ] Add a mode to check for a specific value in the reserved access property instead of exist/not exist.
 - [x] Reindexation (trigger event) when embargo is updated automatically.
+- [ ] Recheck all new features with mode "individual".
 
 
 Warning
