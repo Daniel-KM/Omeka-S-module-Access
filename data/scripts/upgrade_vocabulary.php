@@ -9,6 +9,7 @@ use Omeka\Stdlib\Message;
  * @var Module $this
  * @var \Laminas\ServiceManager\ServiceLocatorInterface $services
  */
+$services = $this->getServiceLocator();
 
 if (!method_exists($this, 'getInstallResources')) {
     throw new ModuleCannotInstallException((string) new Message(
