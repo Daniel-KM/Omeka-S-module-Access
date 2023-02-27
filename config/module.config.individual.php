@@ -276,6 +276,7 @@ return [
                 ACCESS_STATUS_RESERVED => 'reserved',
                 ACCESS_STATUS_FORBIDDEN => 'forbidden',
             ],
+            'accessresource_hide_in_advanced_tab' => false,
             'accessresource_embargo_bypass' => false,
             'accessresource_embargo_auto_update' => false,
             'accessresource_ip_item_sets' => [],

@@ -734,11 +734,20 @@ class Module extends AbstractModule
 
     public function addAccessElements(Event $event): void
     {
+        $services = $this->getServiceLocator();
+        if ($this->accessViaProperty
+            && $services->get('Omeka\Settings')->get('accessresource_hide_in_advanced_tab')
+        ) {
+            return;
+        }
+
         $view = $event->getTarget();
-        $accessStatus = $this->getServiceLocator()->get('ControllerPluginManager')->get('accessStatus');
+        $accessStatus = $services->get('ControllerPluginManager')->get('accessStatus');
+
         $resourceAccessStatus = $accessStatus($view->resource);
         $element = new \AccessResource\Form\Element\OptionalRadio('o-module-access-resource:status');
         $element
+            ->setLabel('Access status') // @translate
             ->setOption('info', 'This status will override the main visibility (public/private).') // @translate
             ->setValueOptions([
                 ACCESS_STATUS_FREE => 'Free access', // @translate'
@@ -750,9 +759,12 @@ class Module extends AbstractModule
                 'value' => $resourceAccessStatus,
                 'disabled' => (bool) $this->accessViaProperty,
             ]);
-        $this->accessViaProperty
-            ? $element->setLabel(sprintf('Access status is managed via presence of property "%s")', PROPERTY_RESERVED)) // @translate
-            : $element->setLabel('Access status'); // @translate
+            if ($this->accessViaProperty) {
+                $this->accessViaProperty === 'status'
+                    ? $element->setLabel(sprintf('Access status is managed via property "%s"', PROPERTY_STATUS)) // @translate
+                    : $element->setLabel(sprintf('Access status is managed via presence of property "%s"', PROPERTY_RESERVED)); // @translate
+            }
+
         echo $view->formRow($element);
     }
 

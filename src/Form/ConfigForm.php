@@ -72,6 +72,17 @@ forbidden = forbidden
             ])
 
             ->add([
+                'name' => 'accessresource_hide_in_advanced_tab',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Hide the access status in advanced tab of resource form when mode is property', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_hide_in_advanced_tab',
+                ],
+            ])
+
+            ->add([
                 'name' => 'accessresource_embargo_bypass',
                 'type' => Element\Checkbox::class,
                 'options' => [
