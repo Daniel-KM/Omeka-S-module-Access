@@ -46,8 +46,6 @@ return [
             'isForbiddenFile' => Service\ControllerPlugin\IsForbiddenFileFactory::class,
             'isUnderEmbargo' => Service\ControllerPlugin\IsUnderEmbargoFactory::class,
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
-            // TODO Store the reserved access property id as a constant to avoid to get it each request.
-            'reservedAccessPropertyId' => Service\ControllerPlugin\ReservedAccessPropertyIdFactory::class,
         ],
     ],
     'router' => [

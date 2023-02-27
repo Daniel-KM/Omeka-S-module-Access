@@ -171,7 +171,9 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
-        // Bypass the core filter for media (detach two events of Omeka\Module).
+        // Override the two core filters for media in order to detach two events
+        // of Omeka\Module use to filter media belonging to private items.
+        /** @see \Omeka\Module::filterMedia() */
         $listenersByEvent = [];
         $listenersByEvent['api.search.query'] = $sharedEventManager
             ->getListeners([\Omeka\Api\Adapter\MediaAdapter::class], 'api.search.query');
@@ -185,13 +187,11 @@ class Module extends AbstractModule
                 );
             }
         }
-
         $sharedEventManager->attach(
             \Omeka\Api\Adapter\MediaAdapter::class,
             'api.search.query',
             [$this, 'filterMedia']
         );
-
         $sharedEventManager->attach(
             \Omeka\Api\Adapter\MediaAdapter::class,
             'api.find.query',
@@ -503,53 +503,47 @@ class Module extends AbstractModule
             return;
         }
 
-        /** @var \Omeka\Api\Adapter\MediaAdapter $adapter */
+        /**
+         * @var \Omeka\Api\Adapter\MediaAdapter $adapter
+         * @var \Doctrine\ORM\QueryBuilder $qb
+         */
         $adapter = $event->getTarget();
-
-        /** @var \Doctrine\ORM\QueryBuilder $qb */
+        $itemAlias = $adapter->createAlias();
         $qb = $event->getParam('queryBuilder');
+        $qb->innerJoin('omeka_root.item', $itemAlias);
+
         $em = $qb->getEntityManager();
         $expr = $qb->expr();
 
-        $itemAlias = $adapter->createAlias();
-        $qb->innerJoin('omeka_root.item', $itemAlias);
 
         // Users can view media they do not own that belong to public items.
         $conditions = [
             $expr->eq("$itemAlias.isPublic", true),
         ];
 
-        // Anon user can view media if he use a token in query
+        // Anonymous or user can view media if a token is used in query
+        // and if they have access to it.
         $token = $services->get('Request')->getQuery('token');
         $access = $em->getRepository(\AccessResource\Entity\AccessResource::class)
             ->findOneBy(['token' => $token]);
+        if ($access) {
+            $conditions[] = $expr->eq('omeka_root.id', $access->getResource()->getId());
+        }
 
         $identity = $services->get('Omeka\AuthenticationService')->getIdentity();
         if ($identity) {
             // Users can view all media they own.
             $conditions[] = $expr->eq($itemAlias . '.owner', $adapter->createNamedParameter($qb, $identity));
 
-            // Users can view some media if they have access by token.
-            if ($access) {
-                $conditions[] = $expr->eq('omeka_root.id', $access->getResource()->getId());
-            }
-
-            // Users can view all media in private items with special property.
-            $reservedAccessPropertyId = $this->serviceLocator->get('ControllerPluginManager')->get('reservedAccessPropertyId')->__invoke();
+            // Users can view records of all resources with access reserved.
+            // Only files are protected (via htaccess).
             $qbs = $em->createQueryBuilder();
-            $valueAlias = $adapter->createAlias();
+            $accessReservedAlias = $adapter->createAlias();
             $qbs
-                ->select("IDENTITY($valueAlias.resource)")
-                ->from(\Omeka\Entity\Value::class, $valueAlias)
-                ->where($expr->eq(
-                    "IDENTITY($valueAlias.property)",
-                    $adapter->createNamedParameter($qb, $reservedAccessPropertyId)
-                ));
-
-            $conditions[] = $expr->in('omeka_root.id', $qbs->getDQL());
-        } elseif ($access) {
-            // Users can view some media if they have access by token.
-            $conditions[] = $expr->eq('omeka_root.id', $access->getResource()->getId());
+                ->select("$accessReservedAlias.id")
+                ->from(\AccessResource\Entity\AccessReserved::class, $accessReservedAlias)
+                ->where($expr->eq("$accessReservedAlias.id", 'omeka_root.id'));
+            $conditions[] = $expr->exists($qbs->getDQL());
         }
 
         $expression = $expr->orX();
