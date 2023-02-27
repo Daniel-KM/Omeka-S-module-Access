@@ -36,6 +36,25 @@ class ConfigForm extends Form
                 ],
             ])
             ->add([
+                'name' => 'accessresource_access_apply',
+                'type' => Element\MultiCheckbox::class,
+                'options' => [
+                    'label' => 'Apply the access rights only to these resources', // @translate
+                    'info' => 'To protect files only, select "medias". To protect records too, select them too.', // @translate
+                    'value_options' => [
+                        'items' => 'Items', // @translate
+                        'media' => 'Medias', // @translate
+                        'item_sets' => 'Item sets', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_access_apply',
+                    'required' => false,
+                    'disabled' => 'disabled',
+                    'style' => 'display: block;',
+                ],
+            ])
+            ->add([
                 'name' => 'accessresource_access_via_property',
                 'type' => Element\Radio::class,
                 'options' => [
@@ -123,6 +142,10 @@ forbidden = forbidden
         $this->getInputFilter()
             ->add([
                 'name' => 'accessresource_access_mode',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'accessresource_access_apply',
                 'required' => false,
             ])
             ->add([

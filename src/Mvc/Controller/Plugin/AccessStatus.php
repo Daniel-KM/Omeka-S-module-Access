@@ -43,13 +43,13 @@ class AccessStatus extends AbstractPlugin
         } elseif (is_numeric($resource)) {
             $resourceId = (int) $resource;
             $resource = $this->entityManager->find(Resource::class, $resourceId);
-            if ($resource->isPublic()) {
+            if (!$resource || $resource->isPublic()) {
                 return ACCESS_STATUS_FREE;
             }
         } elseif (is_array($resource) && !empty($resource['o:id'])) {
             $resourceId = (int) $resource['o:id'];
             $resource = $this->entityManager->find(Resource::class, $resourceId);
-            if ($resource->isPublic()) {
+            if (!$resource || $resource->isPublic()) {
                 return ACCESS_STATUS_FREE;
             }
         } else {

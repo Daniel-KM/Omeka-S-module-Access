@@ -247,6 +247,15 @@ return [
     'accessresource' => [
         // Access mode may be "global", "ip" or "individual".
         'access_mode' => 'individual',
+        // Use the access mode for items or not.
+        // By default, the access mode is used only for media.
+        // Items and item sets uses the visibility public/private.
+        // It allows to have public record and to protect files.
+        'access_apply' => [
+            // 'items',
+            'media',
+            // 'item_sets',
+        ],
         // The access right can be set via a property to simplify some workflows,
         // in particular for import.
         // When the access right is set via a property, there are two modes:
@@ -267,9 +276,14 @@ return [
             'forbidden' => 'forbidden',
         ],
         'config' => [
-            // The three first settings are just for info: they are overriden by
+            // The four first settings are just for info: they are overriden by
             // the value set above or by config/local.config.php.
             'accessresource_access_mode' => ACCESS_MODE_INDIVIDUAL,
+            'accessresource_access_apply' => [
+                // 'items',
+                'media',
+                // 'item_sets',
+            ],
             'accessresource_access_via_property' => false,
             'accessresource_access_via_property_statuses' => [
                 ACCESS_STATUS_FREE => 'free',

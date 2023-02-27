@@ -46,6 +46,15 @@ class Module extends AbstractModule
     protected $accessMode = ACCESS_MODE_GLOBAL;
 
     /**
+     * @var array
+     */
+    protected $accessApply = [
+        // 'items',
+        'media',
+        // 'item_sets',
+    ];
+
+    /**
      * The include defines the access mode constant "AccessResource::ACCESS_VIA_PROPERTY"
      * that should be used, except to avoid install/update issues.
      *
@@ -68,6 +77,7 @@ class Module extends AbstractModule
     {
         $config = include OMEKA_PATH . '/config/local.config.php';
         $this->accessMode = $config['accessresource']['access_mode'] ?? ACCESS_MODE_GLOBAL;
+        $this->accessApply = $config['accessresource']['access_apply'] ?? $this->accessApply;
         $this->accessViaProperty = $config['accessresource']['access_via_property'] ?? false;
         $this->accessViaPropertyStatuses = $config['accessresource']['access_via_property_statuses'] ?? $this->accessViaPropertyStatuses;
         require_once __DIR__ . '/config/access_mode.'
@@ -342,6 +352,7 @@ class Module extends AbstractModule
         $data = $this->prepareDataToPopulate($settings, 'config');
 
         $data['accessresource_access_mode'] = ACCESS_MODE;
+        $data['accessresource_access_apply'] = $this->accessApply;
         $data['accessresource_access_via_property'] = (string) ACCESS_VIA_PROPERTY;
         $data['accessresource_access_via_property_statuses'] = $this->accessViaPropertyStatuses;
 
@@ -364,6 +375,7 @@ class Module extends AbstractModule
         $params = $controller->getRequest()->getPost();
 
         $params['accessresource_access_mode'] = ACCESS_MODE;
+        $params['accessresource_access_apply'] = $this->accessApply;
         $params['accessresource_access_via_property'] = (string) ACCESS_VIA_PROPERTY;
         $params['accessresource_access_via_property_statuses'] = $this->accessViaPropertyStatuses;
 
@@ -581,11 +593,14 @@ class Module extends AbstractModule
          * @var \Omeka\Entity\Resource $resource
          * @var \Omeka\Api\Request $request
          */
-        $services = $this->getServiceLocator();
-        $entityManager = $services->get('Omeka\EntityManager');
         $resource = $event->getParam('entity');
-        $request = $event->getParam('request');
 
+        $resourceName = $resource->getResourceName();
+        if (!in_array($resourceName, $this->accessApply)) {
+            return;
+        }
+
+        $request = $event->getParam('request');
         $requestContent = $request->getContent();
 
         // The resource may be partial and data should be hydrated or not.
@@ -650,6 +665,9 @@ class Module extends AbstractModule
         $requestContent['o:is_public'] = $isPublicAfterUpdate;
         $request->setContent($requestContent);
 
+        $services = $this->getServiceLocator();
+        $entityManager = $services->get('Omeka\EntityManager');
+
         // Get current access reserved to keep or remove it.
         $currentAccessReserved = $resource->getId()
             ? $entityManager->find(AccessReserved::class, $resource->getId())
@@ -709,7 +727,6 @@ class Module extends AbstractModule
         if ($request->isPost()) {
             // Create access.
             // $post = $request->getPost();
-
             $api = $this->getServiceLocator()->get('Omeka\ApiManager');
             $api->create('access_resources', []);
         }
@@ -744,7 +761,13 @@ class Module extends AbstractModule
         $view = $event->getTarget();
         $accessStatus = $services->get('ControllerPluginManager')->get('accessStatus');
 
-        $resourceAccessStatus = $accessStatus($view->resource);
+        $resource = $view->resource;
+
+        if (!$this->accessApplyToResource($resource)) {
+            return;
+        }
+
+        $resourceAccessStatus = $accessStatus($resource);
         $element = new \AccessResource\Form\Element\OptionalRadio('o-module-access-resource:status');
         $element
             ->setLabel('Access status') // @translate
@@ -770,12 +793,21 @@ class Module extends AbstractModule
 
     public function handleViewShowAfter(Event $event): void
     {
+        if ($this->accessViaProperty === 'status') {
+            return;
+        }
+
         $view = $event->getTarget();
+        $vars = $view->vars();
+
+        $resource = $vars->offsetGet('resource');
+        if (!$this->accessApplyToResource($resource)) {
+            return;
+        }
+
         $plugins = $view->getHelperPluginManager();
         $translate = $plugins->get('translate');
         $accessStatus = $plugins->get('accessStatus');
-        $vars = $view->vars();
-        $resource = $vars->offsetGet('resource');
 
         $resourceAccessStatus = $accessStatus($resource);
 
@@ -792,6 +824,36 @@ class Module extends AbstractModule
             $translate('Access status'), // @translate
             $translate($accessStatuses[$resourceAccessStatus])
         );
+    }
+
+    protected function accessApplyToResource($resource): bool
+    {
+        // TODO Check why resource can be entity, representation or array.
+        if (!$resource) {
+            return false;
+        } elseif ($resource instanceof \Omeka\Entity\Resource) {
+            $resourceName = $resource->getResourceName();
+        } elseif ($resource instanceof \Omeka\Api\Representation\AbstractResourceEntityRepresentation) {
+            $resourceName = $resource->resourceName();
+        } elseif (is_numeric($resource)) {
+            $resourceId = (int) $resource;
+            $resource = $this->getServiceLocator()->get('Omeka\EntityManager')->find(\Omeka\Entity\Resource::class, $resourceId);
+            if (!$resource) {
+                return false;
+            }
+            $resourceName = $resource->getResourceName();
+        } elseif (is_array($resource) && !empty($resource['o:id'])) {
+            $resourceId = (int) $resource['o:id'];
+            $resource = $this->getServiceLocator()->get('Omeka\EntityManager')->find(\Omeka\Entity\Resource::class, $resourceId);
+            if (!$resource) {
+                return false;
+            }
+            $resourceName = $resource->getResourceName();
+        } else {
+            return false;
+        }
+
+        return in_array($resourceName, $this->accessApply);
     }
 
     /**
