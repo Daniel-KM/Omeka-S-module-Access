@@ -257,28 +257,51 @@ class Module extends AbstractModule
         }
 
         // Extend the batch edit form via js.
-        $sharedEventManager->attach(
-            '*',
-            'view.batch_edit.before',
-            [$this, 'addAdminResourceHeaders']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Form\ResourceBatchUpdateForm::class,
-            'form.add_elements',
-            [$this, 'formAddElementsResourceBatchUpdateForm']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Api\Adapter\ItemAdapter::class,
-            'api.preprocess_batch_update',
-            [$this, 'handleResourceBatchUpdatePreprocess']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Api\Adapter\ItemAdapter::class,
-            'api.batch_update.post',
-            [$this, 'handleResourceBatchUpdatePost']
-        );
+        // TODO Manage update when access is via property. And property can be prioritary or not.
+        if (!$this->accessViaProperty) {
+            $sharedEventManager->attach(
+                '*',
+                'view.batch_edit.before',
+                [$this, 'addAdminResourceHeaders']
+            );
+            $sharedEventManager->attach(
+                \Omeka\Form\ResourceBatchUpdateForm::class,
+                'form.add_elements',
+                [$this, 'formAddElementsResourceBatchUpdateForm']
+            );
+            $sharedEventManager->attach(
+                \Omeka\Api\Adapter\ItemSetAdapter::class,
+                'api.preprocess_batch_update',
+                [$this, 'handleResourceBatchUpdatePreprocess']
+            );
+            $sharedEventManager->attach(
+                \Omeka\Api\Adapter\ItemSetAdapter::class,
+                'api.batch_update.post',
+                [$this, 'handleResourceBatchUpdatePost']
+            );
+            $sharedEventManager->attach(
+                \Omeka\Api\Adapter\ItemAdapter::class,
+                'api.preprocess_batch_update',
+                [$this, 'handleResourceBatchUpdatePreprocess']
+            );
+            $sharedEventManager->attach(
+                \Omeka\Api\Adapter\ItemAdapter::class,
+                'api.batch_update.post',
+                [$this, 'handleResourceBatchUpdatePost']
+            );
+            $sharedEventManager->attach(
+                \Omeka\Api\Adapter\MediaAdapter::class,
+                'api.preprocess_batch_update',
+                [$this, 'handleResourceBatchUpdatePreprocess']
+            );
+            $sharedEventManager->attach(
+                \Omeka\Api\Adapter\MediaAdapter::class,
+                'api.batch_update.post',
+                [$this, 'handleResourceBatchUpdatePost']
+            );
+        }
 
-        // No more event when access is global: no form, requests, checks…
+        // No more event when access is global.
         if ($this->accessMode !== ACCESS_MODE_INDIVIDUAL) {
             return;
         }
