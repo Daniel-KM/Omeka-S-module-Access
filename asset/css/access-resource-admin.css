@@ -127,4 +127,8 @@
     .access-resources .resource.item_sets .resource-name:after {
         content:"\f1b3"
     }
+
+    .batch-edit .field-container > legend {
+        font-size: 16px;
+    }
 }

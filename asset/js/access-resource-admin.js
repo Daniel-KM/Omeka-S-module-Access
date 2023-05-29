@@ -124,7 +124,11 @@
         //  Should be triggered after preparation above.
         var value = $('form .value-resource');
         var namePrefix = value.data('name-prefix');
+        if (typeof accessObject === 'undefined') {
+            var accessObject = {};
+        }
         $(document).trigger('o:prepare-value', ['resource', value, accessObject, namePrefix]);
+
     });
 
 })(jQuery);

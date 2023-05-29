@@ -81,6 +81,9 @@ return [
             ],
         ],
     ],
+    'js_translate_strings' => [
+        'Access resource', // @translate
+    ],
     'accessresource' => [
         // Access mode may be "global", "ip" or "individual".
         'access_mode' => 'global',
