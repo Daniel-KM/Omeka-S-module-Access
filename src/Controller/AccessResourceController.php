@@ -405,17 +405,32 @@ class AccessResourceController extends AbstractActionController
         // Send headers separately to handle large files.
         $response->sendHeaders();
 
-        // TODO Use Laminas stream response.
+        // TODO Fix issue with session. See readme of module XmlViewer.
+        ini_set('display_errors', '0');
 
+        // Normally, these formats are not used, so check quality.
+        if ($mediaType === 'text/xml' || $mediaType === 'application/xml') {
+            $xmlContent = file_get_contents($filepath);
+            libxml_use_internal_errors(true);
+            $dom = new \DOMDocument('1.1', 'UTF-8');
+            $dom->strictErrorChecking = false;
+            $dom->validateOnParse = false;
+            $dom->recover = true;
+            $dom->loadXML($xmlContent);
+            $currentXml = simplexml_import_dom($dom);
+            libxml_clear_errors();
+            libxml_use_internal_errors(false);
+            $response->setContent($currentXml->asXML());
+            return $response;
+        }
+
+        // TODO Use Laminas stream response.
         // Clears all active output buffers to avoid memory overflow.
         $response->setContent('');
         while (ob_get_level()) {
             ob_end_clean();
         }
         readfile($filepath);
-
-        // TODO Fix issue with session. See readme of module XmlViewer.
-        ini_set('display_errors', '0');
 
         // Return response to avoid default view rendering and to manage events.
         return $response;
