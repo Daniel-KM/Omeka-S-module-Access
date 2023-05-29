@@ -74,7 +74,7 @@ if (version_compare((string) $oldVersion, '3.3.0.12', '<')) {
 }
 
 if (version_compare((string) $oldVersion, '3.4.0.13', '<')) {
-    // Prepare the table.
+    // Prepare the table access_reserved.
     $sqls = <<<'SQL'
 CREATE TABLE `access_reserved` (
     `id` INT NOT NULL,
@@ -171,4 +171,8 @@ if (version_compare((string) $oldVersion, '3.4.0.15', '<')) {
         'Warning: if you want to hide records and not only media files, the current version may have break some configs. Keep old releases (until 3.3.0.10) in that case for now.' // @translate
     );
     $messenger->addWarning($message);
+}
+
+if (version_compare((string) $oldVersion, '3.4.16', '<')) {
+    require_once __DIR__ . '/upgrade_vocabulary.php';
 }
