@@ -338,6 +338,7 @@ in the guest user board (`/s/my-site/guest/access-resource`).
 TODO
 ----
 
+- [ ] Add a feature to uncouple visibility and access (manage them separetely). Make this the default mode?
 - [ ] Make metadata or resource hidden, not only files (so a more restricted type of access).
 - [ ] Make resources available by token in global mode.
 - [ ] Make resources available by token only, not login (like module Contribute).
