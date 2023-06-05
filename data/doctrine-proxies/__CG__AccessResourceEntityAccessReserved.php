@@ -67,10 +67,10 @@ class AccessReserved extends \AccessResource\Entity\AccessReserved implements \D
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'id', 'startDate', 'endDate'];
+            return ['__isInitialized__', 'id', 'startDate', 'endDate', 'resource'];
         }
 
-        return ['__isInitialized__', 'id', 'startDate', 'endDate'];
+        return ['__isInitialized__', 'id', 'startDate', 'endDate', 'resource'];
     }
 
     /**

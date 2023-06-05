@@ -56,7 +56,12 @@ class AccessReserved extends AbstractEntity
      */
     protected $endDate;
 
-    public function __construct($resource)
+    /**
+     * @var \Omeka\Entity\Resource
+     */
+    protected $resource;
+
+    public function __construct(\Omeka\Entity\Resource $resource)
     {
         $this->id = $resource->getId();
         $this->resource = $resource;
