@@ -2,12 +2,13 @@
 
 namespace AccessResource\Job;
 
-use AccessResource\Api\Representation\AccessStatusRepresentation;
 use Omeka\Job\AbstractJob;
 use Omeka\Stdlib\Message;
 
 class AccessStatusRecursive extends AbstractJob
 {
+    use AccessPropertiesTrait;
+
     /**
      * Limit for the loop to avoid heavy sql requests.
      *
@@ -43,59 +44,12 @@ class AccessStatusRecursive extends AbstractJob
     /**
      * @var bool
      */
-    protected $accessViaProperty;
-
-    /**
-     * @var string
-     */
-    protected $levelProperty;
-
-    /**
-     * @var int
-     */
-    protected $levelPropertyId;
-
-    /**
-     * For mode property / level, list the possible levels.
-     *
-     * @var array
-     */
-    protected $levelPropertyLevels;
-
-    /**
-     * @var string
-     */
-    protected $embargoStartProperty;
-
-    /**
-     * @var int
-     */
-    protected $embargoStartPropertyId;
-
-    /**
-     * @var string
-     */
-    protected $embargoEndProperty;
-
-    /**
-     * @var int
-     */
-    protected $embargoEndPropertyId;
-
-    /**
-     * @var bool
-     */
     protected $isAdminRole;
 
     /**
      * @var int
      */
     protected $userId;
-
-    /**
-     * @var bool
-     */
-    protected $hasNumericDataTypes;
 
     public function perform(): void
     {
@@ -116,42 +70,10 @@ class AccessStatusRecursive extends AbstractJob
         $plugins = $services->get('ControllerPluginManager');
         $this->accessStatusForResource = $plugins->get('accessStatus');
 
-        $settings = $services->get('Omeka\Settings');
-
-        $this->accessViaProperty = (bool) $settings->get('accessresource_property');
-
-        $this->levelProperty = $settings->get('accessresource_property_level');
-        $this->levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])), AccessStatusRepresentation::LEVELS);
-        $this->embargoStartProperty = $settings->get('accessresource_property_embargo_start');
-        $this->embargoEndProperty = $settings->get('accessresource_property_embargo_end');
-
-        $this->levelPropertyId = $this->api->search('properties', ['term' => $this->levelProperty], ['returnScalar' => 'id'])->getContent();
-
-        if ($this->accessViaProperty && !$this->levelPropertyId) {
-            $this->logger->err(new Message(
-                'Property for access level "%1$s" does not exist.', // @translate
-                $this->levelProperty
-            ));
+        $result = $this->prepareProperties(true);
+        if (!$result) {
+            return;
         }
-        $this->levelPropertyId = reset($this->levelPropertyId);
-
-        $this->embargoStartPropertyId = $this->api->search('properties', ['term' => $this->embargoStartProperty], ['returnScalar' => 'id'])->getContent();
-        if ($this->accessViaProperty && !$this->embargoStartPropertyId) {
-            $this->logger->err(new Message(
-                'Property for embargo start "%1$s" does not exist.', // @translate
-                $this->embargoStartProperty
-            ));
-        }
-        $this->embargoStartPropertyId = reset($this->embargoStartPropertyId);
-
-        $this->embargoEndPropertyId = $this->api->search('properties', ['term' => $this->embargoEndProperty], ['returnScalar' => 'id'])->getContent();
-        if ($this->accessViaProperty && !$this->embargoEndPropertyId) {
-            $this->logger->err(new Message(
-                'Property for embargo end "%1$s" does not exist.', // @translate
-                $this->embargoEndProperty
-            ));
-        }
-        $this->embargoEndPropertyId = reset($this->embargoEndPropertyId);
 
         $resourceId = (int) $this->getArg('resource_id');
         $resourceIds = array_filter(array_map('intval', $this->getArg('resource_ids', [])));
@@ -166,26 +88,12 @@ class AccessStatusRecursive extends AbstractJob
             ? array_merge([$resourceId] + $resourceIds)
             : ($resourceId ? [$resourceId] : $resourceIds);
 
-        // Don't repeat messages.
-        $this->accessViaProperty = $this->accessViaProperty
-            && $this->levelPropertyId
-            && $this->embargoStartPropertyId
-            && $this->embargoEndPropertyId;
-
         // People who can view all have all rights to update statuses.
         $owner = $this->job->getOwner();
         $this->userId = $owner ? $owner->getId() : null;
         /** @var \Omeka\Permissions\Acl $acl */
         $acl = $services->get('Omeka\Acl');
         $this->isAdminRole = $this->userId && $acl->isAdminRole($owner->getRole());
-
-        /** @var \Omeka\Module\Manager $moduleManager */
-        $moduleManager = $services->get('Omeka\ModuleManager');
-        $module = $moduleManager->getModule('NumericDataTypes');
-        $this->hasNumericDataTypes = $module
-            && $module->getState() === \Omeka\Module\Manager::STATE_ACTIVE;
-
-        $this->levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])), AccessStatusRepresentation::LEVELS);
 
         $accessStatusValues = $this->getArg('values', []);
 
@@ -267,10 +175,11 @@ class AccessStatusRecursive extends AbstractJob
         }
 
         // Level values.
-        $levelVal = $this->levelPropertyLevels[$level] ?? $level;
+        $levelVal = $this->statusLevels[$level] ?? $level;
         if (empty($accessStatusValues['o-access:level']['type'])) {
             try {
-                $anyLevel = $this->api->read('values', ['property' => $this->levelPropertyId], [], ['responseContent' => 'resource'])->getContent();
+                // Try to search a specific type for level in existing values.
+                $anyLevel = $this->api->read('values', ['property' => $this->propertyLevelId], [], ['responseContent' => 'resource'])->getContent();
                 $levelType = $anyLevel->getType();
             } catch (\Exception $e) {
                 $levelType = 'literal';
@@ -280,9 +189,9 @@ class AccessStatusRecursive extends AbstractJob
         }
 
         $bind += [
-            'property_level' => $this->levelPropertyId,
-            'property_embargo_start' => $this->embargoStartPropertyId,
-            'property_embargo_end' => $this->embargoEndPropertyId,
+            'property_level' => $this->propertyLevelId,
+            'property_embargo_start' => $this->propertyEmbargoStartId,
+            'property_embargo_end' => $this->propertyEmbargoEndId,
             'level_value' => $levelVal,
             'level_type' => $levelType,
         ];

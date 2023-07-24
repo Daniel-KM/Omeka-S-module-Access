@@ -8,6 +8,8 @@ use Omeka\Stdlib\Message;
 
 class AccessStatusUpdate extends AbstractJob
 {
+    use AccessPropertiesTrait;
+
     /**
      * Limit for the loop to avoid heavy sql requests.
      *
@@ -34,6 +36,11 @@ class AccessStatusUpdate extends AbstractJob
      * @var \Omeka\Api\Manager
      */
     protected $api;
+
+    /**
+     * @var string
+     */
+    protected $missingMode = 'skip';
 
     /**
      * @var int
@@ -64,33 +71,6 @@ class AccessStatusUpdate extends AbstractJob
      * @var int
      */
     protected $totalToProcess;
-
-    /**
-     * @var string
-     */
-    protected $levelProperty;
-
-    /**
-     * For mode property / level, list the possible levels.
-     *
-     * @var array
-     */
-    protected $levelPropertyLevels;
-
-    /**
-     * @var string
-     */
-    protected $embargoStartProperty;
-
-    /**
-     * @var string
-     */
-    protected $embargoEndProperty;
-
-    /**
-     * @var string
-     */
-    protected $missingMode = 'skip';
 
     public function perform(): void
     {
@@ -135,18 +115,20 @@ class AccessStatusUpdate extends AbstractJob
             return;
         }
 
+        $this->accessViaProperty = (bool) $settings->get('accessresource_property');
+        if ($this->accessViaProperty) {
+            $result = $this->prepareProperties(true);
+            if (!$result) {
+                return;
+            }
+        }
+
         $this->logger->info(new Message(
             'Starting indexation of access statuses of all resources.' // @translate
         ));
 
-        $accessViaProperty = (bool) $settings->get('accessresource_property');
-        if ($accessViaProperty) {
-            $this->levelProperty = $settings->get('accessresource_property_level');
-            $this->levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])), AccessStatusRepresentation::LEVELS);
-            $this->embargoStartProperty = $settings->get('accessresource_property_embargo_start');
-            $this->embargoEndProperty = $settings->get('accessresource_property_embargo_end');
-            $this->updateLevelViaProperty();
-            $this->updateEmbargoViaProperty();
+        if ($this->accessViaProperty) {
+            $this->updateLevelAndEmbargoViaProperty();
         } else {
             $this->updateLevelViaVisibility();
         }
@@ -156,9 +138,9 @@ class AccessStatusUpdate extends AbstractJob
         ));
     }
 
-    protected function updateLevelViaVisibility(): bool
+    protected function updateLevelViaVisibility(): self
     {
-        if (in_array($this->missingMode, ['free', 'reserved', 'protected', 'forbidden'])) {
+        if (in_array($this->missingMode, AccessStatusRepresentation::LEVELS)) {
             $sql = <<<SQL
 # Set the specified status for all missing resources.
 INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
@@ -177,7 +159,7 @@ SELECT `id`, "free", NULL, NULL
 FROM `resource`
 WHERE `is_public` = 1
 ON DUPLICATE KEY UPDATE
-   `id` = `resource`.`id`
+    `id` = `resource`.`id`
 ;
 # Set reserved/protected/forbidden all missing private resources.
 INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
@@ -185,58 +167,35 @@ SELECT `id`, "$mode", NULL, NULL
 FROM `resource`
 WHERE `is_public` = 0
 ON DUPLICATE KEY UPDATE
-   `id` = `resource`.`id`
+    `id` = `resource`.`id`
 ;
-
 SQL;
         }
 
         $this->connection->executeStatement($sql);
 
-        return true;
+        return $this;
     }
 
-    protected function updateLevelViaProperty(): bool
+    protected function updateLevelAndEmbargoViaProperty(): self
     {
-        if (!$this->levelProperty) {
-            $this->logger->err(new Message(
-                'Property to set access resource is not defined.' // @translate
-            ));
-            return false;
-        }
-
-        $propertyId = $this->api->search('properties', ['term' => $this->levelProperty])->getContent();
-        if (!$propertyId) {
-            $this->logger->err(new Message(
-                'Property "%1$s" does not exist.', // @translate
-                $this->levelProperty
-            ));
-            return false;
-        }
-        $propertyId = reset($propertyId);
-
-        $list = array_intersect_key($this->levelPropertyLevels, $this->levelPropertyLevelsDefault);
-        if (count($list) !== 4) {
-            $this->logger->err(new Message(
-                'List of property levels is incomplete, missing "%s".', // @translate
-                implode('", "', array_flip(array_diff_key($this->levelPropertyLevelsDefault, $this->levelPropertyLevels)))
-            ));
-            return false;
-        }
-
         $quotedList = [];
-        foreach ($list as $key => $value) {
+        foreach ($this->statusLevels as $key => $value) {
             $quotedList[$key] = $this->connection->quote($value);
         }
         $quotedListString = implode(', ', $quotedList);
 
         // Insert missing access according to property values.
-        if (in_array($this->missingMode, ['free', 'reserved', 'protected', 'forbidden'])) {
+        if (in_array($this->missingMode, AccessStatusRepresentation::LEVELS)) {
             $subSql = "'$this->missingMode'";
         } else {
             $mode = substr($this->missingMode, 11);
             $subSql = "IF(`resource`.`is_public` = 1, 'free', '$mode')";
         }
+
+        // TODO %T espace?
+        // Use insert: statuses were created previously, but there may be levels
+        // or embargos without levels, in which case the default level is used.
 
         $sql = <<<SQL
 # Set access statuses according to values.
@@ -244,100 +203,80 @@ INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
 SELECT
     `resource`.`id`,
     (CASE `value`.`value`
-        WHEN {$quotedList['free']} THEN 'free'
-        WHEN {$quotedList['reserved']} THEN 'reserved'
-        WHEN {$quotedList['protected']} THEN 'protected'
-        WHEN {$quotedList['forbidden']} THEN 'forbidden'
+        WHEN {$quotedList['free']} THEN "free"
+        WHEN {$quotedList['reserved']} THEN "reserved"
+        WHEN {$quotedList['protected']} THEN "protected"
+        WHEN {$quotedList['forbidden']} THEN "forbidden"
         ELSE $subSql
     END),
     NULL,
     NULL
 FROM `resource`
 JOIN `value`
-    ON `value`.`resource_id`
-    AND `value`.`property_id` = $propertyId
+    ON `value`.`resource_id` = `resource`.`id`
+    AND `value`.`property_id` = $this->propertyLevelId
     AND `value`.`value` IN ($quotedListString)
 ON DUPLICATE KEY UPDATE
-   `id` = `resource`.`id`,
-    (CASE `value`.`value`
-        WHEN {$quotedList['free']} THEN 'free'
-        WHEN {$quotedList['reserved']} THEN 'reserved'
-        WHEN {$quotedList['protected']} THEN 'protected'
-        WHEN {$quotedList['forbidden']} THEN 'forbidden'
+    `value` = (CASE `value`.`value`
+        WHEN {$quotedList['free']} THEN "free"
+        WHEN {$quotedList['reserved']} THEN "reserved"
+        WHEN {$quotedList['protected']} THEN "protected"
+        WHEN {$quotedList['forbidden']} THEN "forbidden"
         ELSE $subSql
-    END),
-    NULL,
-    NULL
+    END)
 ;
-
-SQL;
-
-        $this->connection->executeStatement($sql);
-
-        return true;
-    }
-
-    protected function updateEmbargoViaProperty(): bool
-    {
-        $propertyStart = null;
-        if ($this->embargoStartProperty) {
-            $propertyStart = $this->api->search('properties', ['term' => $this->embargoStartProperty])->getContent();
-            if (!$propertyStart) {
-                $this->logger->err(new Message(
-                    'Property "%1$s" for embargo start does not exist.', // @translate
-                    $this->embargoStartProperty
-                ));
-                return false;
-            }
-            $propertyStart = reset($propertyStart);
-        }
-
-        $propertyEnd = null;
-        if ($this->embargoEndProperty) {
-            $propertyEnd = $this->api->search('properties', ['term' => $this->embargoEndProperty])->getContent();
-            if (!$propertyEnd) {
-                $this->logger->err(new Message(
-                    'Property "%1$s" for embargo end does not exist.', // @translate
-                    $this->embargoEndProperty
-                ));
-                return false;
-            }
-            $propertyEnd = reset($propertyEnd);
-        }
-// TODO %T espace?
-        $sql = <<<SQL
 # Set access embargo start according to values.
-UPDATE `access_status` (`start_date`)
+INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
 SELECT
+    `resource_id`,
+    $subSql,
     CASE `value`.`value`
         WHEN NULL THEN NULL
         WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
         WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
         ELSE NULL
+    END,
+    NULL
+FROM `resource`
+JOIN `value`
+    ON `value`.`resource_id` = `resource`.`id`
+    AND `value`.`property_id` = $this->propertyEmbargoStartId
+ON DUPLICATE KEY UPDATE
+    `embargo_start` = CASE `value`.`value`
+        WHEN NULL THEN NULL
+        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
+        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
+        ELSE NULL
     END
-FROM `access_status`
-LEFT JOIN `value`
-    ON `value`.`resource_id`
-    AND `value`.`property_id` = $propertyStart
 ;
 # Set access embargo end according to values.
-UPDATE `access_status` (`start_end`)
+INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+SELECT
+    `resource_id`,
+    $subSql,
+    NULL,
     CASE `value`.`value`
         WHEN NULL THEN NULL
         WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
         WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
         ELSE NULL
     END
-FROM `access_status`
-LEFT JOIN `value`
-    ON `value`.`resource_id`
-    AND `value`.`property_id` = $propertyEnd
+FROM `resource`
+JOIN `value`
+    ON `value`.`resource_id` = `resource`.`id`
+    AND `value`.`property_id` = $this->propertyEmbargoEndId
+ON DUPLICATE KEY UPDATE
+    `embargo_end` = CASE `value`.`value`
+        WHEN NULL THEN NULL
+        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
+        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
+        ELSE NULL
+    END
 ;
-
 SQL;
 
         $this->connection->executeStatement($sql);
 
-        return true;
+        return $this;
     }
 }
