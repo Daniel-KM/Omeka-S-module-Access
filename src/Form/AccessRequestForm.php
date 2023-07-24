@@ -25,7 +25,7 @@ class AccessRequestForm extends Form
                 'name' => 'submit',
                 'attributes' => [
                     'id' => 'submitbutton',
-                    'value' => 'Request', // @translate
+                    'value' => 'Send', // @translate
                 ],
             ]);
     }

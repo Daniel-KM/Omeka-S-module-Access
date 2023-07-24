@@ -34,15 +34,17 @@ return [
     ],
     'view_helpers' => [
         'factories' => [
-            'accessResourceRequestForm' => Service\ViewHelper\AccessResourceRequestFormFactory::class,
             'accessLevel' => Service\ViewHelper\AccessLevelFactory::class,
+            'accessRequest' => Service\ViewHelper\AccessRequestFactory::class,
             'accessStatus' => Service\ViewHelper\AccessStatusFactory::class,
+            'isAccessRequestable' => Service\ViewHelper\IsAccessRequestableFactory::class,
             'isAllowedMediaContent' => Service\ViewHelper\IsAllowedMediaContentFactory::class,
             'isUnderEmbargo' => Service\ViewHelper\IsUnderEmbargoFactory::class,
         ],
     ],
     'resource_page_block_layouts' => [
         'invokables' => [
+            'accessRequest' => Site\ResourcePageBlockLayout\AccessRequest::class,
             'accessStatus' => Site\ResourcePageBlockLayout\AccessStatus::class,
         ],
     ],
@@ -102,10 +104,10 @@ return [
             ],
             'site' => [
                 'child_routes' => [
-                    'access-resource-request' => [
+                    'access-resource' => [
                         'type' => \Laminas\Router\Http\Literal::class,
                         'options' => [
-                            'route' => '/access-resource-request',
+                            'route' => '/access-resource',
                             'defaults' => [
                                 '__NAMESPACE__' => 'AccessResource\Controller\Site',
                                 'controller' => 'Request',
