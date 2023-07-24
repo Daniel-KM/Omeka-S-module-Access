@@ -3,22 +3,28 @@
 namespace AccessResource\Entity;
 
 use DateTime;
-use Doctrine\ORM\Event\LifecycleEventArgs;
-use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Omeka\Entity\AbstractEntity;
 use Omeka\Entity\Resource;
 use Omeka\Entity\User;
 
 /**
  * @Entity
- * @HasLifecycleCallbacks
  */
 class AccessRequest extends AbstractEntity
 {
+    /**#@+
+     * Access type.
+     *
+     * STATUS_NEW: New request.
+     * STATUS_RENEW: Renew request for prolongation or after reject.
+     * STATUS_ACCEPTED: Accepted by admin.
+     * STATUS_REJECTED: Reject by admin.
+     */
     const STATUS_NEW = 'new'; // @translate
     const STATUS_RENEW = 'renew'; // @translate
     const STATUS_ACCEPTED = 'accepted'; // @translate
     const STATUS_REJECTED = 'rejected'; // @translate
+    /**#@-*/
 
     /**
      * @int
@@ -75,7 +81,11 @@ class AccessRequest extends AbstractEntity
      * @var \DateTime
      *
      * @Column(
-     *     type="datetime"
+     *     type="datetime",
+     *     nullable=false,
+     *     options={
+     *         "default": "CURRENT_TIMESTAMP"
+     *     }
      * )
      */
     protected $created;
@@ -139,7 +149,7 @@ class AccessRequest extends AbstractEntity
         return $this->created;
     }
 
-    public function setModified(?DateTime $dateTime = null): self
+    public function setModified(?DateTime $dateTime): self
     {
         $this->modified = $dateTime;
         return $this;
@@ -148,21 +158,5 @@ class AccessRequest extends AbstractEntity
     public function getModified(): ?DateTime
     {
         return $this->modified;
-    }
-
-    /**
-     * @PrePersist
-     */
-    public function prePersist(LifecycleEventArgs $eventArgs): void
-    {
-        $this->created = new DateTime('now');
-    }
-
-    /**
-     * @PreUpdate
-     */
-    public function preUpdate(PreUpdateEventArgs $eventArgs): void
-    {
-        $this->modified = new DateTime('now');
     }
 }

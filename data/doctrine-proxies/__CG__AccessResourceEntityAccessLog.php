@@ -67,10 +67,10 @@ class AccessLog extends \AccessResource\Entity\AccessLog implements \Doctrine\OR
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'id', 'user', 'action', 'recordId', 'type', 'date'];
+            return ['__isInitialized__', 'id', 'userId', 'action', 'recordId', 'type', 'date'];
         }
 
-        return ['__isInitialized__', 'id', 'user', 'action', 'recordId', 'type', 'date'];
+        return ['__isInitialized__', 'id', 'userId', 'action', 'recordId', 'type', 'date'];
     }
 
     /**
@@ -195,23 +195,23 @@ class AccessLog extends \AccessResource\Entity\AccessLog implements \Doctrine\OR
     /**
      * {@inheritDoc}
      */
-    public function setUser(\Omeka\Entity\User $user = NULL): \AccessResource\Entity\AccessLog
+    public function setUserId(int $userId): \AccessResource\Entity\AccessLog
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setUser', [$user]);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setUserId', [$userId]);
 
-        return parent::setUser($user);
+        return parent::setUserId($userId);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getUser(): ?\Omeka\Entity\User
+    public function getUserId(): int
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getUser', []);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getUserId', []);
 
-        return parent::getUser();
+        return parent::getUserId();
     }
 
     /**
@@ -283,7 +283,7 @@ class AccessLog extends \AccessResource\Entity\AccessLog implements \Doctrine\OR
     /**
      * {@inheritDoc}
      */
-    public function setDate(\DateTime $date = NULL): \AccessResource\Entity\AccessLog
+    public function setDate(\DateTime $date): \AccessResource\Entity\AccessLog
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'setDate', [$date]);
@@ -294,7 +294,7 @@ class AccessLog extends \AccessResource\Entity\AccessLog implements \Doctrine\OR
     /**
      * {@inheritDoc}
      */
-    public function getDate(): ?\DateTime
+    public function getDate(): \DateTime
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getDate', []);

@@ -4,15 +4,23 @@ namespace AccessResource\Entity;
 
 use DateTime;
 use Omeka\Entity\AbstractEntity;
-use Omeka\Entity\User;
 
 /**
+ * Store access to restricted resources for individual users.
+ *
  * @Entity
  */
 class AccessLog extends AbstractEntity
 {
+    /**#@+
+     * Access type.
+     *
+     * TYPE_ACCESS: A user or anonymous acceded a restricted resource.
+     * TYPE_REQUEST: A user or anonymous request access to a restricted resource.
+     */
     const TYPE_ACCESS = 'access'; // @translate
     const TYPE_REQUEST = 'request'; // @translate
+    /**#@-*/
 
     /**
      * @var int
@@ -26,31 +34,30 @@ class AccessLog extends AbstractEntity
     protected $id;
 
     /**
-     * @todo Use simple id? This is a log.
-     * @var \Omeka\Entity\User
+     * This is a log, so no need to join User.
      *
-     * @ManyToOne(
-     *     targetEntity="Omeka\Entity\User"
-     * )
-     * @JoinColumn(
-     *     onDelete="SET NULL",
-     *    nullable=true
+     * @var int
+     *
+     * @Column(
+     *     type="integer",
+     *     nullable=false
      * )
      */
-    protected $user;
+    protected $userId;
 
     /**
+     * "update", "create", "delete", "no_access", "accessed", "update_to_" + action.
+     *
      * @var string
      *
      * @Column(
      *     type="string",
-     *     length=190
+     *     length=31
      * )
      */
     protected $action;
 
     /**
-     * @todo Use true record as id and make it nullable? Or deletable? (this is the access or the request id).
      * @var int
      *
      * @Column(
@@ -61,11 +68,12 @@ class AccessLog extends AbstractEntity
 
     /**
      * This is "access" or "request".
+     *
      * @var string
      *
      * @Column(
      *     type="string",
-     *     length=190
+     *     length=7
      * )
      */
     protected $type;
@@ -75,7 +83,10 @@ class AccessLog extends AbstractEntity
      *
      * @Column(
      *     type="datetime",
-     *     nullable=true
+     *     nullable=false,
+     *     options={
+     *         "default": "CURRENT_TIMESTAMP"
+     *     }
      * )
      */
     protected $date;
@@ -85,15 +96,15 @@ class AccessLog extends AbstractEntity
         return $this->id;
     }
 
-    public function setUser(?User $user = null): self
+    public function setUserId(int $userId): self
     {
-        $this->user = $user;
+        $this->userId = $userId;
         return $this;
     }
 
-    public function getUser(): ?User
+    public function getUserId(): int
     {
-        return $this->user;
+        return $this->userId;
     }
 
     public function setAction(string $action): self
@@ -129,13 +140,13 @@ class AccessLog extends AbstractEntity
         return $this->type;
     }
 
-    public function setDate(?DateTime $date = null): self
+    public function setDate(DateTime $date): self
     {
         $this->date = $date;
         return $this;
     }
 
-    public function getDate(): ?DateTime
+    public function getDate(): DateTime
     {
         return $this->date;
     }

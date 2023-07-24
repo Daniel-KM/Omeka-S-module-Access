@@ -371,7 +371,7 @@ class AccessResource extends \AccessResource\Entity\AccessResource implements \D
     /**
      * {@inheritDoc}
      */
-    public function setModified(\DateTime $dateTime = NULL): \AccessResource\Entity\AccessResource
+    public function setModified(?\DateTime $dateTime): \AccessResource\Entity\AccessResource
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'setModified', [$dateTime]);
@@ -388,28 +388,6 @@ class AccessResource extends \AccessResource\Entity\AccessResource implements \D
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getModified', []);
 
         return parent::getModified();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function prePersist(\Doctrine\ORM\Event\LifecycleEventArgs $eventArgs): void
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'prePersist', [$eventArgs]);
-
-        parent::prePersist($eventArgs);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function preUpdate(\Doctrine\ORM\Event\PreUpdateEventArgs $eventArgs): void
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'preUpdate', [$eventArgs]);
-
-        parent::preUpdate($eventArgs);
     }
 
     /**
