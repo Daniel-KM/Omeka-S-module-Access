@@ -436,28 +436,28 @@ class Module extends AbstractModule
         if (empty($rawData['embargo_start_update'])) {
             // Nothing to do.
         } elseif ($rawData['embargo_start_update'] === 'remove') {
-            $newData['o-access:embargoStart'] = null;
+            $newData['o-access:embargo_start'] = null;
         } elseif ($rawData['embargo_start_update'] === 'set') {
             $embargoStart = $rawData['embargo_start_date'] ?? null;
             $embargoStart = trim((string) $embargoStart) ?: null;
             if ($embargoStart) {
                 $embargoStart .= 'T' . (empty($rawData['embargo_start_time']) ? '00:00:00' : $rawData['embargo_start_time']  . ':00');
             }
-            $newData['o-access:embargoStart'] = $embargoStart;
+            $newData['o-access:embargo_start'] = $embargoStart;
         }
 
         // Embargo end.
         if (empty($rawData['embargo_end_update'])) {
             // Nothing to do.
         } elseif ($rawData['embargo_end_update'] === 'remove') {
-            $newData['o-access:embargoEnd'] = null;
+            $newData['o-access:embargo_end'] = null;
         } elseif ($rawData['embargo_end_update'] === 'set') {
             $embargoEnd = $rawData['embargo_end_date'] ?? null;
             $embargoEnd = trim((string) $embargoEnd) ?: null;
             if ($embargoEnd) {
                 $embargoEnd .= 'T' . (empty($rawData['embargo_end_time']) ? '00:00:00' : $rawData['embargo_end_time']  . ':00');
             }
-            $newData['o-access:embargoEnd'] = $embargoEnd;
+            $newData['o-access:embargo_end'] = $embargoEnd;
         }
 
         if (!empty($rawData['access_recursive'])) {
@@ -465,8 +465,8 @@ class Module extends AbstractModule
         }
 
         $needProcess = array_key_exists('o-access:level', $newData)
-            || array_key_exists('o-access:embargoStart', $newData)
-            || array_key_exists('o-access:embargoEnd', $newData)
+            || array_key_exists('o-access:embargo_start', $newData)
+            || array_key_exists('o-access:embargo_end', $newData)
             || array_key_exists('access_recursive', $newData);
 
         if ($needProcess) {
@@ -503,8 +503,8 @@ class Module extends AbstractModule
         }
 
         $level = array_key_exists('o-access:level', $data) ? $data['o-access:level'] : false;
-        $embargoStart = array_key_exists('o-access:embargoStart', $data) ? $data['o-access:embargoStart'] : false;
-        $embargoEnd = array_key_exists('o-access:embargoEnd', $data) ? $data['o-access:embargoEnd'] : false;
+        $embargoStart = array_key_exists('o-access:embargo_start', $data) ? $data['o-access:embargo_start'] : false;
+        $embargoEnd = array_key_exists('o-access:embargo_end', $data) ? $data['o-access:embargo_end'] : false;
         $accessRecursive = !empty($data['access_recursive']);
 
         // Check if a process is needed (normally already done).
@@ -591,8 +591,8 @@ class Module extends AbstractModule
             if ($accessViaProperty) {
                 $accessStatusValues = [
                     'o-access:level' => ['value' => $level, 'type' => null],
-                    'o-access:embargoStart' => ['value' => $embargoStart && substr($embargoStart, -8) === '00:00:00' ? substr($embargoStart, 0,10) : $embargoStart, 'type' => null],
-                    'o-access:embargoEnd' => ['value' => $embargoEnd && substr($embargoEnd, -8) === '00:00:00' ? substr($embargoEnd, 0,10) : $embargoEnd, 'type' => null],
+                    'o-access:embargo_start' => ['value' => $embargoStart && substr($embargoStart, -8) === '00:00:00' ? substr($embargoStart, 0,10) : $embargoStart, 'type' => null],
+                    'o-access:embargo_end' => ['value' => $embargoEnd && substr($embargoEnd, -8) === '00:00:00' ? substr($embargoEnd, 0,10) : $embargoEnd, 'type' => null],
                 ];
             } else {
                 $accessStatusValues = [];
@@ -712,16 +712,16 @@ class Module extends AbstractModule
             }
             $accessStatusValues = [
                 'o-access:level' => ['value' => $level, 'type' => $levelType],
-                'o-access:embargoStart' => ['value' => $embargoStartVal, 'type' => $embargoStartType],
-                'o-access:embargoEnd' => ['value' => $embargoEndVal, 'type' => $embargoEndType],
+                'o-access:embargo_start' => ['value' => $embargoStartVal, 'type' => $embargoStartType],
+                'o-access:embargo_end' => ['value' => $embargoEndVal, 'type' => $embargoEndType],
             ];
         } else {
             $levelIsSet = array_key_exists('o-access:level', $resourceData);
             $level = $resourceData['o-access:level'] ?? null;
             // The process via resource form returns two keys (date and time),
             // but the background process use the right key.
-            $embargoStartIsSet = array_key_exists('o-access:embargoStart', $resourceData);
-            $embargoStart = $resourceData['o-access:embargoStart'] ?? null;
+            $embargoStartIsSet = array_key_exists('o-access:embargo_start', $resourceData);
+            $embargoStart = $resourceData['o-access:embargo_start'] ?? null;
             // No standard keys means a form process.
             // Merge date and time used in advanced tab of resource form.
             if (!$embargoStartIsSet) {
@@ -732,8 +732,8 @@ class Module extends AbstractModule
                     $embargoStart .= 'T' . (empty($resourceData['embargo_start_time']) ? '00:00:00' : $resourceData['embargo_start_time']  . ':00');
                 }
             }
-            $embargoEndIsSet = array_key_exists('o-access:embargoEnd', $resourceData);
-            $embargoEnd = $resourceData['o-access:embargoEnd'] ?? null;
+            $embargoEndIsSet = array_key_exists('o-access:embargo_end', $resourceData);
+            $embargoEnd = $resourceData['o-access:embargo_end'] ?? null;
             if (!$embargoEndIsSet) {
                 $embargoEndIsSet = array_key_exists('embargo_end_date', $resourceData);
                 $embargoEnd = $resourceData['embargo_end_date'] ?? null;

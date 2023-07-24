@@ -228,13 +228,13 @@ class AccessStatusRecursiveProperties extends AbstractJob
         ];
 
         // Embargo start values.
-        $embargoStartVal = empty($accessStatusValues['o-access:embargoStart']['value'])
+        $embargoStartVal = empty($accessStatusValues['o-access:embargo_start']['value'])
             ? ($embargoStartStatus && substr($embargoStartStatus, -8) === '00:00:00' ? substr($embargoStartStatus, 0,10) : $embargoStartStatus)
-            : $accessStatusValues['o-access:embargoStart']['value'];
+            : $accessStatusValues['o-access:embargo_start']['value'];
         if ($embargoStartVal) {
-            $embargoStartType = empty($accessStatusValues['o-access:embargoStart']['type'])
+            $embargoStartType = empty($accessStatusValues['o-access:embargo_start']['type'])
                 ? ($hasNumericDataType ? 'numeric:timestamp' : 'literal')
-                : $accessStatusValues['o-access:embargoStart']['type'];
+                : $accessStatusValues['o-access:embargo_start']['type'];
             $bind += [
                 'embargo_start_value' => $embargoStartVal,
                 'embargo_start_type' => $embargoStartType,
@@ -246,13 +246,13 @@ class AccessStatusRecursiveProperties extends AbstractJob
         }
 
         // Embargo end values.
-        $embargoEndVal = empty($accessStatusValues['o-access:embargoEnd']['value'])
+        $embargoEndVal = empty($accessStatusValues['o-access:embargo_end']['value'])
             ? ($embargoEndStatus && substr($embargoEndStatus, -8) === '00:00:00' ? substr($embargoEndStatus, 0,10) : $embargoEndStatus)
-            : $accessStatusValues['o-access:embargoEnd']['value'];
+            : $accessStatusValues['o-access:embargo_end']['value'];
         if ($embargoEndVal) {
-            $embargoEndType = empty($accessStatusValues['o-access:embargoEnd']['type'])
+            $embargoEndType = empty($accessStatusValues['o-access:embargo_end']['type'])
                 ? ($hasNumericDataType ? 'numeric:timestamp' : 'literal')
-                : $accessStatusValues['o-access:embargoEnd']['type'];
+                : $accessStatusValues['o-access:embargo_end']['type'];
             $bind += [
                 'embargo_end_value' => $embargoEndVal,
                 'embargo_end_type' => $embargoEndType,
