@@ -62,7 +62,12 @@ trait AccessPropertiesTrait
      *
      * @var array
      */
-    protected $statusLevels = [];
+    protected $statusLevels;
+
+    /**
+     * @var string
+     */
+    protected $levelDataType;
 
     protected function prepareProperties(bool $useLogger = false): bool
     {
@@ -87,6 +92,7 @@ trait AccessPropertiesTrait
         $this->propertyEmbargoStart = $settings->get('accessresource_property_embargo_start');
         $this->propertyEmbargoEnd = $settings->get('accessresource_property_embargo_end');
         $this->statusLevels = $settings->get('accessresource_property_levels', []);
+        $this->levelDataType = $settings->get('accessresource_property_level_datatype');
 
         $hasError = false;
 
@@ -161,6 +167,22 @@ trait AccessPropertiesTrait
             $useLogger ? $this->logger->err($message) : $messenger->addError($message);
         } else {
             $this->statusLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $this->statusLevels), AccessStatusRepresentation::LEVELS);
+        }
+
+        if (!$this->levelDataType) {
+            try {
+                // Try to search a specific type for level in existing values.
+                // TODO Improve query to get first value that is not literal.
+                $anyLevel = $this->api->read('values', ['property' => $this->propertyLevelId], [], ['responseContent' => 'resource'])->getContent();
+                $this->levelDataType = $anyLevel->getType();
+            } catch (\Exception $e) {
+                $this->levelDataType = 'literal';
+            }
+            $message = new Message(
+                'The data type for property level is not set, so "%s" will be used by default when it is not set in metadata.', // @translate
+                $this->levelDataType
+            );
+            $useLogger ? $this->logger->warn($message) : $messenger->addWarning($message);
         }
 
         // Don't repeat messages.

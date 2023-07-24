@@ -141,6 +141,19 @@ forbidden = forbidden
 ',
                 ],
             ])
+            ->add([
+                'name' => 'accessresource_property_level_datatype',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => 'Data type to use for the level', // @translate
+                    'info' => 'A data type like "literal" (default) or "customvocab:X" (recommended), where X is the custom vocab id to set. This value is used for batch processes.', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_property_level_datatype',
+                    'class' => 'accessresource-property',
+                    'placeholder' => 'customvocab:2',
+                ],
+            ])
 
             ->add([
                 'name' => 'accessresource_property_embargo_start',

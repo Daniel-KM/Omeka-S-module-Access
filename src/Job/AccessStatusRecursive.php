@@ -176,17 +176,7 @@ class AccessStatusRecursive extends AbstractJob
 
         // Level values.
         $levelVal = $this->statusLevels[$level] ?? $level;
-        if (empty($accessStatusValues['o-access:level']['type'])) {
-            try {
-                // Try to search a specific type for level in existing values.
-                $anyLevel = $this->api->read('values', ['property' => $this->propertyLevelId], [], ['responseContent' => 'resource'])->getContent();
-                $levelType = $anyLevel->getType();
-            } catch (\Exception $e) {
-                $levelType = 'literal';
-            }
-        } else {
-            $levelType = $accessStatusValues['o-access:level']['type'];
-        }
+        $levelType = empty($accessStatusValues['o-access:level']['type']) ? $this->levelDataType : $accessStatusValues['o-access:level']['type'];
 
         $bind += [
             'property_level' => $this->propertyLevelId,

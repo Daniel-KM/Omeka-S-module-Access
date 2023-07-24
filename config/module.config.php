@@ -283,6 +283,7 @@ return [
                 AccessStatus::PROTECTED => 'protected',
                 AccessStatus::FORBIDDEN => 'forbidden',
             ],
+            'accessresource_property_level_datatype' => null,
 
             'accessresource_property_embargo_start' => 'curation:dateStart',
             'accessresource_property_embargo_end' => 'curation:dateEnd',
