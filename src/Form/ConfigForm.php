@@ -84,7 +84,7 @@ class ConfigForm extends Form
                 ],
             ])
 
-            /*
+            /* // TODO Only mode "level" (three/four values) is supported for now.
             ->add([
                 'name' => 'accessresource_property_level_mode',
                 'type' => Element\Radio::class,
@@ -101,6 +101,7 @@ class ConfigForm extends Form
                 ],
                 'attributes' => [
                     'id' => 'accessresource_property_level_mode',
+                    'class' => 'accessresource-property',
                     'required' => false,
                     'style' => 'display: inline-block;',
                 ],
@@ -117,7 +118,7 @@ class ConfigForm extends Form
                 ],
                 'attributes' => [
                     'id' => 'accessresource_property_level',
-                    'class' => 'chosen-select',
+                    'class' => 'chosen-select accessresource-property',
                     'multiple' => false,
                     'data-placeholder' => 'Select property…', // @translate
                 ],
@@ -131,6 +132,7 @@ class ConfigForm extends Form
                 ],
                 'attributes' => [
                     'id' => 'accessresource_property_levels',
+                    'class' => 'accessresource-property',
                     'rows' => 4,
                     'placeholder' => 'free = free
 reserved = reserved
@@ -150,7 +152,7 @@ forbidden = forbidden
                 ],
                 'attributes' => [
                     'id' => 'accessresource_property_embargo_start',
-                    'class' => 'chosen-select',
+                    'class' => 'chosen-select accessresource-property',
                     'multiple' => false,
                     'data-placeholder' => 'Select property…', // @translate
                 ],
@@ -165,20 +167,21 @@ forbidden = forbidden
                 ],
                 'attributes' => [
                     'id' => 'accessresource_property_embargo_end',
-                    'class' => 'chosen-select',
+                    'class' => 'chosen-select accessresource-property',
                     'multiple' => false,
                     'data-placeholder' => 'Select property…', // @translate
                 ],
             ])
 
             ->add([
-                'name' => 'accessresource_property_hide_in_advanced_tab',
+                'name' => 'accessresource_property_show_in_advanced_tab',
                 'type' => Element\Checkbox::class,
                 'options' => [
-                    'label' => 'Hide the access status in advanced tab of resource form when properties are used', // @translate
+                    'label' => 'Show the access status in advanced tab of resource form when properties are used', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_property_hide_in_advanced_tab',
+                    'id' => 'accessresource_property_show_in_advanced_tab',
+                    'class' => 'accessresource-property'
                 ],
             ])
 

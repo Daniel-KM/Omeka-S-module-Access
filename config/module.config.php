@@ -276,7 +276,7 @@ return [
 
             'accessresource_property' => false,
 
-            'accessresource_property_level' => null,
+            'accessresource_property_level' => 'curation:access',
             'accessresource_property_levels' => [
                 AccessStatus::FREE => 'free',
                 AccessStatus::RESERVED => 'reserved',
@@ -284,10 +284,10 @@ return [
                 AccessStatus::FORBIDDEN => 'forbidden',
             ],
 
-            'accessresource_property_embargo_start' => null,
-            'accessresource_property_embargo_end' => null,
+            'accessresource_property_embargo_start' => 'curation:dateStart',
+            'accessresource_property_embargo_end' => 'curation:dateEnd',
 
-            'accessresource_property_hide_in_advanced_tab' => false,
+            'accessresource_property_show_in_advanced_tab' => false,
 
             'accessresource_embargo_bypass' => false,
 

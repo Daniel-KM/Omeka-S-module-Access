@@ -112,22 +112,25 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
-        // Add the status to the representation.
-        $sharedEventManager->attach(
-            \Omeka\Api\Representation\ItemRepresentation::class,
-            'rep.resource.json',
-            [$this, 'filterEntityJsonLd']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Api\Representation\MediaRepresentation::class,
-            'rep.resource.json',
-            [$this, 'filterEntityJsonLd']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Api\Representation\ItemSetRepresentation::class,
-            'rep.resource.json',
-            [$this, 'filterEntityJsonLd']
-        );
+        $accessViaProperty = (bool) $this->getServiceLocator()->get('Omeka\Settings')->get('accessresource_property');
+        if (!$accessViaProperty) {
+            // Add the status to the representation.
+            $sharedEventManager->attach(
+                \Omeka\Api\Representation\ItemRepresentation::class,
+                'rep.resource.json',
+                [$this, 'filterEntityJsonLd']
+            );
+            $sharedEventManager->attach(
+                \Omeka\Api\Representation\MediaRepresentation::class,
+                'rep.resource.json',
+                [$this, 'filterEntityJsonLd']
+            );
+            $sharedEventManager->attach(
+                \Omeka\Api\Representation\ItemSetRepresentation::class,
+                'rep.resource.json',
+                [$this, 'filterEntityJsonLd']
+            );
+        }
 
         // No events are simple to use:
         // - api.hydrate.post: no id for create; errors are not thrown yet.
@@ -184,12 +187,12 @@ class Module extends AbstractModule
             $sharedEventManager->attach(
                 $controller,
                 'view.add.form.advanced',
-                [$this, 'addAccessElements']
+                [$this, 'addResourceFormElements']
             );
             $sharedEventManager->attach(
                 $controller,
                 'view.edit.form.advanced',
-                [$this, 'addAccessElements']
+                [$this, 'addResourceFormElements']
             );
             $sharedEventManager->attach(
                 $controller,
@@ -214,21 +217,23 @@ class Module extends AbstractModule
         }
 
         // Extend the batch edit form via js.
-        $sharedEventManager->attach(
-            '*',
-            'view.batch_edit.before',
-            [$this, 'addAdminResourceHeaders']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Form\ResourceBatchUpdateForm::class,
-            'form.add_elements',
-            [$this, 'formAddElementsResourceBatchUpdateForm']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Form\ResourceBatchUpdateForm::class,
-            'form.add_input_filters',
-            [$this, 'formAddInputFiltersResourceBatchUpdateForm']
-        );
+        if (!$accessViaProperty) {
+            $sharedEventManager->attach(
+                '*',
+                'view.batch_edit.before',
+                [$this, 'addAdminResourceHeaders']
+            );
+            $sharedEventManager->attach(
+                \Omeka\Form\ResourceBatchUpdateForm::class,
+                'form.add_elements',
+                [$this, 'formAddElementsResourceBatchUpdateForm']
+            );
+            $sharedEventManager->attach(
+                \Omeka\Form\ResourceBatchUpdateForm::class,
+                'form.add_input_filters',
+                [$this, 'formAddInputFiltersResourceBatchUpdateForm']
+            );
+        }
 
         // Management of individual accesses.
 
@@ -323,6 +328,26 @@ class Module extends AbstractModule
             return false;
         }
 
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $accessViaProperty = (bool) $settings->get('accessresource_property');
+        if (!$accessViaProperty) {
+            return true;
+        }
+
+        $levelProperty = (bool) $settings->get('accessresource_property_level');
+        $embargoStartProperty = (bool) $settings->get('accessresource_property_embargo_start');
+        $embargoEndProperty = (bool) $settings->get('accessresource_property_embargo_end');
+        if (!$levelProperty || !$embargoStartProperty || !$embargoEndProperty) {
+            $translator = $services->get('MvcTranslator');
+            $message = new \Omeka\Stdlib\Message(
+                $translator->translate('When properties are used, three properties should be defined for "level", "embargo start" and "embargo end".'), // @translate
+            );
+            $messenger = $services->get('ControllerPluginManager')->get('messenger');
+            $messenger->addError($message);
+            return false;
+        }
+
         $post = $controller->getRequest()->getPost();
         if (!empty($post['fieldset_index']['process_index'])) {
             $vars = [
@@ -337,22 +362,17 @@ class Module extends AbstractModule
     /**
      * Add the status to the resource JSON-LD.
      *
+     * When the status is set via properties, it is not appended here.
+     *
      * Use getJsonLd() instead of jsonSerialize() because access status is not
      * an api for now.
      */
     public function filterEntityJsonLd(Event $event): void
     {
-        $services = $this->getServiceLocator();
-        $settings = $services->get('Omeka\Settings');
-        $accessViaProperty = (bool) $settings->get('accessresource_property');
-        if ($accessViaProperty) {
-            return;
-        }
-
         $resource = $event->getTarget();
 
         /** @var \AccessResource\Api\Representation\AccessStatusRepresentation $accessStatus */
-        $plugins = $services->get('ControllerPluginManager');
+        $plugins = $this->getServiceLocator()->get('ControllerPluginManager');
         $accessStatusForResource = $plugins->get('accessStatus');
         $accessStatus = $accessStatusForResource($resource, true);
         if (!$accessStatus) {
@@ -436,6 +456,7 @@ class Module extends AbstractModule
             }
             $newData['o-access:embargoStart'] = $embargoStart;
         }
+
         // Embargo end.
         if (empty($rawData['embargo_end_update'])) {
             // Nothing to do.
@@ -643,37 +664,39 @@ class Module extends AbstractModule
         // Request "isPartial" does not check "should hydrate" for properties,
         // so properties are always managed, but not access keys.
 
-        // TODO Access recursive is not allowed for property process for now.
-        // For now, recursivity with properties require to run a separate process.
-        $accessRecursive = false;
-
         $accessViaProperty = (bool) $settings->get('accessresource_property');
         if ($accessViaProperty) {
+            // TODO Access recursive is not allowed for property process for now.
+            // For now, recursivity with properties require to run a separate process.
+            $accessRecursive = false;
+
+            // Always update access resource, whatever property is new or not,
+            // so don't use submitted resourceData, but the json because here,
+            // the resource is already stored.
+            /**
+             * @var \Omeka\Api\Adapter\AbstractResourceEntityAdapter $adapter
+             * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $representation
+             */
+            $adapter = $services->get('Omeka\ApiAdapterManager')->get($resource->getResourceName());
+            $representation = $adapter->getRepresentation($resource);
             $levelProperty = $accessViaProperty ? $settings->get('accessresource_property_level') : null;
             if ($levelProperty) {
                 $levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])), AccessStatusRepresentation::LEVELS);
-                /** @see \Omeka\Api\Adapter\AbstractResourceEntityAdapter::hydrate() */
-                $levelIsSet = array_key_exists($levelProperty, $resourceData);
-                $level = empty($resourceData[$levelProperty])
-                    ? null
-                    : (array_values($resourceData[$levelProperty])[0]['@value'] ?? null);
-                if ($level) {
-                    $level = array_search($level, $levelPropertyLevels) ?: null;
-                }
+                $levelValue = $representation->value($levelProperty);
+                $levelIsSet = !empty($levelValue);
+                $level = ($levelIsSet ? array_search($levelValue->value(), $levelPropertyLevels) : null) ?: AccessStatus::FREE;
             }
             $embargoStartProperty = $accessViaProperty ? $settings->get('accessresource_property_embargo_start') : null;
             if ($embargoStartProperty) {
-                $embargoStartIsSet = array_key_exists($embargoStartProperty, $resourceData);
-                $embargoStart = empty($resourceData[$embargoStartProperty])
-                ? null
-                : (array_values($resourceData[$embargoStartProperty])[0]['@value'] ?? null);
+                $embargoStartValue = $representation->value($embargoStartProperty);
+                $embargoStartIsSet = !empty($embargoStartValue);
+                $embargoStart = ($embargoStartIsSet ? (string) $embargoStartValue->value() : null) ?: null;
             }
             $embargoEndProperty = $accessViaProperty ? $settings->get('accessresource_property_embargo_end') : null;
             if ($embargoEndProperty) {
-                $embargoEndIsSet = array_key_exists($embargoEndProperty, $resourceData);
-                $embargoEnd = empty($resourceData[$embargoEndProperty])
-                ? null
-                : (array_values($resourceData[$embargoEndProperty])[0]['@value'] ?? null);
+                $embargoEndValue = $representation->value($embargoEndProperty);
+                $embargoEndIsSet = !empty($embargoEndValue);
+                $embargoEnd = ($embargoEndIsSet ? (string) $embargoEndValue->value() : null) ?: null;
             }
         } else {
             $levelIsSet = array_key_exists('o-access:level', $resourceData);
@@ -817,7 +840,7 @@ class Module extends AbstractModule
     }
     */
 
-    public function addAccessElements(Event $event): void
+    public function addResourceFormElements(Event $event): void
     {
         /**
          * @var \Omeka\Api\Request $request
@@ -830,7 +853,7 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        if ($settings->get('accessresource_property_hide_in_advanced_tab')) {
+        if (!$settings->get('accessresource_property_show_in_advanced_tab')) {
             return;
         }
 
@@ -884,11 +907,6 @@ class Module extends AbstractModule
                 'value' => $level,
                 'disabled' => $accessViaProperty ? 'disabled' : false,
             ]);
-        if ($accessViaProperty) {
-            $levelProperty = $settings->get('accessresource_property_level');
-            $levelElement
-                ->setLabel(sprintf('Access level is managed via property %s.', $levelProperty)); // @translate
-        }
 
         // Html element "datetime" is deprecated and "datetime-local" requires
         // time, even with a pattern, so use elements date and time to avoid js.
@@ -926,11 +944,17 @@ class Module extends AbstractModule
                 'value' => $embargoEnd ? $embargoEnd->format('H:i') : '',
                 'disabled' => $accessViaProperty ? 'disabled' : false,
             ]);
+
         if ($accessViaProperty) {
+            $levelProperty = $settings->get('accessresource_property_level');
+            $levelElement
+                ->setLabel(sprintf('Access level (managed via property %s)', $levelProperty)); // @translate
             $embargoStartProperty = $settings->get('accessresource_property_embargo_start');
-            $embargoEndProperty = $settings->get('accessresource_property_embargo_end');
             $embargoStartElementDate
-                ->setLabel(sprintf('Access embargo is managed via properties %1$s and %2$s.', $embargoStartProperty, $embargoEndProperty)); // @translate
+                ->setLabel(sprintf('Embargo start (managed via property %s)', $embargoStartProperty)); // @translate
+            $embargoEndProperty = $settings->get('accessresource_property_embargo_end');
+            $embargoEndElementDate
+                ->setLabel(sprintf('Embargo end (managed via property %s)', $embargoEndProperty)); // @translate
         }
 
         if (!$accessViaProperty) {
@@ -1131,6 +1155,8 @@ HTML;
 
     public function formAddElementsResourceBatchUpdateForm(Event $event): void
     {
+        // Does not manage access via property.
+
         /**
          * @var \Omeka\Settings\Settings $settings
          * @var \Omeka\Form\ResourceBatchUpdateForm $form
@@ -1139,18 +1165,12 @@ HTML;
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $accessViaProperty = (bool) $settings->get('accessresource_property');
-        if ($accessViaProperty) {
-            return;
-        }
-
         $form = $event->getTarget();
         $formElementManager = $services->get('FormElementManager');
 
         $fieldset = $formElementManager->get(BatchEditFieldset::class, [
             'full_access' => (bool) $settings->get('accessresource_full'),
             'resource_type' => $event->getTarget()->getOption('resource_type'),
-            'access_via_property' => $accessViaProperty,
         ]);
 
         $form->add($fieldset);
@@ -1163,6 +1183,8 @@ HTML;
      */
     public function formAddInputFiltersResourceBatchUpdateForm(Event $event): void
     {
+        // Does not manage access via property.
+
         /** @var \Laminas\InputFilter\InputFilterInterface $inputFilter */
         $inputFilter = $event->getParam('inputFilter');
         $inputFilter

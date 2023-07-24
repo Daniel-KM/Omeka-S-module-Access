@@ -11,7 +11,6 @@ class BatchEditFieldset extends Fieldset
 {
     protected $fullAccess = false;
     protected $resourceType = null;
-    protected $accessViaProperty = false;
 
     public function __construct($name = null, array $options = [])
     {
@@ -21,9 +20,6 @@ class BatchEditFieldset extends Fieldset
         }
         if (isset($options['resource_type'])) {
             $this->resourceType = (string) $options['resource_type'];
-        }
-        if (isset($options['access_via_property'])) {
-            $this->accessViaProperty = (bool) $options['access_via_property'];
         }
     }
 
@@ -69,7 +65,6 @@ class BatchEditFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'accessresource_o_access_level',
                     'class' => 'accessresource',
-                    'disabled' => $this->accessViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -89,7 +84,6 @@ class BatchEditFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'accessresource_embargo_start_update',
                     'class' => 'accessresource',
-                    'disabled' => $this->accessViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -103,7 +97,6 @@ class BatchEditFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'accessresource_embargo_start_date',
                     'class' => 'accessresource',
-                    'disabled' => $this->accessViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -118,7 +111,6 @@ class BatchEditFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'accessresource_embargo_start_time',
                     'class' => 'accessresource',
-                    'disabled' => $this->accessViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -137,7 +129,6 @@ class BatchEditFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'accessresource_embargo_end_update',
                     'class' => 'accessresource',
-                    'disabled' => $this->accessViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -151,7 +142,6 @@ class BatchEditFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'accessresource_embargo_end_date',
                     'class' => 'accessresource',
-                    'disabled' => $this->accessViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -166,16 +156,13 @@ class BatchEditFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'accessresource_embargo_end_time',
                     'class' => 'accessresource',
-                    'disabled' => $this->accessViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
             ])
         ;
 
-        if (!$this->accessViaProperty
-            && in_array($this->resourceType, ['itemSet', 'item'])
-        ) {
+        if (in_array($this->resourceType, ['itemSet', 'item'])) {
             $this
                 ->add([
                     'name' => 'access_recursive',

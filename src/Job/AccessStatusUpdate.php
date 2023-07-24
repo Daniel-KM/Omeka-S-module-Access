@@ -142,7 +142,7 @@ class AccessStatusUpdate extends AbstractJob
         $accessViaProperty = (bool) $settings->get('accessresource_property');
         if ($accessViaProperty) {
             $this->levelProperty = $settings->get('accessresource_property_level');
-            $this->levelPropertyLevels = array_intersect_key(AccessStatusRepresentation::LEVELS, array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])));
+            $this->levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])), AccessStatusRepresentation::LEVELS);
             $this->embargoPropertyStart = $settings->get('accessresource_property_embargo_start');
             $this->embargoPropertyEnd = $settings->get('accessresource_property_embargo_end');
             $this->updateLevelViaProperty();

@@ -179,17 +179,9 @@
         const accessViaProperty = function() {
             const element = $('input[type=checkbox][name=accessresource_property]');
             if (element.prop('checked')) {
-                $('#accessresource_property_level').closest('.field').show(300);
-                $('#accessresource_property_levels').closest('.field').show(300);
-                $('#accessresource_property_embargo_start').closest('.field').show(300);
-                $('#accessresource_property_embargo_end').closest('.field').show(300);
-                $('#accessresource_property_hide_in_advanced_tab').closest('.field').show(300);
+                $('.accessresource-property').closest('.field').show(300);
             } else {
-                $('#accessresource_property_level').closest('.field').hide(300);
-                $('#accessresource_property_levels').closest('.field').hide(300);
-                $('#accessresource_property_embargo_start').closest('.field').hide(300);
-                $('#accessresource_property_embargo_end').closest('.field').hide(300);
-                $('#accessresource_property_hide_in_advanced_tab').closest('.field').hide(300);
+                $('.accessresource-property').closest('.field').hide(300);
             }
         }
 
