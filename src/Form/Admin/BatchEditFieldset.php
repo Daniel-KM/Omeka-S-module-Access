@@ -11,6 +11,7 @@ class BatchEditFieldset extends Fieldset
 {
     protected $fullAccess = false;
     protected $resourceType = null;
+    protected $accessViaProperty = false;
 
     public function __construct($name = null, array $options = [])
     {
@@ -21,10 +22,28 @@ class BatchEditFieldset extends Fieldset
         if (isset($options['resource_type'])) {
             $this->resourceType = (string) $options['resource_type'];
         }
+        if (isset($options['access_via_property'])) {
+            $this->accessViaProperty = (bool) $options['access_via_property'];
+        }
     }
 
     public function init(): void
     {
+        $this
+            ->setName('accessresource')
+            ->setLabel('Access resource') // @translate
+            ->setAttributes([
+                'id' => 'accessresource',
+                'class' => 'field-container',
+                // This attribute is required to make "batch edit all" working.
+                'data-collection-action' => 'replace',
+            ]);
+
+        if ($this->accessViaProperty) {
+            $this->initAccessRecursive();
+            return;
+        }
+
         $valueOptions = [
             AccessStatus::FREE => 'Free', // @translate'
             AccessStatus::RESERVED => 'Restricted', // @translate
@@ -44,15 +63,6 @@ class BatchEditFieldset extends Fieldset
         error_reporting(error_reporting() & ~E_WARNING);
 
         $this
-            ->setName('accessresource')
-            ->setLabel('Access resource') // @translate
-            ->setAttributes([
-                'id' => 'accessresource',
-                'class' => 'field-container',
-                // This attribute is required to make "batch edit all" working.
-                'data-collection-action' => 'replace',
-            ])
-
             ->add([
                 'name' => 'o-access:level',
                 'type' => AccessResourceElement\OptionalRadio::class,
@@ -160,8 +170,12 @@ class BatchEditFieldset extends Fieldset
                     'data-collection-action' => 'replace',
                 ],
             ])
+            ->initAccessRecursive()
         ;
+    }
 
+    protected function initAccessRecursive(): self
+    {
         if (in_array($this->resourceType, ['itemSet', 'item'])) {
             $this
                 ->add([
@@ -181,5 +195,6 @@ class BatchEditFieldset extends Fieldset
                 ])
             ;
         }
+        return $this;
     }
 }
