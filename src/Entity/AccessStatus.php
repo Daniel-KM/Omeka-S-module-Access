@@ -146,8 +146,6 @@ class AccessStatus extends AbstractEntity
      *
      * @return bool|null Null if the embargo dates are not set, true if resource
      * is under embargo, else false.
-     *
-     * @todo Move to AccessStatus representation.
      */
     public function isUnderEmbargo(): ?bool
     {

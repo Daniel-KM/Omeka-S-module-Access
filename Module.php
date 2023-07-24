@@ -8,6 +8,7 @@ if (!class_exists(\Generic\AbstractModule::class)) {
         : __DIR__ . '/src/Generic/AbstractModule.php';
 }
 
+use AccessResource\Api\Representation\AccessStatusRepresentation;
 use AccessResource\Entity\AccessStatus;
 use AccessResource\Form\Admin\BatchEditFieldset;
 use DateTime;
@@ -24,19 +25,6 @@ use Omeka\Stdlib\Message;
 class Module extends AbstractModule
 {
     const NAMESPACE = __NAMESPACE__;
-
-    /**
-     * The classes are not ready on load of the class, so use a method.
-     */
-    protected function accessLevels(): array
-    {
-        return [
-            AccessStatus::FREE => AccessStatus::FREE,
-            AccessStatus::RESERVED => AccessStatus::RESERVED,
-            AccessStatus::PROTECTED => AccessStatus::PROTECTED,
-            AccessStatus::FORBIDDEN => AccessStatus::FORBIDDEN,
-        ];
-    }
 
     protected function preInstall(): void
     {
@@ -387,7 +375,7 @@ class Module extends AbstractModule
         if ($levelViaProperty) {
             // TODO Manage batch update for properties.
         } else {
-            if (!empty($rawData['o-access:level']) && in_array($rawData['o-access:level'], $this->accessLevels())) {
+            if (!empty($rawData['o-access:level']) && in_array($rawData['o-access:level'], AccessStatusRepresentation::LEVELS)) {
                 $newData['o-access:level'] = $rawData['o-access:level'];
             }
         }
@@ -617,8 +605,6 @@ class Module extends AbstractModule
         // Request "isPartial" does not check "should hydrate" for properties,
         // so properties are always managed, but not access keys.
 
-        $accessLevels = $this->accessLevels();
-
         // TODO Access recursive is not allowed for property process for now.
         // For now, recursivity with properties require to run a separate process.
         $accessRecursive = false;
@@ -626,7 +612,7 @@ class Module extends AbstractModule
         $levelViaProperty = (bool) $settings->get('accessresource_level_via_property');
         $levelProperty = $levelViaProperty ? $settings->get('accessresource_level_property') : null;
         if ($levelProperty) {
-            $levelPropertyLevels = array_intersect_key(array_replace($accessLevels, $settings->get('accessresource_level_property_levels', $accessLevels)), $accessLevels);
+            $levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_level_property_levels', [])), AccessStatusRepresentation::LEVELS);
             /** @see \Omeka\Api\Adapter\AbstractResourceEntityAdapter::hydrate() */
             $levelIsSet = array_key_exists($levelProperty, $resourceData);
             $level = empty($resourceData[$levelProperty])
@@ -690,7 +676,7 @@ class Module extends AbstractModule
         if (!empty($levelIsSet)) {
             // Default level is free.
             // TODO Create access level "unknown" or "undefined"? Probably better, but complexify later.
-            if (!in_array($level, $accessLevels)) {
+            if (!in_array($level, AccessStatusRepresentation::LEVELS)) {
                 $level = AccessStatus::FREE;
             }
             $accessStatus->setLevel($level);
@@ -972,29 +958,18 @@ class Module extends AbstractModule
         $accessStatusForResource = $plugins->get('accessStatus');
 
         $resource = $vars->offsetGet('resource');
-        $accessStatus = $accessStatusForResource($resource);
+
+        /** @var \AccessResource\Api\Representation\AccessStatusRepresentation $accessStatus */
+        $accessStatus = $accessStatusForResource($resource, true);
 
         if (!$levelViaProperty) {
-            $accessLevels = [
-                AccessStatus::FREE => 'Free', // @translate'
-                AccessStatus::RESERVED => 'Reserved', // @translate
-                AccessStatus::PROTECTED => 'Protected', // @translate
-                AccessStatus::FORBIDDEN => 'Forbidden', // @translate
-            ];
-            $level = $accessStatus ? $accessStatus->getLevel() : AccessStatus::FREE;
-            $htmlLevel = sprintf('<div class="value">%s</div>', $translate($accessLevels[$level]));
+            $level = $accessStatus ? $accessStatus->displayLevel() : $translate(AccessStatus::FREE);
+            $htmlLevel = sprintf('<div class="value">%s</div>', $level);
         }
 
         if (!$embargoViaProperty) {
-            $embargoStart = $accessStatus ? $accessStatus->getEmbargoStart() : null;
-            $embargoEnd = $accessStatus ? $accessStatus->getEmbargoEnd() : null;
-            if ($embargoStart && $embargoEnd) {
-                $htmlEmbargo= sprintf('<div class="value">%s</div>', sprintf($translate('Embargo from %1$s until %2$s'), $i18n->dateFormat($embargoStart, $i18n::DATE_FORMAT_LONG, $i18n::DATE_FORMAT_SHORT), $i18n->dateFormat($embargoEnd, $i18n::DATE_FORMAT_LONG, $i18n::DATE_FORMAT_SHORT))); // @translate
-            } elseif ($embargoStart) {
-                $htmlEmbargo= sprintf('<div class="value">%s</div>', sprintf($translate('Embargo from %1$s'), $i18n->dateFormat($embargoStart, $i18n::DATE_FORMAT_LONG, $i18n::DATE_FORMAT_SHORT))); // @translate
-            } elseif ($embargoEnd) {
-                $htmlEmbargo= sprintf('<div class="value">%s</div>', sprintf($translate('Embargo until %1$s'), $i18n->dateFormat($embargoEnd, $i18n::DATE_FORMAT_LONG, $i18n::DATE_FORMAT_SHORT))); // @translate
-            }
+            $embargo = $accessStatus ? $accessStatus->displayEmbargo() : '';
+            $htmlEmbargo= $embargo ? sprintf('<div class="value">%s</div>', $embargo) : ''; // @translate
         }
 
         $html = <<<'HTML'
