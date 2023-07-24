@@ -415,13 +415,14 @@ SQL;
             $conditions[] = $expr->eq($itemAlias . '.owner', $adapter->createNamedParameter($qb, $identity));
 
             // Users can view records of all resources with access reserved.
-            // Only files are protected (via htaccess).
+            // Only files are protected (via htaccess, redirected to controller).
             $qbs = $em->createQueryBuilder();
             $accessStatusAlias = $adapter->createAlias();
             $qbs
                 ->select("$accessStatusAlias.id")
                 ->from(AccessStatus::class, $accessStatusAlias)
                 ->where($expr->eq("$accessStatusAlias.id", 'omeka_root.id'))
+                ->andWhere($expr->neq("$accessStatusAlias.status", 'protected'))
                 ->andWhere($expr->neq("$accessStatusAlias.status", 'forbidden'));
             $conditions[] = $expr->exists($qbs->getDQL());
         }
@@ -644,6 +645,7 @@ SQL;
             ->setValueOptions([
                 ACCESS_STATUS_FREE => 'Free access', // @translate'
                 ACCESS_STATUS_RESERVED => 'Restricted access', // @translate
+                ACCESS_STATUS_PROTECTED => 'Protected access', // @translate
                 ACCESS_STATUS_FORBIDDEN => 'Forbidden access', // @translate
             ])
             ->setAttributes([
@@ -683,6 +685,7 @@ SQL;
         $accessStatuses = [
             ACCESS_STATUS_FREE => 'Free access', // @translate'
             ACCESS_STATUS_RESERVED => 'Reserved access', // @translate
+            ACCESS_STATUS_PROTECTED => 'Protected access', // @translate
             ACCESS_STATUS_FORBIDDEN => 'Forbidden access', // @translate
         ];
 
@@ -917,7 +920,7 @@ SQL;
         }
 
         if (empty($post['accessresource']['status'])
-            || !in_array($post['accessresource']['status'], ['free', 'reserved', 'forbidden'])
+            || !in_array($post['accessresource']['status'], ['free', 'reserved', 'protected', 'forbidden'])
         ) {
             unset($data['accessresource']);
             $event->setParam('data', $data);

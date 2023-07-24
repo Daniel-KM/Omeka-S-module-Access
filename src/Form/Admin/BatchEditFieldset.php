@@ -28,6 +28,7 @@ class BatchEditFieldset extends Fieldset
                         '' => 'No change', // @translate
                         ACCESS_STATUS_FREE => 'Free', // @translate
                         ACCESS_STATUS_RESERVED => 'Restricted', // @translate
+                        ACCESS_STATUS_PROTECTED => 'Protected', // @translate
                         ACCESS_STATUS_FORBIDDEN => 'Private', // @translate
                     ],
                 ],
