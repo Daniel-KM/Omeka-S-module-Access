@@ -464,7 +464,7 @@ class Module extends AbstractModule
                 $hasError = true;
                 continue;
             } elseif ($itemSetIds) {
-                $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace( '/\D/', ' ', $itemSetIds))));
+                $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace('/\D/', ' ', $itemSetIds))));
                 if (!$itemSetIdsArray) {
                     $message = new Message(
                         'The item sets list "%1$s" for ip "%2$s" is invalid: they should be numeric ids.', // @translate
@@ -573,7 +573,6 @@ class Module extends AbstractModule
 
         $em = $qb->getEntityManager();
         $expr = $qb->expr();
-
 
         // Users can view media they do not own that belong to public items.
         $conditions = [
@@ -829,11 +828,11 @@ class Module extends AbstractModule
                 'value' => $resourceAccessStatus,
                 'disabled' => (bool) $this->accessViaProperty,
             ]);
-            if ($this->accessViaProperty) {
-                $this->accessViaProperty === 'status'
-                    ? $element->setLabel(sprintf('Access status is managed via property "%s"', PROPERTY_STATUS)) // @translate
-                    : $element->setLabel(sprintf('Access status is managed via presence of property "%s"', PROPERTY_RESERVED)); // @translate
-            }
+        if ($this->accessViaProperty) {
+            $this->accessViaProperty === 'status'
+                ? $element->setLabel(sprintf('Access status is managed via property "%s"', PROPERTY_STATUS)) // @translate
+                : $element->setLabel(sprintf('Access status is managed via presence of property "%s"', PROPERTY_RESERVED)); // @translate
+        }
 
         echo $view->formRow($element);
     }

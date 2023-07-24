@@ -167,7 +167,7 @@ class AccessResourceController extends AbstractActionController
             return $result;
         }
 
-        $result['filename'] = $routeParams['filename'] ?? null;;
+        $result['filename'] = $routeParams['filename'] ?? null;
         if (!$result['filename']) {
             return $result;
         }

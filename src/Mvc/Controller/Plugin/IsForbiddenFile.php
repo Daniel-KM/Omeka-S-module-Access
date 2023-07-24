@@ -120,7 +120,7 @@ class IsForbiddenFile extends AbstractPlugin
         if (!$hasMediaAccess
             // Don't bypass embargo when it is set and not overridable.
             || $isUnderEmbargo
-        ) {;
+        ) {
             return true;
         }
 
@@ -243,12 +243,12 @@ class IsForbiddenFile extends AbstractPlugin
         return (bool) array_intersect($mediaItemSetIds, $itemSetIds);
     }
 
-    /**
-     * Check if the ip of the user is reserved and limited to some item sets.
-     *
-     * @return array|null Null if the user is not listed in reserved ips, else
-     *   array of item sets, that may be empty.
-     */
+     /**
+      * Check if the ip of the user is reserved and limited to some item sets.
+      *
+      * @return array|null Null if the user is not listed in reserved ips, else
+      *   array of item sets, that may be empty.
+      */
      protected function reservedItemSetsForClientIp(): ?array
      {
          // This method is called one time for each file, but each file is

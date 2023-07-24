@@ -24,7 +24,7 @@ class UpdateVisibilityForEmbargo extends AbstractJob
         $api = $services->get('ControllerPluginManager')->get('api');
 
         $startPropertyId = (int) $api->searchOne('properties', ['term' => PROPERTY_EMBARGO_START], ['returnScalar' => 'id'])->getContent();
-        $endPropertyId= (int) $api->searchOne('properties', ['term' => PROPERTY_EMBARGO_END], ['returnScalar' => 'id'])->getContent();
+        $endPropertyId = (int) $api->searchOne('properties', ['term' => PROPERTY_EMBARGO_END], ['returnScalar' => 'id'])->getContent();
         if (!$startPropertyId) {
             $logger->warn(new Message(
                 'The property "%s" for start embargo is missing', // @translate
@@ -64,7 +64,7 @@ SQL;
         $bind = [
             'start_id' => $startPropertyId,
             'end_id' => $endPropertyId,
-            'now' =>$now,
+            'now' => $now,
         ];
 
         // The cases are numerous, so only update when the metadata are logical.

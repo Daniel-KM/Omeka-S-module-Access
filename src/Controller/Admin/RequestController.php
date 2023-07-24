@@ -116,7 +116,7 @@ class RequestController extends AbstractActionController
                         ->setRecordId($accessRequest->id())
                         ->setType(AccessLog::TYPE_REQUEST)
                         ->setDate(new \DateTime());
-                        $this->entityManager->flush();
+                    $this->entityManager->flush();
 
                     // Fire send email event.
                     $this->getEventManager()->trigger('accessresource.request.updated');
