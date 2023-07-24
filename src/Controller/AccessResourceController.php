@@ -98,7 +98,7 @@ class AccessResourceController extends AbstractActionController
 
         // Log only non-admin individual access to original records.
         if ($storageType === 'original'
-            && !$this->acl->userIsAllowed('Omeka\Entity\Resource', 'view-all')
+            && !$this->acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')
         ) {
             $user = $this->identity();
             $log = new AccessLog();

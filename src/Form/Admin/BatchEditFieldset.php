@@ -11,6 +11,7 @@ class BatchEditFieldset extends Fieldset
 {
     public function init(): void
     {
+        $resourceType = $this->getOption('resource_type');
         $fullAccess = (bool) $this->getOption('full_access');
         $accessViaProperty = (bool) $this->getOption('access_via_property');
         $embargoViaProperty = (bool) $this->getOption('embargo_via_property');
@@ -35,6 +36,24 @@ class BatchEditFieldset extends Fieldset
                 'class' => 'field-container',
                 // This attribute is required to make "batch edit all" working.
                 'data-collection-action' => 'replace',
+            ])
+
+            ->add([
+                'name' => 'o-access:status',
+                'type' => AccessResourceElement\OptionalRadio::class,
+                'options' => [
+                    'label' => 'New status', // @translate
+                    'value_options' => [
+                        '' => 'No change', // @translate
+                    ] + $valueOptions,
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_o_access_status',
+                    'class' => 'accessresource',
+                    'disabled' => $accessViaProperty ? 'disabled' : false,
+                    // This attribute is required to make "batch edit all" working.
+                    'data-collection-action' => 'replace',
+                ],
             ])
 
             ->add([
@@ -152,5 +171,28 @@ class BatchEditFieldset extends Fieldset
             ])
             */
         ;
+
+        if (!($accessViaProperty && $embargoViaProperty)
+            && in_array($resourceType, ['itemSet', 'item'])
+        ) {
+            $this
+                ->add([
+                    'name' => 'access_recursive',
+                    'type' => Element\Checkbox::class,
+                    'options' => [
+                        'label' => $resourceType === 'itemSet'
+                            ? 'Apply access level and embargo to items and medias' // @translate
+                            : 'Apply access level and embargo to medias', // @translate
+                    ],
+                    'attributes' => [
+                        'id' => 'access_recursive',
+                        'class' => 'accessresource',
+                        'disabled' => $accessViaProperty ? 'disabled' : false,
+                        // This attribute is required to make "batch edit all" working.
+                        'data-collection-action' => 'replace',
+                    ],
+                ])
+            ;
+        }
     }
 }

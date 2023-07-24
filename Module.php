@@ -18,6 +18,7 @@ use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
+use Omeka\Entity\Resource;
 use Omeka\Stdlib\Message;
 
 class Module extends AbstractModule
@@ -77,6 +78,9 @@ class Module extends AbstractModule
             $acl->addRole('guest');
         }
 
+        $roles = $acl->getRoles();
+        $rolesExceptGuest = array_diff($roles, ['guest']);
+
         $acl
             ->allow(
                 null,
@@ -97,17 +101,29 @@ class Module extends AbstractModule
             ->allow(
                 null,
                 [\AccessResource\Api\Adapter\AccessResourceAdapter::class],
-                ['search']
+                ['search', 'read']
             )
             ->allow(
                 null,
                 [\AccessResource\Api\Adapter\AccessRequestAdapter::class],
-                ['search', 'create', 'update']
+                ['search', 'create', 'update', 'read']
             )
             ->allow(
                 null,
                 [\AccessResource\Entity\AccessRequest::class],
-                ['create', 'update']
+                ['create', 'update', 'read']
+            )
+            // Rights on access status are useless for now because they are
+            // managed only via sql/orm.
+            ->allow(
+                null,
+                [\AccessResource\Entity\AccessStatus::class],
+                ['search', 'read']
+            )
+            ->allow(
+                $rolesExceptGuest,
+                [\AccessResource\Entity\AccessStatus::class],
+                ['search', 'read', 'create', 'update']
             )
         ;
     }
@@ -497,6 +513,7 @@ class Module extends AbstractModule
         } else {
             $accessIsSet = array_key_exists('o-access:status', $resourceData);
             $status = $resourceData['o-access:status'] ?? null;
+            $accessRecursive = !empty($resourceData['access_recursive']);
         }
 
         $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
@@ -575,10 +592,17 @@ class Module extends AbstractModule
         $entityManager->persist($accessStatus);
         // Flush a single entity is required in batch update, but a deprecation
         // warning occurs, so use the unit of work.
-        // In hydrate post, most of the checks are done, except files;
-        if ($entityManager->isOpen()) {
-            // $entityManager->flush($accessStatus);
-            $entityManager->getUnitOfWork()->commit($accessStatus);
+        // In hydrate post, most of the checks are done, except files anyway.
+        if (!$entityManager->isOpen()) {
+            return;
+        }
+
+        // $entityManager->flush($accessStatus);
+        $entityManager->getUnitOfWork()->commit($accessStatus);
+
+        $resourceName = $resource->getResourceName();
+        if (!empty($accessRecursive) && in_array($resourceName, ['item_sets', 'items'])) {
+            $this->recursiveUpdate($resource, $accessStatus);
         }
     }
 
@@ -765,9 +789,31 @@ class Module extends AbstractModule
                 ->setLabel(sprintf('Access embargo is managed via properties %1$s and %2$s.', $embargoStartProperty, $embargoEndProperty)); // @translate
         }
 
+        if (!$accessViaProperty || !$embargoViaProperty) {
+            $resourceName = $resource->resourceName();
+            if (($resourceName === 'item_sets' && $resource->itemCount())
+                // Media may not be stored yet?
+                || $resourceName === 'items'
+            ) {
+                $recursiveElement = new \Laminas\Form\Element\Checkbox('access_recursive');
+                $recursiveElement
+                    ->setLabel($resourceName === 'item_sets'
+                        ? 'Apply access level and embargo to items and medias' // @translate
+                        : 'Apply access level and embargo to medias' // @translate
+                    )
+                    ->setAttributes([
+                        'id' => 'o-access-recursive',
+                        'value' => false,
+                    ]);
+            }
+        }
+
         echo $view->formRow($statusElement);
         echo preg_replace('~<div class="inputs">(\s*.*\s*)</div>~mU', '<div class="inputs">$1' . $view->formTime($embargoStartElementTime) . '</div>', $view->formRow($embargoStartElementDate));
         echo preg_replace('~<div class="inputs">(\s*.*\s*)</div>~mU', '<div class="inputs">$1' . $view->formTime($embargoEndElementTime) . '</div>', $view->formRow($embargoEndElementDate));
+        if (isset($recursiveElement)) {
+            echo $view->formRow($recursiveElement);
+        }
     }
 
     public function handleViewShowAfter(Event $event): void
@@ -973,6 +1019,7 @@ HTML;
         $fieldset = $formElementManager->get(BatchEditFieldset::class);
         $fieldset
             ->setOption('full_access', (bool) $settings->get('accessresource_full'))
+            ->setOption('resource_type', $event->getTarget()->getOption('resource_type'))
             ->setOption('access_via_property', $accessViaProperty)
             ->setOption('embargo_via_property', $embargoViaProperty);
 
@@ -990,6 +1037,10 @@ HTML;
             ->get('accessresource')
             ->add([
                 'name' => 'o-access:status',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'access_recursive',
                 'required' => false,
             ])
             ->add([
@@ -1087,6 +1138,15 @@ HTML;
         }
         unset($data['accessresource']);
 
+        if (!empty($post['access_recursive'])
+            && (array_key_exists('o-access:status', $data)
+                || array_key_exists('o-access:embargoStart', $data)
+                || array_key_exists('o-access:embargoEnd', $data)
+            )
+        ) {
+            $data['access_recursive'] = true;
+        }
+
         $event->setParam('data', $data);
     }
 
@@ -1113,6 +1173,201 @@ HTML;
         );
         $message->setEscapeHtml(false);
         $messenger->addSuccess($message);
+    }
+
+    protected function recursiveUpdate(Resource $resource, AccessStatus $accessStatus): void
+    {
+        // A job is required, because there may be many items in an item set and
+        // many media in an item.
+        // But for now, just use a quick sql, because this is a post hydration.
+        // TODO Use dql/orm to update status of items and media of an item set?
+
+        /**
+         * @var \Doctrine\ORM\EntityManager $entityManager
+         * @var \Omeka\Permissions\Acl $acl
+         */
+        $services = $this->getServiceLocator();
+        $entityManager = $services->get('Omeka\EntityManager');
+
+        $acl = $services->get('Omeka\Acl');
+        $isAllowed = $acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all');
+
+        $resourceId = $resource->getId();
+
+        $status = $accessStatus->getStatus();
+        $embargoStart = $accessStatus->getEmbargoStart();
+        $embargoEnd = $accessStatus->getEmbargoEnd();
+
+        $bind = [
+            'status' => $status,
+            'embargo_start' => $embargoStart ? $embargoStart->format('Y-m-d H:i:s') : null,
+            'embargo_end' => $embargoEnd ? $embargoEnd->format('Y-m-d H:i:s') : null,
+        ];
+        $types = [
+            'status' => \Doctrine\DBAL\ParameterType::STRING,
+            'embargo_start' => $embargoStart ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL,
+            'embargo_end' => $embargoEnd ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL,
+        ];
+
+        $resourceName = $resource->getResourceName();
+
+        // Items: update medias.
+
+        if ($resourceName === 'items') {
+            /*
+            // Join is not possible with doctrine 2, so use the list of media.
+            $mediaIds = [];
+            foreach ($resource->getMedia() as $media) {
+                $mediaIds[] = $media->getId();
+            }
+            $qb = $entityManager->createQueryBuilder();
+            $expr = $qb->expr();
+            $qb
+                ->update(AccessStatus::class, 'access_status')
+                ->set('access_status.status', ':status')
+                ->setParameter('status', $status)
+                ->where($expr->in('access_status.id', ':ids'))
+                ->setParameter('ids', $mediaIds, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY)
+            ;
+            $qb->getQuery()->execute();
+            */
+
+            $bind['item_id'] = $resourceId;
+            $types['item_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
+
+            // To check rights via sql, the media ids are passed to the query
+            // even if most of  the time, if the user has rights on the item, he
+            // has rights on all its media.
+            if ($isAllowed) {
+                $whereMedias = '';
+            } else {
+                $mediaIds = $services->get('Omeka\ApiManager')
+                    ->search('media', ['item_id' => $resourceId], ['initialize' => false, 'returnScalar' => 'id'])->getContent();
+                if (!$mediaIds) {
+                    return;
+                }
+                $whereMedias = 'AND `media`.`id` IN (:media_ids)';
+                $bind['media_ids'] = $mediaIds;
+                $types['media_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
+            }
+
+            // Use insert into instead of update, because the access statuses
+            // may not exist yet.
+            $sql = <<<SQL
+INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
+SELECT `media`.`id`, :status, :embargo_start, :embargo_end
+FROM `media`
+WHERE `media`.`item_id` = :item_id
+    $whereMedias
+ON DUPLICATE KEY UPDATE
+    `status` = :status,
+    `embargo_start` = :embargo_start,
+    `embargo_end` = :embargo_end
+;
+SQL;
+            $entityManager->getConnection()->executeStatement($sql, $bind, $types);
+            return;
+        }
+
+        // Item sets: update items and medias.
+
+        $bind['item_set_id'] = $resourceId;
+        $types['item_set_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
+
+        if ($isAllowed) {
+            $sql = <<<SQL
+INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
+SELECT `item_item_set`.`item_id`, :status, :embargo_start, :embargo_end
+FROM `item_item_set`
+WHERE `item_item_set`.`item_set_id` = :item_set_id
+ON DUPLICATE KEY UPDATE
+    `status` = :status,
+    `embargo_start` = :embargo_start,
+    `embargo_end` = :embargo_end
+;
+SQL;
+            $entityManager->getConnection()->executeStatement($sql, $bind, $types);
+
+            $sql = <<<SQL
+INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
+SELECT `media`.`id`, :status, :embargo_start, :embargo_end
+FROM `media`
+JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+WHERE `item_item_set`.`item_set_id` = :item_set_id
+ON DUPLICATE KEY UPDATE
+    `status` = :status,
+    `embargo_start` = :embargo_start,
+    `embargo_end` = :embargo_end
+;
+SQL;
+            $entityManager->getConnection()->executeStatement($sql, $bind, $types);
+            return;
+        }
+
+        // To check rights via sql, the item ids are passed to the query.
+        $itemIds = $services->get('Omeka\ApiManager')
+            ->search('items', ['item_set_id' => $resourceId], ['initialize' => false, 'returnScalar' => 'id'])->getContent();
+        if (!$itemIds) {
+            return;
+        }
+
+        $bind['item_ids'] = $itemIds;
+        $types['item_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
+
+        $sql = <<<SQL
+INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
+SELECT `item_item_set`.`item_id`, :status, :embargo_start, :embargo_end
+FROM `item_item_set`
+WHERE `item_item_set`.`item_set_id` = :item_set_id
+    AND `item_item_set`.`item_id` IN (:item_ids)
+ON DUPLICATE KEY UPDATE
+    `status` = :status,
+    `embargo_start` = :embargo_start,
+    `embargo_end` = :embargo_end
+;
+SQL;
+        $entityManager->getConnection()->executeStatement($sql, $bind, $types);
+
+        // The standard api does not allow to search media by item set or
+        // media by a list of items.
+        /*
+        $mediaIds = $services->get('Omeka\ApiManager')
+           ->search('media', ['item_set_id' => $resourceId], ['initialize' => false, 'returnScalar' => 'id'])->getContent();
+        if (!$mediaIds) {
+           return;
+        }
+        $whereMedias = 'AND media.item_id IN (:item_ids)';
+        $bind['media_ids'] = $itemIds;
+        $types['media_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
+        */
+
+        // So use the standard db visibility check.
+        /** @see \Omeka\Db\Filter\ResourceVisibilityFilter */
+        $user = $services->get('Omeka\AuthenticationService')->getIdentity();
+        if ($user) {
+            $orWhereUser = 'OR `resource`.`owner_id` = :user_id';
+            $bind['user_id'] = $user->getId();
+            $types['user_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
+        } else {
+            $orWhereUser = '';
+        }
+
+        $sql = <<<SQL
+INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
+SELECT `media`.`id`, :status, :embargo_start, :embargo_end
+FROM `media`
+JOIN `resource` ON `resource`.`id` = `media`.`id`
+JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+WHERE `item_item_set`.`item_set_id` = :item_set_id
+    AND `media`.`item_id` IN (:item_ids)
+    AND (`resource`.`is_public` = 1 $orWhereUser)
+ON DUPLICATE KEY UPDATE
+    `status` = :status,
+    `embargo_start` = :embargo_start,
+    `embargo_end` = :embargo_end
+;
+SQL;
+        $entityManager->getConnection()->executeStatement($sql, $bind, $types);
     }
 
     /**
