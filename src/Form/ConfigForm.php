@@ -96,6 +96,17 @@ forbidden = forbidden
             ])
 
             ->add([
+                'name' => 'accessresource_embargo_via_property',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Set embargo dates via property', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_embargo_via_property',
+                    'required' => false,
+                ],
+            ])
+            ->add([
                 'name' => 'accessresource_embargo_property_start',
                 'type' => OmekaElement\PropertySelect::class,
                 'options' => [

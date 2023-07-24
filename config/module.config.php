@@ -268,6 +268,9 @@ return [
                 AccessStatus::PROTECTED => 'protected',
                 AccessStatus::FORBIDDEN => 'forbidden',
             ],
+            'accessresource_hide_in_advanced_tab' => false,
+
+            'accessresource_embargo_via_property' => false,
             'accessresource_embargo_property_start' => null,
             'accessresource_embargo_property_end' => null,
             'accessresource_embargo_bypass' => false,

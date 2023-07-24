@@ -70,14 +70,6 @@ class UpdateAccessStatus extends AbstractJob
     protected $totalToProcess;
 
     /**
-     * The include defines the access mode constant "AccessResource::ACCESS_VIA_PROPERTY"
-     * that should be used, except to avoid install/update issues.
-     *
-     * @var bool|string
-     */
-    protected $accessViaProperty = false;
-
-    /**
      * @var string
      */
     protected $accessProperty;
@@ -104,17 +96,17 @@ class UpdateAccessStatus extends AbstractJob
     /**
      * @var string
      */
-    protected $missingMode = 'skip';
-
-    /**
-     * @var string
-     */
     protected $embargoPropertyStart;
 
     /**
      * @var string
      */
     protected $embargoPropertyEnd;
+
+    /**
+     * @var string
+     */
+    protected $missingMode = 'skip';
 
     public function perform(): void
     {
@@ -163,19 +155,23 @@ class UpdateAccessStatus extends AbstractJob
             'Starting indexation of access statuses of all resources.' // @translate
         ));
 
-        $this->accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
+        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
         $this->accessProperty = $settings->get('accessresource_access_property');
         $this->accessPropertyStatuses = $settings->get('accessresource_access_property_statuses', $this->accessPropertyStatusesDefault);
 
-        if ($this->accessViaProperty) {
+        if ($accessViaProperty) {
             $this->updateViaProperty();
         } else {
             $this->updateViaVisibility();
         }
 
+        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
         $this->embargoPropertyStart = $settings->get('accessresource_embargo_property_start');
         $this->embargoPropertyEnd = $settings->get('accessresource_embargo_property_end');
-        $this->updateEmbargo();
+
+        if  ($embargoViaProperty) {
+            $this->updateEmbargo();
+        }
     }
 
     protected function updateViaVisibility(): bool
