@@ -130,6 +130,7 @@ return [
             'accessresource_access_via_property' => false,
             'accessresource_access_via_property_statuses' => [
                 ACCESS_STATUS_FREE => 'free',
+                ACCESS_STATUS_PROTECTED => 'protected',
                 ACCESS_STATUS_RESERVED => 'reserved',
                 ACCESS_STATUS_FORBIDDEN => 'forbidden',
             ],

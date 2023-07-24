@@ -12,10 +12,10 @@ use Omeka\Entity\Resource;
  * Resources that don't have an access status are defined according to
  * visibility public/private. The status and the visibility must be compliant.
  *
- * To store all statuses (free, reserved, forbidden) for all selected resources
- * (item sets, items and media), and not only "reserved", allows to get it
- * directly for any mode and any param (with or without item/media…) and without
- * php processing.
+ * To store all statuses (free, reserved, protected, forbidden) for all selected
+ * resources (item sets, items and media), and not only "reserved", allows to
+ * get it directly for any mode and any param (with or without item/media…) and
+ * without php processing.
  *
  * @Entity
  * @Table(
@@ -31,15 +31,16 @@ class AccessStatus extends AbstractEntity
     /**#@+
      * Access statuses.
      *
-     * The status is set according to modes.
-     * There may be a fourth mode in the future.
+     * A resource can have four statuses from the most open to the most close.
      *
-     * FREE Free for all (public).
-     * RESERVED Restricted access (private, except for some people).
-     * FORBIDDEN Not available (private).
+     * FREE: Free access to resource.
+     * RESERVED: Restricted access to media content only, not to the record.
+     * PROTECTED: Restricted access to record and content (file).
+     * FORBIDDEN: Not available.
      */
     const FREE = 'free';
     const RESERVED = 'reserved';
+    const PROTECTED = 'protected';
     const FORBIDDEN = 'forbidden';
     /**#@-*/
 

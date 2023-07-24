@@ -15,6 +15,7 @@ const ACCESS_MODE_INDIVIDUAL = 'individual';
 // Like \AccessResource\Entity\AccessStatus.
 const ACCESS_STATUS_FREE = 'free';
 const ACCESS_STATUS_RESERVED = 'reserved';
+const ACCESS_STATUS_PROTECTED = 'protected';
 const ACCESS_STATUS_FORBIDDEN = 'forbidden';
 
 use const AccessResource\ACCESS_MODE;
@@ -72,6 +73,7 @@ class Module extends AbstractModule
      */
     protected $accessViaPropertyStatuses = [
         ACCESS_STATUS_FREE => 'free',
+        ACCESS_STATUS_PROTECTED => 'protected',
         ACCESS_STATUS_RESERVED => 'reserved',
         ACCESS_STATUS_FORBIDDEN => 'forbidden',
     ];
