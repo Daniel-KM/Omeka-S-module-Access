@@ -13,15 +13,44 @@ if (!count($requestables)) return;
 
 $plugins = $this->getHelperPluginManager();
 $url = $plugins->get('url');
+$setting = $plugins->get('setting');
 $assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
 
 $hasGuest = $plugins->has('guestWidget');
 
-$this->headLink()->appendStylesheet($assetUrl('css/access-request.css', 'AccessResource'));
-$this->headScript()->appendFile($assetUrl('js/access-request.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+$user = $this->identity();
+$accessModes = $setting('accessresource_access_modes');
+$allowIndividualRequests = (bool) array_intersect(['individual', 'email', 'token'], $accessModes);
+$allowGlobalRequests = (bool) array_intersect(['ip', 'guest', 'external'], $accessModes);
 
-$formSubmitUrl = $this->url('site/access-request/default', ['action' => 'submit'], true);
+$this->headLink()
+    ->appendStylesheet($assetUrl('css/access-request.css', 'AccessResource'));
+$this->headScript()
+    ->appendFile($assetUrl('js/access-request.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+
+$formSubmitUrl = $url('site/access-request/default', ['action' => 'submit'], true);
+
+$parts = [];
+if ($user) {
+    if ($allowIndividualRequests) {
+        $parts['form'] = 'form';
+    } else {
+        $parts['message'] = 'message';
+    }
+} else {
+    if ($allowIndividualRequests) {
+        if (in_array('email', $accessModes) || in_array('token', $accessModes)) {
+            $parts['form'] = 'form';
+        }
+        if (in_array('individual', $accessModes)) {
+            $parts['login'] = 'login';
+        }
+    }
+    if ($allowGlobalRequests) {
+        $parts['login'] = 'login';
+    }
+}
 ?>
 
 <button type="button" class="request-access-resource"><?= $translate('Request access') ?></button>
@@ -37,38 +66,42 @@ $formSubmitUrl = $this->url('site/access-request/default', ['action' => 'submit'
             </div>
             <div class="block-body">
 
-                <?php if ($user): ?>
-
-                    <?= $this->form($form) ?>
-
-                <?php elseif ($hasGuest): ?>
-
+                <?php if (in_array('message', $parts)): ?>
                     <div>
-                        <?php
-                        if ($this->setting('guest_open') === 'close'):
+                        <?= $setting('accessresource_message_access_text') ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (in_array('form', $parts)): ?>
+                    <?= $this->form($form) ?>
+                <?php endif?>
+
+                <?php if (in_array('login', $parts)): ?>
+                    <div>
+                        <?php if ($hasGuest):
+                            if ($setting('guest_open') === 'close'):
+                                echo sprintf(
+                                    $translate('To request access please %1$slogin%2$s or contact the publisher!'),
+                                    sprintf('<a href="%s">' , $url('site/guest/anonymous', ['action' => 'login'], true)),
+                                    '</a>'
+                                );
+                            else:
+                                echo sprintf(
+                                    $translate('To request access please %1$slogin%3$s or %2$sregister%3$s!'),
+                                    sprintf('<a href="%s">' , $url('site/guest/anonymous', ['action' => 'login'], true)),
+                                    sprintf('<a href="%s">' , $url('site/guest/anonymous', ['action' => 'register'], true)),
+                                    '</a>'
+                                );
+                            endif;
+                        else:
                             echo sprintf(
                                 $translate('To request access please %1$slogin%2$s or contact the publisher!'),
                                 sprintf('<a href="%s">' , $url('site/guest/anonymous', ['action' => 'login'], true)),
                                 '</a>'
                             );
-                        else:
-                            echo sprintf(
-                                $translate('To request access please %1$slogin%3$s or %2$sregister%3$s!'),
-                                sprintf('<a href="%s">' , $url('site/guest/anonymous', ['action' => 'login'], true)),
-                                sprintf('<a href="%s">' , $url('site/guest/anonymous', ['action' => 'register'], true)),
-                                '</a>'
-                            );
-                        endif;
-                        ?>
+                        endif; ?>
                     </div>
-
-                <?php else: ?>
-
-                    <div>
-                        <?= $translate('To request access please contact the publisher!') ?>
-                    </div>
-
-                <?php endif; ?>
+                <?php endif?>
 
             </div>
         </div>

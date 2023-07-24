@@ -2,8 +2,12 @@
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
+ * @var bool $isAccessRequestable
  */
 
 // Display the access request form of a resource.
+
+// By default, this check is done by the view helper too.
+// if (!$isAccessRequestable) return;
 
 echo $this->accessRequest($resource);

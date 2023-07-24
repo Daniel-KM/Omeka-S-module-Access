@@ -19,6 +19,7 @@ class SettingsFieldset extends Fieldset
         $this
             ->setAttribute('id', 'access-resource')
             ->setOption('element_groups', $this->elementGroups)
+
             ->add([
                 'name' => 'accessresource_message_send',
                 'type' => Element\Checkbox::class,
@@ -97,6 +98,19 @@ class SettingsFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'accessresource_message_user_request_updated',
                 ],
-            ]);
+            ])
+
+            ->add([
+                'name' => 'accessresource_message_access_text',
+                'type' => CkeditorInline::class,
+                'options' => [
+                    'element_group' => 'access',
+                    'label' => 'Message for the block "Access request text" when a resource is not available', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_message_access_text',
+                ],
+            ])
+        ;
     }
 }

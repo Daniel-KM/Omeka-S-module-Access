@@ -6,11 +6,11 @@ use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 use Omeka\Site\ResourcePageBlockLayout\ResourcePageBlockLayoutInterface;
 
-class AccessRequest implements ResourcePageBlockLayoutInterface
+class AccessRequestText implements ResourcePageBlockLayoutInterface
 {
     public function getLabel() : string
     {
-        return 'Access request form'; // @translate
+        return 'Access request text'; // @translate
     }
 
     public function getCompatibleResourceNames() : array
@@ -27,7 +27,7 @@ class AccessRequest implements ResourcePageBlockLayoutInterface
         /** @see \AccessResource\View\Helper\IsAccessRequestable */
         $isAccessRequestable = $view->isAccessRequestable($resource);
 
-        return $view->partial('common/resource-page-block-layout/access-request', [
+        return $view->partial('common/resource-page-block-layout/access-request-text', [
             'resource' => $resource,
             'isAccessRequestable' => $isAccessRequestable,
         ]);

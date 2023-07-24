@@ -45,6 +45,7 @@ return [
     'resource_page_block_layouts' => [
         'invokables' => [
             'accessRequest' => Site\ResourcePageBlockLayout\AccessRequest::class,
+            'accessRequestText' => Site\ResourcePageBlockLayout\AccessRequestText::class,
             'accessStatus' => Site\ResourcePageBlockLayout\AccessStatus::class,
         ],
     ],
@@ -337,6 +338,7 @@ return [
             'accessresource_message_user_subject' => 'New request status!', //@translate
             'accessresource_message_user_request_created' => 'Your request to access resource is sent to administrator. You will be inform when your request will change.', //@translate
             'accessresource_message_user_request_updated' => 'Your request to resource access is updated. You can check guest user requests dashboard.', //@translate
+            'accessresource_message_access_text' => 'This resource is not available for now. Contact the webmaster.', //@translate
         ],
     ],
 ];
