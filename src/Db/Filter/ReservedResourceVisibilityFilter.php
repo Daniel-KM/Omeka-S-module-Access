@@ -26,27 +26,23 @@ class ReservedResourceVisibilityFilter extends ResourceVisibilityFilter
             return $constraints;
         }
 
-        // Resource should have property 'curation:reserved', whatever the value.
         // The embargo is checked separately to avoid complex request.
-        // @todo Check embargo in visibility filter (don't take embargo option in account?).
+        // Useless: the status should be set from embargo via a cron job.
 
-        $reservedConstraints = [];
-
-        // Resource should be private.
-        $reservedConstraints[] = sprintf('%s.`is_public` = 0', $alias);
-
-        // And listed in the table access_reserved.
+        // And access_status is not forbidden.
         // @todo Use a simple join with table "access_resource" (and embargo dates?) of resources.
-        $reservedConstraints[] = sprintf(
+
+        $reservedConstraints = sprintf(
             'EXISTS (
-    SELECT `access_reserved`.`id`
-    FROM `access_reserved`
-    WHERE `access_reserved`.`id` = `%s`.`id`
+    SELECT `access_status`.`id`
+    FROM `access_status`
+    WHERE `access_status`.`id` = `%s`.`id`
+        AND `access_status`.`status` != "forbidden"
     LIMIT 1
 )',
             $alias
         );
 
-        return $constraints . sprintf(' OR (%s)', implode(' AND ', $reservedConstraints));
+        return $constraints . sprintf(' OR (%s)', $reservedConstraints);
     }
 }

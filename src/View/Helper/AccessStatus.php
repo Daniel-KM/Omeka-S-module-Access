@@ -4,7 +4,6 @@ namespace AccessResource\View\Helper;
 
 use AccessResource\Mvc\Controller\Plugin\AccessStatus as AccessStatusPlugin;
 use Laminas\View\Helper\AbstractHelper;
-use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 
 class AccessStatus extends AbstractHelper
 {
@@ -23,7 +22,7 @@ class AccessStatus extends AbstractHelper
      *
      * @uses \AccessResource\Mvc\Controller\Plugin\AccessStatus
      */
-    public function __invoke(?AbstractResourceEntityRepresentation $resource): string
+    public function __invoke($resource): string
     {
         return $this->accessStatusPlugin->__invoke($resource);
     }

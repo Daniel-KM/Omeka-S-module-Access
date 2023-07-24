@@ -9,9 +9,6 @@ use Omeka\Entity\Resource;
 /**
  * Access status of resources.
  *
- * Resources that don't have an access status are defined according to
- * visibility public/private. The status and the visibility must be compliant.
- *
  * To store all statuses (free, reserved, protected, forbidden) for all selected
  * resources (item sets, items and media), and not only "reserved", allows to
  * get it directly for any mode and any param (with or without item/media…) and

@@ -67,14 +67,14 @@ class Module extends AbstractModule
     protected $accessViaProperty = false;
 
     /**
-     * For mode property / status, list the possible status.
+     * For mode property / status, list the possible statuses.
      *
      * @var array
      */
     protected $accessViaPropertyStatuses = [
         ACCESS_STATUS_FREE => 'free',
-        ACCESS_STATUS_PROTECTED => 'protected',
         ACCESS_STATUS_RESERVED => 'reserved',
+        ACCESS_STATUS_PROTECTED => 'protected',
         ACCESS_STATUS_FORBIDDEN => 'forbidden',
     ];
 
@@ -187,7 +187,8 @@ class Module extends AbstractModule
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
         // Override the two core filters for media in order to detach two events
-        // of Omeka\Module use to filter media belonging to private items.
+        // of Omeka\Module used to filter media belonging to private items.
+        // It allows to filter reserved media and to search by storage_id.
         /** @see \Omeka\Module::filterMedia() */
         $listenersByEvent = [];
         $listenersByEvent['api.search.query'] = $sharedEventManager
@@ -557,6 +558,11 @@ class Module extends AbstractModule
         $this->filterMediaAdditional($event);
     }
 
+    /**
+     * Override the default event for media in order to add the check for the status.
+     *
+     * @see \Omeka\Module::filterMedia()
+     */
     protected function filterMediaOverride(Event $event): void
     {
         $services = $this->getServiceLocator();
@@ -616,6 +622,9 @@ class Module extends AbstractModule
         $qb->andWhere($expression);
     }
 
+    /**
+     *Add the ability to search media by storage_id.
+     */
     protected function filterMediaAdditional(Event $event): void
     {
         $adapter = $event->getTarget();
@@ -627,7 +636,6 @@ class Module extends AbstractModule
         }
 
         $query = $request->getContent();
-        // Ability to filter by storage_id.
         if (isset($query['storage_id'])) {
             $qb->andWhere($qb->expr()->eq(
                 'omeka_root.storageId',
@@ -638,6 +646,8 @@ class Module extends AbstractModule
 
     /**
      * Update access status according to resource edit request.
+     *
+     * The access status is decorrelated from the visibility since version 3.4.17.
      */
     public function updateAccessStatus(Event $event): void
     {
@@ -647,12 +657,6 @@ class Module extends AbstractModule
          * @var \Omeka\Api\Request $request
          */
         $resource = $event->getParam('entity');
-
-        $resourceName = $resource->getResourceName();
-        if (!in_array($resourceName, $this->accessApply)) {
-            return;
-        }
-
         $request = $event->getParam('request');
         $requestContent = $request->getContent();
 
@@ -721,19 +725,16 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $entityManager = $services->get('Omeka\EntityManager');
 
-        // Get current access reserved to keep or remove it.
-        $currentAccessReserved = $resource->getId()
-            ? $entityManager->find(AccessReserved::class, $resource->getId())
+        // Get current access reserved to keep.
+        $currentAccessStatus = $resource->getId()
+            ? $entityManager->find(AccessStatus::class, $resource->getId())
             : null;
-
-        if ($resourceAccessStatus === ACCESS_STATUS_RESERVED) {
-            if (!$currentAccessReserved) {
-                $currentAccessReserved = new AccessReserved($resource);
-            }
-            $entityManager->persist($currentAccessReserved);
-        } elseif ($currentAccessReserved) {
-            $entityManager->remove($currentAccessReserved);
+        if (!$currentAccessStatus) {
+            $currentAccessStatus = new AccessStatus($resource);
         }
+
+        $currentAccessStatus->setStatus($resourceAccessStatus);
+        $entityManager->persist($currentAccessStatus);
     }
 
     public function handleRequestCreated(Event $event): void
