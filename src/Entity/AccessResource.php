@@ -55,7 +55,7 @@ class AccessResource extends AbstractEntity
      *
      * @Column(
      *     type="string",
-     *     length=190,
+     *     length=32,
      *     nullable=true
      * )
      */

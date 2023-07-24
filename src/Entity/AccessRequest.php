@@ -63,8 +63,10 @@ class AccessRequest extends AbstractEntity
      * @Column(
      *     type="string",
      *     nullable=false,
-     *     length=190,
-     *     options={"default": "new"}
+     *     length=8,
+     *     options={
+     *         "default": "new"
+     *     }
      * )
      */
     protected $status = self::STATUS_NEW;
