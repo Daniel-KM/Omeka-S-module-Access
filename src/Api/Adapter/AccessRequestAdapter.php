@@ -197,7 +197,31 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         /** @var \AccessResource\Entity\AccessRequest $entity */
         $data = $request->getContent();
 
-        if (isset($data['o:resource']) && is_array($data['o:resource'])) {
+        // Only admins can update requests and manage specific params of the
+        // requests (resources, status and dates).
+        $operation = $request->getOperation();
+
+        $identity = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
+        $rolesAdmins = [
+            \Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN,
+            \Omeka\Permissions\Acl::ROLE_SITE_ADMIN,
+            \Omeka\Permissions\Acl::ROLE_EDITOR,
+            \Omeka\Permissions\Acl::ROLE_REVIEWER,
+        ];
+        $isAdmin = $identity && in_array($identity->getRole(), $rolesAdmins);
+        $isAdminOrCreate = $isAdmin || $operation === $request::CREATE;
+
+        if (!$isAdmin) {
+            if ($identity) {
+                $data['o:user'] = $identity;
+                $data['o:email'] = null;
+                $data['o:token'] = null;
+            } else {
+                $data['o:user'] = null;
+            }
+        }
+
+        if (isset($data['o:resource']) && is_array($data['o:resource']) && $isAdminOrCreate) {
             $resources = $entity->getResources();
             if (!count($data['o:resource'])) {
                 $resources->clear();
@@ -234,7 +258,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
             }
         }
 
-        if (array_key_exists('o:user', $data) && $data['o:user'] !== '') {
+        if (array_key_exists('o:user', $data) && $data['o:user'] !== '' && $isAdminOrCreate) {
             if ($data['o:user'] === null) {
                 $user = null;
             } elseif (is_numeric($data['o:user'])) {
@@ -252,20 +276,26 @@ class AccessRequestAdapter extends AbstractEntityAdapter
             $entity->setUser($user);
         }
 
-        if (array_key_exists('o:email', $data) && $data['o:email'] !== '') {
+        if (array_key_exists('o:email', $data) && $data['o:email'] !== '' && $isAdminOrCreate) {
             $entity->setEmail($data['o:email']);
         }
 
         // Don't update an existing token.
-        if (array_key_exists('o-access:token', $data) && $data['o-access:token'] !== '' && !$entity->getToken()) {
+        // Only an admin can create a token.
+        if (array_key_exists('o-access:token', $data) && $data['o-access:token'] !== '' && !$entity->getToken() && $isAdmin) {
             $entity->setToken($data['o-access:token']);
         }
 
-        if (isset($data['o:status']) && $data['o:status'] !== '' && is_string($data['o:status']) && isset($this->statuses[$data['o:status']])) {
+        // Only admin can modify status and set something else than "new".
+       // TODO Check status earlier and add Acl.
+        if (isset($data['o:status']) && $data['o:status'] !== '' && is_string($data['o:status']) && isset($this->statuses[$data['o:status']]) && $isAdminOrCreate) {
+            if (!$isAdmin && !in_array($data['o:status'], [AccessRequest::STATUS_NEW, AccessRequest::STATUS_RENEW])) {
+                $data['o:status'] = AccessRequest::STATUS_NEW;
+            }
             $entity->setStatus($data['o:status']);
         }
 
-        if (isset($data['o-access:recursive']) && in_array($data['o-access:recursive'], [false, true, 0, 1, '0', '1'], true)) {
+        if (isset($data['o-access:recursive']) && in_array($data['o-access:recursive'], [false, true, 0, 1, '0', '1'], true) && $isAdminOrCreate) {
             $entity->setRecursive((bool) $data['o-access:recursive']);
         }
 
@@ -276,7 +306,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         */
         $entity->setEnabled($entity->getStatus() === 'accepted');
 
-        if (array_key_exists('o-access:start', $data) && $data['o-access:start'] !== '') {
+        if (array_key_exists('o-access:start', $data) && $data['o-access:start'] !== '' && $isAdminOrCreate) {
             $startDate = null;
             if (is_string($data['o-access:start'])) {
                 try {
@@ -289,7 +319,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
             $entity->setStart($startDate);
         }
 
-        if (array_key_exists('o-access:end', $data) && $data['o-access:end'] !== '') {
+        if (array_key_exists('o-access:end', $data) && $data['o-access:end'] !== '' && $isAdminOrCreate) {
             $endDate = null;
             if (is_string($data['o-access:end'])) {
                 try {
