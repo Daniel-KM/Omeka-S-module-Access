@@ -1069,7 +1069,7 @@ class Module extends AbstractModule
         $accesses = $api->search('access_resources', ['resource_id' => $resource->id()])->getContent();
         $requests = $api->search('access_requests', ['resource_id' => $resource->id()])->getContent();
 
-        $partial = 'common/admin/access-resource-list';
+        $partial = 'common/admin/access-request-list';
         echo $event->getTarget()->partial(
             $partial,
             [

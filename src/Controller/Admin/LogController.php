@@ -2,7 +2,6 @@
 
 namespace AccessResource\Controller\Admin;
 
-use AccessResource\Entity\AccessLog;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
@@ -28,38 +27,18 @@ class LogController extends AbstractActionController
 
     public function browseAction()
     {
-        $params = $this->params();
-        $page = $params->fromQuery('page', 1);
-        $perPage = $this->settings()->get('pagination_per_page', 25);
+        $this->browse()->setDefaults('access_logs');
+        $response = $this->api()->search('access_logs', $this->params()->fromQuery());
+        $this->paginator($response->getTotalResults());
 
-        $query = $params->fromQuery() + [
-            'page' => $page,
-            'per_page' => $perPage,
-            'sort_by' => $params->fromQuery('sort_by', 'id'),
-            'sort_order' => $params->fromQuery('sort_order', 'desc'),
-        ];
+        $returnQuery = $this->params()->fromQuery();
+        unset($returnQuery['page']);
 
-        $qb = $this->entityManager->createQueryBuilder();
-        $qb
-            ->select('logs')
-            ->from(AccessLog::class, 'logs')
-            ->setFirstResult(((int) $query['page'] - 1) * (int) $query['per_page'])
-            ->setMaxResults((int) $query['per_page'])
-            ->orderBy('logs.id', 'DESC');
-        $logs = $qb->getQuery()->getResult();
-
-        $qb = $this->entityManager->createQueryBuilder();
-
-        $logCount = $qb
-            ->select($qb->expr()->count('logs_count.id'))
-            ->from(AccessLog::class, 'logs_count')
-            ->getQuery()
-            ->getSingleResult();
-
-        $this->paginator($logCount, $page, $perPage);
+        $accessLogs = $response->getContent();
 
         return new ViewModel([
-            'accessLogs' => $logs,
+            'accessLogs' => $accessLogs,
+            'resources' => $accessLogs,
         ]);
     }
 }

@@ -5,9 +5,10 @@
  */
 
 $plugins = $this->getHelperPluginManager();
-$translate = $plugins->get('translate');
+$url = $plugins->get('url');
+$i18n = $plugins->get('i18n');
 $escape = $plugins->get('escapeHtml');
-$urlHelper = $plugins->get('url');
+$translate = $plugins->get('translate');
 
 $sortHeadings = [
     [
@@ -40,7 +41,7 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
 
 <div id="page-actions">
     <?php if ($this->userIsAllowed(\AccessResource\Entity\AccessRequest::class, 'create')): ?>
-        <?= $this->hyperlink($translate('Add new request'), $urlHelper('admin/access-resource/default', ['controller' => 'request', 'action' => 'add']), ['class' => 'button']) ?>
+        <?= $this->hyperlink($translate('Add new request'), $url('admin/access-request/default', ['action' => 'add']), ['class' => 'button']) ?>
     <?php endif; ?>
 </div>
 
@@ -106,8 +107,8 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
                     </ul>
                 </td>
 
-                <td><?= $accessRequest->created()->format('Y-m-d H:i:s') ?></td>
-                <td><?= $accessRequest->modified() ? $accessRequest->modified()->format('Y-m-d H:i:s') : '' ?></td>
+                <td><?= $i18n->dateFormat($accessRequest, 'medium', 'medium') ?></td>
+                <td><?= $accessRequest->modified() ? $i18n->dateFormat($accessRequest->modified(), 'medium', 'medium') : '' ?></td>
             </tr>
         <?php endforeach; ?>
         </tbody>
@@ -189,5 +190,5 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
     </script>
 
 <?php else: ?>
-    <p><?= $escape($translate('No access records yet.')); ?> <a href="<?= $urlHelper(null, [], true); ?>"><?= $escape($translate('Refresh page')) ?></a></p>
+    <p><?= $escape($translate('No access records yet.')); ?> <a href="<?= $url(null, [], true); ?>"><?= $escape($translate('Refresh page')) ?></a></p>
 <?php endif; ?>

@@ -4,10 +4,16 @@
  * @var \AccessResource\Entity\AccessLog[] $accessLogs
  */
 
-$translate = $this->plugin('translate');
-$escape = $this->plugin('escapeHtml');
+$plugins = $this->getHelperPluginManager();
+$url = $plugins->get('url');
+$api = $plugins->get('api');
+$i18n = $plugins->get('i18n');
+$escape = $plugins->get('escapeHtml');
+$translate = $plugins->get('translate');
+$hyperlink= $plugins->get('hyperlink');
 
 $this->headLink()->appendStylesheet($this->assetUrl('css/table-access-resource.css', 'AccessResource'));
+
 $this->htmlElement('body')->appendAttribute('class', 'sites browse');
 ?>
 
@@ -32,11 +38,13 @@ $this->htmlElement('body')->appendAttribute('class', 'sites browse');
         <tbody>
         <?php foreach ($accessLogs as $accessLog): ?>
             <?php
-                if ($user = $accessLog->getUser()):
-                    $userText = $this->hyperlink(
-                        $user->getName(),
-                        $this->url('admin/id', ['controller' => 'user', 'action' => 'show', 'id' => $user->getId()])
-                    );
+                if ($userId = $accessLog->getUserId()):
+                    try {
+                        $user = $api->read('users', $userId)->getContent();
+                        $userText = $hyperlink($user->getName(), $url('admin/id', ['controller' => 'user', 'action' => 'show', 'id' => $user->getId()]));
+                    } catch (Exception $e) {
+                        $userText = $translate('[no user]');
+                    }
                 else:
                     $userText = $translate('[no user]');
                 endif;
@@ -46,7 +54,7 @@ $this->htmlElement('body')->appendAttribute('class', 'sites browse');
                 <td><?= $accessLog->getAction() ?></td>
                 <td><?= $accessLog->getAccessId() ?></td>
                 <td><?= $accessLog->getAccessType() ?></td>
-                <td><?= $accessLog->getDate()->format('Y-m-d H:i:s') ?></td>
+                <td><?= $i18n->dateFormat($accessLog->getDate(), 'medium', 'medium') ?></td>
             </tr>
         <?php endforeach; ?>
         </tbody>

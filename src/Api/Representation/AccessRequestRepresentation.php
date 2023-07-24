@@ -159,9 +159,8 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
     {
         $url = $this->getViewHelper('Url');
         return $url(
-            'admin/access-resource/id',
+            'admin/access-request/id',
             [
-                'controller' => 'request',
                 'action' => $action,
                 'id' => $this->id(),
             ],

@@ -8,6 +8,9 @@ use Omeka\Entity\AbstractEntity;
 /**
  * Store access to restricted resources for individual users.
  *
+ * @todo Store email or token too.
+ * @todo Remove this whole feature?
+ *
  * @Entity
  */
 class AccessLog extends AbstractEntity

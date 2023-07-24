@@ -74,7 +74,7 @@ class RequestController extends AbstractActionController
 
         if ($id && !$accessRequest) {
             $this->messenger()->addError(sprintf('Access request record with id #%s does not exist', $id)); // @translate
-            return $this->redirect()->toRoute('admin/access-resource');
+            return $this->redirect()->toRoute('admin/access-request');
         }
 
         $form = $this->getForm(AccessRequestForm::class);
@@ -103,9 +103,7 @@ class RequestController extends AbstractActionController
                 if ($accessRequest) {
                     $response = $this->api($form)->update('access_requests', $accessRequest->id(), $data, [], ['isPartial' => true]);
                     $accessRequest = $response->getContent();
-                    $accessUser = $this->entityManager
-                        ->getRepository(\Omeka\Entity\User::class)
-                        ->find($accessRequest->user()->id());
+                    $accessUser = $this->entityManager->find(\Omeka\Entity\User::class, $accessRequest->user()->id());
 
                     // Log changes to request record.
                     $log = new AccessLog();
@@ -131,7 +129,7 @@ class RequestController extends AbstractActionController
 
                 if ($response) {
                     $this->messenger()->addSuccess('Access request record successfully saved'); // @translate
-                    return $this->redirect()->toRoute('admin/access-resource', ['controller' => 'request']);
+                    return $this->redirect()->toRoute('admin/access-request');
                 }
             } else {
                 $this->messenger()->addFormErrors($form);
@@ -180,14 +178,7 @@ class RequestController extends AbstractActionController
             }
         }
 
-        return $this->redirect()->toRoute(
-            'admin/access-resource/default',
-            [
-                'controller' => 'request',
-                'action' => 'browse',
-            ],
-            true
-        );
+        return $this->redirect()->toRoute('admin/access-resource');
     }
 
     public function toggleAction()

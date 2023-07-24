@@ -46,11 +46,7 @@ var accessObject = <?= $requestedResource ? json_encode($requestedResource->valu
 <div id="page-actions">
     <?php
         echo $deleteButton;
-        echo $hyperlink(
-            $translate('Cancel'),
-            $urlHelper('admin/access-resource/default', ['controller' => 'request', 'action' => 'browse']),
-            ['class' => 'button']
-        );
+        echo $hyperlink($translate('Cancel'), $urlHelper('admin/access-request'), ['class' => 'button']);
     ?>
 </div>
 

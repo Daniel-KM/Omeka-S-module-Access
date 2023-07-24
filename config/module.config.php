@@ -66,9 +66,8 @@ return [
         ],
         'factories' => [
             'AccessResource\Controller\AccessResource' => Service\Controller\AccessResourceControllerFactory::class,
-            'AccessResource\Controller\Admin\Access' => Service\Controller\AccessControllerFactory::class,
-            'AccessResource\Controller\Admin\Log' => Service\Controller\LogControllerFactory::class,
-            'AccessResource\Controller\Admin\Request' => Service\Controller\RequestControllerFactory::class,
+            Controller\Admin\LogController::class => Service\Controller\LogControllerFactory::class,
+            Controller\Admin\RequestController::class => Service\Controller\RequestControllerFactory::class,
         ],
     ],
     'controller_plugins' => [
@@ -141,13 +140,13 @@ return [
             ],
             'admin' => [
                 'child_routes' => [
-                    'access-resource' => [
+                    'access-request' => [
                         'type' => \Laminas\Router\Http\Literal::class,
                         'options' => [
-                            'route' => '/access-resource',
+                            'route' => '/access-request',
                             'defaults' => [
                                 '__NAMESPACE__' => 'AccessResource\Controller\Admin',
-                                'controller' => 'access',
+                                'controller' => Controller\Admin\RequestController::class,
                                 'action' => 'browse',
                             ],
                         ],
@@ -156,14 +155,11 @@ return [
                             'default' => [
                                 'type' => \Laminas\Router\Http\Segment::class,
                                 'options' => [
-                                    'route' => '/:controller[/:action]',
+                                    'route' => '/:action',
                                     'constraints' => [
-                                        'controller' => '[a-zA-Z][a-zA-Z0-9_-]*',
                                         'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
                                     ],
                                     'defaults' => [
-                                        '__NAMESPACE__' => 'AccessResource\Controller\Admin',
-                                        'controller' => 'access',
                                         'action' => 'browse',
                                     ],
                                 ],
@@ -171,18 +167,26 @@ return [
                             'id' => [
                                 'type' => \Laminas\Router\Http\Segment::class,
                                 'options' => [
-                                    'route' => '/:controller/:id[/:action]',
+                                    'route' => '/:id[/:action]',
                                     'constraints' => [
-                                        'controller' => '[a-zA-Z][a-zA-Z0-9_-]*',
                                         'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
                                         'id' => '\d+',
                                     ],
                                     'defaults' => [
-                                        '__NAMESPACE__' => 'AccessResource\Controller\Admin',
-                                        'controller' => 'access',
                                         'action' => 'edit',
                                     ],
                                 ],
+                            ],
+                        ],
+                    ],
+                    'access-log' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/access-log',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'AccessResource\Controller\Admin',
+                                'controller' => Controller\Admin\LogController::class,
+                                'action' => 'browse',
                             ],
                         ],
                     ],
@@ -199,49 +203,27 @@ return [
                 'controller' => 'access',
                 'pages' => [
                     [
-                        'label' => 'Access Management', // @translate
-                        'route' => 'admin/access-resource',
-                        'controller' => 'access',
-                        'action' => 'browse',
-                        'pages' => [
-                            [
-                                'route' => 'admin/access-resource/default',
-                                'controller' => 'access',
-                                'visible' => false,
-                            ],
-                            [
-                                'route' => 'admin/access-resource/id',
-                                'controller' => 'access',
-                                'visible' => false,
-                            ],
-                        ],
-                    ],
-                    [
                         'label' => 'Requests', // @translate
-                        'route' => 'admin/access-resource/default',
-                        'controller' => 'request',
-                        'action' => 'browse',
+                        'route' => 'admin/access-request/default',
                         'pages' => [
                             [
-                                'route' => 'admin/access-resource/default',
-                                'controller' => 'request',
+                                'route' => 'admin/access-request/default',
                                 'visible' => false,
                             ],
                             [
-                                'route' => 'admin/access-resource/id',
-                                'controller' => 'request',
+                                'route' => 'admin/access-request/id',
                                 'visible' => false,
                             ],
                         ],
                     ],
                     [
                         'label' => 'Logs', // @translate
-                        'route' => 'admin/access-resource/default',
+                        'route' => 'admin/access-request/default',
                         'controller' => 'log',
                         'action' => 'browse',
                     ],
                     [
-                        'route' => 'admin/access-resource',
+                        'route' => 'admin/access-request',
                         'visible' => false,
                     ],
                 ],
