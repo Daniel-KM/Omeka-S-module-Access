@@ -11,11 +11,11 @@ $plugins = $this->getHelperPluginManager();
 $assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
 
+$level = $accessStatus ? $accessStatus->level() : 'free';
+$resourceName = $resource->resourceName();
 $allowIndividualRequests = (bool) array_intersect(['individual', 'token', 'email'], $this->setting('accessresource_access_modes'));
 
-$level = $accessStatus ? $accessStatus->level() : 'free';
-
-if ($level !== 'free' && $level !== 'forbidden')  {
+if ($level !== 'forbidden')  {
     $this->headLink()
         ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
     $this->headScript()
@@ -26,32 +26,44 @@ if ($level !== 'free' && $level !== 'forbidden')  {
 <div class="access-resource access-request">
 
     <?php // Quick form to add access. ?>
+    <?php // Displayed in all cases except forbidden or without individual access. A free item may have restricted media. ?>
 
     <div>
         <h4><?= $translate('Give access') ?></h4>
 
-     <?php if ($level ===  'free'): ?>
+        <?php if ($level ===  'free' && $resourceName === 'media'): ?>
 
         <div class="no-resources">
-            <p><?= $translate('Free access'); ?></p>
+            <p><?= $translate('Free access') ?></p>
         </div>
 
-    <?php elseif ($level ===  'forbidden'): ?>
+        <?php elseif ($level ===  'forbidden'): ?>
 
         <div class="no-resources">
-            <p><?= $translate('Forbidden access'); ?></p>
+            <p><?= $translate('Forbidden access') ?></p>
         </div>
 
     <?php elseif (!$allowIndividualRequests): ?>
 
         <div class="no-resources">
-            <p><?= $translate("Access settings don't allow individual requests."); ?></p>
+            <p><?= $translate("Access settings don't allow individual requests.") ?></p>
         </div>
 
-    <?php // Manage access to reserved resource (resources with other levels cannot be requested). ?>
     <?php else: ?>
 
-        <?php /* // TODO Create a form view helper for user selector.
+         <?php if ($level ===  'free'): ?>
+            <?php if ($resourceName === 'items'): ?>
+            <div>
+                <p><?= $translate('The access to this item is free, so the request should include medias.') ?></p>
+            </div>
+            <?php elseif ($resourceName === 'item_sets'): ?>
+            <div>
+                <p><?= $translate('The access to this item set is free, so the request should include items and medias.') ?></p>
+            </div>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <?php /* // TODO Use the user selector in the form instead of the select.
         <button id="user-selector-button"><?= $translate('Select user') ?></button>
         <?= $this->userSelector($translate('Click on a user to select it.'), false) ?>
         */ ?>

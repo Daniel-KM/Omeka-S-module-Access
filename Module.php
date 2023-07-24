@@ -953,6 +953,7 @@ class Module extends AbstractModule
             'accessRequests' => $accessRequests,
         ]);
 
+        // Admin request form.
         $requestForm = $view->partial('common/access-request-form', [
             'resource' => $resource,
             'accessStatus' => $accessStatus,
