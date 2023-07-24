@@ -265,8 +265,8 @@ class AccessRequestAdapter extends AbstractEntityAdapter
             $entity->setStatus($data['o:status']);
         }
 
-        if (isset($data['o-access:recursive']) && $data['o-access:recursive'] !== '' && in_array($data['o-access:recursive'], [0, 1, true, false])) {
-            $entity->setEnabled((bool) $data['o-access:recursive']);
+        if (isset($data['o-access:recursive']) && in_array($data['o-access:recursive'], [false, true, 0, 1, '0', '1'], true)) {
+            $entity->setRecursive((bool) $data['o-access:recursive']);
         }
 
         /*
