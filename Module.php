@@ -1278,7 +1278,7 @@ HTML;
     {
         $settings = $this->getServiceLocator()->get('Omeka\Settings');
         $modes = $settings->get('accessresource_access_modes');
-        // Mode "individual" is managed directly via authentication.
+        // Mode "user" is managed directly via authentication.
         $singleModes = array_intersect(['email', 'token'], $modes);
         if (!count($singleModes)) {
             return;

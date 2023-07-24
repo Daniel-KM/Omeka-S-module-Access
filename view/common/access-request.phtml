@@ -21,7 +21,7 @@ $hasGuest = $plugins->has('guestWidget');
 
 $user = $this->identity();
 $accessModes = $setting('accessresource_access_modes');
-$allowIndividualRequests = (bool) array_intersect(['individual', 'email', 'token'], $accessModes);
+$allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $accessModes);
 $allowGlobalRequests = (bool) array_intersect(['ip', 'guest', 'external'], $accessModes);
 
 $this->headLink()
@@ -43,7 +43,7 @@ if ($user) {
         if (in_array('email', $accessModes) || in_array('token', $accessModes)) {
             $parts['form'] = 'form';
         }
-        if (in_array('individual', $accessModes)) {
+        if (in_array('user', $accessModes)) {
             $parts['login'] = 'login';
         }
     }

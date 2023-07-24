@@ -286,7 +286,7 @@ return [
                 // 'ip',
                 'guest',
                 // 'external',
-                // 'individual',
+                // 'user',
                 // 'email',
                 // 'token',
             ],

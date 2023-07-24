@@ -30,12 +30,14 @@ class IsAllowedMediaContent extends AbstractHelper
      * via api to check the visibility first.
      *
      * Can access to public resources that are restricted or protected:
-     * - IP: anonymous with IP.
-     * - External: authenticated externally (cas for now, ldap or sso later).
-     * - Guest: guest users.
-     * - Individual: users with requests and anonymous with token.
-     * - Email: visitor identified by email with a request.
-     * - Token: user or visitor with a token.
+     * - global modes
+     *   - IP: anonymous with IP.
+     *   - External: authenticated externally (cas for now, ldap or sso later).
+     *   - Guest: guest users.
+     * - individual modes
+     *   - User: authenticated users via a request .
+     *   - Email: visitor identified by email via a request.
+     *   - Token: user or visitor with a token via a request.
      *
      * The embargo is checked first.
      *

@@ -18,7 +18,7 @@ class RequestController extends AbstractActionController
         // For user mode, it is recommended to use the module Guest.
 
         $modes = $this->settings()->get('accessresource_access_modes');
-        $individualModes = array_intersect(['individual', 'email', 'token'], $modes);
+        $individualModes = array_intersect(['user', 'email', 'token'], $modes);
         if (!count($individualModes)) {
             return $this->redirect()->toRoute('top');
         }
@@ -88,8 +88,8 @@ class RequestController extends AbstractActionController
         }
 
         $modes = $this->settings()->get('accessresource_access_modes');
-        $singleModes = array_intersect(['individual', 'email', 'token'], $modes);
-        if (!count($singleModes)) {
+        $individualModes = array_intersect(['user', 'email', 'token'], $modes);
+        if (!count($individualModes)) {
             $this->getResponse()->setStatusCode(405);
             return new JsonModel([
                 'status' => 'fail',

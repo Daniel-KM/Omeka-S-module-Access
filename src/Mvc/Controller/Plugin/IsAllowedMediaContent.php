@@ -84,12 +84,14 @@ class IsAllowedMediaContent extends AbstractPlugin
      * via api to check the visibility first.
      *
      * Can access to public resources that are restricted or protected:
-     * - IP: anonymous with IP.
-     * - External: authenticated externally (cas for now, ldap or sso later).
-     * - Guest: guest users.
-     * - Individual: users with requests and anonymous with token.
-     * - Email: visitor identified by email with a request.
-     * - Token: visitor with a request token.
+     * - global modes
+     *   - IP: anonymous with IP.
+     *   - External: authenticated externally (cas for now, ldap or sso later).
+     *   - Guest: guest users.
+     * - individual modes
+     *   - User: authenticated users via a request .
+     *   - Email: visitor identified by email via a request.
+     *   - Token: user or visitor with a token via a request.
      *
      * The embargo is checked first.
      *
@@ -154,8 +156,8 @@ class IsAllowedMediaContent extends AbstractPlugin
 
         // Use a single process for all single accesses to avoid multiple
         // queries, that are nearly the same.
-        $singleModes = array_intersect(['individual', 'email', 'token'], $modes);
-        if ($singleModes && $this->checkSingleAccesses($media, $singleModes, $this->user)) {
+        $individualModes = array_intersect(['user', 'email', 'token'], $modes);
+        if ($individualModes && $this->checkIndividualAccesses($media, $individualModes, $this->user)) {
             return true;
         }
 
@@ -260,20 +262,20 @@ class IsAllowedMediaContent extends AbstractPlugin
         return $remoteAddress->getIpAddress() ?: '::';
     }
 
-    protected function checkSingleAccesses(MediaRepresentation $media, array $singleModes, ?User $user = null): bool
+    protected function checkIndividualAccesses(MediaRepresentation $media, array $individualModes, ?User $user = null): bool
     {
         $bind = [];
         $types = [];
         $sqlModes = [];
 
-        foreach ($singleModes as $mode) switch ($mode) {
-            case 'individual':
+        foreach ($individualModes as $mode) switch ($mode) {
+            case 'user':
                 if (!$user) {
                     continue 2;
                 }
                 $bind['user_id'] = $user->getId();
                 $types['user_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
-                $sqlModes['Individual'] = 'ar.user_id = :user_id';
+                $sqlModes['user'] = 'ar.user_id = :user_id';
                 break;
             case 'email':
                 $email = $this->params->fromQuery('access');
