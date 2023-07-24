@@ -7,6 +7,7 @@ use const AccessResource\ACCESS_MODE_IP;
 use const AccessResource\ACCESS_MODE_INDIVIDUAL;
 
 use Laminas\Form\Element;
+use Laminas\Form\Fieldset;
 use Laminas\Form\Form;
 use Omeka\Form\Element as OmekaElement;
 
@@ -17,11 +18,9 @@ class ConfigForm extends Form
         $this
             ->add([
                 'name' => 'accessresource_access_mode',
-                'type' => Element\Radio::class,
+                'type' => Element\MultiCheckbox::class,
                 'options' => [
-                    'label' => 'Reserved access mode (to be set in config/local.config.php)', // @translate
-                    'info' => 'Access to a media is "reserved" when it has the property "curation:reserved" filled, whatever it is.', // @translate
-                    'documentation' => 'https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource#access-mode',
+                    'label' => 'Reserved access modes', // @translate
                     'value_options' => [
                         ACCESS_MODE_GLOBAL => 'Global: all users, included guests, have access to all reserved medias', // @translate
                         ACCESS_MODE_IP => 'IP: visitors with specified ips have access to all reserved medias', // @translate
@@ -30,27 +29,7 @@ class ConfigForm extends Form
                 ],
                 'attributes' => [
                     'id' => 'accessresource_access_mode',
-                    'required' => true,
-                    'disabled' => 'disabled',
-                    'style' => 'display: block;',
-                ],
-            ])
-            ->add([
-                'name' => 'accessresource_access_apply',
-                'type' => Element\MultiCheckbox::class,
-                'options' => [
-                    'label' => 'Apply the access rights only to these resources', // @translate
-                    'info' => 'To protect files only, select "medias". To protect records too, select them too.', // @translate
-                    'value_options' => [
-                        'items' => 'Items', // @translate
-                        'media' => 'Medias', // @translate
-                        'item_sets' => 'Item sets', // @translate
-                    ],
-                ],
-                'attributes' => [
-                    'id' => 'accessresource_access_apply',
                     'required' => false,
-                    'disabled' => 'disabled',
                     'style' => 'display: block;',
                 ],
             ])
@@ -58,17 +37,17 @@ class ConfigForm extends Form
                 'name' => 'accessresource_access_via_property',
                 'type' => Element\Radio::class,
                 'options' => [
-                    'label' => 'Set access via property (to be set in config/local.config.php)', // @translate
+                    'label' => 'Set access via property', // @translate
                     'value_options' => [
                         '' => 'Do not use property', // @translate
-                        'status' => 'Access via property with mode "status" (three possible values)', // @translate
-                        'reserved' => 'Access via property with mode "reserved" (presence or not of a value)', // @translate
+                        'status' => 'Access via property with mode "status" (four possible values)', // @translate
+                        // 'reserved' => 'Access via property with mode "reserved" (presence or not of a value)', // @translate
+                        // 'protected' => 'Access via property with mode "protected" (presence or not of a value)', // @translate
                     ],
                 ],
                 'attributes' => [
                     'id' => 'accessresource_access_via_property',
                     'required' => false,
-                    'disabled' => 'disabled',
                     'style' => 'display: block;',
                 ],
             ])
@@ -76,20 +55,19 @@ class ConfigForm extends Form
                 'name' => 'accessresource_access_via_property_statuses',
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
-                    'label' => 'Labels for the three statuses (for mode property/status)', // @translate
+                    'label' => 'Labels for the four statuses for mode property/status', // @translate
                     'as_key_value' => true,
                 ],
                 'attributes' => [
                     'id' => 'accessresource_access_via_property_statuses',
-                    'rows' => 3,
-                    'disabled' => 'disabled',
+                    'rows' => 4,
                     'placeholder' => 'free = free
 reserved = reserved
+protected = protected
 forbidden = forbidden
 ',
                 ],
             ])
-
             ->add([
                 'name' => 'accessresource_hide_in_advanced_tab',
                 'type' => Element\Checkbox::class,
@@ -102,6 +80,36 @@ forbidden = forbidden
             ])
 
             ->add([
+                'name' => 'accessresource_embargo_property_start',
+                'type' => OmekaElement\PropertySelect::class,
+                'options' => [
+                    'label' => 'Set property to use for embargo start', // @translate
+                    'term_as_value' => true,
+                    'empty_value' => '',
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_embargo_property_start',
+                    'class' => 'chosen-select',
+                    'multiple' => false,
+                    'data-placeholder' => 'Select property…', // @translate
+                ],
+            ])
+            ->add([
+                'name' => 'accessresource_embargo_property_end',
+                'type' => OmekaElement\PropertySelect::class,
+                'options' => [
+                    'label' => 'Set property to use for embargo end', // @translate
+                    'term_as_value' => true,
+                    'empty_value' => '',
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_embargo_property_start',
+                    'class' => 'chosen-select',
+                    'multiple' => false,
+                    'data-placeholder' => 'Select property…', // @translate
+                ],
+            ])
+            ->add([
                 'name' => 'accessresource_embargo_bypass',
                 'type' => Element\Checkbox::class,
                 'options' => [
@@ -111,16 +119,7 @@ forbidden = forbidden
                     'id' => 'accessresource_embargo_bypass',
                 ],
             ])
-            ->add([
-                'name' => 'accessresource_embargo_auto_update',
-                'type' => Element\Checkbox::class,
-                'options' => [
-                    'label' => 'Automatically update visibility status', // @translate
-                ],
-                'attributes' => [
-                    'id' => 'accessresource_embargo_auto_update',
-                ],
-            ])
+
             ->add([
                 'name' => 'accessresource_ip_item_sets',
                 'type' => OmekaElement\ArrayTextarea::class,
@@ -139,17 +138,59 @@ forbidden = forbidden
             ])
         ;
 
+        // Process reindexation of items and medias.
+        $this
+            ->add([
+                'name' => 'fieldset_index',
+                'type' => Fieldset::class,
+                'options' => [
+                    'label' => 'Update accesses status and visibility of all resources', // @translate
+                ],
+            ]);
+
+        $fieldset = $this->get('fieldset_index');
+        $fieldset
+            ->add([
+                'name' => 'missing',
+                'type' => Element\Radio::class,
+                'options' => [
+                    'label' => 'Fill missing statuses', // @translate
+                    'value_options' => [
+                        'skip' => 'Skip', // @translate
+                        'reserved' => 'Set access status free when public and reserved when private', // @translate
+                        'protected' => 'Set access status free when public and protected when private', // @translate
+                        'forbidden' => 'Set access status free when public and forbidden when private', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'missing',
+                ],
+            ])
+            ->add([
+                'name' => 'process_index',
+                'type' => Element\Submit::class,
+                'options' => [
+                    'label' => 'Process reindexation', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'process_index',
+                    'value' => 'Process', // @translate
+                ],
+            ])
+        ;
+
         $this->getInputFilter()
             ->add([
                 'name' => 'accessresource_access_mode',
                 'required' => false,
             ])
             ->add([
-                'name' => 'accessresource_access_apply',
+                'name' => 'accessresource_access_via_property',
                 'required' => false,
             ])
+            ->get('fieldset_index')
             ->add([
-                'name' => 'accessresource_access_via_property',
+                'name' => 'missing',
                 'required' => false,
             ])
         ;

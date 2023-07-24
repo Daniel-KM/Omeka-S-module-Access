@@ -12,18 +12,6 @@ const ACCESS_MODE_GLOBAL = 'global';
 const ACCESS_MODE_IP = 'ip';
 const ACCESS_MODE_INDIVIDUAL = 'individual';
 
-// Like \AccessResource\Entity\AccessStatus.
-const ACCESS_STATUS_FREE = 'free';
-const ACCESS_STATUS_RESERVED = 'reserved';
-const ACCESS_STATUS_PROTECTED = 'protected';
-const ACCESS_STATUS_FORBIDDEN = 'forbidden';
-
-use const AccessResource\ACCESS_MODE;
-use const AccessResource\ACCESS_VIA_PROPERTY;
-
-use const AccessResource\PROPERTY_STATUS;
-use const AccessResource\PROPERTY_RESERVED;
-
 use AccessResource\Entity\AccessStatus;
 use AccessResource\Form\Admin\BatchEditFieldset;
 use Doctrine\DBAL\ParameterType;
@@ -34,63 +22,11 @@ use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
-use Omeka\Settings\SettingsInterface;
 use Omeka\Stdlib\Message;
 
 class Module extends AbstractModule
 {
     const NAMESPACE = __NAMESPACE__;
-
-    /**
-     * The include defines the access mode constant "AccessResource::ACCESS_MODE"
-     * that should be used, except to avoid install/update issues.
-     *
-     * @var string
-     */
-    protected $accessMode = ACCESS_MODE_GLOBAL;
-
-    /**
-     * @var array
-     */
-    protected $accessApply = [
-        // 'items',
-        'media',
-        // 'item_sets',
-    ];
-
-    /**
-     * The include defines the access mode constant "AccessResource::ACCESS_VIA_PROPERTY"
-     * that should be used, except to avoid install/update issues.
-     *
-     * @var bool|string
-     */
-    protected $accessViaProperty = false;
-
-    /**
-     * For mode property / status, list the possible statuses.
-     *
-     * @var array
-     */
-    protected $accessViaPropertyStatuses = [
-        ACCESS_STATUS_FREE => 'free',
-        ACCESS_STATUS_RESERVED => 'reserved',
-        ACCESS_STATUS_PROTECTED => 'protected',
-        ACCESS_STATUS_FORBIDDEN => 'forbidden',
-    ];
-
-    public function getConfig()
-    {
-        $config = include OMEKA_PATH . '/config/local.config.php';
-        $this->accessMode = $config['accessresource']['access_mode'] ?? ACCESS_MODE_GLOBAL;
-        $this->accessApply = $config['accessresource']['access_apply'] ?? $this->accessApply;
-        $this->accessViaProperty = $config['accessresource']['access_via_property'] ?? false;
-        $this->accessViaPropertyStatuses = $config['accessresource']['access_via_property_statuses'] ?? $this->accessViaPropertyStatuses;
-        require_once __DIR__ . '/config/access_mode.'
-            . $this->accessMode
-            . ($this->accessViaProperty ? '.property.' . $this->accessViaProperty : '')
-            . '.php';
-        return include __DIR__ . '/config/module.config.php';
-    }
 
     protected function preInstall(): void
     {
@@ -114,40 +50,15 @@ class Module extends AbstractModule
     {
         parent::onBootstrap($event);
 
-        if ($this->accessMode === ACCESS_MODE_INDIVIDUAL) {
-            $this->addAclRoleAndRulesIndividually();
-        } else {
-            $this->addAclRoleAndRulesGlobally();
-        }
-    }
-
-    /**
-     * Add ACL role and rules for this module.
-     */
-    protected function addAclRoleAndRulesGlobally(): void
-    {
-        $this->getServiceLocator()->get('Omeka\Acl')
-            ->allow(
-                null,
-                ['AccessResource\Controller\AccessResource']
-            )
-        ;
-    }
-
-    /**
-     * Add ACL role and rules for this module.
-     */
-    protected function addAclRoleAndRulesIndividually(): void
-    {
         /** @var \Omeka\Permissions\Acl $acl */
         $services = $this->getServiceLocator();
         $acl = $services->get('Omeka\Acl');
 
         // Since Omeka 1.4, modules are ordered, so Guest come after AccessResource.
         // See \Guest\Module::onBootstrap(). Manage other roles too: contributor, etc.
-        // if (!$acl->hasRole('guest')) {
-        //     $acl->addRole('guest');
-        // }
+        if (!$acl->hasRole('guest')) {
+            $acl->addRole('guest');
+        }
 
         $acl
             ->allow(
@@ -261,54 +172,51 @@ class Module extends AbstractModule
         }
 
         // Extend the batch edit form via js.
-        // TODO Manage update when access is via property. And property can be prioritary or not.
-        if (!$this->accessViaProperty) {
-            $sharedEventManager->attach(
-                '*',
-                'view.batch_edit.before',
-                [$this, 'addAdminResourceHeaders']
-            );
-            $sharedEventManager->attach(
-                \Omeka\Form\ResourceBatchUpdateForm::class,
-                'form.add_elements',
-                [$this, 'formAddElementsResourceBatchUpdateForm']
-            );
-            $sharedEventManager->attach(
-                \Omeka\Api\Adapter\ItemSetAdapter::class,
-                'api.preprocess_batch_update',
-                [$this, 'handleResourceBatchUpdatePreprocess']
-            );
-            $sharedEventManager->attach(
-                \Omeka\Api\Adapter\ItemSetAdapter::class,
-                'api.batch_update.post',
-                [$this, 'handleResourceBatchUpdatePost']
-            );
-            $sharedEventManager->attach(
-                \Omeka\Api\Adapter\ItemAdapter::class,
-                'api.preprocess_batch_update',
-                [$this, 'handleResourceBatchUpdatePreprocess']
-            );
-            $sharedEventManager->attach(
-                \Omeka\Api\Adapter\ItemAdapter::class,
-                'api.batch_update.post',
-                [$this, 'handleResourceBatchUpdatePost']
-            );
-            $sharedEventManager->attach(
-                \Omeka\Api\Adapter\MediaAdapter::class,
-                'api.preprocess_batch_update',
-                [$this, 'handleResourceBatchUpdatePreprocess']
-            );
-            $sharedEventManager->attach(
-                \Omeka\Api\Adapter\MediaAdapter::class,
-                'api.batch_update.post',
-                [$this, 'handleResourceBatchUpdatePost']
-            );
-        }
-
-        // No more event when access is global.
-        if ($this->accessMode !== ACCESS_MODE_INDIVIDUAL) {
-            return;
-        }
+        $sharedEventManager->attach(
+            '*',
+            'view.batch_edit.before',
+            [$this, 'addAdminResourceHeaders']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Form\ResourceBatchUpdateForm::class,
+            'form.add_elements',
+            [$this, 'formAddElementsResourceBatchUpdateForm']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Form\ResourceBatchUpdateForm::class,
+            'form.add_input_filters',
+            [$this, 'formAddInputFiltersResourceBatchUpdateForm']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\ItemSetAdapter::class,
+            'api.preprocess_batch_update',
+            [$this, 'handleResourceBatchUpdatePreprocess']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\ItemSetAdapter::class,
+            'api.batch_update.post',
+            [$this, 'handleResourceBatchUpdatePost']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\ItemAdapter::class,
+            'api.preprocess_batch_update',
+            [$this, 'handleResourceBatchUpdatePreprocess']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\ItemAdapter::class,
+            'api.batch_update.post',
+            [$this, 'handleResourceBatchUpdatePost']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\MediaAdapter::class,
+            'api.preprocess_batch_update',
+            [$this, 'handleResourceBatchUpdatePreprocess']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Api\Adapter\MediaAdapter::class,
+            'api.batch_update.post',
+            [$this, 'handleResourceBatchUpdatePost']
+        );
 
         // Attach to Doctrine events Access Request update, to trigger Access
         // resource management.
@@ -396,140 +304,37 @@ class Module extends AbstractModule
     public function getConfigForm(PhpRenderer $renderer)
     {
         $this->warnConfig();
-
-        $services = $this->getServiceLocator();
-        $settings = $services->get('Omeka\Settings');
-        $this->initDataToPopulate($settings, 'config');
-        $data = $this->prepareDataToPopulate($settings, 'config');
-
-        $data['accessresource_access_mode'] = ACCESS_MODE;
-        $data['accessresource_access_apply'] = $this->accessApply;
-        $data['accessresource_access_via_property'] = (string) ACCESS_VIA_PROPERTY;
-        $data['accessresource_access_via_property_statuses'] = $this->accessViaPropertyStatuses;
-
-        /** @var \AccessResource\Form\ConfigForm $form */
-        $form = $services->get('FormElementManager')->get(\AccessResource\Form\ConfigForm::class);
-        $form->init();
-        if ($this->accessMode === ACCESS_MODE_GLOBAL) {
-            $form->remove('accessresource_ip_item_sets');
-        }
-        $form->setData($data);
-        $form->prepare();
-        return $renderer->formCollection($form);
+        return '<style>fieldset[name=fieldset_index] .inputs label {display: block;}</style>'
+            . parent::getConfigForm($renderer);
     }
 
     public function handleConfigForm(AbstractController $controller)
     {
         $this->warnConfig();
 
-        $services = $this->getServiceLocator();
-        $params = $controller->getRequest()->getPost();
-
-        $params['accessresource_access_mode'] = ACCESS_MODE;
-        $params['accessresource_access_apply'] = $this->accessApply;
-        $params['accessresource_access_via_property'] = (string) ACCESS_VIA_PROPERTY;
-        $params['accessresource_access_via_property_statuses'] = $this->accessViaPropertyStatuses;
-
-        $form = $services->get('FormElementManager')->get(\AccessResource\Form\ConfigForm::class);
-        $form->init();
-        $form->setData($params);
-        if (!$form->isValid()) {
-            $controller->messenger()->addErrors($form->getMessages());
+        $result = parent::handleConfigForm($controller);
+        if (!$result) {
             return false;
         }
 
-        // Check ips and item sets and prepare the quick hidden setting.
-        $api = $services->get('Omeka\ApiManager');
-        $hasError = false;
-        $config = $this->getConfig();
-
-        $params = $form->getData();
-        $params['accessresource_access_via_property'] = ACCESS_VIA_PROPERTY;
-
-        $settings = $services->get('Omeka\Settings');
-
-        $ipItemSets = $this->accessMode === ACCESS_MODE_GLOBAL
-            ? []
-            : $params['accessresource_ip_item_sets'] ?? [];
-        $params['accessresource_ip_item_sets'] = $ipItemSets;
-
-        $reservedIps = [];
-        foreach ($ipItemSets as $ip => $itemSetIds) {
-            $itemSets = [];
-            if (!$ip && !$itemSetIds) {
-                continue;
-            }
-            if (!$ip || !filter_var(strtok($ip, '/'), FILTER_VALIDATE_IP)) {
-                $message = new Message(
-                    'The ip "%s" is empty or invalid.', // @translate
-                    $ip
-                );
-                $controller->messenger()->addError($message);
-                $hasError = true;
-                continue;
-            } elseif ($itemSetIds) {
-                $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace('/\D/', ' ', $itemSetIds))));
-                if (!$itemSetIdsArray) {
-                    $message = new Message(
-                        'The item sets list "%1$s" for ip "%2$s" is invalid: they should be numeric ids.', // @translate
-                        $itemSetIds, $ip
-                    );
-                    $controller->messenger()->addError($message);
-                    $hasError = true;
-                    continue;
-                }
-                $itemSets = $api->search('item_sets', ['id' => $itemSetIdsArray], ['returnScalar' => 'id'])->getContent();
-                if (count($itemSets) !== count($itemSetIdsArray)) {
-                    $message = new Message(
-                        'The item sets list "%1$s" for ip "%2$s" contains unknown item sets (%3$s).', // @translate
-                        $itemSetIds, $ip, implode(', ', array_diff($itemSetIdsArray, $itemSets))
-                    );
-                    $controller->messenger()->addError($message);
-                    $hasError = true;
-                    continue;
-                }
-            }
-            $reservedIps[$ip] = $this->cidrToRange($ip);
-            $reservedIps[$ip]['reserved'] = $itemSets;
-        }
-
-        if ($hasError) {
+        $result = $this->prepareIpItemSets();
+        if (!$result) {
             return false;
         }
 
-        // Move the ip 0.0.0.0/0 as last ip, it will be possible to find a more
-        // precise rule if any.
-        foreach (['0.0.0.0', '0.0.0.0/0', '::'] as $ip) {
-            if (isset($reservedIps[$ip])) {
-                $v = $reservedIps[$ip];
-                unset($reservedIps[$ip]);
-                $reservedIps[$ip] = $v;
-            }
+        $post = $controller->getRequest()->getPost();
+        if (!empty($post['fieldset_index']['process_index'])) {
+            $vars = [
+                'missing' => $post['fieldset_index']['missing'] ?? null,
+            ];
+            $this->processUpdateMissingStatus($vars);
         }
 
-        $params['accessresource_ip_reserved'] = $reservedIps;
-
-        $defaultSettings = $config['accessresource']['config'];
-        $params = array_intersect_key($params, $defaultSettings);
-        foreach ($params as $name => $value) {
-            $settings->set($name, $value);
-        }
         return true;
     }
 
     protected function warnConfig(): void
     {
-        $config = include OMEKA_PATH . '/config/local.config.php';
-        if (empty($config['accessresource']['access_mode'])) {
-            $services = $this->getServiceLocator();
-            $translator = $services->get('MvcTranslator');
-            $message = new \Omeka\Stdlib\Message(
-                $translator->translate('The module is not configured: the key "[accessresource][access_mode]" should be set in the main config file of Omeka "config/local.config.php".') // @translate
-            );
-            $messenger = $services->get('ControllerPluginManager')->get('messenger');
-            $messenger->addWarning($message);
-        }
-
         if ($this->isModuleActive('Group')) {
             $services = $this->getServiceLocator();
             $translator = $services->get('MvcTranslator');
@@ -539,14 +344,6 @@ class Module extends AbstractModule
             $messenger = $services->get('ControllerPluginManager')->get('messenger');
             $messenger->addError($message);
         }
-    }
-
-    protected function prepareDataToPopulate(SettingsInterface $settings, string $settingsType): ?array
-    {
-        $data = parent::prepareDataToPopulate($settings, $settingsType);
-        // The mode is available only in main config file.
-        $data['accessresource_access_mode'] = $this->accessMode;
-        return $data;
     }
 
     /**
@@ -1293,6 +1090,110 @@ SQL;
             ];
             $connection->executeStatement($sql, $bind, $types);
         }
+    }
+
+    protected function processUpdateMissingStatus(array $vars): void
+    {
+        $services = $this->getServiceLocator();
+
+        $plugins = $services->get('ControllerPluginManager');
+        $url = $plugins->get('url');
+        $messenger = $plugins->get('messenger');
+
+        $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
+        $job = $dispatcher->dispatch(\AccessResource\Job\UpdateAccessStatus::class, $vars);
+        $message = new Message(
+            'A job was launched in background to update access statuses according to parameters: (%1$sjob #%2$d%3$s, %4$slogs%3$s).', // @translate
+            sprintf('<a href="%s">',
+                htmlspecialchars($url->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
+            ),
+            $job->getId(),
+            '</a>',
+            sprintf('<a href="%1$s">', $this->isModuleActive('Log')
+                ? $url->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])
+                : $url->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))
+        );
+        $message->setEscapeHtml(false);
+        $messenger->addSuccess($message);
+    }
+
+    /**
+     * Check ips and item sets and prepare the quick hidden setting.
+     */
+    protected function prepareIpItemSets(): bool
+    {
+        $services = $this->getServiceLocator();
+
+        /**
+         * @var \Omeka\\Api\Manager $api
+         * @var \Omeka\Settings\Settings $settings
+         * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
+         */
+        $plugins = $services->get('ControllerPluginManager');
+        $api = $services->get('Omeka\ApiManager');
+        $settings = $services->get('Omeka\Settings');
+        $messenger = $plugins->get('messenger');
+
+        $ipItemSets = $settings->get('accessresource_ip_item_sets') ?: [];
+
+        $reservedIps = [];
+        $hasError = false;
+        foreach ($ipItemSets as $ip => $itemSetIds) {
+            $itemSets = [];
+            if (!$ip && !$itemSetIds) {
+                continue;
+            }
+            if (!$ip || !filter_var(strtok($ip, '/'), FILTER_VALIDATE_IP)) {
+                $message = new Message(
+                    'The ip "%s" is empty or invalid.', // @translate
+                    $ip
+                );
+                $messenger->addError($message);
+                $hasError = true;
+                continue;
+            } elseif ($itemSetIds) {
+                $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace('/\D/', ' ', $itemSetIds))));
+                if (!$itemSetIdsArray) {
+                    $message = new Message(
+                        'The item sets list "%1$s" for ip "%2$s" is invalid: they should be numeric ids.', // @translate
+                        $itemSetIds, $ip
+                    );
+                    $messenger->addError($message);
+                    $hasError = true;
+                    continue;
+                }
+                $itemSets = $api->search('item_sets', ['id' => $itemSetIdsArray], ['returnScalar' => 'id'])->getContent();
+                if (count($itemSets) !== count($itemSetIdsArray)) {
+                    $message = new Message(
+                        'The item sets list "%1$s" for ip "%2$s" contains unknown item sets (%3$s).', // @translate
+                        $itemSetIds, $ip, implode(', ', array_diff($itemSetIdsArray, $itemSets))
+                    );
+                    $messenger->addError($message);
+                    $hasError = true;
+                    continue;
+                }
+            }
+            $reservedIps[$ip] = $this->cidrToRange($ip);
+            $reservedIps[$ip]['reserved'] = $itemSets;
+        }
+
+        if ($hasError) {
+            return false;
+        }
+
+        // Move the ip 0.0.0.0/0 as last ip, it will be possible to find a more
+        // precise rule if any.
+        foreach (['0.0.0.0', '0.0.0.0/0', '::'] as $ip) {
+            if (isset($reservedIps[$ip])) {
+                $v = $reservedIps[$ip];
+                unset($reservedIps[$ip]);
+                $reservedIps[$ip] = $v;
+            }
+        }
+
+        $settings->set('accessresource_ip_reserved', $reservedIps);
+
+        return true;
     }
 
     /**

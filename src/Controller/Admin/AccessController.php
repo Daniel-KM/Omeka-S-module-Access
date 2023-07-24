@@ -39,6 +39,7 @@ class AccessController extends AbstractActionController
 
     public function browseAction()
     {
+        // TODO Upgrade for Omeka S v4.
         $params = $this->params();
         $page = $params->fromQuery('page', 1);
         $perPage = $this->settings()->get('pagination_per_page', 25);

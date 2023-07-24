@@ -2,6 +2,8 @@
 
 namespace AccessResource;
 
+use AccessResource\Entity\AccessStatus;
+
 return [
     'api_adapters' => [
         'invokables' => [
@@ -259,15 +261,17 @@ return [
             ],
 
             'accessresource_access_via_property' => false,
-            'accessresource_access_via_property_statuses' => [
-                ACCESS_STATUS_FREE => 'free',
-                ACCESS_STATUS_RESERVED => 'reserved',
-                ACCESS_STATUS_PROTECTED => 'protected',
-                ACCESS_STATUS_FORBIDDEN => 'forbidden',
+            'accessresource_access_property' => null,
+            'accessresource_access_property_statuses' => [
+                AccessStatus::FREE => 'free',
+                AccessStatus::RESERVED => 'reserved',
+                AccessStatus::PROTECTED => 'protected',
+                AccessStatus::FORBIDDEN => 'forbidden',
             ],
             'accessresource_embargo_property_start' => null,
             'accessresource_embargo_property_end' => null,
             'accessresource_embargo_bypass' => false,
+
             'accessresource_ip_item_sets' => [],
 
             // Hidden settings automatically filled after saving config.
