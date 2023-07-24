@@ -45,6 +45,12 @@ class BatchEditFieldset extends Fieldset
             unset($valueOptions[AccessStatus::PROTECTED]);
         }
 
+        /**
+         * @fixme There is a warning on php 8 on date and time validator that is not fixed in version 2.25, the last version supporting 7.4.
+         * @see \Laminas\Validator\DateStep::convertString() ligne 207: output may be false.
+         */
+        error_reporting(error_reporting() & ~E_WARNING);
+
         $this
             ->setName('accessresource')
             ->setLabel('Access resource') // @translate
