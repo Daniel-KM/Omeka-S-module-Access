@@ -99,14 +99,15 @@ class AccessResourceController extends AbstractActionController
             && $storageType === 'original'
             && !$canViewAll
         ) {
+            $user = $this->identity();
             $log = new AccessLog();
-            $this->entityManager->persist($log);
             $log
                 ->setAction(empty($filepath) ? 'no_access' : 'accessed')
-                ->setUser($user)
-                ->setRecordId($media->id())
-                ->setType(AccessLog::TYPE_ACCESS)
+                ->setUserId($user ? $user->getId() : 0)
+                ->setAccessId($media->id())
+                ->setAccessType(AccessLog::TYPE_ACCESS)
                 ->setDate(new \DateTime());
+            $this->entityManager->persist($log);
             $this->entityManager->flush();
         }
 

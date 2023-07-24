@@ -112,9 +112,9 @@ class RequestController extends AbstractActionController
                     $this->entityManager->persist($log);
                     $log
                         ->setAction('update_to_' . $accessRequest->status())
-                        ->setUser($accessUser)
-                        ->setRecordId($accessRequest->id())
-                        ->setType(AccessLog::TYPE_REQUEST)
+                        ->setUserId($accessUser ? $accessUser->getId() : 0)
+                        ->setAccessId($accessRequest->id())
+                        ->setAccessType(AccessLog::TYPE_REQUEST)
                         ->setDate(new \DateTime());
                     $this->entityManager->flush();
 

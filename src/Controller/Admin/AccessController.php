@@ -119,9 +119,9 @@ class AccessController extends AbstractActionController
                     $this->entityManager->persist($log);
                     $log
                         ->setAction('update')
-                        ->setUser($accessUser)
-                        ->setRecordId($accessResource->id())
-                        ->setType(AccessLog::TYPE_ACCESS)
+                        ->setUserId($accessUser ? $accessUser->getId() : 0)
+                        ->setAccessId($accessResource->id())
+                        ->setAccessType(AccessLog::TYPE_ACCESS)
                         ->setDate(new \DateTime());
                     $this->entityManager->flush();
                 } else {
@@ -139,9 +139,9 @@ class AccessController extends AbstractActionController
                     $this->entityManager->persist($log);
                     $log
                         ->setAction('create')
-                        ->setUser($accessUser)
-                        ->setRecordId($accessResource->id())
-                        ->setType(AccessLog::TYPE_ACCESS)
+                        ->setUserId($accessUser ? $accessUser->getId() : 0)
+                        ->setAccessId($accessResource->id())
+                        ->setAccessType(AccessLog::TYPE_ACCESS)
                         ->setDate(new \DateTime());
                     $this->entityManager->flush();
                 }
@@ -207,9 +207,9 @@ class AccessController extends AbstractActionController
                     $this->entityManager->persist($log);
                     $log
                         ->setAction('delete')
-                        ->setUser($accessUser)
-                        ->setRecordId($id)
-                        ->setType(AccessLog::TYPE_ACCESS)
+                        ->setUserId($accessUser ? $accessUser->getId() : 0)
+                        ->setAccessId($id)
+                        ->setAccessType(AccessLog::TYPE_ACCESS)
                         ->setDate(new \DateTime());
                     $this->entityManager->flush();
 
@@ -240,9 +240,9 @@ class AccessController extends AbstractActionController
                         $this->entityManager->persist($log);
                         $log
                             ->setAction('delete')
-                            ->setUser($accessUser)
-                            ->setRecordId($id)
-                            ->setType(AccessLog::TYPE_ACCESS)
+                            ->setUserId($accessUser ? $accessUser->getId() : 0)
+                            ->setAccessId($id)
+                            ->setAccessType(AccessLog::TYPE_ACCESS)
                             ->setDate(new \DateTime());
                         $this->entityManager->flush();
                     }

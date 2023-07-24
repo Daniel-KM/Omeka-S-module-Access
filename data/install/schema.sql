@@ -13,9 +13,9 @@ CREATE TABLE `access_request` (
 CREATE TABLE `access_log` (
     `id` INT AUTO_INCREMENT NOT NULL,
     `user_id` INT NOT NULL,
+    `access_id` INT NOT NULL,
+    `access_type` VARCHAR(7) NOT NULL,
     `action` VARCHAR(31) NOT NULL,
-    `record_id` INT NOT NULL,
-    `type` VARCHAR(7) NOT NULL,
     `date` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY KEY(`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;

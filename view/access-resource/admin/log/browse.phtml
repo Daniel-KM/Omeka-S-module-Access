@@ -1,7 +1,7 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \AccessResource\Entity\AccessLog[] $logs
+ * @var \AccessResource\Entity\AccessLog[] $accessLogs
  */
 
 $translate = $this->plugin('translate');
@@ -13,7 +13,7 @@ $this->htmlElement('body')->appendAttribute('class', 'sites browse');
 
 <?= $this->pageTitle($translate('Access logs')) ?>
 
-<?php if (count($logs)): ?>
+<?php if (count($accessLogs)): ?>
     <div class="browse-controls">
         <?= $this->pagination() ?>
     </div>
@@ -30,9 +30,9 @@ $this->htmlElement('body')->appendAttribute('class', 'sites browse');
         </tr>
         </thead>
         <tbody>
-        <?php foreach ($logs as $log): ?>
+        <?php foreach ($accessLogs as $accessLog): ?>
             <?php
-                if ($user = $log->getUser()):
+                if ($user = $accessLog->getUser()):
                     $userText = $this->hyperlink(
                         $user->getName(),
                         $this->url('admin/id', ['controller' => 'user', 'action' => 'show', 'id' => $user->getId()])
@@ -43,10 +43,10 @@ $this->htmlElement('body')->appendAttribute('class', 'sites browse');
             ?>
             <tr>
                 <td><?= $userText ?></td>
-                <td><?= $log->getAction() ?></td>
-                <td><?= $log->getRecordId() ?></td>
-                <td><?= $log->getType() ?></td>
-                <td><?= $log->getDate()->format('Y-m-d H:i:s') ?></td>
+                <td><?= $accessLog->getAction() ?></td>
+                <td><?= $accessLog->getAccessId() ?></td>
+                <td><?= $accessLog->getAccessType() ?></td>
+                <td><?= $accessLog->getDate()->format('Y-m-d H:i:s') ?></td>
             </tr>
         <?php endforeach; ?>
         </tbody>

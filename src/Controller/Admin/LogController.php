@@ -59,7 +59,7 @@ class LogController extends AbstractActionController
         $this->paginator($logCount, $page, $perPage);
 
         return new ViewModel([
-            'logs' => $logs,
+            'accessLogs' => $logs,
         ]);
     }
 }

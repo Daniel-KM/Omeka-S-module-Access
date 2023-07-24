@@ -67,10 +67,10 @@ class AccessLog extends \AccessResource\Entity\AccessLog implements \Doctrine\OR
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'id', 'userId', 'action', 'recordId', 'type', 'date'];
+            return ['__isInitialized__', 'id', 'userId', 'accessId', 'accessType', 'action', 'date'];
         }
 
-        return ['__isInitialized__', 'id', 'userId', 'action', 'recordId', 'type', 'date'];
+        return ['__isInitialized__', 'id', 'userId', 'accessId', 'accessType', 'action', 'date'];
     }
 
     /**
@@ -217,6 +217,50 @@ class AccessLog extends \AccessResource\Entity\AccessLog implements \Doctrine\OR
     /**
      * {@inheritDoc}
      */
+    public function setAccessId(int $accessId): \AccessResource\Entity\AccessLog
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setAccessId', [$accessId]);
+
+        return parent::setAccessId($accessId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAccessId(): int
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getAccessId', []);
+
+        return parent::getAccessId();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setAccessType(string $accessType): \AccessResource\Entity\AccessLog
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setAccessType', [$accessType]);
+
+        return parent::setAccessType($accessType);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAccessType(): string
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getAccessType', []);
+
+        return parent::getAccessType();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function setAction(string $action): \AccessResource\Entity\AccessLog
     {
 
@@ -234,50 +278,6 @@ class AccessLog extends \AccessResource\Entity\AccessLog implements \Doctrine\OR
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getAction', []);
 
         return parent::getAction();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setRecordId(int $recordId): \AccessResource\Entity\AccessLog
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setRecordId', [$recordId]);
-
-        return parent::setRecordId($recordId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getRecordId(): ?int
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getRecordId', []);
-
-        return parent::getRecordId();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setType(string $type): \AccessResource\Entity\AccessLog
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setType', [$type]);
-
-        return parent::setType($type);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getType(): ?string
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getType', []);
-
-        return parent::getType();
     }
 
     /**

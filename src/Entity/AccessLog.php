@@ -46,6 +46,31 @@ class AccessLog extends AbstractEntity
     protected $userId;
 
     /**
+     * May be an access resource (create, update, delete) or an access request
+     * for other actions.
+     *
+     * @var int
+     *
+     * @Column(
+     *     type="integer",
+     *     nullable=false
+     * )
+     */
+    protected $accessId;
+
+    /**
+     * This is "access" for access_resource or "request" for access_request.
+     *
+     * @var string
+     *
+     * @Column(
+     *     type="string",
+     *     length=7
+     * )
+     */
+    protected $accessType;
+
+    /**
      * "update", "create", "delete", "no_access", "accessed", "update_to_" + action.
      *
      * @var string
@@ -56,27 +81,6 @@ class AccessLog extends AbstractEntity
      * )
      */
     protected $action;
-
-    /**
-     * @var int
-     *
-     * @Column(
-     *     type="integer"
-     * )
-     */
-    protected $recordId;
-
-    /**
-     * This is "access" or "request".
-     *
-     * @var string
-     *
-     * @Column(
-     *     type="string",
-     *     length=7
-     * )
-     */
-    protected $type;
 
     /**
      * @var \DateTime
@@ -107,6 +111,28 @@ class AccessLog extends AbstractEntity
         return $this->userId;
     }
 
+    public function setAccessId(int $accessId): self
+    {
+        $this->accessId = $accessId;
+        return $this;
+    }
+
+    public function getAccessId(): int
+    {
+        return $this->accessId;
+    }
+
+    public function setAccessType(string $accessType): self
+    {
+        $this->accessType = $accessType;
+        return $this;
+    }
+
+    public function getAccessType(): string
+    {
+        return $this->accessType;
+    }
+
     public function setAction(string $action): self
     {
         $this->action = $action;
@@ -116,28 +142,6 @@ class AccessLog extends AbstractEntity
     public function getAction(): ?string
     {
         return $this->action;
-    }
-
-    public function setRecordId(int $recordId): self
-    {
-        $this->recordId = $recordId;
-        return $this;
-    }
-
-    public function getRecordId(): ?int
-    {
-        return $this->recordId;
-    }
-
-    public function setType(string $type): self
-    {
-        $this->type = $type;
-        return $this;
-    }
-
-    public function getType(): ?string
-    {
-        return $this->type;
     }
 
     public function setDate(DateTime $date): self
