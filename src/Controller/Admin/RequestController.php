@@ -2,6 +2,7 @@
 
 namespace AccessResource\Controller\Admin;
 
+use AccessResource\Controller\AccessTrait;
 use AccessResource\Entity\AccessRequest;
 use AccessResource\Form\Admin\AccessRequestForm;
 use Doctrine\ORM\EntityManager;
@@ -14,6 +15,8 @@ use Omeka\Stdlib\Message;
 
 class RequestController extends AbstractActionController
 {
+    use AccessTrait;
+
     /**
      * @var \Doctrine\ORM\EntityManager;
      */

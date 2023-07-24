@@ -76,6 +76,7 @@ class IsAccessRequestable extends AbstractHelper
 
         $resourceName = $resource->resourceName();
         if ($resourceName === 'media') {
+            // The level should be checked, else "forbidden" will output true.
             $level = $this->accessLevel->__invoke($resource);
             return in_array($level, [AccessStatus::RESERVED, AccessStatus::PROTECTED])
                 && !$this->isAllowedMediaContent->__invoke($resource);

@@ -41,6 +41,6 @@ class GuestBoardController extends AbstractActionController
             'accessRequests' => $requests->getContent(),
         ]);
         return $view
-            ->setTemplate('guest/site/guest/access-resources');
+            ->setTemplate('guest/site/guest/access-requests');
     }
 }

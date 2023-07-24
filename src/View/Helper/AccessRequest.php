@@ -2,7 +2,7 @@
 
 namespace AccessResource\View\Helper;
 
-use AccessResource\Form\AccessRequestForm;
+use AccessResource\Form\Site\AccessRequestForm;
 use Laminas\Form\FormElementManager;
 use Laminas\View\Helper\AbstractHelper;
 
@@ -153,7 +153,16 @@ class AccessRequest extends AbstractHelper
 
     public function form(): AccessRequestForm
     {
-        return $this->formElementManager->get(AccessRequestForm::class);
+        /** @var \AccessResource\Form\Site\AccessRequestForm $form */
+        $formOptions = [
+            'full_access' => (bool) $this->view->setting('accessresource_full'),
+            'resources' => $this->getRequestableResources(),
+            'user' => $this->view->identity(),
+        ];
+        /** @var \AccessResource\Form\Site\AccessRequestForm $form */
+        $form = $this->formElementManager->get(AccessRequestForm::class, $formOptions);
+        $form->setOptions($formOptions);
+        return $form;
     }
 
     public function render(): string

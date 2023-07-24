@@ -78,11 +78,11 @@ class Module extends AbstractModule
         $acl
             ->allow(
                 null,
-                ['AccessResource\Controller\AccessResource']
+                [\AccessResource\Controller\AccessFileController::class]
             )
             ->allow(
                 null,
-                ['AccessResource\Controller\Site\Request'],
+                [\AccessResource\Controller\Site\RequestController::class],
                 ['submit']
             )
             ->allow(
@@ -91,7 +91,7 @@ class Module extends AbstractModule
             )
             ->allow(
                 $roles,
-                ['AccessResource\Controller\Site\GuestBoard']
+                [\AccessResource\Controller\Site\GuestBoardController::class]
             )
             ->allow(
                 null,
@@ -266,19 +266,6 @@ class Module extends AbstractModule
             'Omeka\Controller\Site\Media',
             'view.show.after',
             [$this, 'handleViewShowAfterMedia']
-        );
-
-        // Send email to admin/user when a request is created or updated.
-        $sharedEventManager->attach(
-            \AccessResource\Controller\Site\RequestController::class,
-            'accessresource.request.created',
-            [$this, 'handleRequestCreated']
-        );
-
-        $sharedEventManager->attach(
-            \AccessResource\Controller\Admin\RequestController::class,
-            'accessresource.request.updated',
-            [$this, 'handleRequestUpdated']
         );
 
         // Guest user integration.
@@ -813,30 +800,6 @@ class Module extends AbstractModule
         }
     }
 
-    public function handleRequestCreated(Event $event): void
-    {
-        $services = $this->getServiceLocator();
-        if (!$services->get('Omeka\Settings')->get('accessresource_message_send')) {
-            return;
-        }
-
-        $requestMailer = $services->get('ControllerPluginManager')->get('requestMailer');
-        $requestMailer->sendMailToAdmin('created');
-        $requestMailer->sendMailToUser('created');
-    }
-
-    public function handleRequestUpdated(Event $event): void
-    {
-        $services = $this->getServiceLocator();
-        if (!$services->get('Omeka\Settings')->get('accessresource_message_send')) {
-            return;
-        }
-
-        $requestMailer = $services->get('ControllerPluginManager')->get('requestMailer');
-        // $requestMailer->sendMailToAdmin('updated');
-        $requestMailer->sendMailToUser('updated');
-    }
-
     /**
      * Add a tab to section navigation (show has no "advanced tab").
      */
@@ -1181,8 +1144,8 @@ HTML;
         $partial = $viewHelpers->get('partial');
 
         $widget = [];
-        $widget['label'] = $translate('Resource access'); // @translate
-        $widget['content'] = $partial('guest/site/guest/widget/access-resource');
+        $widget['label'] = $translate('Access requests'); // @translate
+        $widget['content'] = $partial('guest/site/guest/widget/access-requests');
         $widgets['access'] = $widget;
 
         $event->setParam('widgets', $widgets);

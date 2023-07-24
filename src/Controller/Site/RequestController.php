@@ -2,65 +2,133 @@
 
 namespace AccessResource\Controller\Site;
 
+use AccessResource\Controller\AccessTrait;
 use AccessResource\Entity\AccessRequest;
+use AccessResource\Form\Site\AccessRequestForm;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\JsonModel;
-use Omeka\Mvc\Exception\PermissionDeniedException;
 
 class RequestController extends AbstractActionController
 {
+    use AccessTrait;
+
     public function submitAction()
     {
+        if (!$this->getRequest()->isPost()) {
+            $this->getResponse()->setStatusCode(405);
+            return new JsonModel([
+                'status' => 'fail',
+                'data' => [
+                    'access_request' => [
+                        'o:id' => $this->translate('Method should be post.'), // @translate
+                    ],
+                ],
+            ]);
+        }
+
+        $api = $this->api();
+        $post = $this->params()->fromPost();
+        $resources = $post['o:resource'] ?? null;
+        if (!$resources) {
+            $this->getResponse()->setStatusCode(405);
+            return new JsonModel([
+                'status' => 'fail',
+                'data' => [
+                    'access_request' => [
+                        'o:resource' => $this->translate('No resources were requested.'), // @translate
+                    ],
+                ],
+            ]);
+        }
+
+        // Here, the request is done by user or email.
         $user = $this->identity();
-        if (!$user) {
-            throw new PermissionDeniedException;
+        $email = $this->params()->fromPost('o:email');
+        if (!$user && !$email) {
+            $this->getResponse()->setStatusCode(405);
+            return new JsonModel([
+                'status' => 'fail',
+                'data' => [
+                    'access_request' => [
+                        'o:email' => $this->translate('An email is required.'), // @translate
+                    ],
+                ],
+            ]);
+        } elseif ($user && $email) {
+            $post['email'] = null;
+        } elseif (!$user && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            // Early check: normally checked below.
+            $this->getResponse()->setStatusCode(405);
+            return new JsonModel([
+                'status' => 'fail',
+                'data' => [
+                    'access_request' => [
+                        'o:email' => $this->translate('A valid email is required.'), // @translate
+                    ],
+                ],
+            ]);
         }
 
-        // Add requests for each resource if it does not exist.
-        if ($this->getRequest()->isPost()) {
-            $api = $this->api();
-            $resources = $this->params()->fromPost('resources', []);
+        // TODO Find a way to load the list of resources in RequestController.
 
-            // Get existing requests.
-            $requestsByResource = [];
-            if (count($resources)) {
-                $requests = $api->search('access_requests', [
-                    'user_id' => $user->getId(),
-                    'resource_id' => $resources,
-                ])->getContent();
-                foreach ($requests as $request) {
-                    $requestsByResource[$request->resource()->id()] = $request;
-                }
-            }
-            $requestedResources = array_keys($requestsByResource);
-            $resourcesRequestCreate = array_diff($resources, $requestedResources);
-
-            foreach ($resourcesRequestCreate as $resource) {
-                $api->create('access_requests', [
-                    'user_id' => $user->getId(),
-                    'resource_id' => $resource,
-                    'status' => AccessRequest::STATUS_NEW,
-                ]);
-            }
-            foreach ($requestsByResource as $request) {
-                $api->update('access_requests', $request->id(), [
-                    'user_id' => $user->getId(),
-                    'resource_id' => $request->resource()->id(),
-                    'status' => AccessRequest::STATUS_RENEW,
-                ]);
-            }
+        /** @var \AccessResource\Form\Site\AccessRequestForm $form */
+        $formOptions = [
+            'full_access' => (bool) $this->settings()->get('accessresource_full'),
+            'resources' => [],
+            'user' => $user,
+        ];
+        /** @var \AccessResource\Form\Site\AccessRequestForm $form */
+        $form = $this->getForm(AccessRequestForm::class, $formOptions);
+        $form->setOptions($formOptions);
+        $form->setData($post);
+        if (!$form->isValid()) {
+            $this->getResponse()->setStatusCode(405);
+            return new JsonModel([
+                'status' => 'fail',
+                'data' => [
+                    'access_request' => $form->getMessages(),
+                ],
+            ]);
         }
 
-        $result = new JsonModel([
-            'status' => \Laminas\Http\Response::STATUS_CODE_200,
-            'data' => [
-                'success' => true,
-            ],
-        ]);
+        /* TODO Check for existing requests.
+        $accessRequests = $api->search('access_requests', [
+            $user ? 'user_id' : 'email' => $user ? $user->getId() : $email,
+            'resource' => $resources,
+        ])->getContent();
+        */
 
-        // $event = new Event('AccessResource\Controller\RequestController', $this);
-        // $event->setName('view.handle.after');
-        $this->getEventManager()->trigger('accessresource.request.created');
+        $accessRequest = $api->create('access_requests', [
+            $user ? 'o:user' : 'o:email' => $user ?: $email,
+            'o:resource' => $resources,
+            'o:status' => AccessRequest::STATUS_NEW,
+            // To simplify end user experience, always set request recursive.
+            'o-access:recursive' => true,
+        ])->getContent();
+
+        $post['request_from'] = 'somebody';
+        $result = $this->sendRequestEmailCreate($accessRequest, $post);
+
+        if ($result) {
+            return new JsonModel([
+                'status' => 'success',
+                'data' => [
+                    'access_request' => [
+                        'o:id' => $accessRequest->id(),
+                    ],
+                ],
+            ]);
+        } else {
+            return new JsonModel([
+                'status' => 'success',
+                'data' => [
+                    'access_request' => [
+                        'o:id' => $accessRequest->id(),
+                    ],
+                ],
+                'message' => $this->translate('The request was sent, but an issue occurred when sending the confirmation email.'), // @translate
+            ]);
+        }
 
         return $result;
     }

@@ -4,7 +4,7 @@
  * @var \Omeka\Entity\User|null $user
  * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[] $resources
  * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[] $requestables
- * @var \AccessResource\Form\AccessRequestForm $form
+ * @var \AccessResource\Form\Site\AccessRequestForm $form
  * @var string $requestType
  */
 
@@ -21,7 +21,7 @@ $hasGuest = $plugins->has('guestWidget');
 $this->headLink()->appendStylesheet($assetUrl('css/access-request.css', 'AccessResource'));
 $this->headScript()->appendFile($assetUrl('js/access-request.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
 
-$formSubmitUrl = $this->url('site/access-resource-request', [], true);
+$formSubmitUrl = $this->url('site/access-request', [], true);
 ?>
 
 <button type="button" class="request-access-resource"><?= $translate('Request access') ?></button>
@@ -39,19 +39,7 @@ $formSubmitUrl = $this->url('site/access-resource-request', [], true);
 
                 <?php if ($user): ?>
 
-                    <?= $this->form()->openTag($form) ?>
-                    <?php foreach ($requestables as $resource): ?>
-                    <div>
-                        <label>
-                            <input type="checkbox" name="resources[]" value="<?= $resource->id() ?>">
-                            <?= $resource->linkPretty() ?>
-                        </label>
-                    </div>
-                    <?php endforeach; ?>
-                    <?= $this->formHidden($form->get('csrf')) ?>
-                    <br/>
-                    <?= $this->formRow($form->get('access_request_submit')->get('submit')) ?>
-                    <?= $this->form()->closeTag() ?>
+                    <?= $this->form($form) ?>
 
                 <?php elseif ($hasGuest): ?>
 

@@ -10,10 +10,7 @@ use Omeka\Api\Representation\MediaRepresentation;
 use Omeka\Mvc\Exception;
 use Omeka\Permissions\Acl;
 
-/**
- * @todo Simplify according to Statistics\Controller\DownloadController
- */
-class AccessResourceController extends AbstractActionController
+class AccessFileController extends AbstractActionController
 {
     /**
      * @var \Doctrine\ORM\EntityManager
@@ -152,7 +149,7 @@ class AccessResourceController extends AbstractActionController
      * This is the 'file' action that is invoked when a user wants to download
      * the given file.
      *
-     * @see \AccessResource\Controller\AccessResourceController::sendFile()
+     * @see \AccessResource\Controller\AccessFileController::sendFile()
      * @see \DerivativeMedia\Controller\IndexController::sendFile()
      * @see \Statistics\Controller\DownloadController::sendFile()
      * and

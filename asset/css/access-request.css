@@ -47,4 +47,12 @@
     .access-request-form .form-wrapper .form-block .block-body {
         padding: 15px 10px;
     }
+    .access-request-form form label {
+        display: block;
+        margin-bottom: 12px;
+    }
+    .access-request-form form label input {
+        margin-right: 12px;
+        vertical-align: unset;
+    }
 }

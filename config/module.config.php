@@ -51,7 +51,6 @@ return [
     'form_elements' => [
         'invokables' => [
             Form\Element\OptionalRadio::class => Form\Element\OptionalRadio::class,
-            Form\AccessRequestForm::class => Form\AccessRequestForm::class,
             Form\ConfigForm::class => Form\ConfigForm::class,
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,
         ],
@@ -59,14 +58,16 @@ return [
         'factories' => [
             Form\Admin\AccessRequestForm::class => \Omeka\Form\Factory\InvokableFactory::class,
             Form\Admin\BatchEditFieldset::class => \Omeka\Form\Factory\InvokableFactory::class,
+            Form\Site\AccessRequestForm::class => \Omeka\Form\Factory\InvokableFactory::class,
         ],
     ],
     'controllers' => [
         'invokables' => [
-            'AccessResource\Controller\Site\GuestBoard' => Controller\Site\GuestBoardController::class,
-            'AccessResource\Controller\Site\Request' => Controller\Site\RequestController::class,
+            Controller\Site\GuestBoardController::class => Controller\Site\GuestBoardController::class,
+            Controller\Site\RequestController::class => Controller\Site\RequestController::class,
         ],
         'factories' => [
+            Controller\AccessFileController::class => Service\Controller\AccessFileControllerFactory::class,
             Controller\Admin\LogController::class => Service\Controller\LogControllerFactory::class,
             Controller\Admin\RequestController::class => Service\Controller\RequestControllerFactory::class,
         ],
@@ -78,12 +79,11 @@ return [
             'isAllowedMediaContent' => Service\ControllerPlugin\IsAllowedMediaContentFactory::class,
             'isExternalUser' => Service\ControllerPlugin\IsExternalUserFactory::class,
             'isUnderEmbargo' => Service\ControllerPlugin\IsUnderEmbargoFactory::class,
-            'requestMailer' => Service\ControllerPlugin\RequestMailerFactory::class,
         ],
     ],
     'router' => [
         'routes' => [
-            'access-resource-file' => [
+            'access-file' => [
                 'type' => \Laminas\Router\Http\Segment::class,
                 'options' => [
                     // See module Statistics too.
@@ -96,20 +96,20 @@ return [
                     ],
                     'defaults' => [
                         '__NAMESPACE__' => 'AccessResource\Controller',
-                        'controller' => 'AccessResource',
+                        'controller' => Controller\AccessFileController::class,
                         'action' => 'file',
                     ],
                 ],
             ],
             'site' => [
                 'child_routes' => [
-                    'access-resource' => [
+                    'access-request' => [
                         'type' => \Laminas\Router\Http\Literal::class,
                         'options' => [
-                            'route' => '/access-resource',
+                            'route' => '/access-request',
                             'defaults' => [
                                 '__NAMESPACE__' => 'AccessResource\Controller\Site',
-                                'controller' => 'Request',
+                                'controller' => Controller\Site\RequestController::class,
                                 'action' => 'submit',
                             ],
                         ],
@@ -124,13 +124,13 @@ return [
                         ],
                         'may_terminate' => true,
                         'child_routes' => [
-                            'access-resource' => [
+                            'access-request' => [
                                 'type' => \Laminas\Router\Http\Literal::class,
                                 'options' => [
-                                    'route' => '/access-resource',
+                                    'route' => '/access-request',
                                     'defaults' => [
                                         '__NAMESPACE__' => 'AccessResource\Controller\Site',
-                                        'controller' => 'GuestBoard',
+                                        'controller' => Controller\Site\GuestBoardController::class,
                                         'action' => 'browse',
                                     ],
                                 ],
@@ -311,10 +311,10 @@ return [
         'settings' => [
             'accessresource_message_send' => true,
             'accessresource_message_admin_subject' => 'New request status!', //@translate
-            'accessresource_message_admin_request_created' => 'User created new request to AccessResource. Please, check request dashboard.', //@translate
-            'accessresource_message_admin_request_updated' => 'User request to resource access is updated.', //@translate
+            'accessresource_message_admin_request_created' => 'A user or visitor requested to access a resource. Please, check request dashboard.', //@translate
+            'accessresource_message_admin_request_updated' => 'A user or visitor updated the request to access a resource. Please, check request dashboard.', //@translate
             'accessresource_message_user_subject' => 'New request status!', //@translate
-            'accessresource_message_user_request_created' => 'Your request is sent to administrator. You will be inform when your request will change.', //@translate
+            'accessresource_message_user_request_created' => 'Your request to access resource is sent to administrator. You will be inform when your request will change.', //@translate
             'accessresource_message_user_request_updated' => 'Your request to resource access is updated. You can check guest user requests dashboard.', //@translate
         ],
     ],
