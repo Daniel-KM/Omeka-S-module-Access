@@ -80,12 +80,12 @@ class AccessStatusUpdate extends AbstractJob
     /**
      * @var string
      */
-    protected $embargoPropertyStart;
+    protected $embargoStartProperty;
 
     /**
      * @var string
      */
-    protected $embargoPropertyEnd;
+    protected $embargoEndProperty;
 
     /**
      * @var string
@@ -143,8 +143,8 @@ class AccessStatusUpdate extends AbstractJob
         if ($accessViaProperty) {
             $this->levelProperty = $settings->get('accessresource_property_level');
             $this->levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])), AccessStatusRepresentation::LEVELS);
-            $this->embargoPropertyStart = $settings->get('accessresource_property_embargo_start');
-            $this->embargoPropertyEnd = $settings->get('accessresource_property_embargo_end');
+            $this->embargoStartProperty = $settings->get('accessresource_property_embargo_start');
+            $this->embargoEndProperty = $settings->get('accessresource_property_embargo_end');
             $this->updateLevelViaProperty();
             $this->updateEmbargoViaProperty();
         } else {
@@ -280,12 +280,12 @@ SQL;
     protected function updateEmbargoViaProperty(): bool
     {
         $propertyStart = null;
-        if ($this->embargoPropertyStart) {
-            $propertyStart = $this->api->search('properties', ['term' => $this->embargoPropertyStart])->getContent();
+        if ($this->embargoStartProperty) {
+            $propertyStart = $this->api->search('properties', ['term' => $this->embargoStartProperty])->getContent();
             if (!$propertyStart) {
                 $this->logger->err(new Message(
                     'Property "%1$s" for embargo start does not exist.', // @translate
-                    $this->embargoPropertyStart
+                    $this->embargoStartProperty
                 ));
                 return false;
             }
@@ -293,26 +293,26 @@ SQL;
         }
 
         $propertyEnd = null;
-        if ($this->embargoPropertyEnd) {
-            $propertyEnd = $this->api->search('properties', ['term' => $this->embargoPropertyEnd])->getContent();
+        if ($this->embargoEndProperty) {
+            $propertyEnd = $this->api->search('properties', ['term' => $this->embargoEndProperty])->getContent();
             if (!$propertyEnd) {
                 $this->logger->err(new Message(
                     'Property "%1$s" for embargo end does not exist.', // @translate
-                    $this->embargoPropertyEnd
+                    $this->embargoEndProperty
                 ));
                 return false;
             }
             $propertyEnd = reset($propertyEnd);
         }
-
+// TODO %T espace?
         $sql = <<<SQL
 # Set access embargo start according to values.
 UPDATE `access_status` (`start_date`)
 SELECT
     CASE `value`.`value`
         WHEN NULL THEN NULL
-        WHEN DATE(STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')) IS NOT NULL THEN DATE(STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T'))
-        WHEN DATE(STR_TO_DATE(`value`.`value`, CONCAT('%Y-%m-%d', ' 00:00:00'))) IS NOT NULL THEN DATE(STR_TO_DATE(`value`.`value`, CONCAT('%Y-%m-%d', ' 00:00:00')))
+        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
+        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
         ELSE NULL
     END
 FROM `access_status`
@@ -324,8 +324,8 @@ LEFT JOIN `value`
 UPDATE `access_status` (`start_end`)
     CASE `value`.`value`
         WHEN NULL THEN NULL
-        WHEN DATE(STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')) IS NOT NULL THEN DATE(STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T'))
-        WHEN DATE(STR_TO_DATE(`value`.`value`, CONCAT('%Y-%m-%d', ' 00:00:00'))) IS NOT NULL THEN DATE(STR_TO_DATE(`value`.`value`, CONCAT('%Y-%m-%d', ' 00:00:00')))
+        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
+        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
         ELSE NULL
     END
 FROM `access_status`
