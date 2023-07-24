@@ -368,11 +368,17 @@ class AccessResourceController extends AbstractActionController
     /**
      * This is the 'file' action that is invoked when a user wants to download
      * the given file.
+     *
+     * @see \AccessResource\Controller\AccessResourceController::sendFile()
+     * @see \DerivativeMedia\Controller\IndexController::sendFile()
+     * @see \Statistics\Controller\DownloadController::sendFile()
      */
     protected function sendFile(
         string $filepath,
         ?string $mediaType = null,
         ?string $filename = null,
+        // "inline" or "attachment".
+        // It is recommended to set attribute "download" to link tag "<a>".
         ?string $dispositionMode = 'inline',
         ?bool $cache = false,
         ?MediaRepresentation $media = null,
