@@ -99,6 +99,7 @@ class AccessRequest extends AbstractEntity
      * @var bool
      *
      * @Column(
+     *     name="`recursive`",
      *     type="boolean",
      *     nullable=false,
      *     options={
