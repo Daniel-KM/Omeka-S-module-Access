@@ -7,10 +7,71 @@ use AccessResource\Entity\AccessRequest;
 use AccessResource\Form\Site\AccessRequestForm;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\JsonModel;
+use Laminas\View\Model\ViewModel;
 
 class RequestController extends AbstractActionController
 {
     use AccessTrait;
+
+    public function browseAction()
+    {
+        // For user mode, it is recommended to use the module Guest.
+
+        $modes = $this->settings()->get('accessresource_access_modes');
+        $individualModes = array_intersect(['individual', 'email', 'token'], $modes);
+        if (!count($individualModes)) {
+            return $this->redirect()->toRoute('top');
+        }
+
+        // This is a site page: admin can view all, so results are useless.
+        // TODO Else does not modify checks below.
+        $user = $this->identity();
+        $canViewAll = $user && $this->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all');
+        if ($canViewAll) {
+            return $this->redirect()->toRoute('top');
+        }
+
+        $this->browse()->setDefaults('access_requests');
+        $query = $this->params()->fromQuery();
+
+        // Don't allow end user to see other user access requests.
+        $access = ($query['access'] ?? null) ?: null;
+        $accesses = $access
+            ? (is_array($access) ? array_filter($access) : [$access])
+            : [];
+        $accesses[] = $query['email'] ?? null;
+        $accesses[] = $query['token'] ?? null;
+        $accesses = array_filter($accesses);
+        $accesses = array_diff($accesses, array_filter($accesses, 'is_numeric'));
+
+        // Check access first to allow a user to access specific requests.
+        if ($accesses && $user) {
+            $accesses[] = $user->getId();
+            $session = new \Laminas\Session\Container('Access');
+            $session->offsetSet('access', $access);
+        } elseif ($accesses) {
+            $session = new \Laminas\Session\Container('Access');
+            $session->offsetSet('access', $access);
+        } elseif ($user) {
+            $accesses[] = $user->getId();
+        } else {
+            return $this->redirect()->toRoute('top');
+        }
+        unset($query['user_id'], $query['email'], $query['token']);
+        $query['access'] = $accesses;
+
+        $response = $this->api()->search('access_requests', $query);
+        $this->paginator($response->getTotalResults());
+
+        /** @var \AccessResource\Api\Representation\AccessRequestRepresentation[] $accessRequests */
+        $accessRequests = $response->getContent();
+        return new ViewModel([
+            'accessRequests' => $accessRequests,
+            'modes' => $modes,
+            'access' => $access,
+            'user' => $user,
+        ]);
+    }
 
     public function submitAction()
     {
@@ -21,6 +82,20 @@ class RequestController extends AbstractActionController
                 'data' => [
                     'access_request' => [
                         'o:id' => $this->translate('Method should be post.'), // @translate
+                    ],
+                ],
+            ]);
+        }
+
+        $modes = $this->settings()->get('accessresource_access_modes');
+        $singleModes = array_intersect(['individual', 'email', 'token'], $modes);
+        if (!count($singleModes)) {
+            $this->getResponse()->setStatusCode(405);
+            return new JsonModel([
+                'status' => 'fail',
+                'data' => [
+                    'access_request' => [
+                        'o:resource' => $this->translate('Individual access requests are not allowed.'), // @translate
                     ],
                 ],
             ]);

@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManager;
 use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Laminas\Mvc\Controller\Plugin\Params;
+use Laminas\Session\Container;
 use Omeka\Api\Representation\MediaRepresentation;
 use Omeka\Entity\User;
 use Omeka\Mvc\Controller\Plugin\UserIsAllowed;
@@ -87,8 +88,8 @@ class IsAllowedMediaContent extends AbstractPlugin
      * - External: authenticated externally (cas for now, ldap or sso later).
      * - Guest: guest users.
      * - Individual: users with requests and anonymous with token.
-     * - Token: visitor with a request token.
      * - Email: visitor identified by email with a request.
+     * - Token: visitor with a request token.
      *
      * The embargo is checked first.
      *
@@ -275,7 +276,11 @@ class IsAllowedMediaContent extends AbstractPlugin
                 $sqlModes['Individual'] = 'ar.user_id = :user_id';
                 break;
             case 'email':
-                $email = $this->params->fromQuery('email');
+                $email = $this->params->fromQuery('access');
+                if (!$email) {
+                    $session = new \Laminas\Session\Container('Access');
+                    $email = $session->offsetGet('access');
+                }
                 if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     continue 2;
                 }
@@ -284,8 +289,12 @@ class IsAllowedMediaContent extends AbstractPlugin
                 $sqlModes['email'] = 'ar.email = :email';
                 break;
             case 'token':
-                $token = $this->params->fromQuery('token');
+                $token = $this->params->fromQuery('access');
                 if (!$token) {
+                    $session = new \Laminas\Session\Container('Access');
+                    $token = $session->offsetGet('access');
+                }
+                if (!$token || strpos($token, '@')) {
                     continue 2;
                 }
                 $bind['token'] = $token;

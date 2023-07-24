@@ -4,54 +4,9 @@
  * @var \AccessResource\Api\Representation\AccessRequestRepresentation[] $accessRequests
  */
 
-$plugins = $this->getHelperPluginManager();
-$i18n = $plugins->get('i18n');
-$escape = $plugins->get('escapeHtml');
-$assetUrl = $plugins->get('assetUrl');
-$translate = $plugins->get('translate');
-
-$this->headLink()
-    ->appendStylesheet($assetUrl('vendor/tablesaw/tablesaw.stackonly.css', 'Omeka'));
-$this->headScript()
-    ->appendFile($assetUrl('vendor/tablesaw/tablesaw.stackonly.jquery.js', 'Omeka'), 'text/javascript', ['defer' => 'defer']);
-
-$this->htmlElement('body')->appendAttribute('class', 'sites browse');
-?>
-
-<?= $this->pageTitle($translate('Access requests')) ?>
-
-<?php if (count($accessRequests)): ?>
-    <div class="browse-controls">
-
-        <?= $this->pagination() ?>
-    </div>
-    <?php $this->trigger('view.browse.before'); ?>
-
-    <table class="tablesaw" data-tablesaw-mode="stack">
-        <thead>
-        <tr>
-            <th><?= $escape($translate('Resources')) ?></th>
-            <th><?= $escape($translate('Recursive')) ?></th>
-            <th><?= $escape($translate('Status')) ?></th>
-            <th><?= $escape($translate('Dates')) ?></th>
-            <th><?= $escape($translate('Created')) ?></th>
-        </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($accessRequests as $accessRequest): ?>
-            <tr>
-                <td class="resource"><?= $accessRequest->displayResources() ?></td>
-                <td><?= $accessRequest->displayRecursive() ?></td>
-                <td><?= $accessRequest->displayStatus() ?></td>
-                <td><?= $accessRequest->displayTemporal() ?></td>
-                <td><?= $i18n->dateFormat($accessRequest->created()) ?></td>
-            </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
-
-    <?php $this->trigger('view.browse.after'); ?>
-
-<?php else: ?>
-    <p><?= $escape($translate('No access requests yet.')) ?> <a href=""><?= $escape($translate('Refresh page')) ?></a></p>
-<?php endif; ?>
+echo $this->partial('access-resource/site/request/browse', [
+    'accessRequests' => $accessRequests,
+    'modes' => $this->setting('accessresource_access_modes'),
+    'access' => null,
+    'user' => $this->identity(),
+]);

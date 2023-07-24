@@ -110,7 +110,22 @@ return [
                             'defaults' => [
                                 '__NAMESPACE__' => 'AccessResource\Controller\Site',
                                 'controller' => Controller\Site\RequestController::class,
-                                'action' => 'submit',
+                                'action' => 'browse',
+                            ],
+                        ],
+                        'may_terminate' => true,
+                        'child_routes' => [
+                            'default' => [
+                                'type' => \Laminas\Router\Http\Segment::class,
+                                'options' => [
+                                    'route' => '/:action',
+                                    'constraints' => [
+                                        'action' => 'browse|submit',
+                                    ],
+                                    'defaults' => [
+                                        'action' => 'browse',
+                                    ],
+                                ],
                             ],
                         ],
                     ],
@@ -233,6 +248,12 @@ return [
     ],
     'browse_defaults' => [
         'admin' => [
+            'access_requests' => [
+                'sort_by' => 'created',
+                'sort_order' => 'desc',
+            ],
+        ],
+        'site' => [
             'access_requests' => [
                 'sort_by' => 'created',
                 'sort_order' => 'desc',

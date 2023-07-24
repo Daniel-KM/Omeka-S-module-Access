@@ -21,7 +21,7 @@ $hasGuest = $plugins->has('guestWidget');
 $this->headLink()->appendStylesheet($assetUrl('css/access-request.css', 'AccessResource'));
 $this->headScript()->appendFile($assetUrl('js/access-request.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
 
-$formSubmitUrl = $this->url('site/access-request', [], true);
+$formSubmitUrl = $this->url('site/access-request/default', ['action' => 'submit'], true);
 ?>
 
 <button type="button" class="request-access-resource"><?= $translate('Request access') ?></button>

@@ -67,7 +67,7 @@ class Module extends AbstractModule
         $roles = $acl->getRoles();
         $rolesExceptGuest = array_diff($roles, ['guest']);
 
-        // Admins can manage requests.
+        // Only admins can manage requests.
         $rolesAdmins = [
             \Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN,
             \Omeka\Permissions\Acl::ROLE_SITE_ADMIN,
@@ -83,7 +83,7 @@ class Module extends AbstractModule
             ->allow(
                 null,
                 [\AccessResource\Controller\Site\RequestController::class],
-                ['submit']
+                ['browse', 'submit']
             )
             ->allow(
                 $rolesAdmins,
@@ -120,7 +120,8 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
-        $accessViaProperty = (bool) $this->getServiceLocator()->get('Omeka\Settings')->get('accessresource_property');
+        $settings = $this->getServiceLocator()->get('Omeka\Settings');
+        $accessViaProperty = (bool) $settings->get('accessresource_property');
         if (!$accessViaProperty) {
             // Add the status to the representation.
             $sharedEventManager->attach(
@@ -261,11 +262,15 @@ class Module extends AbstractModule
             'view.show.after',
             [$this, 'handleViewShowAfterItem']
         );
-
         $sharedEventManager->attach(
             'Omeka\Controller\Site\Media',
             'view.show.after',
             [$this, 'handleViewShowAfterMedia']
+        );
+        $sharedEventManager->attach(
+            'Omeka\Controller\Site\ItemSet',
+            'view.show.after',
+            [$this, 'handleViewShowAfterItemSet']
         );
 
         // Guest user integration.
@@ -1112,12 +1117,14 @@ HTML;
     {
         // Note: there is no item-set show, but a special case for items browse.
         $view = $event->getTarget();
+        // $this->storeSingleAccess($event);
         echo $view->accessRequest($view->items);
     }
 
     public function handleViewBrowseAfterItemSet(Event $event): void
     {
         $view = $event->getTarget();
+        // $this->storeSingleAccess($event);
         echo $view->accessRequest($view->itemSets);
     }
 
@@ -1126,6 +1133,7 @@ HTML;
         $view = $event->getTarget();
         $resources = [$view->item];
         $resources += $view->item->media();
+        // $this->storeSingleAccess($event);
         echo $view->accessRequest($resources);
     }
 
@@ -1133,6 +1141,15 @@ HTML;
     {
         $view = $event->getTarget();
         $resources = [$view->media->item(), $view->media];
+        // $this->storeSingleAccess($event);
+        echo $view->accessRequest($resources);
+    }
+
+    public function handleViewShowAfterItemSet(Event $event): void
+    {
+        $view = $event->getTarget();
+        $resources = [$view->itemSet];
+        // $this->storeSingleAccess($event);
         echo $view->accessRequest($resources);
     }
 
@@ -1247,6 +1264,39 @@ HTML;
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
         $messenger->addError($message);
     }
+
+    /**
+     * Store the query arg "access" to check individual http requests to files.
+     *
+     * This process avoids to use a specific url to get access by the end user,
+     * but requires to check rights each time.
+     *
+     * @todo This process is not enable for now.
+     */
+    /*
+    protected function storeSingleAccess(Event $event)
+    {
+        $settings = $this->getServiceLocator()->get('Omeka\Settings');
+        $modes = $settings->get('accessresource_access_modes');
+        // Mode "individual" is managed directly via authentication.
+        $singleModes = array_intersect(['email', 'token'], $modes);
+        if (!count($singleModes)) {
+            return;
+        }
+
+        // The access is refreshed on each browse or show page, but only when
+        // the argument is present in the query, so it's not lost for subsequent
+        // http requests.
+        if (!array_key_exists('access', $_GET)) {
+            return;
+        }
+
+        $access = $_GET['access'];
+
+        $session = new \Laminas\Session\Container('Access');
+        $session->offsetSet('access', $access);
+    }
+    */
 
     protected function processUpdateStatus(array $vars): void
     {

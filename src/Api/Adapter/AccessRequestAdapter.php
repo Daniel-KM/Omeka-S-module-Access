@@ -69,6 +69,29 @@ class AccessRequestAdapter extends AbstractEntityAdapter
     {
         $expr = $qb->expr();
 
+        // Don't allow a non-admin user to query other users accesses.
+        // TODO Add a db filter.
+        $isAdmin = $this->isAdmin();
+        if (!$isAdmin) {
+            $query['access'] = isset($query['access']) && $query['access'] !== ''
+                ? (is_array($query['access']) ? $query['access'] : [$query['access']])
+                : [];
+            $query['access'][] = $query['email'] ?? null;
+            $query['access'][] = $query['token'] ?? null;
+            $query['access'] = array_filter($query['access']);
+            $query['access'] = array_diff($query['access'], array_filter($query['access'], 'is_numeric'));
+            unset($query['user_id'], $query['email'], $query['token']);
+            $user = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
+            if ($user) {
+                $query['access'] = array_diff($query['access'], array_filter($query['access'], 'is_numeric'));
+                $query['access'][] = $user->getId();
+            } else {
+                $query['user_id'] = 0;
+            }
+        }
+
+        $hasArg = false;
+
         if (isset($query['resource_id'])) {
             if (!is_array($query['resource_id'])) {
                 $query['resource_id'] = [$query['resource_id']];
@@ -93,18 +116,28 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         }
 
         if (isset($query['user_id'])) {
+            $hasArg = true;
             $userAlias = $this->createAlias();
-            $qb->innerJoin(
-                'omeka_root.user',
-                $userAlias
-            );
-            $qb->andWhere($expr->eq(
-                $userAlias . '.id',
-                $this->createNamedParameter($qb, $query['user_id'])
-            ));
+            if (empty($query['user_id'])) {
+                $qb->leftJoin(
+                    'omeka_root.user',
+                    $userAlias
+                );
+                $qb->andWhere($expr->isNull($userAlias . '.id',));
+            } else {
+                $qb->innerJoin(
+                    'omeka_root.user',
+                    $userAlias
+                );
+                $qb->andWhere($expr->eq(
+                    $userAlias . '.id',
+                    $this->createNamedParameter($qb, $query['user_id'])
+                ));
+            }
         }
 
         if (isset($query['email'])) {
+            $hasArg = true;
             $qb->andWhere($expr->eq(
                 'omeka_root.email',
                 $this->createNamedParameter($qb, $query['email'])
@@ -112,10 +145,38 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         }
 
         if (isset($query['token'])) {
+            $hasArg = true;
             $qb->andWhere($expr->eq(
                 'omeka_root.token',
                 $this->createNamedParameter($qb, $query['token'])
             ));
+        }
+
+        if (isset($query['access']) && $query['access']) {
+            $hasArg = true;
+            $accesses = is_array($query['access']) ? $query['access'] : [$query['access']];
+            $accesses = array_filter($accesses);
+            $or = [];
+            foreach ($accesses as $access) {
+                if (is_numeric($access)) {
+                    $or[] = $expr->eq('omeka_root.user', $this->createNamedParameter($qb, $access));
+                } elseif (strpos($access, '@')) {
+                    $or[] = $expr->eq('omeka_root.email', $this->createNamedParameter($qb, $access));
+                } else {
+                    $or[] = $expr->eq('omeka_root.token', $this->createNamedParameter($qb, $access));
+                }
+            }
+            if (count($or) === 1) {
+                $qb->andWhere(reset($or));
+            } elseif (count($or)) {
+                $qb->andWhere($expr->orX(...$or));
+            } else {
+                // Invalid query does not return any output.
+                $qb->andWhere($expr->eq(
+                    'omeka_root.id',
+                    $this->createNamedParameter($qb, 0)
+                ));
+            }
         }
 
         if (isset($query['status'])) {
@@ -166,6 +227,11 @@ class AccessRequestAdapter extends AbstractEntityAdapter
                 $this->createNamedParameter($qb, $query['modified'])
             ));
         }
+
+        // Do not return anything when there is no arg for non-admin.
+        if (!$isAdmin && !$hasArg) {
+            $qb->andWhere($expr->isNull('omeka_root.id'));
+        }
     }
 
     public function validateRequest(Request $request, ErrorStore $errorStore)
@@ -202,13 +268,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         $operation = $request->getOperation();
 
         $identity = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
-        $rolesAdmins = [
-            \Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN,
-            \Omeka\Permissions\Acl::ROLE_SITE_ADMIN,
-            \Omeka\Permissions\Acl::ROLE_EDITOR,
-            \Omeka\Permissions\Acl::ROLE_REVIEWER,
-        ];
-        $isAdmin = $identity && in_array($identity->getRole(), $rolesAdmins);
+        $isAdmin = $this->isAdmin();
         $isAdminOrCreate = $isAdmin || $operation === $request::CREATE;
 
         if (!$isAdmin) {
@@ -353,5 +413,17 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         if (!isset($this->statuses[$entity->getStatus()])) {
             $errorStore->addError('o:status', 'The status must be one of the list of statuses.'); // @translate
         }
+    }
+
+    protected function isAdmin(): bool
+    {
+        $rolesAdmins = [
+            \Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN,
+            \Omeka\Permissions\Acl::ROLE_SITE_ADMIN,
+            \Omeka\Permissions\Acl::ROLE_EDITOR,
+            \Omeka\Permissions\Acl::ROLE_REVIEWER,
+        ];
+        $identity = $this->getServiceLocator()->get('Omeka\AuthenticationService')->getIdentity();
+        return $identity && in_array($identity->getRole(), $rolesAdmins);
     }
 }
