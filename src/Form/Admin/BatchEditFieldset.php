@@ -44,7 +44,7 @@ class BatchEditFieldset extends Fieldset
             return;
         }
 
-        $valueOptions = [
+        $statusLevels = [
             AccessStatus::FREE => 'Free', // @translate'
             AccessStatus::RESERVED => 'Restricted', // @translate
             AccessStatus::PROTECTED => 'Protected', // @translate
@@ -53,7 +53,7 @@ class BatchEditFieldset extends Fieldset
         // There is no difference between reserved and protected when only the
         // file is protected.
         if (!$this->fullAccess) {
-            unset($valueOptions[AccessStatus::PROTECTED]);
+            unset($statusLevels[AccessStatus::PROTECTED]);
         }
 
         /**
@@ -70,7 +70,7 @@ class BatchEditFieldset extends Fieldset
                     'label' => 'New level', // @translate
                     'value_options' => [
                         '' => 'No change', // @translate
-                    ] + $valueOptions,
+                    ] + $statusLevels,
                 ],
                 'attributes' => [
                     'id' => 'accessresource_o_access_level',

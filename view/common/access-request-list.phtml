@@ -1,0 +1,76 @@
+<?php
+
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\AbstractResourceRepresentation $resource
+ * @var \AccessResource\Api\Representation\AccessStatusRepresentation $accessStatus
+ * @var \AccessResource\Api\Representation\AccessRequestRepresentation[] $accessRequests
+ *
+ * @see view/access-resource/admin/request/browse.phtml
+ */
+
+$plugins = $this->getHelperPluginManager();
+$url = $plugins->get('url');
+$escape = $plugins->get('escapeHtml');
+$assetUrl = $plugins->get('assetUrl');
+$translate = $plugins->get('translate');
+
+$this->headLink()
+    ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
+$this->headScript()
+    ->appendFile($assetUrl('js/access-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+?>
+
+<?php // Manage user requests. ?>
+
+<div class="access-requests">
+    <h4><?= $translate('Requests') ?></h4>
+
+<?php if (empty($accessRequests)): ?>
+
+    <div class="no-resources">
+        <p><?= $translate('There are no requests for this resource.') ?></p>
+    </div>
+
+<?php else: ?>
+
+    <?php
+    // TODO Add a button to clean all access to public resources (and mutiple toggle/deletion anyway).
+
+    $allowUpdate = $this->userIsAllowed(\AccessResource\Entity\AccessRequest::class, 'update');
+    ?>
+    <ul>
+    <?php foreach ($accessRequests as $accessRequest): ?>
+        <?php
+            $status = $accessRequest->status();
+        ?>
+
+        <li class="access-request value tag" data-id="<?= $accessRequest->id() ?>">
+            <span><?= $accessRequest->displayRequester() ?></span>
+            <span><?= $accessRequest->displayTemporal() ?></span>
+            <?php if ($allowUpdate): ?>
+            <span class="single actions"><a href="<?= $url('admin/access-request/id', ['id' => $accessRequest->id(), 'action' => 'edit']) ?>"
+                class="o-icon-edit"
+                aria-label="<?= $escape($translate('Edit')) ?>"
+                title="<?= $escape($translate('Edit')) ?>"></a></span>
+            <span class="single actions"><a href="#"
+                class="status-toggle-access-request o-icon-<?= $status ?>"
+                data-status-toggle-url="<?= $this->url("admin/access-request/id", ['id' => $accessRequest->id(), 'action' => "toggle" ]) ?>"
+                data-status="<?= $status ?>"
+                aria-label="<?= $escape($translate('Enable of disable')) ?>"
+                title="<?= $escape($translate('Enable or disable')) ?>"></a></span>
+            <span class="single actions"><a href="#"
+                class="o-icon-delete"
+                data-status-toggle-url="<?= $this->url('admin/access-request/id', ['id' => $accessRequest->id(), 'action' => 'remove']) ?>"
+                aria-label="<?= $escape($translate('Remove request')) ?>"
+                title="<?= $escape($translate('Remove request')) ?>"></a></span>
+            <?php else: ?>
+            <span class="no-action o-icon-<?= $status ?>"></span>
+            <?php endif; ?>
+        </li>
+    <?php endforeach; ?>
+    </ul>
+
+<?php endif; ?>
+
+</div>

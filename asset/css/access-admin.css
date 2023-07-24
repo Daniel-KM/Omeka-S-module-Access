@@ -1,0 +1,162 @@
+@media screen {
+    header nav .access-request::before,
+    .access-requests .subhead::before,
+    .access-request .no-resources::before {
+        content:"";
+    }
+
+    .inputs input[name=embargo_start_date],
+    .inputs input[name=embargo_end_date],
+    .inputs input[name="accessresource[embargo_start_date]"],
+    .inputs input[name="accessresource[embargo_end_date]"] ,
+    .inputs input[name="o-access:start-date"],
+    .inputs input[name="o-access:end-date"] {
+        width: calc( 100% - 72px );
+        margin-right: 6px;
+    }
+    .inputs input[name=embargo_start_time],
+    .inputs input[name=embargo_end_time],
+    .inputs input[name="accessresource[embargo_start_time]"],
+    .inputs input[name="accessresource[embargo_end_time]"],
+    .inputs input[name="o-access:start-time"],
+    .inputs input[name="o-access:end-time"] {
+        min-width: 62px;
+        text-align: center;
+    }
+    .inputs select[name^="o-access:start"],
+    .inputs select[name^="o-access:end"] {
+        width: auto;
+    }
+
+    .access-request table .resource-name {
+        display: inline-block;
+        vertical-align: bottom;
+        margin-left: .5em;
+        opacity: .5;
+    }
+
+    .access-request .single.actions {
+        float: right;
+    }
+    .access-request .single.actions a::before {
+        text-align: inherit;
+    }
+    /* TODO Use a font-awesome icon. */
+    .access-request .single.actions .o-icon-transmit::before {
+        background: url('../img/waiting-mini.gif') no-repeat scroll 3px 3px transparent !important;
+    }
+    .access-request .no-action::before {
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        vertical-align: top;
+        border: 0;
+        box-shadow: none;
+        opacity: .5;
+        text-align: inherit;
+    }
+    .access-request.meta-group .single.actions,
+    .access-request.meta-group .no-action::before {
+        float: right;
+    }
+
+    .access-request.meta-group span,
+    .access-request .meta-group span {
+        display: inline;
+        hyphens: auto;
+        word-wrap: break-word;
+    }
+
+    .access-request.meta-group::before,
+    .access-request .status-toggle::before,
+    .access-request .resource-name::before {
+        display: inline-block;
+        font-family: "Font Awesome 5 Free";
+        padding-left: 3px;
+        padding-right: 3px;
+        width: 24px;
+    }
+    .access-request .resource-name.resource::before {
+        content: "";
+    }
+    .access-request .resource-name.no-resource::before {
+        content: "❌";
+    }
+    .access-request .resource-name.item-set::before {
+        content: "";
+    }
+    .access-request .resource-name.item::before {
+        content: "";
+    }
+    .access-request .resource-name.media::before {
+        content: "";
+    }
+    .access-request .o-icon-new::before,
+    .access-request .o-icon-renew::before,
+    .access-request .o-icon-proposed::before {
+        color: #FFA500;
+        content: "";
+    }
+    .access-request .o-icon-allowed::before {
+        color: #FFA500;
+        content: "";
+    }
+    .access-request .o-icon-accepted::before,
+    .access-request .o-icon-approved::before {
+        color: #00FF00;
+        content: "";
+    }
+    .access-request .o-icon-rejected::before {
+        color: #FF0000;
+        content: "";
+    }
+    .access-request .o-icon-undefined::before {
+        color: #FF0000;
+        content: "";
+    }
+    .access-request .o-icon-none::before {
+        color: #FFFFFF;
+        content: "";
+    }
+    .access-request .o-icon-transmit::before {
+        background: url('../img/waiting-mini.gif') no-repeat scroll 12px 3px transparent !important;
+        color: #000000;
+        content: "";
+        cursor: progress;
+    }
+    .access-requests .resource .resource-name:after {
+        font-family:"Font Awesome 5 Free";
+        font-weight:900;
+        display:inline-block;
+        margin-left:.5em;
+        opacity: 0.6;
+    }
+    .access-requests .resource.items .resource-name:after {
+        content:"\f1b2"
+    }
+    .access-requests .resource.media .resource-name:after {
+        content:"\f03e"
+    }
+    .access-requests .resource.item_sets .resource-name:after {
+        content:"\f1b3"
+    }
+    .access-requests .display-block .tablesaw-cell-content {
+        display: block;
+    }
+    .batch-edit .field-container > legend {
+        font-size: 16px;
+    }
+
+    /* Log. */
+    .browse td:first-child,
+    .browse th:first-child {
+        width: 10%;
+    }
+}
+
+@media screen and (min-width: 641px) {
+    .access-requests.browse td:first-child,
+    .access-requests.browse th:first-child {
+        width: 15%;
+    }
+}

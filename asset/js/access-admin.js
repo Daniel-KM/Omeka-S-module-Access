@@ -2,8 +2,41 @@
 
     $(document).ready(function() {
 
-        // Deletion of an access.
-        $('#content').on('click', 'a.o-icon-delete', function (e) {
+        const jsendFail = function(response, textStatus) {
+            if (!response || (!response.message && !response.data)) {
+                alert(Omeka.jsTranslate('Something went wrong' + ': ' + textStatus));
+            } else if (response.message) {
+                alert(response.message);
+            } else if (response.data) {
+                var msg = '';
+                Object.values(response.data).forEach(value => {
+                    if (value && typeof value === 'object') {
+                        Object.values(value).forEach(val => {
+                            if (val && typeof val === 'object') {
+                                Object.values(val).forEach(va => {
+                                    if (va && typeof va === 'object') {
+                                        Object.values(va).forEach(v => {
+                                            msg += "\n" + v;
+                                        });
+                                    } else {
+                                        msg += "\n" + va;
+                                    }
+                                });
+                            } else {
+                                msg += "\n" + val;
+                            }
+                        });
+                    } else {
+                        msg += "\n" + value;
+                    }
+                });
+                msg = msg.trim();
+                alert(msg.length ? msg : Omeka.jsTranslate('Something went wrong'));
+            }
+        }
+
+        // Direct deletion of an access.
+        $('#content').on('click', 'body.show a.o-icon-delete', function (e) {
             e.preventDefault();
 
             var button = $(this);
@@ -16,15 +49,14 @@
                         button.removeClass('o-icon-delete').addClass('o-icon-transmit');
                     }
                 })
-                .done(function (data) {
+                .done(function (response) {
                     button.parent().parent().remove();
+                    if (response.message) {
+                        alert(response.message);
+                    }
                 })
                 .fail(function (jqXHR, textStatus) {
-                    if (jqXHR.status == 404) {
-                        alert(Omeka.jsTranslate('The resource or the access doesn’t exist.'));
-                    } else {
-                        alert(Omeka.jsTranslate('Something went wrong'));
-                    }
+                    jsendFail(jqXHR.responseJSON, textStatus);
                 })
                 .always(function () {
                     button.removeClass('o-icon-transmit').addClass('o-icon-delete');
@@ -32,7 +64,7 @@
         });
 
         // Toggle the status of an access or a request.
-        $('#content').on('click', 'a.status-toggle-access-resource', function (e) {
+        $('#content').on('click', 'a.status-toggle-access-request', function (e) {
             e.preventDefault();
 
             var button = $(this);
@@ -47,87 +79,31 @@
                     }
                 })
                 .done(function (response) {
-                    if (response.status === 200) {
-                        status = response.data.status;
-                        button.data('status', status);
-                    } else {
-                        alert(Omeka.jsTranslate('Something went wrong') + ' ' + response.message);
+                    status = response.data.access_request['o:status'];
+                    button.data('status', status);
+                    if (response.message) {
+                        alert(response.message);
                     }
                 })
                 .fail(function (jqXHR, textStatus) {
-                    if (jqXHR.status == 404) {
-                        alert(Omeka.jsTranslate('The resource or the access doesn’t exist.'));
-                    } else {
-                        alert(Omeka.jsTranslate('Something went wrong'));
-                    }
+                    jsendFail(jqXHR.responseJSON, textStatus);
                 })
                 .always(function () {
                     button.removeClass('o-icon-transmit').addClass('o-icon-' + status);
                 });
         });
 
-        // Adapted from resource-form.js.
-
-        $('.button.resource-select').on('click', function(e) {
-            e.preventDefault();
-            var selectButton = $(this);
-            var sidebar = $('#select-resource');
-            Omeka.populateSidebarContent(sidebar, selectButton.data('sidebar-content-url'));
-            Omeka.openSidebar(sidebar);
-        });
-
-        $('#select-item a').on('o:resource-selected', function (e) {
-            var value = $('.value.selecting-resource');
-            var valueObj = $('.resource-details').data('resource-values');
-            $(document).trigger('o:prepare-value', ['resource', value, valueObj]);
-            Omeka.closeSidebar($('#select-resource'));
-        });
-
-        $(document).on('o:prepare-value', function(e, dataType, value, valueObj) {
-            // Prepare simple single-value form inputs using data-value-key
-            value.find(':input').each(function () {
-                var valueKey = $(this).data('valueKey');
-                if (!valueKey) {
-                    return;
-                }
-                $(this).removeAttr('name')
-                    .val(valueObj ? valueObj[valueKey] : null);
-            });
-
-            // Prepare the markup for the resource data types.
-            var resourceDataTypes = [
-                'resource',
-                'resource:item',
-                'resource:itemset',
-                'resource:media',
-                'resource:annotation',
-            ];
-            if (valueObj && -1 !== resourceDataTypes.indexOf(dataType)) {
-                value.find('span.default').hide();
-                var resource = value.find('.selected-resource');
-                if (typeof valueObj['display_title'] === 'undefined') {
-                    valueObj['display_title'] = Omeka.jsTranslate('[Untitled]');
-                }
-                resource.find('.o-title')
-                    .removeClass() // remove all classes
-                    .addClass('o-title ' + valueObj['value_resource_name'])
-                    .html($('<a>', {href: valueObj['url'], text: valueObj['display_title']}));
-                if (typeof valueObj['thumbnail_url'] !== 'undefined') {
-                    resource.find('.o-title')
-                        .prepend($('<img>', {src: valueObj['thumbnail_url']}));
-                }
-                resource.find('.value.to-require').val(valueObj['value_resource_id']);
-            }
-        });
-
-        // The accessResource is set in the access/edit form.
-        //  Should be triggered after preparation above.
-        var value = $('form .value-resource');
-        var namePrefix = value.data('name-prefix');
-        if (typeof accessObject === 'undefined') {
-            var accessObject = {};
-        }
-        $(document).trigger('o:prepare-value', ['resource', value, accessObject, namePrefix]);
+        // Improve request form.
+        // TODO Create a specific form element.
+        var move, field;
+        move = $('#o-access-start-time');
+        field = move.closest('.field');
+        $('#o-access-start-date').after(move);
+        field.remove();
+        move = $('#o-access-end-time');
+        field = move.closest('.field');
+        $('#o-access-end-date').after(move);
+        field.remove();
 
         // Batch edit form.
 

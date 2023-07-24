@@ -2,193 +2,177 @@
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var \AccessResource\Api\Representation\AccessRequestRepresentation[] $accessRequests
+ *
+ * @see view/common/access-request-list.phtml
  */
 
 $plugins = $this->getHelperPluginManager();
 $url = $plugins->get('url');
 $i18n = $plugins->get('i18n');
 $escape = $plugins->get('escapeHtml');
+$assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
+$hyperlink = $plugins->get('hyperlink');
 
-$sortHeadings = [
-    [
-        'label' => $translate('User'),
-        'value' => 'user',
-    ],
-    [
-        'label' => $translate('Resource'),
-        'value' => 'resource',
-    ],
-    [
-        'label' => $translate('Status'),
-        'value' => 'status',
-    ],
-    [
-        'label' => $translate('Created'),
-        'value' => 'created',
-    ],
-    [
-        'label' => $translate('Modified'),
-        'value' => 'modified',
-    ],
-];
+$this->headLink()
+    ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
+$this->headScript()
+    ->appendFile($assetUrl('js/access-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
 
-$this->headLink()->appendStylesheet($this->assetUrl('css/access-resource-admin.css', 'AccessResource'));
 $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
 ?>
 
 <?= $this->pageTitle($translate('Access requests')) ?>
 
+<div class="browse-controls">
+    <?= $this->pagination() ?>
+    <?= $this->browse()->renderSortSelector('access_requests') ?>
+</div>
+
 <div id="page-actions">
     <?php if ($this->userIsAllowed(\AccessResource\Entity\AccessRequest::class, 'create')): ?>
-        <?= $this->hyperlink($translate('Add new request'), $url('admin/access-request/default', ['action' => 'add']), ['class' => 'button']) ?>
+        <?= $hyperlink($translate('Add new request'), $url('admin/access-request/default', ['action' => 'add']), ['class' => 'button']) ?>
     <?php endif; ?>
 </div>
 
+<?php $this->trigger('view.browse.before'); ?>
+
 <?php if (count($accessRequests)): ?>
-    <div class="browse-controls">
-        <?= $this->pagination() ?>
-        <?= $this->sortSelector($sortHeadings) ?>
-    </div>
-    <?php $this->trigger('view.browse.before'); ?>
-
-    <table class="tablesaw" data-tablesaw-mode="stack">
-        <thead>
+<table class="tablesaw" data-tablesaw-mode="stack">
+    <thead>
         <tr>
-            <th><?= $escape($translate('User')) ?></th>
-            <th><?= $escape($translate('Resource')) ?></th>
+            <th>
+                <?php /*
+                <input type="checkbox" class="select-all" aria-label="<?= $translate('Select all') ?>">
+                */ ?>
+                <?= $translate('Id') ?>
+            </th>
+            <th><?= $escape($translate('Requester')) ?></th>
+            <th><?= $escape($translate('Resources')) ?></th>
             <th><?= $escape($translate('Status')) ?></th>
-            <th>&nbsp;</th>
-            <th><?= $escape($translate('Created')) ?></th>
-            <th><?= $escape($translate('Modified')) ?></th>
+            <th><?= $escape($translate('Dates')) ?></th>
         </tr>
-        </thead>
-        <tbody>
+    </thead>
+    <tbody>
         <?php foreach ($accessRequests as $accessRequest): ?>
-            <?php
-                if ($user = $accessRequest->user()):
-                    $userText = $this->hyperlink($user->name(), $user->adminUrl());
-                else:
-                    $userText = $translate('[no user]');
-                endif;
-
-                $resourceType = '';
-                $resourceText = '';
-                if ($requestedResource = $accessRequest->resource()):
-                    $resourceType = $requestedResource->resourceName();
-                    $resourceText = $requestedResource->linkPretty();
-                endif;
-                ?>
-            <tr>
-                <td><?= $userText; ?></td>
-                <td class="resource <?= $resourceType; ?>"><?= $resourceText ?></td>
-                <td><?= $translate($accessRequest->statusLabel()) ?></td>
-
-                <td>
-                    <ul class="actions">
-                        <?php if ($accessRequest->userIsAllowed('update')): ?>
-                        <li>
-                            <?= $this->hyperlink('', $accessRequest->url('edit'), [
-                                'class' => 'o-icon-edit',
-                                'title' => $translate('Edit'),
-                            ]) ?>
-                        </li>
-                        <?php endif; ?>
-                        <?php if ($accessRequest->userIsAllowed('delete')): ?>
-                        <li>
-                            <?= $this->hyperlink('', '#', [
-                                'data-sidebar-selector' => '#sidebar',
-                                'data-sidebar-content-url' => $accessRequest->url('delete-confirm'),
-                                'class' => 'o-icon-delete sidebar-content',
-                                'title' => $translate('Delete'),
-                            ]) ?>
-                        </li>
-                        <?php endif; ?>
-                    </ul>
-                </td>
-
-                <td><?= $i18n->dateFormat($accessRequest, 'medium', 'medium') ?></td>
-                <td><?= $accessRequest->modified() ? $i18n->dateFormat($accessRequest->modified(), 'medium', 'medium') : '' ?></td>
-            </tr>
+        <tr>
+            <td>
+                <?php /*
+                <?php if ($this->userIsAllowed(\AccessResource\Api\Adapter\AccessRequestAdapter::class, 'batch_update') && ($accessRequest->userIsAllowed('update') || $accessRequest->userIsAllowed('delete'))): ?>
+                <input type="checkbox" name="resource_ids[]" value="<?= $accessRequest->id() ?>" aria-label="<?= $translate('Select access request') ?>">
+                <?php endif; ?>
+                */ ?>
+                <?= sprintf($translate('#%s'), $accessRequest->id()) ?>
+                <ul class="actions">
+                    <?php if ($accessRequest->userIsAllowed('update')): ?>
+                    <li><?= $accessRequest->link('', 'edit', [
+                        'class' => 'o-icon-edit',
+                        'title' => $translate('Edit'),
+                    ]) ?></li>
+                    <?php endif; ?>
+                    <?php if ($accessRequest->userIsAllowed('delete')): ?>
+                    <li><?= $hyperlink('', '#', [
+                        'data-sidebar-selector' => '#sidebar',
+                        'data-sidebar-content-url' => $accessRequest->url('delete-confirm'),
+                        'class' => 'o-icon-delete sidebar-content',
+                        'title' => $translate('Delete'),
+                    ]) ?></li>
+                    <?php endif; ?>
+                    <li><?= $hyperlink('', '#', [
+                        'data-sidebar-selector' => '#sidebar',
+                        'data-sidebar-content-url' => $accessRequest->url('show-details'),
+                        'class' => 'o-icon-more sidebar-content',
+                        'title' => $translate('Details'),
+                    ]) ?></li>
+                </ul>
+            </td>
+            <td><?= $accessRequest->displayRequester() ?></td>
+            <td><?= $accessRequest->displayResources() ?></td>
+            <td><?= $accessRequest->displayStatus() ?></td>
+            <td><?= $accessRequest->displayTemporal() ?></td>
+        </tr>
         <?php endforeach; ?>
-        </tbody>
-    </table>
+    </tbody>
+</table>
+<?php $this->trigger('view.browse.after'); ?>
+<div class="browse-controls">
+    <?= $this->pagination() ?>
+</div>
 
-    <?php $this->trigger('view.browse.after'); ?>
-    <div class="browse-controls">
-        <?= $this->pagination() ?>
-    </div>
-
-    <div id="sidebar" class="sidebar">
-        <?= $this->hyperlink('', '#', [
-            'class' => 'sidebar-close o-icon-close',
-            'title' => $translate('Close'),
-        ]) ?>
-        <div class="sidebar-content"></div>
-    </div>
-    <div id="sidebar-delete-selected" class="sidebar">
-        <?= $this->hyperlink('', '#', [
-            'class' => 'sidebar-close o-icon-close',
-            'title' => $translate('Close'),
-        ]) ?>
-        <div class="sidebar-content">
-            <div id="sidebar-confirm">
-                <h3><?= $translate('Delete records') ?></h3>
-                <p><?= $translate('Are you sure you would like to delete the selected records?') ?></p>
-                <p class="error"><?= sprintf(
-                        $translate('%s: this action will permanently delete %s records and cannot be undone.'),
-                        sprintf('<strong>%s</strong>', $translate('Warning')),
-                        '<strong><span id="delete-selected-count"></span></strong>'
-                    ) ?></p>
-                <?= 'formDeleteSelected' /*$this->form($this->formDeleteSelected)*/ ?>
-            </div>
+<div id="sidebar" class="sidebar">
+    <?= $hyperlink('', '#', [
+        'class' => 'sidebar-close o-icon-close',
+        'title' => $translate('Close'),
+    ]) ?>
+    <div class="sidebar-content"></div>
+</div>
+<div id="sidebar-delete-selected" class="sidebar">
+    <?= $hyperlink('', '#', [
+        'class' => 'sidebar-close o-icon-close',
+        'title' => $translate('Close'),
+    ]) ?>
+    <div class="sidebar-content">
+        <div id="sidebar-confirm">
+            <h3><?= $translate('Delete access requests'); ?></h3>
+            <p><?= $translate('Are you sure you would like to delete the selected access requests?') ?></p>
+            <p class="error"><?= sprintf(
+                $translate('%1$s: this action will permanently delete %2$s access requests and cannot be undone.'),
+                sprintf('<strong>%s</strong>', $translate('Warning')),
+                '<strong><span id="delete-selected-count"></span></strong>'
+            ) ?></p>
+            <?= $this->form($this->formDeleteSelected) ?>
         </div>
     </div>
-    <div id="sidebar-delete-all" class="sidebar">
-        <?= $this->hyperlink('', '#', [
-            'class' => 'sidebar-close o-icon-close',
-            'title' => $translate('Close'),
-        ]) ?>
-        <div class="sidebar-content">
-            <div id="sidebar-confirm">
-                <h3><?= $translate('Delete records') ?></h3>
-                <p><?= $translate('Are you sure you would like to delete all records on all pages of this result?') ?></p>
-                <p class="error"><?= sprintf(
-                        $translate('%s: this action will permanently delete %s records and cannot be undone.'),
-                        sprintf('<strong>%s</strong>', $translate('Warning')),
-                        sprintf('<strong>%s</strong>', number_format($this->pagination()->getPaginator()->getTotalCount()))
-                    ) ?></p>
-                <label><input type="checkbox" name="confirm-delete-all-check"> <?= $translate('Are you sure?') ?></label>
-                <?= 'formDeleteAll' /*$this->form($this->formDeleteAll)*/ ?>
-            </div>
+</div>
+<div id="sidebar-delete-all" class="sidebar">
+    <?= $hyperlink('', '#', [
+        'class' => 'sidebar-close o-icon-close',
+        'title' => $translate('Close'),
+    ]) ?>
+    <div class="sidebar-content">
+        <div id="sidebar-confirm">
+            <h3><?= $translate('Delete access requests') ?></h3>
+            <p><?= $translate('Are you sure you would like to delete all access requests on all pages of this result?') ?></p>
+            <p class="error"><?= sprintf(
+                $translate('%1$s: this action will permanently delete %2$s access requests and cannot be undone.'),
+                sprintf('<strong>%s</strong>', $translate('Warning')),
+                sprintf('<strong>%s</strong>', number_format($this->pagination()->getPaginator()->getTotalCount()))
+            ) ?></p>
+            <label><input type="checkbox" name="confirm-delete-all-check"> <?= $translate('Are you sure?') ?></label>
+            <?= $this->form($this->formDeleteAll) ?>
         </div>
     </div>
+</div>
 
-    <script>
-        // Complete the batch delete form after confirmation.
-        $('#confirm-delete-selected, #confirm-delete-all').on('submit', function(e) {
-            var confirmForm = $(this);
-            if ('confirm-delete-all' === this.id) {
-                confirmForm.append($('.batch-query').clone());
-            } else {
-                $('#batch-form').find('input[name="resource_ids[]"]:checked').each(function() {
-                    confirmForm.append($(this).clone().prop('disabled', false).attr('type', 'hidden'));
-                });
-            }
+<script>
+// Complete the batch delete form after confirmation.
+$('#confirm-delete-selected, #confirm-delete-all').on('submit', function(e) {
+    var confirmForm = $(this);
+    if ('confirm-delete-all' === this.id) {
+        confirmForm.append($('.batch-query').clone());
+    } else {
+        $('#batch-form').find('input[name="resource_ids[]"]:checked').each(function() {
+            confirmForm.append($(this).clone().prop('disabled', false).attr('type', 'hidden'));
         });
-        $('.delete-all').on('click', function(e) {
-            Omeka.closeSidebar($('#sidebar-delete-selected'));
-        });
-        $('.delete-selected').on('click', function(e) {
-            Omeka.closeSidebar($('#sidebar-delete-all'));
-            var inputs = $('input[name="resource_ids[]"]');
-            $('#delete-selected-count').text(inputs.filter(':checked').length);
-        });
-        $('#sidebar-delete-all').on('click', 'input[name="confirm-delete-all-check"]', function(e) {
-            $('#confirm-delete-all input[type="submit"]').prop('disabled', this.checked ? false : true);
-        });
-    </script>
+    }
+});
+$('.delete-all').on('click', function(e) {
+    Omeka.closeSidebar($('#sidebar-delete-selected'));
+});
+$('.delete-selected').on('click', function(e) {
+    Omeka.closeSidebar($('#sidebar-delete-all'));
+    var inputs = $('input[name="resource_ids[]"]');
+    $('#delete-selected-count').text(inputs.filter(':checked').length);
+});
+$('#sidebar-delete-all').on('click', 'input[name="confirm-delete-all-check"]', function(e) {
+    $('#confirm-delete-all input[type="submit"]').prop('disabled', this.checked ? false : true);
+});
+</script>
 
 <?php else: ?>
-    <p><?= $escape($translate('No access records yet.')); ?> <a href="<?= $url(null, [], true); ?>"><?= $escape($translate('Refresh page')) ?></a></p>
+
+<div class="no-resources">
+    <p><?php echo $translate('No access requests.'); ?></p>
+</div>
+
 <?php endif; ?>

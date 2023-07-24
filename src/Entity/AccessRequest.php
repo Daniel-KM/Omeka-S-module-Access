@@ -8,6 +8,8 @@ use Omeka\Entity\AbstractEntity;
 use Omeka\Entity\User;
 
 /**
+ * @todo Clarify options enabled and temporal. Temporal is useful only with a cron task.
+ *
  * @Entity
  * @Table(
  *      indexes={
@@ -126,7 +128,7 @@ class AccessRequest extends AbstractEntity
     protected $temporal = false;
 
     /**
-     * @var DateTime
+     * @var \DateTime
      *
      * @Column(
      *     name="`start`",
@@ -137,7 +139,7 @@ class AccessRequest extends AbstractEntity
     protected $start;
 
     /**
-     * @var DateTime
+     * @var \DateTime
      *
      * @Column(
      *     name="`end`",

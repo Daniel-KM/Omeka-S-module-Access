@@ -1,23 +1,17 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
- * @var array $values
  * @var string $linkTitle
+ * @var string $values
+ * @var \AccessResource\Api\Representation\AccessRequestRepresentation $resource
  */
 
 $plugins = $this->getHelperPluginManager();
-$translate = $plugins->get('translate');
+$i18n = $plugins->get('i18n');
 $escape = $plugins->get('escapeHtml');
+$translate = $plugins->get('translate');
 
-/** @var \AccessResource\Api\Representation\AccessRequestRepresentation $accessRequest */
 $accessRequest = $resource;
-
-if ($user = $accessRequest->user()):
-    $userText = $this->hyperlink($user->name(), $user->adminUrl(), ['target' => '_blank']);
-else:
-    $userText = $translate('[no user]');
-endif;
 ?>
 
 <div class="resource-details" data-resource-values="<?= $escape($values) ?>">
@@ -29,22 +23,39 @@ endif;
     <?php endif; ?>
     <div class="o-description"><?= $escape($resource->displayDescription()) ?></div>
 
-    <?php // echo $this->thumbnail($requestedResource, 'square'); ?>
-
     <div class="meta-group">
-        <h4><?= $escape($translate('User')) ?></h4>
-        <div class="value"><?= $userText ?></div>
+        <h4><?= $escape($translate('Requester')) ?></h4>
+        <div class="value"><?= $accessRequest->displayRequester() ?></div>
     </div>
 
     <div class="meta-group">
-        <h4><?= $escape($translate('Resource')) ?></h4>
-        <div class="value"><?= $accessRequest->resource()->linkPretty() ?></div>
+        <h4><?= $escape($translate('Resources')) ?></h4>
+        <div class="value"><?= $accessRequest->displayResources() ?></div>
     </div>
 
     <div class="meta-group">
         <h4><?= $escape($translate('Status')) ?></h4>
-        <div class="value"><?= $translate($resource->statusLabel()) ?></div>
+        <div class="value"><?= $accessRequest->displayStatus() ?></div>
     </div>
+
+    <?php if ($temporal = $accessRequest->displayTemporal()): ?>
+    <div class="meta-group">
+        <h4><?= $escape($translate('Dates')) ?></h4>
+        <div class="value"><?= $temporal ?></div>
+    </div>
+    <?php endif; ?>
+
+    <div class="meta-group">
+        <h4><?= $escape($translate('Created')) ?></h4>
+        <div class="value"><?=  $i18n->dateFormat($accessRequest->created()) ?></div>
+    </div>
+
+    <?php if ($modified = $accessRequest->modified()): ?>
+    <div class="meta-group">
+        <h4><?= $escape($translate('Modified')) ?></h4>
+        <div class="value"><?=  $i18n->dateFormat($modified) ?></div>
+    </div>
+    <?php endif; ?>
 
     <?php $this->trigger('view.details', ['entity' => $resource]) ?>
 </div>

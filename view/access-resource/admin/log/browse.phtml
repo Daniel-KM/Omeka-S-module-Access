@@ -12,7 +12,8 @@ $escape = $plugins->get('escapeHtml');
 $translate = $plugins->get('translate');
 $hyperlink= $plugins->get('hyperlink');
 
-$this->headLink()->appendStylesheet($this->assetUrl('css/table-access-resource.css', 'AccessResource'));
+$this->headLink()
+    ->appendStylesheet($this->assetUrl('css/access-admin.css', 'AccessResource'));
 
 $this->htmlElement('body')->appendAttribute('class', 'sites browse');
 ?>

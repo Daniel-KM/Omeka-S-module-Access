@@ -51,13 +51,13 @@ return [
     'form_elements' => [
         'invokables' => [
             Form\Element\OptionalRadio::class => Form\Element\OptionalRadio::class,
-            Form\Admin\AccessRequestForm::class => Form\Admin\AccessRequestForm::class,
-            Form\Admin\AccessResourceForm::class => Form\Admin\AccessResourceForm::class,
             Form\AccessRequestForm::class => Form\AccessRequestForm::class,
             Form\ConfigForm::class => Form\ConfigForm::class,
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,
         ],
+        // TODO In Omeka, forms with options should be passed as factory to avoid a warning for now.
         'factories' => [
+            Form\Admin\AccessRequestForm::class => \Omeka\Form\Factory\InvokableFactory::class,
             Form\Admin\BatchEditFieldset::class => \Omeka\Form\Factory\InvokableFactory::class,
         ],
     ],
@@ -67,7 +67,6 @@ return [
             'AccessResource\Controller\Site\Request' => Controller\Site\RequestController::class,
         ],
         'factories' => [
-            'AccessResource\Controller\AccessResource' => Service\Controller\AccessResourceControllerFactory::class,
             Controller\Admin\LogController::class => Service\Controller\LogControllerFactory::class,
             Controller\Admin\RequestController::class => Service\Controller\RequestControllerFactory::class,
         ],
@@ -175,7 +174,7 @@ return [
                                         'id' => '\d+',
                                     ],
                                     'defaults' => [
-                                        'action' => 'edit',
+                                        'action' => 'show',
                                     ],
                                 ],
                             ],
@@ -202,7 +201,6 @@ return [
                 'label' => 'Accesses', // @translate
                 'class' => 'o-icon- fa-key',
                 'route' => 'admin/access-request',
-                'controller' => 'access',
                 'pages' => [
                     [
                         'label' => 'Requests', // @translate
@@ -220,13 +218,7 @@ return [
                     ],
                     [
                         'label' => 'Logs', // @translate
-                        'route' => 'admin/access-request/default',
-                        'controller' => 'log',
-                        'action' => 'browse',
-                    ],
-                    [
-                        'route' => 'admin/access-request',
-                        'visible' => false,
+                        'route' => 'admin/access-log',
                     ],
                 ],
             ],
@@ -237,6 +229,14 @@ return [
             'accessLevel' => ColumnType\AccessLevel::class,
             'embargoDate' => ColumnType\EmbargoDate::class,
             'isUnderEmbargo' => ColumnType\IsUnderEmbargo::class,
+        ],
+    ],
+    'browse_defaults' => [
+        'admin' => [
+            'access_requests' => [
+                'sort_by' => 'created',
+                'sort_order' => 'desc',
+            ],
         ],
     ],
     'translator' => [

@@ -3,6 +3,7 @@
 namespace AccessResource\Controller\Admin;
 
 use AccessResource\Entity\AccessLog;
+use AccessResource\Entity\AccessRequest;
 use AccessResource\Form\Admin\AccessRequestForm;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\AbstractActionController;
@@ -39,23 +40,67 @@ class RequestController extends AbstractActionController
 
     public function browseAction()
     {
-        $params = $this->params();
-        $page = $params->fromQuery('page', 1);
-        // TODO Use the standard params for per page.
-        $perPage = 25;
-        $query = $params->fromQuery() + [
-            'page' => $page,
-            'per_page' => $perPage,
-            'sort_by' => $params->fromQuery('sort_by', 'id'),
-            'sort_order' => $params->fromQuery('sort_order', 'desc'),
-        ];
-        $response = $this->api()->search('access_requests', $query);
+        $this->browse()->setDefaults('access_requests');
+        $response = $this->api()->search('access_requests', $this->params()->fromQuery());
+        $this->paginator($response->getTotalResults());
 
-        $this->paginator($response->getTotalResults(), $page);
+        // Set the return query for batch actions. Note that we remove the page
+        // from the query because there's no assurance that the page will return
+        // results once changes are made.
+        $returnQuery = $this->params()->fromQuery();
+        unset($returnQuery['page']);
 
+        /** @var \Omeka\Form\ConfirmForm $formDeleteSelected */
+        $formDeleteSelected = $this->getForm(ConfirmForm::class);
+        $formDeleteSelected
+            ->setAttribute('action', $this->url()->fromRoute(null, ['action' => 'batch-delete'], ['query' => $returnQuery], true))
+            ->setAttribute('id', 'confirm-delete-selected')
+            ->setButtonLabel('Confirm Delete'); // @translate
+
+        /** @var \Omeka\Form\ConfirmForm $formDeleteAll */
+        $formDeleteAll = $this->getForm(ConfirmForm::class);
+        $formDeleteAll
+            ->setAttribute('action', $this->url()->fromRoute(null, ['action' => 'batch-delete-all'], ['query' => $returnQuery], true))
+            ->setAttribute('id', 'confirm-delete-all')
+            ->setButtonLabel('Confirm Delete'); // @translate
+        $formDeleteAll
+            ->get('submit')->setAttribute('disabled', true);
+
+        $accessRequests = $response->getContent();
         return new ViewModel([
-            'accessRequests' => $response->getContent(),
+            'accessRequests' => $accessRequests,
+            'resources' => $accessRequests,
+            'formDeleteSelected' => $formDeleteSelected,
+            'formDeleteAll' => $formDeleteAll,
+            'returnQuery' => $returnQuery,
         ]);
+    }
+
+    public function showAction()
+    {
+        $response = $this->api()->read('access_requests', $this->params('id'));
+
+        $accessRequest = $response->getContent();
+        return new ViewModel([
+            'accessRequest' => $accessRequest,
+            'resource' => $accessRequest,
+        ]);
+    }
+
+    public function showDetailsAction()
+    {
+        $linkTitle = (bool) $this->params()->fromQuery('link-title', true);
+        $response = $this->api()->read('access_requests', $this->params('id'));
+        $accessRequest = $response->getContent();
+        $values = ['@id' => $accessRequest->id()];
+
+        $view = new ViewModel([
+            'linkTitle' => $linkTitle,
+            'resource' => $accessRequest,
+            'values' => json_encode($values),
+        ]);
+        return $view
+            ->setTerminal(true);
     }
 
     public function addAction()
@@ -65,6 +110,8 @@ class RequestController extends AbstractActionController
 
     public function editAction()
     {
+        /** @see \AccessResource\Module::addAccessListAndForm() */
+
         $id = $this->params('id');
 
         /** @var \AccessResource\Api\Representation\AccessRequestRepresentation $accessRequest */
@@ -77,59 +124,121 @@ class RequestController extends AbstractActionController
             return $this->redirect()->toRoute('admin/access-request');
         }
 
-        $form = $this->getForm(AccessRequestForm::class);
+        /** @var \AccessResource\Form\Admin\AccessRequestForm $form */
+        $formOptions = [
+            'full_access' => (bool) $this->settings()->get('accessresource_full'),
+            // 'resource_id' => null,
+            // 'request_status' => AccessRequest::STATUS_ACCEPTED,
+        ];
+        $form = $this->getForm(AccessRequestForm::class, $formOptions);
+        $form->setOptions($formOptions);
         if ($accessRequest) {
-            $form->setData($accessRequest->toArray());
-        }
-
-        $requestedResource = null;
-        if ($accessRequest && $accessRequest->id()) {
-            $requestedResource = $accessRequest->resource();
+            // Adapt the request to the form.
+            $data = $accessRequest->jsonSerialize();
+            $res = [];
+            foreach ($data['o:resource'] as $resource) {
+                $res[] = $resource->id();
+            }
+            $data['o:resource'] = implode(' ', $res);
+            $data['o:user'] = $accessRequest->user() ? $accessRequest->user()->id() : null;
+            $date = $accessRequest->start();
+            if ($date) {
+                $data['o-access:start-date'] = $date->format('Y-m-d');
+                $data['o-access:start-time'] = $date->format('H-i');
+            }
+            $date = $accessRequest->end();
+            if ($date) {
+                $data['o-access:end-date'] = $date->format('Y-m-d');
+                $data['o-access:end-time'] = $date->format('H-i');
+            }
+            $form->setData($data);
         }
 
         if ($this->getRequest()->isPost()) {
             $post = $this->params()->fromPost();
-
             $form->setData($post);
-
-            if ($form->isValid() && !empty($post['resource_id'])) {
+            if (@$form->isValid()) {
                 $data = $form->getData();
-                // Some data are not managed by the form.
-                $data['resource_id'] = (int) $post['resource_id'] ?: null;
-                $data['user_id'] = (int) $post['user_id'] ?: null;
-
-                $response = null;
-
-                if ($accessRequest) {
-                    $response = $this->api($form)->update('access_requests', $accessRequest->id(), $data, [], ['isPartial' => true]);
-                    $accessRequest = $response->getContent();
-                    $accessUser = $this->entityManager->find(\Omeka\Entity\User::class, $accessRequest->user()->id());
-
-                    // Log changes to request record.
-                    $log = new AccessLog();
-                    $this->entityManager->persist($log);
-                    $log
-                        ->setAction('update_to_' . $accessRequest->status())
-                        ->setUserId($accessUser ? $accessUser->getId() : 0)
-                        ->setAccessId($accessRequest->id())
-                        ->setAccessType(AccessLog::TYPE_REQUEST)
-                        ->setDate(new \DateTime());
-                    $this->entityManager->flush();
-
-                    // Fire send email event.
-                    $this->getEventManager()->trigger('accessresource.request.updated');
-                } elseif (empty($post['resource_id'])) {
-                    $this->messenger()->addError(new Message(
-                        'Resource is undefined.' // @translate
-                    ));
-                } else {
-                    $response = $this->api($form)->create('access_requests', $data);
-                    $this->getEventManager()->trigger('accessresource.request.created');
+                $data['o:resource'] = is_array($data['o:resource'])
+                    ? array_filter($data['o:resource'])
+                    : array_filter(explode(' ', preg_replace('~[^\d]~', ' ', $data['o:resource'])));
+                $date = $data['o-access:start-date'] ?? null;
+                $date = trim((string) $date) ?: null;
+                if ($date) {
+                    $date .= 'T' . (empty($data['o-access:start-time']) ? '00:00:00' : $data['o-access:start-time']  . ':00');
                 }
-
-                if ($response) {
-                    $this->messenger()->addSuccess('Access request record successfully saved'); // @translate
-                    return $this->redirect()->toRoute('admin/access-request');
+                $data['o-access:start'] = $date;
+                $date = $data['o-access:end-date'] ?? null;
+                $date = trim((string) $date) ?: null;
+                if ($date) {
+                    $date .= 'T' . (empty($data['o-access:end-time']) ? '00:00:00' : $data['o-access:end-time']  . ':00');
+                }
+                $data['o-access:end'] = $date;
+                if (!$data['o:user'] && !$data['o:email'] && !$data['o-access:token']) {
+                    $message = new Message(
+                        'You should set either a user or an email or check box for token.', // @translate
+                    );
+                    $this->messenger()->addError($message);
+                } else {
+                    unset(
+                        $data['csrf'],
+                        $data['submit'],
+                        $data['o-access:start-date'],
+                        $data['o-access:start-time'],
+                        $data['o-access:end-date'],
+                        $data['o-access:end-time']
+                    );
+                    if ($data['o:user']) {
+                        $data['o:email'] = null;
+                        $data['o-access:token'] = null;
+                    } elseif ($data['o:email']) {
+                        $data['o-access:token'] = null;
+                    } else {
+                        $data['o-access:token'] = $accessRequest && $accessRequest->token()
+                            ? $accessRequest->token()
+                            : substr(str_replace(['+', '/', '='], '', base64_encode(random_bytes(48))), 0, 16);
+                    }
+                    if (!$id) {
+                        $response = $this->api($form)->create('access_requests', $data);
+                        if ($response) {
+                            $message = new Message(
+                                'Access request successfully created.', // @translate
+                            );
+                            $this->messenger()->addSuccess($message);
+                            $accessRequest = $response->getContent();
+                            if ($accessRequest->user() || $accessRequest->email()) {
+                                $post['request_from'] = 'admin';
+                                $result = $this->sendRequestEmailCreate($accessRequest, $post);
+                                if (!$result) {
+                                    $message = new Message(
+                                        $this->translate('The request was sent, but an issue occurred when sending the confirmation email.') // @translate
+                                    );
+                                    $this->messenger()->addWarning($message);
+                                }
+                            }
+                            return $this->redirect()->toRoute('admin/access-request');
+                        }
+                    } else {
+                        $response = $this->api($form)->update('access_requests', $id, $data);
+                        if ($response) {
+                            $message = new Message(
+                                'Access request successfully updated.', // @translate
+                            );
+                            $this->messenger()->addSuccess($message);
+                            $accessRequest = $response->getContent();
+                            if ($accessRequest->user() || $accessRequest->email()) {
+                                $post['request_from'] = 'admin';
+                                $result = $this->sendRequestEmailUpdate($accessRequest, $post);
+                                if (!$result) {
+                                    $message = new Message(
+                                        $this->translate('The request was sent, but an issue occurred when sending the confirmation email.') // @translate
+                                    );
+                                    $this->messenger()->addWarning($message);
+                                }
+                            }
+                            return $this->redirect()->toRoute('admin/access-request');
+                        }
+                    }
                 }
             } else {
                 $this->messenger()->addFormErrors($form);
@@ -137,9 +246,8 @@ class RequestController extends AbstractActionController
         }
 
         return new ViewModel([
-            'dataType' => $this->dataTypeManager->get('resource'),
+            'resource' => $accessRequest,
             'accessRequest' => $accessRequest,
-            'requestedResource' => $requestedResource,
             'form' => $form,
         ]);
     }
@@ -153,9 +261,10 @@ class RequestController extends AbstractActionController
 
         $view = new ViewModel([
             'resource' => $resource,
-            'resourceLabel' => 'access request record', // @translate
+            'resourceLabel' => 'access request', // @translate
             'partialPath' => 'access-resource/admin/request/show-details',
             'linkTitle' => $linkTitle,
+            'accessRequest' => $resource,
             'values' => json_encode($values),
         ]);
         return $view
@@ -171,54 +280,101 @@ class RequestController extends AbstractActionController
             if ($form->isValid()) {
                 $response = $this->api($form)->delete('access_requests', $this->params('id'));
                 if ($response) {
-                    $this->messenger()->addSuccess('Access request record successfully deleted'); // @translate
+                    $this->messenger()->addSuccess('Access request successfully deleted'); // @translate
                 }
             } else {
                 $this->messenger()->addFormErrors($form);
             }
         }
-
-        return $this->redirect()->toRoute('admin/access-resource');
+        return $this->redirect()->toRoute('admin/access-request');
     }
 
-    public function toggleAction()
+    public function removeAction()
     {
+        // Rights are already checked in acl for this controller.
         if ($this->getRequest()->isPost()) {
-            $userRole = $this->identity()->getRole();
-            // TODO Use the permission check.
-            $isAdmin = in_array($userRole, [\Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN, \Omeka\Permissions\Acl::ROLE_SITE_ADMIN]);
-            if ($isAdmin) {
-                $api = $this->api();
-
-                $id = $this->params('id');
-                $request = $api->searchOne('access_requests', ['id' => $id])->getContent();
-                if ($id && !$request) {
-                    return false;
-                }
-
-                $status = $request->status() === \AccessResource\Entity\AccessRequest::STATUS_ACCEPTED
-                    ? \AccessResource\Entity\AccessRequest::STATUS_REJECTED
-                    : \AccessResource\Entity\AccessRequest::STATUS_ACCEPTED;
-
-                $api->update('access_requests', $id, ['status' => $status]);
-
+            $api = $this->api();
+            $id = $this->params('id');
+            $request = $api->searchOne('access_requests', ['id' => $id])->getContent();
+            if ($id && !$request) {
+                $this->getResponse()->setStatusCode(404);
                 return new JsonModel([
-                    'status' => \Laminas\Http\Response::STATUS_CODE_200,
+                    'status' => 'fail',
                     'data' => [
-                        'status' => $status,
+                        'access_request' => [
+                            'o:id' => sprintf($this->translate('The request #%s is invalid or unavailable.'), $id), // @translate
+                        ],
                     ],
                 ]);
             }
 
+            $api->delete('access_requests', $id);
+
             return new JsonModel([
-                'status' => \Laminas\Http\Response::STATUS_CODE_403,
-                'message' => $this->translate('No rights to update status.'), // @translate
+                'status' => 'success',
+                'data' => [
+                    'access_request' => [
+                        'o:id' => $id,
+                    ],
+                ],
             ]);
         }
 
+        $this->getResponse()->setStatusCode(405);
         return new JsonModel([
-            'status' => \Laminas\Http\Response::STATUS_CODE_405,
-            'message' => $this->translate('Method should be post.'), // @translate
+            'status' => 'fail',
+            'data' => [
+                'access_request' => [
+                    'o:id' => $this->translate('Method should be post.'), // @translate
+                ],
+            ],
+        ]);
+    }
+
+    public function toggleAction()
+    {
+        // Rights are already checked in acl for this controller.
+        if ($this->getRequest()->isPost()) {
+            $api = $this->api();
+            $id = $this->params('id');
+            $request = $api->searchOne('access_requests', ['id' => $id])->getContent();
+            if ($id && !$request) {
+                $this->getResponse()->setStatusCode(404);
+                return new JsonModel([
+                    'status' => 'fail',
+                    'data' => [
+                        'access_request' => [
+                            'o:id' => sprintf($this->translate('The request #%s is invalid or unavailable.'), $id), // @translate
+                        ],
+                    ],
+                ]);
+            }
+
+            $status = $request->status() === AccessRequest::STATUS_ACCEPTED
+                ? AccessRequest::STATUS_REJECTED
+                : AccessRequest::STATUS_ACCEPTED;
+
+            $api->update('access_requests', $id, ['o:status' => $status]);
+
+            return new JsonModel([
+                'status' => 'success',
+                'data' => [
+                    'access_request' => [
+                        'o:id' => $id,
+                        'o:status' => $status,
+                    ],
+                ],
+            ]);
+        }
+
+        $this->getResponse()->setStatusCode(405);
+        return new JsonModel([
+            'status' => 'fail',
+            'data' => [
+                'access_request' => [
+                    'o:id' => $this->translate('Method should be post.'), // @translate
+                ],
+            ],
         ]);
     }
 }

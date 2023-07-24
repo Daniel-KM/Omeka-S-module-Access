@@ -265,13 +265,12 @@ class AccessRequestAdapter extends AbstractEntityAdapter
             $entity->setStatus($data['o:status']);
         }
 
+        /*
         if (isset($data['o-access:enabled']) && $data['o-access:enabled'] !== '' && in_array($data['o-access:enabled'], [0, 1, true, false])) {
             $entity->setEnabled((bool) $data['o-access:enabled']);
         }
-
-        if (isset($data['o-access:temporal']) && $data['o-access:temporal'] !== '' && in_array($data['o-access:temporal'], [0, 1, true, false])) {
-            $entity->setTemporal((bool) $data['o-access:temporal']);
-        }
+        */
+        $entity->setEnabled($entity->getStatus() === 'accepted');
 
         if (array_key_exists('o-access:start', $data) && $data['o-access:start'] !== '') {
             $startDate = null;
@@ -283,7 +282,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
             } elseif ($data['o-access:start'] instanceof DateTime) {
                 $startDate = $data['o-access:start'];
             }
-            $entity->setStartDate($startDate);
+            $entity->setStart($startDate);
         }
 
         if (array_key_exists('o-access:end', $data) && $data['o-access:end'] !== '') {
@@ -296,8 +295,15 @@ class AccessRequestAdapter extends AbstractEntityAdapter
             } elseif ($data['o-access:end'] instanceof DateTime) {
                 $endDate = $data['o-access:end'];
             }
-            $entity->setEndDate($endDate);
+            $entity->setEnd($endDate);
         }
+
+        /*
+        if (isset($data['o-access:temporal']) && $data['o-access:temporal'] !== '' && in_array($data['o-access:temporal'], [0, 1, true, false])) {
+            $entity->setTemporal((bool) $data['o-access:temporal']);
+        }
+        */
+        $entity->setTemporal($entity->getStart() || $entity->getEnd());
 
         $this->updateTimestamps($request, $entity);
     }

@@ -9,6 +9,7 @@ if (!class_exists(\Generic\AbstractModule::class)) {
 }
 
 use AccessResource\Api\Representation\AccessStatusRepresentation;
+use AccessResource\Entity\AccessRequest;
 use AccessResource\Entity\AccessStatus;
 use AccessResource\Form\Admin\BatchEditFieldset;
 use DateTime;
@@ -18,7 +19,6 @@ use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
 use Laminas\View\Renderer\PhpRenderer;
-use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 use Omeka\Entity\Resource;
 use Omeka\Stdlib\Message;
 
@@ -60,9 +60,20 @@ class Module extends AbstractModule
         if (!$acl->hasRole('guest')) {
             $acl->addRole('guest');
         }
+        if (!$acl->hasRole('guest_private')) {
+            $acl->addRole('guest_private');
+        }
 
         $roles = $acl->getRoles();
         $rolesExceptGuest = array_diff($roles, ['guest']);
+
+        // Admins can manage requests.
+        $rolesAdmins = [
+            \Omeka\Permissions\Acl::ROLE_GLOBAL_ADMIN,
+            \Omeka\Permissions\Acl::ROLE_SITE_ADMIN,
+            \Omeka\Permissions\Acl::ROLE_EDITOR,
+            \Omeka\Permissions\Acl::ROLE_REVIEWER,
+        ];
 
         $acl
             ->allow(
@@ -75,11 +86,12 @@ class Module extends AbstractModule
                 ['submit']
             )
             ->allow(
-                // TODO Limit access to authenticated users, instead of checking in controller.
-                // Guest role is not yet loaded, neither specific roles (contributor…).
-                null,
-                ['AccessResource\Controller\Site\GuestBoard'],
-                ['browse']
+                $rolesAdmins,
+                [\AccessResource\Controller\Site\RequestController::class]
+            )
+            ->allow(
+                $roles,
+                ['AccessResource\Controller\Site\GuestBoard']
             )
             ->allow(
                 null,
@@ -208,7 +220,7 @@ class Module extends AbstractModule
             $sharedEventManager->attach(
                 $controller,
                 'view.show.after',
-                [$this, 'displayListAndForm']
+                [$this, 'addAccessListAndForm']
             );
         }
 
@@ -230,19 +242,6 @@ class Module extends AbstractModule
         );
 
         // Management of individual accesses.
-
-        // Attach to Doctrine events Access Request update, to trigger Access
-        // resource management.
-        $sharedEventManager->attach(
-            \AccessResource\Entity\AccessRequest::class,
-            'entity.persist.post',
-            [$this, 'manageAccessByRequest']
-        );
-        $sharedEventManager->attach(
-            \AccessResource\Entity\AccessRequest::class,
-            'entity.update.post',
-            [$this, 'manageAccessByRequest']
-        );
 
         // Attach to view render, to inject guest user request form.
         // TODO Replace by resource blocks.
@@ -302,7 +301,7 @@ class Module extends AbstractModule
         $this->warnConfig();
 
         $renderer->headScript()
-            ->appendFile($renderer->assetUrl('js/access-resource-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+            ->appendFile($renderer->assetUrl('js/access-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
         return '<style>fieldset[name=fieldset_index] .inputs label {display: block;}</style>'
             . parent::getConfigForm($renderer);
     }
@@ -851,34 +850,121 @@ class Module extends AbstractModule
     /**
      * Display a partial for a resource.
      */
-    public function displayListAndForm(Event $event): void
+    public function addAccessListAndForm(Event $event): void
     {
-        $request = $this->getServiceLocator()->get('Request');
+        /**
+         * @var \Omeka\Api\Request $request
+         * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus $accessStatusForResource
+         */
+        $view = $event->getTarget();
+        $services = $this->getServiceLocator();
+        $plugins =  $services->get('ControllerPluginManager');
+        $api = $plugins->get('api');
+        $settings = $services->get('Omeka\Settings');
+        $messenger = $plugins->get('messenger');
+        $accessStatusForResource = $plugins->get('accessStatus');
 
+        $resource = $view->resource;
+        $accessStatus = $accessStatusForResource($resource, true);
+
+        $formOptions = [
+            'full_access' => (bool) $settings->get('accessresource_full'),
+            'resource_id' => $resource->id(),
+            'request_status' => AccessRequest::STATUS_ACCEPTED,
+        ];
+        /** @var \AccessResource\Form\Admin\AccessRequestForm $form */
+        $form = $services->get('FormElementManager')
+            ->get(\AccessResource\Form\Admin\AccessRequestForm::class, $formOptions)
+            ->setOptions($formOptions);
+
+        /**
+         * @see \AccessResource\Controller\Admin\RequestController::editAction()
+         * @var \Laminas\Mvc\MvcEvent $mvcEvent
+         * @var \Laminas\Http\PhpEnvironment\Request $httpRequest
+         */
+        $request = $services->get('Request');
         if ($request->isPost()) {
-            // Create access.
-            // $post = $request->getPost();
-            $api = $this->getServiceLocator()->get('Omeka\ApiManager');
-            $api->create('access_resources', []);
+            $params = $plugins->get('params');
+            $post = $params->fromPost();
+            $form->setData($post);
+            // TODO Fix issue with date time.
+            if (@$form->isValid()) {
+                $data = $form->getData();
+                $data['o:resource'] = is_array($data['o:resource'])
+                    ? array_filter($data['o:resource'])
+                    : array_filter(explode(' ', preg_replace('~[^\d]~', ' ', $data['o:resource'])));
+                $date = $data['o-access:start-date'] ?? null;
+                $date = trim((string) $date) ?: null;
+                if ($date) {
+                    $date .= 'T' . (empty($data['o-access:start-time']) ? '00:00:00' : $data['o-access:start-time']  . ':00');
+                }
+                $data['o-access:start'] = $date;
+                $date = $data['o-access:end-date'] ?? null;
+                $date = trim((string) $date) ?: null;
+                if ($date) {
+                    $date .= 'T' . (empty($data['o-access:end-time']) ? '00:00:00' : $data['o-access:end-time']  . ':00');
+                }
+                $data['o-access:end'] = $date;
+                if (!$data['o:user'] && !$data['o:email'] && !$data['o-access:token']) {
+                    $message = new Message(
+                        'You should set either a user or an email or check box for token.', // @translate
+                    );
+                    $messenger->addError($message);
+                } else {
+                    unset(
+                        $data['csrf'],
+                        $data['submit'],
+                        $data['o-access:start-date'],
+                        $data['o-access:start-time'],
+                        $data['o-access:end-date'],
+                        $data['o-access:end-time']
+                    );
+                    if ($data['o:user']) {
+                        $data['o:email'] = null;
+                        $data['o-access:token'] = null;
+                    } elseif ($data['o:email']) {
+                        $data['o-access:token'] = null;
+                    } else {
+                        $data['o-access:token'] = substr(str_replace(['+', '/', '='], '', base64_encode(random_bytes(48))), 0, 16);
+                    }
+                    $response = $api($form)->create('access_requests', $data);
+                    if ($response) {
+                        $message = new Message(
+                            'Access request successfully created.', // @translate
+                        );
+                        $messenger->addSuccess($message);
+                    }
+                    // Reinit the form for a new request.
+                    $form = $services->get('FormElementManager')
+                        ->get(\AccessResource\Form\Admin\AccessRequestForm::class, $formOptions)
+                        ->setOptions($formOptions);
+                }
+            } else {
+                $messenger->addFormErrors($form);
+            }
         }
 
-        echo '<div id="access" class="section">';
-        $resource = $event->getTarget()->resource;
-        $this->displayAccessesAccessResource($event, $resource);
-        // if ($allowed) {
-        //     echo $this->createAddAccessForm($event);
-        // }
-        echo '</div>';
-    }
+        $accessRequests = $api->search('access_requests', ['resource_id' => $resource->id()])->getContent();
+        $requestHtml = $view->partial('common/access-request-list', [
+            'resource' => $resource,
+            'accessStatus' => $accessStatus,
+            'accessRequests' => $accessRequests,
+        ]);
 
-    /*
-    protected function createAddAccessForm(Event $event)
-    {
-        $controller = $event->getTarget();
-        $form = new \AccessResource\Form\Admin\AddAccessForm();
-        return $controller->formCollection(new \AccessResource\Form\Admin\AddAccessForm());
+        $requestForm = $view->partial('common/access-request-form', [
+            'resource' => $resource,
+            'accessStatus' => $accessStatus,
+            'requestForm' => $form,
+        ]);
+
+        $html = <<<'HTML'
+<div id="access" class="section">
+    %1$s
+    %2$s
+</div>
+HTML;
+        echo sprintf($html, $requestHtml, $requestForm);
     }
-    */
 
     public function addResourceFormElements(Event $event): void
     {
@@ -902,7 +988,7 @@ class Module extends AbstractModule
 
         $assetUrl = $view->plugin('assetUrl');
         $view->headLink()
-            ->appendStylesheet($assetUrl('css/access-resource-admin.css', 'AccessResource'));
+            ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
 
         // Get current access if any.
         $resource = $view->vars()->offsetGet('resource');
@@ -945,6 +1031,7 @@ class Module extends AbstractModule
 
         // Html element "datetime" is deprecated and "datetime-local" requires
         // time, even with a pattern, so use elements date and time to avoid js.
+        // TODO Create a full form element with view for standard date + time.
 
         $embargoStartElementDate = new \Laminas\Form\Element\Date('embargo_start_date');
         $embargoStartElementDate
@@ -1055,66 +1142,6 @@ class Module extends AbstractModule
         ]);
     }
 
-    /**
-     * Helper to display the accesses and requests for a resource.
-     *
-     * @param Event $event
-     * @param AbstractResourceEntityRepresentation $resource
-     */
-    protected function displayAccessesAccessResource(Event $event, AbstractResourceEntityRepresentation $resource): void
-    {
-        $services = $this->getServiceLocator();
-        $api = $services->get('Omeka\ApiManager');
-
-        $accesses = $api->search('access_resources', ['resource_id' => $resource->id()])->getContent();
-        $requests = $api->search('access_requests', ['resource_id' => $resource->id()])->getContent();
-
-        $partial = 'common/admin/access-request-list';
-        echo $event->getTarget()->partial(
-            $partial,
-            [
-                'resource' => $resource,
-                'accesses' => $accesses,
-                'requests' => $requests,
-            ]
-        );
-    }
-
-    public function manageAccessByRequest(Event $event): void
-    {
-        $entity = $event->getTarget();
-
-        // Process only if status is 'accepted'.
-        if ($entity->getStatus() !== \AccessResource\Entity\AccessRequest::STATUS_ACCEPTED) {
-            return;
-        }
-
-        // Find last access record.
-        /** @var \Omeka\Api\Manager $api */
-        $api = $this->getServiceLocator()->get('Omeka\ApiManager');
-
-        $accessRecords = $api->search('access_resources', [
-            'resource_id' => $entity->getResource()->getId(),
-            'user_id' => $entity->getUser()->getId(),
-        ], ['responseContent' => 'resource'])->getContent();
-        $accessRecord = count($accessRecords) ? array_pop($accessRecords) : null;
-
-        if ($accessRecord) {
-            $api->update('access_resources', $accessRecord->getId(), [
-                'enabled' => true,
-            ]);
-        } else {
-            $api->create('access_resources', [
-                'resource_id' => $entity->getResource()->getId(),
-                'user_id' => $entity->getUser()->getId(),
-                'enabled' => true,
-                // FIXME Use a random token.
-                'token' => md5($entity->getResource()->getId() . '/' . $entity->getUser()->getId()),
-                'temporal' => false,
-            ]);
-        }
-    }
-
     public function handleViewBrowseAfterItem(Event $event): void
     {
         // Note: there is no item-set show, but a special case for items browse.
@@ -1163,9 +1190,9 @@ class Module extends AbstractModule
         $view = $event->getTarget();
         $assetUrl = $view->plugin('assetUrl');
         $view->headLink()
-            ->appendStylesheet($assetUrl('css/access-resource-admin.css', 'AccessResource'));
+            ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
         $view->headScript()
-            ->appendFile($assetUrl('js/access-resource-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+            ->appendFile($assetUrl('js/access-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
     }
 
     public function formAddElementsResourceBatchUpdateForm(Event $event): void

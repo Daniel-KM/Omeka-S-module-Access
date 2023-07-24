@@ -71,6 +71,21 @@ class AccessStatusRepresentation extends AbstractEntityRepresentation
         return $jsonLd;
     }
 
+    /**
+     * @todo Use an adaptaer for access statuses and remove this method.
+     */
+    public function apiUrl()
+    {
+        $url = $this->getViewHelper('Url');
+        return $url(
+            'api/default',
+            [
+                'resource' => 'access_statuses',
+                'id' => $this->id(),
+            ],
+            ['force_canonical' => true]
+        );
+    }
 
     public function id()
     {
@@ -138,17 +153,17 @@ class AccessStatusRepresentation extends AbstractEntityRepresentation
         if (!$embargoEnd) {
             $hasStartTime = $embargoStart->format('H:i:s') !== '00:00:00';
             $formatStartTime = $hasStartTime ? $i18n::DATE_FORMAT_SHORT : $i18n::DATE_FORMAT_NONE;
-            return sprintf($this->translator()->translate('from %s'), $i18n->dateFormat($i18n->dateFormat($embargoStart, $dateTimeFormat, $formatStartTime))); // @translate
+            return sprintf($this->getTranslator()->translate('from %s'), $i18n->dateFormat($embargoStart, $dateTimeFormat, $formatStartTime)); // @translate
         } elseif (!$embargoStart) {
             $hasEndTime = $embargoEnd->format('H:i:s') !== '00:00:00';
             $formatEndTime = $hasEndTime ? $i18n::DATE_FORMAT_SHORT : $i18n::DATE_FORMAT_NONE;
-            return sprintf($this->translator()->translate('until %s'), $i18n->dateFormat($i18n->dateFormat($embargoEnd, $dateTimeFormat, $formatEndTime))); // @translate
+            return sprintf($this->getTranslator()->translate('until %s'), $i18n->dateFormat($embargoEnd, $dateTimeFormat, $formatEndTime)); // @translate
         } else {
             $hasStartTime = $embargoStart->format('H:i:s') !== '00:00:00';
             $hasEndTime = $embargoEnd->format('H:i:s') !== '00:00:00';
             $formatStartTime = $hasStartTime ? $i18n::DATE_FORMAT_SHORT : $i18n::DATE_FORMAT_NONE;
             $formatEndTime = $hasEndTime ? $i18n::DATE_FORMAT_SHORT : $i18n::DATE_FORMAT_NONE;
-            return sprintf($this->translator()->translate('from %1$s until %2$s'), $i18n->dateFormat($embargoStart, $dateTimeFormat, $formatStartTime), $i18n->dateFormat($embargoEnd, $dateTimeFormat, $formatEndTime)); // @translate
+            return sprintf($this->getTranslator()->translate('from %1$s until %2$s'), $i18n->dateFormat($embargoStart, $dateTimeFormat, $formatStartTime), $i18n->dateFormat($embargoEnd, $dateTimeFormat, $formatEndTime)); // @translate
         }
     }
 }

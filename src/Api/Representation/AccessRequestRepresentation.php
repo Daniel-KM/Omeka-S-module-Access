@@ -119,12 +119,6 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
         return $this->resource->getStatus();
     }
 
-    public function statusLabel(): string
-    {
-        $status = $this->resource->getStatus();
-        return $this->getTranslator()->translate($this->statusLabels[$status] ?? $status);
-    }
-
     public function enabled(): bool
     {
         return (bool) $this->resource->getEnabled();
@@ -170,11 +164,70 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
 
     public function displayTitle($default = null): string
     {
-        return sprintf($this->getTranslator()->translate('Access request #%d'), $this->id());
+        return sprintf($this->getTranslator()->translate('Request #%d'), $this->id());
     }
 
     public function displayDescription($default = null): string
     {
         return (string) $default;
+    }
+
+    public function displayRequester($default = null): string
+    {
+        $translator = $this->getTranslator();
+        if ($user = $this->user()) {
+            return sprintf($translator->translate('User: %s'), $user->link($user->name())); // @translate
+        } elseif ($email = $this->email()) {
+            return sprintf(
+                $translator->translate('Visitor: %s'), // @translate
+                sprintf('<a href="mailto:%1$s">%1$s</a>', $email)
+            );
+        } elseif ($token = $this->token()) {
+            return sprintf($translator->translate('Token: %s'), $token); // @translate
+        } else {
+            return $default ?? $translator->translate('Undefined'); // @translate
+        }
+    }
+
+    public function displayResources($default = null): string
+    {
+        $list = [];
+        /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource */
+        foreach ($this->resources() as $resource) {
+            $list[] = $resource->link($resource->displayTitle(), 'show', ['class' => $resource->resourceName()]);
+        }
+        return '<ul><li>' . implode("</li>\n<li>", $list) . '</li></ul>';
+    }
+
+    public function displayStatus($default = null): string
+    {
+        $status = $this->resource->getStatus();
+        return $this->getTranslator()->translate($this->statusLabels[$status] ?? $status);
+    }
+
+    public function displayTemporal(?string $dateTimeFormat = 'medium'): string
+    {
+        $start = $this->start();
+        $end = $this->end();
+        if (!$start && !$end) {
+            return '';
+        }
+        /** @var \Omeka\View\Helper\i18n $i18n */
+        $i18n = $this->getServiceLocator()->get('ViewHelperManager')->get('i18n');
+        if (!$end) {
+            $hasStartTime = $start->format('H:i:s') !== '00:00:00';
+            $formatStartTime = $hasStartTime ? $i18n::DATE_FORMAT_SHORT : $i18n::DATE_FORMAT_NONE;
+            return sprintf($this->getTranslator()->translate('from %s'), $i18n->dateFormat($start, $dateTimeFormat, $formatStartTime)); // @translate
+        } elseif (!$start) {
+            $hasEndTime = $end->format('H:i:s') !== '00:00:00';
+            $formatEndTime = $hasEndTime ? $i18n::DATE_FORMAT_SHORT : $i18n::DATE_FORMAT_NONE;
+            return sprintf($this->getTranslator()->translate('until %s'), $i18n->dateFormat($end, $dateTimeFormat, $formatEndTime)); // @translate
+        } else {
+            $hasStartTime = $start->format('H:i:s') !== '00:00:00';
+            $hasEndTime = $end->format('H:i:s') !== '00:00:00';
+            $formatStartTime = $hasStartTime ? $i18n::DATE_FORMAT_SHORT : $i18n::DATE_FORMAT_NONE;
+            $formatEndTime = $hasEndTime ? $i18n::DATE_FORMAT_SHORT : $i18n::DATE_FORMAT_NONE;
+            return sprintf($this->getTranslator()->translate('from %1$s until %2$s'), $i18n->dateFormat($start, $dateTimeFormat, $formatStartTime), $i18n->dateFormat($end, $dateTimeFormat, $formatEndTime)); // @translate
+        }
     }
 }

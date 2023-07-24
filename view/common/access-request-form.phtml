@@ -1,0 +1,56 @@
+<?php
+
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\AbstractResourceRepresentation $resource
+ * @var \AccessResource\Api\Representation\AccessStatusRepresentation|null $accessStatus
+ * @var \AccessResource\Form\Admin\AccessRequestForm $requestForm
+ */
+
+$plugins = $this->getHelperPluginManager();
+$assetUrl = $plugins->get('assetUrl');
+$translate = $plugins->get('translate');
+
+$level = $accessStatus ? $accessStatus->level() : 'free';
+
+if ($level !== 'free' && $level !== 'forbidden')  {
+    $this->headLink()
+        ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
+    $this->headScript()
+        ->appendFile($assetUrl('js/access-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+}
+?>
+
+<div class="access-resource access-request">
+
+    <?php // Quick form to add access. ?>
+
+    <div>
+        <h4><?= $translate('Give access') ?></h4>
+
+     <?php if ($level ===  'free'): ?>
+
+        <div class="no-resources">
+            <p><?= $translate('Free access'); ?></p>
+        </div>
+
+    <?php elseif ($level ===  'forbidden'): ?>
+
+        <div class="no-resources">
+            <p><?= $translate('Forbidden access'); ?></p>
+        </div>
+
+    <?php // Manage access to reserved resource (resources with other levels cannot be requested). ?>
+    <?php else: ?>
+
+        <?php /* // TODO Create a form view helper for user selector.
+        <button id="user-selector-button"><?= $translate('Select user') ?></button>
+        <?= $this->userSelector($translate('Click on a user to select it.'), false) ?>
+        */ ?>
+        <?= $this->form($requestForm) ?>
+
+    <?php endif; ?>
+
+    </div>
+
+</div>
