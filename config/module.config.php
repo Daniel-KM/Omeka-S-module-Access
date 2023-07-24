@@ -37,6 +37,7 @@ return [
         'factories' => [
             'accessResourceRequestForm' => Service\ViewHelper\AccessResourceRequestFormFactory::class,
             'accessLevel' => Service\ViewHelper\AccessLevelFactory::class,
+            'isAllowedMediaContent' => Service\ViewHelper\IsAllowedMediaContentFactory::class,
             'isUnderEmbargo' => Service\ViewHelper\IsUnderEmbargoFactory::class,
         ],
     ],
@@ -264,7 +265,11 @@ return [
             'accessresource_full' => false,
 
             'accessresource_access_modes' => [
+                // 'ip',
                 'guest',
+                // 'external',
+                // 'individual',
+                // 'token',
             ],
 
             'accessresource_level_via_property' => false,

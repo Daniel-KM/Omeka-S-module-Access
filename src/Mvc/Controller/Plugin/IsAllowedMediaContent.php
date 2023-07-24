@@ -84,14 +84,14 @@ class IsAllowedMediaContent extends AbstractPlugin
      * - IP: anonymous with IP.
      * - External: authenticated externally (cas for now, ldap or sso later).
      * - Guest: guest users.
-     * - Token: user or visitor with a token.
      * - Individual: users with requests and anonymous with token.
+     * - Token: user or visitor with a token.
      *
-     * The embargo is checked when the user has access to a
+     * The embargo is checked first.
      *
      * @todo Check embargo via a new column in accessStatus?
      */
-    public function __invoke(?MediaRepresentation $media): ?bool
+    public function __invoke(?MediaRepresentation $media): bool
     {
         if (!$media) {
             return false;
@@ -148,13 +148,13 @@ class IsAllowedMediaContent extends AbstractPlugin
             return true;
         }
 
-        $modeToken = in_array('token', $modes);
-        if ($modeToken && $this->checkToken($media)) {
+        $modeIndividual = in_array('individual', $modes);
+        if ($modeIndividual && $this->checkIndividual($media, $this->user)) {
             return true;
         }
 
-        $modeIndividual = in_array('individual', $modes);
-        if ($modeIndividual && $this->checkIndividual($media, $this->user)) {
+        $modeToken = in_array('token', $modes);
+        if ($modeToken && $this->checkToken($media)) {
             return true;
         }
 
