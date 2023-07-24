@@ -8,10 +8,6 @@ if (!class_exists(\Generic\AbstractModule::class)) {
         : __DIR__ . '/src/Generic/AbstractModule.php';
 }
 
-const ACCESS_MODE_GLOBAL = 'global';
-const ACCESS_MODE_IP = 'ip';
-const ACCESS_MODE_INDIVIDUAL = 'individual';
-
 use AccessResource\Entity\AccessStatus;
 use AccessResource\Form\Admin\BatchEditFieldset;
 use DateTime;

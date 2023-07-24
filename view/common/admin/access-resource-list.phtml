@@ -127,7 +127,7 @@ $this->headScript()
                     aria-label="<?= $escape($translate('Remove access')) ?>"
                     title="<?= $escape($translate('Remove access')) ?>"></a></span>
                 <?php else: ?>
-                <span class="no-action o-icon-<?= $access->enabled() ?: 'undefined' ?>"></span>
+                <span class="no-action o-icon-<?= $access->enabled() ? 'approved' : 'private' ?>"></span>
                 <?php endif; ?>
             </li>
         <?php endforeach; ?>

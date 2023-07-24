@@ -15,6 +15,7 @@ class AccessResourceControllerFactory implements FactoryInterface
         return new AccessResourceController(
             $services->get('Omeka\EntityManager'),
             $services->get('Omeka\ApiAdapterManager')->get('media'),
+            $services->get('Omeka\Acl'),
             $basePath
         );
     }

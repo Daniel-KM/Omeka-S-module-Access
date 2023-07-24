@@ -56,7 +56,7 @@ class AccessResourceForm extends Form
                 'attributes' => [
                     'id' => 'start_date',
                     'min' => '2000-01-01 00:00',
-                    'max' => '2200-01-01 00:00',
+                    'max' => '2099-31-12 00:00',
                     'step' => '1',
                 ],
             ])
@@ -71,7 +71,7 @@ class AccessResourceForm extends Form
                 'attributes' => [
                     'id' => 'end_date',
                     'min' => '2000-01-01 00:00',
-                    'max' => '2200-01-01 00:00',
+                    'max' => '2099-31-12 00:00',
                     'step' => '1',
                 ],
             ])

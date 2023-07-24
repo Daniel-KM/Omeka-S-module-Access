@@ -2,10 +2,6 @@
 
 namespace AccessResource\Form;
 
-use const AccessResource\ACCESS_MODE_GLOBAL;
-use const AccessResource\ACCESS_MODE_IP;
-use const AccessResource\ACCESS_MODE_INDIVIDUAL;
-
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 use Laminas\Form\Form;
@@ -17,14 +13,32 @@ class ConfigForm extends Form
     {
         $this
             ->add([
+                'name' => 'accessresource_full',
+                'type' => Element\Radio::class,
+                'options' => [
+                    'label' => 'Protect records and media content (files)', // @translate
+                    'value_options' => [
+                        '0' => 'Protect media content only (files)', // @translate
+                        '1' => 'Protect records and content (not supported currently)', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_full',
+                    'disabled' => 'disabled',
+                ],
+            ])
+
+            ->add([
                 'name' => 'accessresource_access_mode',
                 'type' => Element\MultiCheckbox::class,
                 'options' => [
                     'label' => 'Reserved access modes', // @translate
                     'value_options' => [
-                        ACCESS_MODE_GLOBAL => 'Global: all users, included guests, have access to all reserved medias', // @translate
-                        ACCESS_MODE_IP => 'IP: visitors with specified ips have access to all reserved medias', // @translate
-                        ACCESS_MODE_INDIVIDUAL => 'Individual: guests should request access to each reserved media', // @translate
+                        'ip' => 'IP: visitors with specified ips have access to all reserved medias', // @translate
+                        'guest' => 'Guest: all users, included guests, have access to all reserved medias', // @translate
+                        'external' => 'External: users externally authenticated (cas) have access to all reserved medias', // @translate
+                        'token' => 'Token: A user or a visitor with a token have access to specific reserved medias', // @translate
+                        'individual' => 'Individual: users should request access to specific reserved medias', // @translate
                     ],
                 ],
                 'attributes' => [

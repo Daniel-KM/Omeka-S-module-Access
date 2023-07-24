@@ -2,11 +2,11 @@
 
 namespace AccessResource\Service\ControllerPlugin;
 
-use AccessResource\Mvc\Controller\Plugin\IsForbiddenFile;
+use AccessResource\Mvc\Controller\Plugin\IsAllowedMediaContent;
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
-class IsForbiddenFileFactory implements FactoryInterface
+class IsAllowedMediaContentFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $services, $requestedName, array $options = null)
     {
@@ -14,15 +14,14 @@ class IsForbiddenFileFactory implements FactoryInterface
         // not set.
         // TODO Check if to prepare controller plugins is still needed in Omeka S v4, included some background tasks.
         $plugins = $services->get('ControllerPluginManager');
-        return new IsForbiddenFile(
+        return new IsAllowedMediaContent(
             $services->get('Omeka\EntityManager'),
-            $plugins->get('accessStatus'),
-            $plugins->get('isUnderEmbargo'),
             $plugins->get('userIsAllowed'),
-            $plugins->get('params'),
-            $plugins->get('api'),
+            $plugins->get('accessStatusForResource'),
+            $plugins->get('isExternalUser'),
+            $services->get('Omeka\AuthenticationService'),
             $services->get('Omeka\Settings'),
-            $services->get('Omeka\AuthenticationService')->getIdentity()
+            $plugins->get('params')
         );
     }
 }

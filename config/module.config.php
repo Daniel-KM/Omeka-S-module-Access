@@ -18,10 +18,12 @@ return [
         'proxy_paths' => [
             dirname(__DIR__) . '/data/doctrine-proxies',
         ],
+        /* TODO To be reused when records will be protected. Use another filter or a delegator instead of overriding default one, so it will remain compatible with other modules (group).
         'filters' => [
             // Override Omeka core resource visibility with a new condition.
-            'resource_visibility' => Db\Filter\ReservedResourceVisibilityFilter::class,
+            'resource_visibility' => Db\Filter\AccessResourceVisibilityFilter::class,
         ],
+        */
     ],
     'view_manager' => [
         'template_path_stack' => [
@@ -67,9 +69,9 @@ return [
             'accessEmbargo' => Service\ControllerPlugin\AccessEmbargoFactory::class,
             'accessStatus' => Service\ControllerPlugin\AccessStatusFactory::class,
             'accessStatusForResource' => Service\ControllerPlugin\AccessStatusForResourceFactory::class,
-            'isForbiddenFile' => Service\ControllerPlugin\IsForbiddenFileFactory::class,
+            'isAllowedMediaContent' => Service\ControllerPlugin\IsAllowedMediaContentFactory::class,
+            'isExternalUser' => Service\ControllerPlugin\IsExternalUserFactory::class,
             'isUnderEmbargo' => Service\ControllerPlugin\IsUnderEmbargoFactory::class,
-            'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
             'requestMailer' => Service\ControllerPlugin\RequestMailerFactory::class,
         ],
     ],
@@ -90,7 +92,6 @@ return [
                         '__NAMESPACE__' => 'AccessResource\Controller',
                         'controller' => 'AccessResource',
                         'action' => 'file',
-                        'access_mode' => ACCESS_MODE_INDIVIDUAL,
                     ],
                 ],
             ],
@@ -258,8 +259,11 @@ return [
     ],
     'accessresource' => [
         'config' => [
+            // True means that recods are protected, not only media contents (files).
+            'accessresource_full' => false,
+
             'accessresource_access_modes' => [
-                'global',
+                'guest',
             ],
 
             'accessresource_access_via_property' => false,
