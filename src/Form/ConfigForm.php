@@ -223,6 +223,21 @@ forbidden = forbidden
         $fieldset = $this->get('fieldset_index');
         $fieldset
             ->add([
+                'name' => 'sync',
+                'type' => Element\Radio::class,
+                'options' => [
+                    'label' => 'Copy access level and embargo', // @translate
+                    'value_options' => [
+                        'skip' => 'Skip', // @translate
+                        'from_properties_to_index' => 'Copy data from property values into indexes', // @translate
+                        'from_index_to_properties' => 'Copy data from indexes into property values', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'sync',
+                ],
+            ])
+            ->add([
                 'name' => 'missing',
                 'type' => Element\Radio::class,
                 'options' => [
@@ -281,6 +296,10 @@ forbidden = forbidden
                 'required' => false,
             ])
             ->get('fieldset_index')
+            ->add([
+                'name' => 'sync',
+                'required' => false,
+            ])
             ->add([
                 'name' => 'missing',
                 'required' => false,

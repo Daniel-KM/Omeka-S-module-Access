@@ -350,9 +350,10 @@ class Module extends AbstractModule
         $post = $controller->getRequest()->getPost();
         if (!empty($post['fieldset_index']['process_index'])) {
             $vars = [
-                'missing' => $post['fieldset_index']['missing'] ?? null,
+                'sync' => $post['fieldset_index']['sync'] ?? 'skip',
+                'missing' => $post['fieldset_index']['missing'] ?? 'skip',
             ];
-            $this->processUpdateMissingStatus($vars);
+            $this->processUpdateStatus($vars);
         }
 
         return true;
@@ -1269,13 +1270,18 @@ HTML;
         $messenger->addError($message);
     }
 
-    protected function processUpdateMissingStatus(array $vars): void
+    protected function processUpdateStatus(array $vars): void
     {
         $services = $this->getServiceLocator();
 
         $plugins = $services->get('ControllerPluginManager');
         $url = $plugins->get('url');
         $messenger = $plugins->get('messenger');
+
+        $vars += [
+            'sync' => 'skip',
+            'missing' => 'skip',
+        ];
 
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
         $job = $dispatcher->dispatch(\AccessResource\Job\AccessStatusUpdate::class, $vars);

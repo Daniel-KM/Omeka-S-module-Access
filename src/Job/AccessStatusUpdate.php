@@ -43,6 +43,11 @@ class AccessStatusUpdate extends AbstractJob
     protected $missingMode = 'skip';
 
     /**
+     * @var string
+     */
+    protected $syncMode = 'skip';
+
+    /**
      * @var int
      */
     protected $totalSucceed;
@@ -90,6 +95,20 @@ class AccessStatusUpdate extends AbstractJob
 
         $settings = $services->get('Omeka\Settings');
 
+        $syncModes = [
+            'skip',
+            'from_properties_to_accesses',
+            'from_accesses_to_properties',
+        ];
+        $this->syncMode = $this->getArg('sync', 'skip');
+        if (!in_array($this->missingMode, $syncModes)) {
+            $this->logger->err(new Message(
+                'Sync mode "%s" is invalid.', // @translate
+                $this->syncMode
+            ));
+            return;
+        }
+
         $missingModes = [
             'skip',
             'free',
@@ -100,23 +119,30 @@ class AccessStatusUpdate extends AbstractJob
             'visibility_protected',
             'visibility_forbidden',
         ];
-        $this->missingMode = $this->getArg('missing');
+        $this->missingMode = $this->getArg('missing', 'skip');
         if (!in_array($this->missingMode, $missingModes)) {
             $this->logger->err(new Message(
-                'Missing mode is not set or invalid.' // @translate
+                'Missing mode "%s" is invalid.', // @translate
+                $this->missingMode
             ));
             return;
         }
 
-        if ($this->missingMode === 'skip') {
+        if ($this->syncMode === 'skip' && $this->missingMode === 'skip') {
             $this->logger->warn(new Message(
-                'Missing mode is set as "skip".' // @translate
+                'Synchronization and missing modes are set as "skip".' // @translate
             ));
             return;
         }
 
         $this->accessViaProperty = (bool) $settings->get('accessresource_property');
-        if ($this->accessViaProperty) {
+        if (!$this->accessViaProperty && $this->syncMode !== 'skip') {
+            $this->logger->warn(new Message(
+                'Synchronization of property values and index is set, but the config for access mode does not use properties.' // @translate
+            ));
+        }
+
+        if ($this->accessViaProperty || $this->syncMode !== 'skip') {
             $result = $this->prepareProperties(true);
             if (!$result) {
                 return;
@@ -127,15 +153,145 @@ class AccessStatusUpdate extends AbstractJob
             'Starting indexation of access statuses of all resources.' // @translate
         ));
 
-        if ($this->accessViaProperty) {
+        // Warning: this is not a full sync: only existing properties and indexes are updated.
+
+        if ($this->syncMode === 'from_properties_to_index') {
+            // In fact, sync and missing modes are the same process when the
+            // mode is "access via property", so this is skipped below.
             $this->updateLevelAndEmbargoViaProperty();
-        } else {
-            $this->updateLevelViaVisibility();
+        } elseif ($this->syncMode === 'from_index_to_properties') {
+            $this->copyIndexIntoPropertyValues();
+        }
+
+        if ($this->missingMode !== 'skip') {
+            if ($this->accessViaProperty) {
+                if ($this->syncMode !== 'from_properties_to_index') {
+                    $this->updateLevelAndEmbargoViaProperty();
+                }
+            } else {
+                $this->updateLevelViaVisibility();
+            }
         }
 
         $this->logger->info(new Message(
             'End of indexation.' // @translate
         ));
+    }
+
+    protected function copyIndexIntoPropertyValues(): self
+    {
+        $quotedList = [];
+        foreach ($this->statusLevels as $key => $value) {
+            $quotedList[$key] = $this->connection->quote($value);
+        }
+
+        $bind = [
+            'property_level' => $this->propertyLevelId,
+            'property_embargo_start' => $this->propertyEmbargoStartId,
+            'property_embargo_end' => $this->propertyEmbargoEndId,
+            'level_type' => $this->levelDataType,
+            'embargo_start_type' => $this->hasNumericDataTypes ? 'numeric:timestamp' : 'literal',
+            'embargo_end_type' => $this->hasNumericDataTypes ? 'numeric:timestamp' : 'literal',
+        ];
+        $types = [
+            'property_level' => \Doctrine\DBAL\ParameterType::INTEGER,
+            'property_embargo_start' => \Doctrine\DBAL\ParameterType::INTEGER,
+            'property_embargo_end' => \Doctrine\DBAL\ParameterType::INTEGER,
+            'level_type' => \Doctrine\DBAL\ParameterType::STRING,
+            'embargo_start_type' => \Doctrine\DBAL\ParameterType::STRING,
+            'embargo_end_type' => \Doctrine\DBAL\ParameterType::STRING,
+        ];
+
+        $sql = <<<SQL
+# Remove all level and embargo values set in statuses.
+DELETE `value`
+FROM `value`
+JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
+JOIN `access_status` ON `access_status`.`id` = `value`.`resource_id`
+WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+;
+SQL;
+
+        if ($this->hasNumericDataTypes) {
+            $sql .= "\n" . <<<SQL
+# Remove all embargo numeric timestamps set in statuses.
+DELETE `numeric_data_types_timestamp`
+FROM `numeric_data_types_timestamp`
+JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
+JOIN `access_status` ON `access_status`.`id` = `value`.`resource_id`
+WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
+;
+SQL;
+        }
+
+        $sql .= "\n" . <<<SQL
+# Set all levels set in statuses.
+INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+SELECT
+    `access_status`.`id`,
+    :property_level,
+    :level_type,
+    CASE `access_status`.`level`
+        WHEN "free" THEN {$quotedList['free']}
+        WHEN "reserved" THEN {$quotedList['reserved']}
+        WHEN "protected" THEN {$quotedList['protected']}
+        WHEN "forbidden" THEN {$quotedList['forbidden']}
+        ELSE {$quotedList['free']}
+    END,
+    1
+FROM `access_status`
+;
+SQL;
+
+        $sql .= "\n" . <<<SQL
+# Set all embargo start timestamp set in statuses.
+INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+SELECT
+    `access_status`.`id`,
+    :property_embargo_start,
+    :embargo_start_type,
+    `access_status`.`embargo_start`,
+    1
+FROM `access_status`
+WHERE `access_status`.`embargo_start` IS NOT NULL
+;
+SQL;
+        if ($this->hasNumericDataTypes) {
+            $sql .= "\n" . <<<SQL
+INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+SELECT `access_status`.`id`, :property_embargo_start, UNIX_TIMESTAMP(`access_status`.`embargo_start`)
+FROM `access_status`
+WHERE `access_status`.`embargo_start` IS NOT NULL
+;
+SQL;
+        }
+
+        $sql .= "\n" . <<<SQL
+# Set all embargo end timestamp set in statuses.
+INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+SELECT
+    `access_status`.`id`,
+    :property_embargo_end,
+    :embargo_end_type,
+    `access_status`.`embargo_end`,
+    1
+FROM `access_status`
+WHERE `access_status`.`embargo_end` IS NOT NULL
+;
+SQL;
+        if ($this->hasNumericDataTypes) {
+            $sql .= "\n" . <<<SQL
+INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+SELECT `access_status`.`id`, :property_embargo_end, UNIX_TIMESTAMP(`access_status`.`embargo_end`)
+FROM `access_status`
+WHERE `access_status`.`embargo_end` IS NOT NULL
+;
+SQL;
+        }
+
+        $this->connection->executeStatement($sql, $bind, $types);
+
+        return $this;
     }
 
     protected function updateLevelViaVisibility(): self
