@@ -106,6 +106,16 @@ class UpdateAccessStatus extends AbstractJob
      */
     protected $missingMode = 'skip';
 
+    /**
+     * @var string
+     */
+    protected $embargoPropertyStart;
+
+    /**
+     * @var string
+     */
+    protected $embargoPropertyEnd;
+
     public function perform(): void
     {
         $services = $this->getServiceLocator();
@@ -162,6 +172,10 @@ class UpdateAccessStatus extends AbstractJob
         } else {
             $this->updateViaVisibility();
         }
+
+        $this->embargoPropertyStart = $settings->get('accessresource_embargo_property_start');
+        $this->embargoPropertyEnd = $settings->get('accessresource_embargo_property_end');
+        $this->updateEmbargo();
     }
 
     protected function updateViaVisibility(): bool
@@ -276,6 +290,70 @@ ON DUPLICATE KEY UPDATE
     END),
     NULL,
     NULL
+;
+
+SQL;
+
+        $this->connection->executeStatement($sql);
+
+        return true;
+    }
+
+    protected function updateEmbargo(): bool
+    {
+        $propertyStart = null;
+        if ($this->embargoPropertyStart) {
+            $propertyStart = $this->api->search('properties', ['term' => $this->embargoPropertyStart])->getContent();
+            if (!$propertyStart) {
+                $this->logger->err(new Message(
+                    'Property "%1$s" for embargo start does not exist.', // @translate
+                    $this->embargoPropertyStart
+                ));
+                return false;
+            }
+            $propertyStart = reset($propertyStart);
+        }
+
+        $propertyEnd = null;
+        if ($this->embargoPropertyEnd) {
+            $propertyEnd = $this->api->search('properties', ['term' => $this->embargoPropertyEnd])->getContent();
+            if (!$propertyEnd) {
+                $this->logger->err(new Message(
+                    'Property "%1$s" for embargo end does not exist.', // @translate
+                    $this->embargoPropertyEnd
+                ));
+                return false;
+            }
+            $propertyEnd = reset($propertyEnd);
+        }
+
+        $sql = <<<SQL
+# Set access embargo start according to values.
+UPDATE `access_status` (`start_date`)
+SELECT
+    CASE `value`.`value`
+        WHEN NULL THEN NULL
+        WHEN DATE(STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')) IS NOT NULL THEN DATE(STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T'))
+        WHEN DATE(STR_TO_DATE(`value`.`value`, CONCAT('%Y-%m-%d', ' 00:00:00'))) IS NOT NULL THEN DATE(STR_TO_DATE(`value`.`value`, CONCAT('%Y-%m-%d', ' 00:00:00')))
+        ELSE NULL
+    END
+FROM `access_status`
+LEFT JOIN `value`
+    ON `value`.`resource_id`
+    AND `value`.`property_id` = $propertyStart
+;
+# Set access embargo end according to values.
+UPDATE `access_status` (`start_end`)
+    CASE `value`.`value`
+        WHEN NULL THEN NULL
+        WHEN DATE(STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')) IS NOT NULL THEN DATE(STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T'))
+        WHEN DATE(STR_TO_DATE(`value`.`value`, CONCAT('%Y-%m-%d', ' 00:00:00'))) IS NOT NULL THEN DATE(STR_TO_DATE(`value`.`value`, CONCAT('%Y-%m-%d', ' 00:00:00')))
+        ELSE NULL
+    END
+FROM `access_status`
+LEFT JOIN `value`
+    ON `value`.`resource_id`
+    AND `value`.`property_id` = $propertyEnd
 ;
 
 SQL;
