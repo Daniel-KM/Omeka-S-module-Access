@@ -14,7 +14,7 @@ class AccessResourceRepresentation extends AbstractEntityRepresentation
 
     public function getJsonLdType()
     {
-        return 'o-module-access-resource:AccessResource';
+        return 'o-access:AccessResource';
     }
 
     public function getJsonLd()
@@ -54,11 +54,11 @@ class AccessResourceRepresentation extends AbstractEntityRepresentation
             'o:id' => $this->id(),
             'o:resource' => $this->resource()->getReference(),
             'o:user' => $user ? $user->getReference() : null,
-            'o-module-access-resource:token' => $this->token(),
-            'o-module-access-resource:enabled' => $this->enabled(),
-            'o-module-access-resource:temporal' => $this->temporal(),
-            'o-module-access-resource:startDate' => $startDate,
-            'o-module-access-resource:endDate' => $endDate,
+            'o-access:token' => $this->token(),
+            'o-access:enabled' => $this->enabled(),
+            'o-access:temporal' => $this->temporal(),
+            'o-access:startDate' => $startDate,
+            'o-access:endDate' => $endDate,
             'o:created' => $created,
             'o:modified' => $modified,
         ];
@@ -135,25 +135,5 @@ class AccessResourceRepresentation extends AbstractEntityRepresentation
     public function displayDescription($default = null): string
     {
         return (string) $default;
-    }
-
-    /**
-     * @deprecated
-     */
-    public function toArray()
-    {
-        $user = $this->user();
-        return [
-            'id' => $this->id(),
-            'resource' => $this->resource()->id(),
-            'user' => $user ? $user->id() : null,
-            'token' => $this->token(),
-            'enabled' => $this->enabled(),
-            'temporal' => $this->temporal(),
-            'startDate' => $this->startDate(),
-            'endDate' => $this->endDate(),
-            'created' => $this->created(),
-            'modified' => $this->modified(),
-        ];
     }
 }

@@ -25,7 +25,7 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
 
     public function getJsonLdType()
     {
-        return 'o-module-access-resource:AccessRequest';
+        return 'o-access:AccessRequest';
     }
 
     public function getJsonLd()
@@ -110,21 +110,5 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
     public function displayDescription($default = null): string
     {
         return (string) $default;
-    }
-
-    /**
-     * @deprecated
-     */
-    public function toArray()
-    {
-        $user = $this->user();
-        return [
-            'id' => $this->id(),
-            'resource' => $this->resource()->id(),
-            'user' => $user->id(),
-            'status' => $this->status(),
-            'created' => $this->created(),
-            'modified' => $this->modified(),
-        ];
     }
 }

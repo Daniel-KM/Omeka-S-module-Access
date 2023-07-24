@@ -90,14 +90,14 @@ class AccessResourceAdapter extends AbstractEntityAdapter
             ));
         }
 
-        if (isset($query['enabled'])) {
+        if (isset($query['enabled']) && $query['enabled'] !== '') {
             $qb->andWhere($expr->eq(
                 'omeka_root.enabled',
                 $this->createNamedParameter($qb, $query['enabled'])
             ));
         }
 
-        if (isset($query['temporal'])) {
+        if (isset($query['temporal']) && $query['temporal'] !== '') {
             $qb->andWhere($expr->eq(
                 'omeka_root.temporal',
                 $this->createNamedParameter($qb, $query['temporal'])
