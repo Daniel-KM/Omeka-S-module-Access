@@ -73,6 +73,7 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
             'o:email' => $this->email(),
             'o-access:token' => $this->token(),
             'o:status' => $this->status(),
+            'o-access:recursive' => $this->recursive(),
             'o-access:enabled' => $this->enabled(),
             'o-access:temporal' => $this->temporal(),
             'o-access:start' => $start,
@@ -117,6 +118,11 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
     public function status(): string
     {
         return $this->resource->getStatus();
+    }
+
+    public function recursive(): bool
+    {
+        return (bool) $this->resource->getRecursive();
     }
 
     public function enabled(): bool
@@ -203,6 +209,12 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
     {
         $status = $this->resource->getStatus();
         return $this->getTranslator()->translate($this->statusLabels[$status] ?? $status);
+    }
+
+    public function displayRecursive(): string
+    {
+        $recursive = $this->recursive();
+        return $this->getTranslator()->translate($recursive ? 'yes' : 'no');
     }
 
     public function displayTemporal(?string $dateTimeFormat = 'medium'): string

@@ -23,6 +23,11 @@ class AccessRequestForm extends Form
     /**
      * @var string
      */
+    protected $resourceType = null;
+
+    /**
+     * @var string
+     */
     protected $requestStatus = null;
 
     public function __construct($name = null, array $options = [])
@@ -33,6 +38,9 @@ class AccessRequestForm extends Form
         }
         if (isset($options['resource_id'])) {
             $this->resourceId = $options['resource_id'];
+        }
+        if (isset($options['resource_type'])) {
+            $this->resourceType = $options['resource_type'];
         }
         if (isset($options['request_status'])) {
             $this->requestStatus = $options['request_status'];
@@ -74,6 +82,36 @@ class AccessRequestForm extends Form
                     ],
                     'attributes' => [
                         'id' => 'o-resource',
+                    ],
+                ]);
+        }
+
+        if (in_array($this->resourceType, [null, 'items', 'item_sets'])) {
+            $recursiveLabels = [
+                'items' => 'Include medias', // @translate
+                'item_sets' => 'Include items and medias', // @translate
+                '' => 'Include items and media', // @translate
+            ];
+            $this
+                ->add([
+                    'name' => 'o-access:recursive',
+                    'type' => Element\Checkbox::class,
+                    'options' => [
+                        'label' => $recursiveLabels[$this->resourceType] ?? $recursiveLabels[''],
+                    ],
+                    'attributes' => [
+                        'id' => 'o-access-recursive',
+                    ],
+                ]);
+        } else {
+            // Medias are not recursive.
+            $this
+                ->add([
+                    'name' => 'o-access:recursive',
+                    'type' => Element\Hidden::class,
+                    'attributes' => [
+                        'id' => 'o-access-recursive',
+                        'value' => '0',
                     ],
                 ]);
         }
@@ -252,6 +290,10 @@ class AccessRequestForm extends Form
             ])
             ->add([
                 'name' => 'o:email',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'o:recursive',
                 'required' => false,
             ])
             ->add([

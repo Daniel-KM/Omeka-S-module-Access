@@ -98,6 +98,19 @@ class AccessRequest extends AbstractEntity
     /**
      * @var bool
      *
+     * @Column(
+     *     type="boolean",
+     *     nullable=false,
+     *     options={
+     *         "default": false
+     *     }
+     * )
+     */
+    protected $recursive = false;
+
+    /**
+     * @var bool
+     *
      * Shortcut to check if the request is accepted without checking status.
      * For now, automatically set when updated.
      *
@@ -242,6 +255,17 @@ class AccessRequest extends AbstractEntity
     public function getStatus(): string
     {
         return $this->status;
+    }
+
+    public function setRecursive($recursive): self
+    {
+        $this->recursive = (bool) $recursive;
+        return $this;
+    }
+
+    public function getRecursive(): bool
+    {
+        return $this->recursive;
     }
 
     public function setEnabled($enabled): self

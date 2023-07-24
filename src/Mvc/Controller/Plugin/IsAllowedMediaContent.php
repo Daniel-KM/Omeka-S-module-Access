@@ -206,35 +206,35 @@ class IsAllowedMediaContent extends AbstractPlugin
      *   array of item sets, that may be empty.
      */
     protected function reservedItemSetsForClientIp(): ?array
-     {
-         // This method is called one time for each file, but each file is
-         // called by a difrerent request.
+    {
+        // This method is called one time for each file, but each file is
+        // called by a difrerent request.
 
-         $ip = $this->getClientIp();
-         if ($ip === '::') {
-             return null;
-         }
+        $ip = $this->getClientIp();
+        if ($ip === '::') {
+            return null;
+        }
 
-         $reservedIps = $this->settings->get('accessresource_ip_reserved', []);
-         if (empty($reservedIps)) {
-             return null;
-         }
+        $reservedIps = $this->settings->get('accessresource_ip_reserved', []);
+        if (empty($reservedIps)) {
+            return null;
+        }
 
-         // Check a single ip.
-         if (isset($reservedIps[$ip])) {
-             return $reservedIps[$ip]['reserved'];
-         }
+        // Check a single ip.
+        if (isset($reservedIps[$ip])) {
+            return $reservedIps[$ip]['reserved'];
+        }
 
-         // Check an ip range.
-         // FIXME Fix check of ip for ipv6 (ip2long).
-         $ipLong = ip2long($ip);
-         foreach ($reservedIps as $range) {
-             if ($ipLong >= $range['low'] && $ipLong <= $range['high']) {
-                 return $range['reserved'];
-             }
-         }
+        // Check an ip range.
+        // FIXME Fix check of ip for ipv6 (ip2long).
+        $ipLong = ip2long($ip);
+        foreach ($reservedIps as $range) {
+            if ($ipLong >= $range['low'] && $ipLong <= $range['high']) {
+                return $range['reserved'];
+            }
+        }
 
-         return null;
+        return null;
     }
 
     /**
@@ -264,6 +264,24 @@ class IsAllowedMediaContent extends AbstractPlugin
     {
         if (!$user) {
             return false;
+        }
+
+        $bind = [
+            'user_id' => $user->getId(),
+            'media_id' => $media->id(),
+            'item_id' => $media->item()->id(),
+        ];
+        $types = [
+            'user_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+            'media_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+            'item_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+        ];
+
+        $mediaItemSetIds = array_keys($media->item()->itemSets());
+        if ($mediaItemSetIds) {
+            $orInItemSets = 'OR (ar.recursive = 1 AND r.resource_id IN (:item_set_ids))';
+            $bind['item_set_ids'] = $mediaItemSetIds;
+            $types['item_set_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
         }
 
         /** @var \AccessResource\Entity\AccessRequest $accessRequest */
@@ -301,30 +319,26 @@ DQL;
         }
         */
 
-         $sql = <<<'SQL'
+         $sql = <<<SQL
 SELECT ar.id
 FROM access_request AS ar
 JOIN access_resource AS r ON r.access_request_id = ar.id
 WHERE
     ar.enabled = 1
     AND ar.user_id = :user_id
-    AND r.resource_id = :media_id
+    AND (
+        r.resource_id = :media_id
+        OR (ar.recursive = 1 AND r.resource_id = :item_id)
+        $orInItemSets
+    )
 ORDER BY ar.created DESC
 SQL;
-         $bind = [
-             'user_id' => $user->getId(),
-             'media_id' => $media->id(),
-         ];
-         $types = [
-             'user_id' => \Doctrine\DBAL\ParameterType::INTEGER,
-             'media_id' => \Doctrine\DBAL\ParameterType::INTEGER,
-         ];
-         $accessRequestId = $this->entityManager->getConnection()
-             ->executeQuery($sql, $bind, $types)
-             ->fetchOne();
-         if (!$accessRequestId) {
-             return false;
-         }
+        $accessRequestId = $this->entityManager->getConnection()
+            ->executeQuery($sql, $bind, $types)
+            ->fetchOne();
+        if (!$accessRequestId) {
+            return false;
+        }
 
         $accessRequest = $this->entityManager->find(\AccessResource\Entity\AccessRequest::class, $accessRequestId);
         return $this->checkAccess($accessRequest);
@@ -340,6 +354,24 @@ SQL;
             return false;
         }
 
+        $bind = [
+            'email' => $email,
+            'media_id' => $media->id(),
+            'item_id' => $media->item()->id(),
+        ];
+        $types = [
+            'email' => \Doctrine\DBAL\ParameterType::STRING,
+            'media_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+            'item_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+        ];
+
+        $mediaItemSetIds = array_keys($media->item()->itemSets());
+        if ($mediaItemSetIds) {
+            $orInItemSets = 'OR (ar.recursive = 1 AND r.resource_id IN (:item_set_ids))';
+            $bind['item_set_ids'] = $mediaItemSetIds;
+            $types['item_set_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
+        }
+
         /** @var \AccessResource\Entity\AccessRequest $accessRequest */
         // TODO How to query on resources with entity manager?
         /*
@@ -350,7 +382,7 @@ SQL;
                 'enabled' => true,
                 'email' => $email,
             ]);
-        */
+         */
 
         /*
         $dql = <<<DQL
@@ -375,24 +407,20 @@ DQL;
         }
         */
 
-        $sql = <<<'SQL'
+        $sql = <<<SQL
 SELECT ar.id
 FROM access_request AS ar
 JOIN access_resource AS r ON r.access_request_id = ar.id
 WHERE
     ar.enabled = 1
     AND ar.email = :email
-    AND r.resource_id = :media_id
+    AND (
+        r.resource_id = :media_id
+        OR (ar.recursive = 1 AND r.resource_id = :item_id)
+        $orInItemSets
+    )
 ORDER BY ar.created DESC
 SQL;
-        $bind = [
-            'email' => $email,
-            'media_id' => $media->id(),
-        ];
-        $types = [
-            'email' => \Doctrine\DBAL\ParameterType::STRING,
-            'media_id' => \Doctrine\DBAL\ParameterType::INTEGER,
-        ];
         $accessRequestId = $this->entityManager->getConnection()
             ->executeQuery($sql, $bind, $types)
             ->fetchOne();
@@ -412,6 +440,24 @@ SQL;
         $token = $this->params->fromQuery('token');
         if (!$token) {
             return false;
+        }
+
+        $bind = [
+            'token' => $token,
+            'media_id' => $media->id(),
+            'item_id' => $media->item()->id(),
+        ];
+        $types = [
+            'token' => \Doctrine\DBAL\ParameterType::STRING,
+            'media_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+            'item_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+        ];
+
+        $mediaItemSetIds = array_keys($media->item()->itemSets());
+        if ($mediaItemSetIds) {
+            $orInItemSets = 'OR (ar.recursive = 1 AND r.resource_id IN (:item_set_ids))';
+            $bind['item_set_ids'] = $mediaItemSetIds;
+            $types['item_set_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
         }
 
         /** @var \AccessResource\Entity\AccessRequest $accessRequest */
@@ -447,26 +493,22 @@ DQL;
         if (!$accessRequest) {
             return false;
         }
-     */
+        */
 
-        $sql = <<<'SQL'
+        $sql = <<<SQL
 SELECT ar.id
 FROM access_request AS ar
 JOIN access_resource AS r ON r.access_request_id = ar.id
 WHERE
     ar.enabled = 1
     AND ar.token = :token
-    AND r.resource_id = :media_id
+    AND (
+        r.resource_id = :media_id
+        OR (ar.recursive = 1 AND r.resource_id = :item_id)
+        $orInItemSets
+    )
 ORDER BY ar.created DESC
 SQL;
-        $bind = [
-            'token' => $token,
-            'media_id' => $media->id(),
-        ];
-        $types = [
-            'token' => \Doctrine\DBAL\ParameterType::STRING,
-            'media_id' => \Doctrine\DBAL\ParameterType::INTEGER,
-        ];
         $accessRequestId = $this->entityManager->getConnection()
             ->executeQuery($sql, $bind, $types)
             ->fetchOne();
@@ -489,16 +531,16 @@ SQL;
         if (!$accessRequest->getTemporal()) {
             return true;
         }
-        $accessStartDate = $accessRequest->getStartDate();
-        $accessEndDate = $accessRequest->getEndDate();
-        if (!$accessStartDate && !$accessEndDate) {
+        $start = $accessRequest->getStart();
+        $end = $accessRequest->getEnd();
+        if (!$start && !$end) {
             return false;
         }
         $now = time();
-        if ($accessStartDate && $now <= $accessStartDate->format('U')) {
+        if ($start && $now <= $start->format('U')) {
             return false;
         }
-        if ($accessEndDate && $now >= $accessEndDate->format('U')) {
+        if ($end && $now >= $end->format('U')) {
             return false;
         }
         return true;

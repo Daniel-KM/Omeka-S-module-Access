@@ -2,7 +2,6 @@
 
 namespace AccessResource\Controller\Admin;
 
-use AccessResource\Entity\AccessLog;
 use AccessResource\Entity\AccessRequest;
 use AccessResource\Form\Admin\AccessRequestForm;
 use Doctrine\ORM\EntityManager;
@@ -128,6 +127,7 @@ class RequestController extends AbstractActionController
         $formOptions = [
             'full_access' => (bool) $this->settings()->get('accessresource_full'),
             // 'resource_id' => null,
+            // 'resource_type' => null,
             // 'request_status' => AccessRequest::STATUS_ACCEPTED,
         ];
         $form = $this->getForm(AccessRequestForm::class, $formOptions);

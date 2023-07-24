@@ -34,6 +34,11 @@ $accessRequest = $resource;
     </div>
 
     <div class="meta-group">
+        <h4><?= $escape($translate('Recursive')) ?></h4>
+        <div class="value"><?= $accessRequest->displayRecursive() ?></div>
+    </div>
+
+    <div class="meta-group">
         <h4><?= $escape($translate('Status')) ?></h4>
         <div class="value"><?= $accessRequest->displayStatus() ?></div>
     </div>

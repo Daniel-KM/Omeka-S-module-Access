@@ -855,6 +855,7 @@ class Module extends AbstractModule
         /**
          * @var \Omeka\Api\Request $request
          * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus $accessStatusForResource
+         * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
          */
         $view = $event->getTarget();
         $services = $this->getServiceLocator();
@@ -870,6 +871,7 @@ class Module extends AbstractModule
         $formOptions = [
             'full_access' => (bool) $settings->get('accessresource_full'),
             'resource_id' => $resource->id(),
+            'resource_type' => $resource->resourceName(),
             'request_status' => AccessRequest::STATUS_ACCEPTED,
         ];
         /** @var \AccessResource\Form\Admin\AccessRequestForm $form */

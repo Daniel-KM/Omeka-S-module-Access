@@ -4,6 +4,7 @@ CREATE TABLE `access_request` (
     `email` VARCHAR(190) DEFAULT NULL,
     `token` VARCHAR(16) DEFAULT NULL,
     `status` VARCHAR(8) DEFAULT 'new' NOT NULL,
+    `recursive` TINYINT(1) DEFAULT '0' NOT NULL,
     `enabled` TINYINT(1) DEFAULT '0' NOT NULL,
     `temporal` TINYINT(1) DEFAULT '0' NOT NULL,
     `start` DATETIME DEFAULT NULL,

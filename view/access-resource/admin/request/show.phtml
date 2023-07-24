@@ -40,6 +40,10 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests show');
         <dd class="value"><?= $accessRequest->displayResources() ?></dd>
     </div>
     <div class="property">
+        <dt><?= $translate('Recursive') ?></dt>
+        <dd class="value"><?= $accessRequest->displayRecursive() ?></dd>
+    </div>
+    <div class="property">
         <dt><?= $translate('Status') ?></dt>
         <dd class="value"><?= $accessRequest->displayStatus() ?></dd>
     </div>

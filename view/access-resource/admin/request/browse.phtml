@@ -50,6 +50,7 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
             </th>
             <th><?= $escape($translate('Requester')) ?></th>
             <th><?= $escape($translate('Resources')) ?></th>
+            <th><?= $escape($translate('Recursive')) ?></th>
             <th><?= $escape($translate('Status')) ?></th>
             <th><?= $escape($translate('Dates')) ?></th>
         </tr>
@@ -89,6 +90,7 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
             </td>
             <td><?= $accessRequest->displayRequester() ?></td>
             <td><?= $accessRequest->displayResources() ?></td>
+            <td><?= $accessRequest->displayRecursive() ?></td>
             <td><?= $accessRequest->displayStatus() ?></td>
             <td><?= $accessRequest->displayTemporal() ?></td>
         </tr>

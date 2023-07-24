@@ -67,10 +67,10 @@ class AccessRequest extends \AccessResource\Entity\AccessRequest implements \Doc
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'enabled', 'temporal', 'start', 'end', 'created', 'modified', 'resources'];
+            return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'recursive', 'enabled', 'temporal', 'start', 'end', 'created', 'modified', 'resources'];
         }
 
-        return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'enabled', 'temporal', 'start', 'end', 'created', 'modified', 'resources'];
+        return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'recursive', 'enabled', 'temporal', 'start', 'end', 'created', 'modified', 'resources'];
     }
 
     /**
@@ -289,6 +289,28 @@ class AccessRequest extends \AccessResource\Entity\AccessRequest implements \Doc
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getStatus', []);
 
         return parent::getStatus();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setRecursive($recursive): \AccessResource\Entity\AccessRequest
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setRecursive', [$recursive]);
+
+        return parent::setRecursive($recursive);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRecursive(): bool
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getRecursive', []);
+
+        return parent::getRecursive();
     }
 
     /**
