@@ -56,7 +56,7 @@ class AccessStatus extends AbstractPlugin
             return ACCESS_STATUS_FORBIDDEN;
         }
 
-        // @todo Why entity manager getRefence() or find() always output a AccessReserved even if does not exists? One-to-one on id? The construct?
+        // @todo Why entity manager getReference() or find() always output a AccessReserved even if does not exists? One-to-one on id? The construct?
         // $accessReserved = $this->entityManager->getReference(AccessReserved::class, $resourceId);
         // $accessReserved = $this->entityManager->find(AccessReserved::class, $resourceId);
         $sql = <<<'SQL'

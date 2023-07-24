@@ -33,6 +33,7 @@ return [
         'factories' => [
             'accessResourceRequestForm' => Service\ViewHelper\AccessResourceRequestFormFactory::class,
             'accessStatus' => Service\ViewHelper\AccessStatusFactory::class,
+            'accessStatusItemMedia' => Service\ViewHelper\AccessStatusItemMediaFactory::class,
             'isUnderEmbargo' => Service\ViewHelper\IsUnderEmbargoFactory::class,
         ],
     ],
@@ -61,6 +62,7 @@ return [
     'controller_plugins' => [
         'factories' => [
             'accessStatus' => Service\ControllerPlugin\AccessStatusFactory::class,
+            'accessStatusItemMedia' => Service\ControllerPlugin\AccessStatusItemMediaFactory::class,
             'isForbiddenFile' => Service\ControllerPlugin\IsForbiddenFileFactory::class,
             'isUnderEmbargo' => Service\ControllerPlugin\IsUnderEmbargoFactory::class,
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,
