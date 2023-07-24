@@ -14,7 +14,6 @@ const ACCESS_MODE_INDIVIDUAL = 'individual';
 
 use AccessResource\Entity\AccessStatus;
 use AccessResource\Form\Admin\BatchEditFieldset;
-use Doctrine\DBAL\ParameterType;
 use Generic\AbstractModule;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
@@ -819,46 +818,67 @@ class Module extends AbstractModule
         $view->headLink()
             ->appendStylesheet($assetUrl('css/access-resource-admin.css', 'AccessResource'));
         $view->headScript()
-            ->appendFile($assetUrl('js/access-resource-bulk-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+            ->appendFile($assetUrl('js/access-resource-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
     }
 
     public function formAddElementsResourceBatchUpdateForm(Event $event): void
     {
+        // Add elements only if the resource type is managed.
+        $resourceType = $this->currentResourceType();
+        if (!$resourceType
+            || !in_array($resourceType, $this->accessApply)
+        ) {
+            return;
+        }
+
         /** @var \Omeka\Form\ResourceBatchUpdateForm $form */
         $form = $event->getTarget();
         $services = $this->getServiceLocator();
         $formElementManager = $services->get('FormElementManager');
-        $resourceType = $form->getOption('resource_type');
 
-        $resourceTypeToNames = [
-            'item' => 'items',
-            'item-set' => 'item_sets',
-            'itemSet' => 'item_sets',
-            'media' => 'media',
-        ];
-        $resourceName = $resourceTypeToNames[$resourceType] ?? $resourceType;
-        $options = [];
-        $applyTo = $this->accessApply;
-        switch ($resourceName) {
-            case 'media':
-                if (($pos = array_search('items', $this->accessApply)) !== false) {
-                    unset($applyTo[$pos]);
-                }
-                // no break.
-            case 'items':
-                if (($pos = array_search('item_sets', $this->accessApply)) !== false) {
-                    unset($applyTo[$pos]);
-                }
-                break;
-        }
-        if (count($applyTo) > 1) {
-            $options = [
-                'access_apply' => $applyTo,
-            ];
-        }
-
-        $fieldset = $formElementManager->get(BatchEditFieldset::class, $options);
+        $fieldset = $formElementManager->get(BatchEditFieldset::class);
         $form->add($fieldset);
+    }
+
+    public function formAddInputFiltersResourceBatchUpdateForm(Event $event): void
+    {
+        // Add elements only if the resource type is managed.
+        $resourceType = $this->currentResourceType();
+        if (!$resourceType
+            || !in_array($resourceType, $this->accessApply)
+        ) {
+            return;
+        }
+
+        /** @var \Laminas\InputFilter\InputFilterInterface $inputFilter */
+        $inputFilter = $event->getParam('inputFilter');
+        $inputFilter
+            ->get('accessresource')
+            ->add([
+                'name' => 'status',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'apply',
+                'required' => false,
+            ]);
+    }
+
+    protected function currentResourceType(): ?string
+    {
+        // Add elements only if the resource type is managed.
+        $services = $this->getServiceLocator();
+        /** @var \Omeka\Mvc\Status $status */
+        $status = $services->get('Omeka\Status');
+        $controller = $status->getRouteParam('__CONTROLLER__') ?? $status->getRouteParam('controller');
+        $controllersToTypes = [
+            'item' => 'items',
+            'items' => 'items',
+            'media' => 'media',
+            'item_sets' => 'item_sets',
+            'item-set' => 'item_sets',
+        ];
+        return $controllersToTypes[$controller] ?? null;
     }
 
     /**
@@ -871,19 +891,22 @@ class Module extends AbstractModule
         $post = $request->getContent();
         $data = $event->getParam('data');
 
-        if (empty($data['access_resource'])
-            || !array_filter($data['access_resource'])
-            || empty($post['access_resource']['status'])
-            || !in_array($post['access_resource']['status'], [ACCESS_STATUS_FREE, ACCESS_STATUS_RESERVED, ACCESS_STATUS_FORBIDDEN])
-        ) {
-            unset($data['access_resource']);
+        if (empty($data['accessresource']) || !array_filter($data['accessresource'])) {
+            unset($data['accessresource']);
             $event->setParam('data', $data);
             return;
         }
 
-        $data['access_resource'] = [
-            'status' => $post['access_resource']['status'],
-            'apply' => $post['access_resource']['apply'] ?? [],
+        if (empty($post['accessresource']['status'])
+            || !in_array($post['accessresource']['status'], ['free', 'reserved', 'forbidden'])
+        ) {
+            unset($data['accessresource']);
+            $event->setParam('data', $data);
+            return;
+        }
+
+        $data['accessresource'] = [
+            'status' => $post['accessresource']['status'],
         ];
 
         $event->setParam('data', $data);
@@ -894,18 +917,14 @@ class Module extends AbstractModule
      *
      * Data may need to be reindexed if a module like Search is used, even if
      * the results are probably the same with a simple trimming.
-     *
-     * @param Event $event
      */
     public function handleResourceBatchUpdatePost(Event $event): void
     {
         /** @var \Omeka\Api\Request $request */
         $request = $event->getParam('request');
         $data = $request->getContent();
-        if (empty($data['access_resource'])
-            || !array_filter($data['access_resource'])
-            || empty($data['access_resource']['status'])
-            || !in_array($data['access_resource']['status'], [ACCESS_STATUS_FREE, ACCESS_STATUS_RESERVED, ACCESS_STATUS_FORBIDDEN])
+        if (empty($data['accessresource']['status'])
+            || !in_array($data['accessresource']['status'], ['free', 'reserved', 'forbidden'])
         ) {
             return;
         }
@@ -916,180 +935,34 @@ class Module extends AbstractModule
             return;
         }
 
-        $resourceName = $request->getResource();
+        $status = $data['accessresource']['status'];
 
-        $this->updateAccessResource($resourceName, $ids, $data['access_resource']['status'], $data['access_resource']['apply'] ?? []);
-    }
-
-    /**
-     * @todo Check access rights before update.
-     */
-    protected function updateAccessResource(string $resourceName, array $resourceIds, string $status, array $apply): void
-    {
         /** @var \Doctrine\DBAL\Connection $connection */
         $connection = $this->getServiceLocator()->get('Omeka\Connection');
+        $sql = <<<SQL
+INSERT `access_status` (`id`, `status`, `start_date`, `end_date`)
+SELECT `id`, :status, NULL, NULL
+FROM `resource`
+WHERE `resource`.`id` IN :ids
+ON DUPLICATE KEY UPDATE
+    SET `status` = :status;
 
-        if (!$apply) {
-            $apply = $this->accessApply;
-        }
+UPDATE `resource`
+SET `is_public` = :is_public
+WHERE `resource`.`id` IN :ids;
+SQL;
 
-        $isPublic = $status === ACCESS_STATUS_FREE ? 1 : 0;
-
-        $resourceNamesToTable = [
-            'items' => 'item',
-            'media' => 'media',
-            'item_sets' => 'item_set',
+        $bind = [
+            'status' => $status,
+            'ids' => $ids,
+            'is_public' => (int) ($status === 'free'),
         ];
-
-        foreach ($apply as $applyResourceName) {
-            if ($resourceName === $applyResourceName) {
-                $sql = <<<'SQL'
-# Make resource public or private.
-UPDATE resource
-SET is_public = :is_public
-WHERE id IN (:ids)
-;
-
-SQL;
-                $table = $resourceNamesToTable[$apply];
-                if ($status === ACCESS_STATUS_RESERVED) {
-                    $sql .= <<<SQL
-# Make access reserved.
-INSERT INTO access_reserved (id)
-SELECT $table.id
-WHERE $table.id IN (:ids)
-ON DUPLICATE KEY UPDATE
-    id = $table.id
-;
-
-SQL;
-                } else {
-                    $sql .= <<<SQL
-# Remove access reserved.
-DELETE
-FROM access_reserved
-JOIN $table ON $table.id = access_reserved.id
-WHERE $table.id IN (:ids)
-;
-
-SQL;
-                }
-            } elseif ($resourceName === 'item_sets' && $applyResourceName === 'items') {
-                $sql = <<<'SQL'
-# Make resource public or private.
-UPDATE resource
-JOIN item ON item.id = resource.id
-JOIN item_item_set ON item_item_set.item_id = item.id
-SET is_public = :is_public
-WHERE item_item_set.item_set_id IN (:ids)
-;
-
-SQL;
-                if ($status === ACCESS_STATUS_RESERVED) {
-                    $sql .= <<<'SQL'
-# Make access reserved.
-INSERT INTO access_reserved (id)
-SELECT item_item_set.item_id
-FROM item_item_set
-WHERE item_item_set.item_set_id IN (:ids)
-ON DUPLICATE KEY UPDATE
-    id = item_item_set.item_id
-;
-
-SQL;
-                } else {
-                    $sql .= <<<'SQL'
-# Remove access reserved.
-DELETE
-FROM access_reserved
-JOIN item_item_set ON item_item_set.item_id = access_reserved.id
-WHERE item_item_set.item_set_id IN (:ids)
-;
-
-SQL;
-                }
-            } elseif ($resourceName === 'item_sets' && $applyResourceName === 'media') {
-                $sql = <<<'SQL'
-# Make resource public or private.
-UPDATE resource
-JOIN media ON media.id = resource.id
-JOIN item_item_set ON item_item_set.item_id = media.item_id
-SET is_public = :is_public
-WHERE item_item_set.item_set_id IN (:ids)
-;
-
-SQL;
-                if ($status === ACCESS_STATUS_RESERVED) {
-                    $sql .= <<<'SQL'
-# Make access reserved.
-INSERT INTO access_reserved (id)
-SELECT media.id
-FROM media
-JOIN item_item_set ON item_item_set.item_id = media.item_id
-WHERE item_item_set.item_set_id IN (:ids)
-ON DUPLICATE KEY UPDATE
-    id = media.id
-;
-
-SQL;
-                } else {
-                    $sql .= <<<'SQL'
-# Remove access reserved.
-DELETE
-FROM access_reserved
-JOIN media ON media.id = access_reserved.id
-JOIN item_item_set ON item_item_set.item_id = media.item_id
-WHERE item_item_set.item_set_id IN (:ids)
-;
-
-SQL;
-                }
-            } elseif ($resourceName === 'items' && $applyResourceName === 'media') {
-                $sql = <<<'SQL'
-# Make resource public or private.
-UPDATE resource
-JOIN media ON media.id = resource.id
-SET is_public = :is_public
-WHERE media.item_id IN (:ids)
-;
-
-SQL;
-                if ($status === ACCESS_STATUS_RESERVED) {
-                    $sql .= <<<'SQL'
-# Make access reserved.
-INSERT INTO access_reserved (id)
-SELECT media.id
-FROM media
-WHERE media.item_id IN (:ids)
-ON DUPLICATE KEY UPDATE
-    id = media.id
-;
-
-SQL;
-                } else {
-                    $sql .= <<<'SQL'
-# Remove access reserved.
-DELETE
-FROM access_reserved
-JOIN media ON media.id = access_reserved.id
-WHERE media.item_id IN (:ids)
-;
-
-SQL;
-                }
-            } else {
-                continue;
-            }
-            $bind = [
-                'is_public' => $isPublic,
-                'ids' => $resourceIds,
-            ];
-            $types = [
-                'is_public' => ParameterType::INTEGER,
-                'ids' => $connection::PARAM_INT_ARRAY,
-            ];
-            $connection->executeStatement($sql, $bind, $types);
-        }
+        $types = [
+            'status' => \Doctrine\DBAL\ParameterType::STRING,
+            'ids' => $connection::PARAM_INT_ARRAY,
+            'is_public' => \Doctrine\DBAL\ParameterType::INTEGER,
+        ];
+        $connection->executeStatement($sql, $bind, $types);
     }
 
     protected function processUpdateMissingStatus(array $vars): void

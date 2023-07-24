@@ -44,6 +44,7 @@ return [
             Form\Element\OptionalRadio::class => Form\Element\OptionalRadio::class,
             Form\Admin\AccessRequestForm::class => Form\Admin\AccessRequestForm::class,
             Form\Admin\AccessResourceForm::class => Form\Admin\AccessResourceForm::class,
+            Form\Admin\BatchEditFieldset::class => Form\Admin\BatchEditFieldset::class,
             Form\AccessRequestForm::class => Form\AccessRequestForm::class,
             Form\ConfigForm::class => Form\ConfigForm::class,
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,

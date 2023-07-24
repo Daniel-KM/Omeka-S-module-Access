@@ -129,6 +129,13 @@
         }
         $(document).trigger('o:prepare-value', ['resource', value, accessObject, namePrefix]);
 
+        // Batch edit form.
+
+        $('.accessresource').closest('.field')
+            .wrapAll('<fieldset id="accessresource" class="field-container">');
+        $('#accessresource')
+            .prepend('<legend>' + Omeka.jsTranslate('Access resource') + '</legend>');
+
     });
 
 })(jQuery);

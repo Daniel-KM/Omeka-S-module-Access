@@ -2,10 +2,6 @@
 
 namespace AccessResource\Form\Admin;
 
-use const AccessResource\ACCESS_STATUS_FREE;
-use const AccessResource\ACCESS_STATUS_RESERVED;
-use const AccessResource\ACCESS_STATUS_FORBIDDEN;
-
 use AccessResource\Form\Element as AccessResourceElement;
 use Laminas\Form\Fieldset;
 
@@ -14,7 +10,7 @@ class BatchEditFieldset extends Fieldset
     public function init(): void
     {
         $this
-            ->setName('access_resource')
+            ->setName('accessresource')
             ->setLabel('Access resource') // @translate
             ->setAttributes([
                 'id' => 'accessresource',
