@@ -80,7 +80,7 @@ class AccessStatus extends AbstractEntity
      *     nullable=true
      * )
      */
-    protected $startDate;
+    protected $embargoStart;
 
     /**
      * The embargo ends at this date.
@@ -92,7 +92,7 @@ class AccessStatus extends AbstractEntity
      *     nullable=true
      * )
      */
-    protected $endDate;
+    protected $embargoEnd;
 
     public function setId(Resource $resource): self
     {
@@ -116,25 +116,25 @@ class AccessStatus extends AbstractEntity
         return $this->status;
     }
 
-    public function setStartDate(?DateTime $startDate = null): self
+    public function setEmbargoStart(?DateTime $embargoStart): self
     {
-        $this->startDate = $startDate;
+        $this->embargoStart = $embargoStart;
         return $this;
     }
 
-    public function getStartDate(): ?DateTime
+    public function getEmbargoStart(): ?DateTime
     {
-        return $this->startDate;
+        return $this->embargoStart;
     }
 
-    public function setEndDate(?DateTime $endDate = null): self
+    public function setEmbargoEnd(?DateTime $embargoEnd): self
     {
-        $this->endDate = $endDate;
+        $this->embargoEnd = $embargoEnd;
         return $this;
     }
 
-    public function getEndDate(): ?DateTime
+    public function getEmbargoEnd(): ?DateTime
     {
-        return $this->endDate;
+        return $this->embargoEnd;
     }
 }

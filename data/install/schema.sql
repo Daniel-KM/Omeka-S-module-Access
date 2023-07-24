@@ -40,8 +40,8 @@ CREATE TABLE `access_resource` (
 CREATE TABLE `access_status` (
     `id` INT NOT NULL,
     `status` VARCHAR(15) NOT NULL,
-    `start_date` DATETIME DEFAULT NULL,
-    `end_date` DATETIME DEFAULT NULL,
+    `embargo_start` DATETIME DEFAULT NULL,
+    `embargo_end` DATETIME DEFAULT NULL,
     INDEX IDX_898BF02E7B00651C (`status`),
     PRIMARY KEY(`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;

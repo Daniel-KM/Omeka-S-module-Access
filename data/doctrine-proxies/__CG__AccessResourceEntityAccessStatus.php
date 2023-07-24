@@ -67,10 +67,10 @@ class AccessStatus extends \AccessResource\Entity\AccessStatus implements \Doctr
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'id', 'status', 'startDate', 'endDate'];
+            return ['__isInitialized__', 'id', 'status', 'embargoStart', 'embargoEnd'];
         }
 
-        return ['__isInitialized__', 'id', 'status', 'startDate', 'endDate'];
+        return ['__isInitialized__', 'id', 'status', 'embargoStart', 'embargoEnd'];
     }
 
     /**
@@ -224,45 +224,45 @@ class AccessStatus extends \AccessResource\Entity\AccessStatus implements \Doctr
     /**
      * {@inheritDoc}
      */
-    public function setStartDate(\DateTime $startDate = NULL): \AccessResource\Entity\AccessStatus
+    public function setEmbargoStart(?\DateTime $embargoStart): \AccessResource\Entity\AccessStatus
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setStartDate', [$startDate]);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setEmbargoStart', [$embargoStart]);
 
-        return parent::setStartDate($startDate);
+        return parent::setEmbargoStart($embargoStart);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getStartDate(): ?\DateTime
+    public function getEmbargoStart(): ?\DateTime
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getStartDate', []);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getEmbargoStart', []);
 
-        return parent::getStartDate();
+        return parent::getEmbargoStart();
     }
 
     /**
      * {@inheritDoc}
      */
-    public function setEndDate(\DateTime $endDate = NULL): \AccessResource\Entity\AccessStatus
+    public function setEmbargoEnd(?\DateTime $embargoEnd): \AccessResource\Entity\AccessStatus
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setEndDate', [$endDate]);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setEmbargoEnd', [$embargoEnd]);
 
-        return parent::setEndDate($endDate);
+        return parent::setEmbargoEnd($embargoEnd);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getEndDate(): ?\DateTime
+    public function getEmbargoEnd(): ?\DateTime
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getEndDate', []);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getEmbargoEnd', []);
 
-        return parent::getEndDate();
+        return parent::getEmbargoEnd();
     }
 
     /**
