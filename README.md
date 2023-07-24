@@ -7,8 +7,9 @@ Access Resource (module for Omeka S)
 
 [Access Resource] is a module for [Omeka S] that allows to protect files to be
 accessed from the anonymous visitors, but nevertheless available globally or on
-requests by guests users, restricted to a list of ips, or available by a token.
-Start and end dates of an embargo can be used too, separately or not.
+requests by guests users, restricted to a list of ips, or available by an email
+or a token. Start and end dates of an embargo can be used too, separately or
+not.
 
 Furthermore, you can set the right to see a resource at the media level, so the
 item and media metadata are visible and the visitors know that a media exist.
@@ -23,23 +24,20 @@ Installation
 
 ### Associated modules
 
-If the access is reserved by ip or by token, the module can be used standalone.
+To allow access to restricted resources for user with role "Guest", the module
+will need to identify users, generally with the module [Guest] or [Guest Role].
 
-If the access is reserved globally, the module will need to identify users,
-generally with the module [Guest] or [Guest Role]. If the access is restricted
-individually, the module [Guest] will be needed to manage the requests. The
-public part can be managed easily via the module [Blocks Disposition], or
-directly in the theme.
+The public part can be managed easily via the module [Blocks Disposition], but
+it is recommended to use resource page blocks if the theme supports them.
 
 The module is compatible with the module [Statistics]. It is important to
 redirect download urls to the module (see below config of ".htaccess").
 
 ### Incompatibility
 
-This module is currently incompatible with module [Group], that manages rights
-by a list of groups.
+Since version 3.4.17, the module is compatible with module [Group].
 
-### Copy of the module
+### Installation of the module
 
 See general end user documentation for [installing a module].
 
@@ -77,38 +75,40 @@ In this example, all original and large files will be protected: a check will be
 done by the module before delivering files. If the user has no access to a file,
 a fake file is displayed.
 
-The small derivatives files (square and thumbnails), can be protected too, but
-it is generally useless. Anyway, it depends on the original images.
+The small derivatives files (medium and square thumbnails), can be protected too,
+but it is generally useless. Anyway, it depends on the original images.
 
 ##### When Omeka S is installed at the root of a domain or a sub-domain
 
-Insert the following lines at line 4 of [.htaccess], just after `RewriteEngine On`:
+Insert the following lines at line 4 of [.htaccess], just after `RewriteEngine On`,
+eventually adding `|medium|square` to the list of thumbnails:
 
 ```apache
-RewriteRule ^files/original/(.*)$ /access/files/original/$1 [P]
-RewriteRule ^files/large/(.*)$ /access/files/large/$1 [P]
-# Uncomment the lines below to protect square and medium thumbnails too, if really needed.
-#RewriteRule ^files/medium/(.*)$ /access/files/medium/$1 [P]
-#RewriteRule ^files/square/(.*)$ /access/files/square/$1 [P]
+# Set rule for original and selected derivative files (usually at least large thumbnails).
+RewriteRule "^files/(original|large)/(.*)$" "/access/files/$1)/$2" [P]
+```
+
+An alternative with flag [L]:
+
+```apache
+# Set rule for original and selected derivative files (usually at least large thumbnails).
+RewriteRule "^files/(original|large)/(.*)$" "%{REQUEST_SCHEME}://%{HTTP_HOST}/access/files/$1/$2" [L]
 ```
 
 ##### When Omeka S is installed in a sub-path (https://example.org/digital-library/)
 
 Insert the following lines at line 4 of [.htaccess], just after `RewriteEngine On`,
-adapting it to your real config (here, the sub-path is `digital-library`):
+adapting it to your real config (here, the sub-path is `digital-library`),
+eventually adding `|medium|square` to the list of thumbnails:
 
 ```apache
-RewriteRule ^files/original/(.*)$ /digital-library/access/files/original/$1 [P]
-RewriteRule ^files/large/(.*)$ /digital-library/access/files/large/$1 [P]
-# Uncomment the lines below to protect square and medium thumbnails too, if really needed.
-#RewriteRule ^files/medium/(.*)$ /digital-library/access/files/medium/$1 [P]
-#RewriteRule ^files/square/(.*)$ /digital-library/access/files/square/$1 [P]
-
-RewriteCond %{REQUEST_URI}::$1 ^(/.+)/(.*)::/digital-library/access/\2$
-RewriteRule ^(.*) - [E=BASE:%1]
+# Set rule for original and selected derivative files (usually at least large thumbnails).
+RewriteRule "^files/(original|large)/(.*)$" "/digital-library/access/files/$1/$2" [P]
 ```
 
 ##### Common issues
+
+First, try with the alternative (flag [P] or [L]).
 
 - Unable to redirect to a virtual proxy with https
 
@@ -124,8 +124,8 @@ RewriteRule ^(.*) - [E=BASE:%1]
   internal redirect url is unsecure:
 
 ```apache
-RewriteRule ^files/original/(.*)$ http://%{HTTP_HOST}/digital-library/access/files/original/$1 [P]
-RewriteRule ^files/large/(.*)$ http://%{HTTP_HOST}/digital-library/access/files/large/$1 [P]
+# Set rule for original and selected derivative files (usually at least large thumbnails).
+RewriteRule "^files/(original|large)/(.*)$" "http://%{HTTP_HOST}/digital-library/access/files/$1/$2" [P]
 ```
 
 #### Compatibility with module Statistics
@@ -139,17 +139,16 @@ even if a user as a no restricted access to it. For example:
 
 ```apache
 # Redirect direct access to files to the module Access Resource.
-RewriteRule ^files/original/(.*)$ http://%{HTTP_HOST}/access/files/original/$1 [P]
-RewriteRule ^files/large/(.*)$ http://%{HTTP_HOST}/access/files/large/$1 [P]
+RewriteRule "^files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
 
 # Redirect direct download of files to the module Access Resource.
-RewriteRule ^download/files/original/(.*)$ http://%{HTTP_HOST}/access/files/original/$1 [P]
-RewriteRule ^download/files/large/(.*)$ http://%{HTTP_HOST}/access/files/large/$1 [P]
+RewriteRule "^download/files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
 ```
 
 In fact, if not redirected, it acts the same way than a direct access to a
 private file in Omeka: they are not protected and everybody who knows the url,
-in particular Google via Gmail, Chrome, etc., will have access to it.
+in particular Google, the well-known private life hacker, via Gmail, Chrome,
+Android, etc., will have access to it, even if it's exactly what you don't want.
 
 #### Nginx
 
@@ -159,124 +158,91 @@ The configuration of Apache above should be adapted for Nginx.
 Usage
 -----
 
-Omeka has two modes of visibility: public or private. This module adds a third
-mode for resource: restricted. It is available globally, by ip, or by user. To
-enable this mode of visibility, you should define the access mode and to
-identify the restricted resources.
+Omeka has two modes of visibility: public or private. This module adds a second
+check for anonymous or specific users: the right to access to a resource. This
+rights has four levels: free, restricted, protected or forbidden. These access
+levels applies on record or media files, but the current version supports only
+protection of media contents.
 
-One important thing to understand is to choose to define the access at the item
-and/or at the media level. If you choose to set the restricted access on the
-item, it will remains private for visitors without rights, even metadata. If you
-choose to set the restricted access on the media, the public item metadata will
-be viewable by everybody.
+So an anonymous visitor can see a public media, but can view the file only if
+the level is set to free. The user should have a permission when the level is
+restricted or protected, and cannot see it in any case when the level is
+forbidden, even if the media is public.
+
+There is no difference between restricted or protected when the type of
+protection is limited to files, that is the only type in the current version of
+the module.
+
+The permission to see a restricted content can be done via many ways: Users can
+be checked via the role guest, the authentication via an external identity
+provider (module [CAS], [LDAP] and [Single Sign On]), by ip, by email or by a
+token.
+
+One important thing to understand is to choose to define the access for each
+type of resource: item sets, items and media and to choose if the access is done
+recursively during storing or in request. If the request is set to apply
+recursively for an item set, all items and medias attached to it will be
+available. If the request is set to apply recursively for an item, all medias
+attached to it will be available. So when an item set or an item is saved and
+when a request is validated, set if the access or the request applies
+recursively.
+
+Take care that for resource, the recursivity should be set each time it is
+saved, if needed, else access won't be updated to the attached resources. It
+allows to have specific access for specific items or medias. Furthermore, this
+mechanism does not apply when the access status is set via property. In that
+case, all resources are managed individually.
+
+Finally, the option applies only to existing resources: if an item is created
+after a change in an item set, it won't apply to it, so you will need to set the
+right mode or to update the item set with the recursive option set.
 
 When an embargo is set, it can be bypassed, or not, for the users. Only files
 can be under embargo currently.
 
-**WARNING**: The way to manage visibility of records have been updated since
-last versions, after 3.3.0.10. If you want to keep old behavior, don't update to
-new releases for now.
-
 ### Access mode
 
 The rights to see the files are controlled on the fly. The restricted visibility
-can be managed in three ways, and with or without metadata:
+can be managed in multiple ways:
 
-- `global`: all authenticated users have access to all the restricted files. In
-  practice, the guest users have no access to private resources, but they can
-  view all private resources that are marked restricted. Of course, anonymous
-  don't see media.
-- `ip`: all visitors with a specific ip, for example the ip of the physical
-  library or the one of a researcher, can have access to all the restricted
-  files. Ip can be configured to access specific item sets.
-- `individual`: each file should be made accessible by a specific user one by
-  one. So the module has some forms to manage individual requests and accesses.
-  This mode requires the admin to set each right of each resource. This mode can
-  be combined with a list of ips to allow visitors with these ips to access to
-  any files, as above.
+- Global modes
+  - `ip`: all visitors with a specific ip, for example the ip of the physical
+    library or the one of a researcher, can have access to all the restricted
+    files. Ip can be configured to access specific item sets.
+  - `guest`: all guest users have access to all the restricted files.
+  - `external`: all users authenticated via an external identity provider
+    (currently via module CAS, later for module Ldap and SingleSignOn) have access
+    to media contents.
+- Individual modes
+  - `user`: each file should be made accessible by a specific user one by
+    one. So the module has some forms to manage individual requests and accesses.
+  - `email`: anybody authenticated via an email have access to specific media
+    contents. This protection is simple and light, but not the most secure.
+  - `token`: all users or visitor authenticated via a token have access to
+    specific media contents.
 
-The default mode is `global`. To set the mode `ip` or `individual`, you should
-specify it in the file `config/local.config.php` of the Omeka directory:
-
-```php
-    'accessresource' => [
-        'access_mode' => 'individual',
-    ],
-```
-
-### Selection of content to protect
-
-It is possible to protect some resource only. By default, only medias follow the
-rules and the items and item sets follows the visibility public/private.
-
-To protect items and item sets, add them in option `access_apply` in the file 
-`config/local.config.php` of the Omeka directory (here only medias are
-protected):
-
-```php
-    'accessresource' => [
-        'access_mode' => 'individual',
-        'access_apply' => [
-            // 'items',
-            'media',
-            // 'item_sets',
-        ],
-    ],
-```
+Individual modes require that an admin allow each right for each resource.
 
 ### Identification of the restricted resources
 
-After the configuration, you should identify all medias that you want to make
+After the configuration, you should identify all resources that you want to make
 available via a restricted access. By default, private resources remain private,
 so you need to allow visitors to know that they exist. That is to say you can
 keep some private resources private, and some other ones available on request,
 or globally.
 
-There are three ways to indicate which resources are restricted.
+There are two ways to indicate which resources are restricted.
 
-- By default, it is a specific param available as a radio button in the advanced
-  tab of the resource form.
-- The second way is to add a value to the property `curation:reserved` (by
-  default), that is created by the module. The value can be whatever you want,
-  even empty value `0` or `false`, but it is not recommended: use `yes` or
-  something else.
-- The third way is to add a specific value to the property `curation:access` (by
-  default), that is created by the module. The specific values can be "free",
-  "reserved" or "restricted". The property and the names can be translated or
-  modified in the config. It is recommended to create a custom vocab and to use
-  it via the resource templates to avoid errors in the values.
+- By default, it is a specific setting available as a radio button in the
+  advanced tab of the resource form.
+- The second way is to set a value to a specified property, for example `curation:access`.
+  The value can be "free", "restricted", "protected" or "forbidden". The
+  property and the names can be translated or modified in the config. It is
+  recommended to create a custom vocab and to use it via the resource templates
+  to avoid errors in the values.
 
-To set the mode, update the file `config/config.local.php` in the Omeka
-directory:
-
-```php
-    'accessresource' => [
-        'access_mode' => 'individual', // or whatever you choose.
-        'access_apply' => [ // or whatever you choose.
-            // 'items',
-            'media',
-            // 'item_sets',
-        ],
-        'access_via_property' => 'status', // may be false, "status" or "reserved".
-        'access_via_property_status' => [
-            'free' => 'free',
-            'reserved' => 'reserved',
-            'forbidden' => 'forbidden',
-        ],
-    ],
-```
-
-When a private resource has the status set in the advanced tab (in default mode)
-or has a value for this property (in property reserved mode) or has a value
-restricted (in property status mode), it becomes available for all guest users,
-and all visitors can view its metadata automatically too in listings. Preview
-will be available for media too. The value of this property can be private or public.
-
-**Important**: when the mode is updated, the statuses of the resource must be
-updated to follow the new rules.
-
-**Important**: public medias are never restricted, so you need to set them
-private.
+A private media remains private. A public media will be accessible only if its
+status is not forbidden and not during an embargo, if any.
 
 Note that a public item can have a private media and vice-versa. So, most of the
 time, the value should be set in the metadata of the media. The value can be
@@ -290,67 +256,61 @@ visible for public and restricted resources.
 An option in the config can be used to use it with or without the restricted
 access.
 
-To create an embargo on a file, simply set the dates in `curation:start`
-and/or `curation:end`.
+To create an embargo on a file, simply set the dates in the advanced tab or use
+properties `curation:start` and/or `curation:end`, or the ones specified in the
+config.
 
-It is recommended to use the datatype "numeric timestamp" from the module [Numeric Datatypes],
-but a literal is fine. The date must be an iso one (`2022-03-14`). A time can be
-set too (`2022-03-14T12:34:56`).
+If you use a property to define the date of the embargo, it is recommended to
+use the datatype "numeric timestamp" from the module [Numeric Datatypes], but a
+literal is fine. The date must be an iso one (`2022-03-14`). A time can be set
+too (`2022-03-14T12:34:56`).
 
 A check is automatically done when an anonymous visitor or a restricted user is
-accessing a restricted file. In that case, the media may be set public
-automatically when the embargo is finished. For all other cases, a job may be
-run, for example once a day. A cron task can be used through the script designed
-to run task of the module [Easy Admin].
-
-The job does not update the resource when the visibility is not logical, for
-example when the resource have been set public with a date of end of embargo.
-Of course, don't set a date of end of embargo if the record is not ready or when
-it should remain private.
+accessing a file.
 
 ### Management of requests
 
-If you choose modes `global` or `ip`, there is nothing to do more. Once users
-are authenticated as guest or by ip, they will be able to see the files.
+If you choose modes `ip`, `guest`, or `external`, there is nothing to do more.
+Once users are authenticated or authorized, they will be able to see the files.
 
-In the case of the individual mode, there are two ways to process.
+In the case of the single modes `user`, `email` or `token`, there are two ways
+to process.
 
-- The admin can made some medias available directly in the menu "Access Resource"
-  in the sidebar. Simply add a new access, select a resource and a user, and he
-  will be able to view it. A token is created too: it allows visitors without
-  guest account to see the resource.
+- The admin can made some item sets, items or medias available directly in the
+  menu "Access requests" in the sidebar. Simply add a new access, select a
+  resource and a user, a email or a token, and the person will be able to view
+  it.
 
-- The guest user can request an access to a resource they want. It can be done
-  directly via a button, for logged users, or via a contact form for the
-  anonymous people. The contact form may be added by the module [Contact Us].
-  After the request, the admin will receive an email, and he can accept or
+- The user or visitor can request an access to a specific resource. It can be
+  done directly via a button, for logged users, or via a contact form for the
+  anonymous visitors. The contact form may be added by this module or the module
+  [Contact Us]. After the request, the admin will receive an email to accept or
   reject the request.
 
-There are forms in a tab for each media and in the left sidebar.
+Once accepted, the requester will receive an email with an url to click, that
+will add a session cookie that will allow to browse the selected resources.
 
-The module allows another access mode, by token. This mode is available only in
-the "individual" mode currently. You can find them on access view/edit page.
-
-In public front-end, a dashboard is added for guest users. The link is available
-in the guest user board (`/s/my-site/guest/access-resource`).
+In public front-end, a dashboard is added for visitors: `/s/my-site/access-request`.
+Guest users have a specific board too: `/s/my-site/guest/access-request`.
 
 
 TODO
 ----
 
-- [ ] Add a feature to uncouple visibility and access (manage them separetely). Make this the default mode?
-- [ ] Make metadata or resource hidden, not only files (so a more restricted type of access).
-- [ ] Make resources available by token in global mode.
-- [ ] Make resources available by token only, not login (like module Contribute).
-- [x] Make non-exclusive mode "ip" and "individual".
+- [x] Add a feature to uncouple visibility and access (manage them separetely). Make this the default mode?
+- [x] Make metadata or resource hidden, not only files (so a more restricted type of access).
+- [x] Make resources available by token in global mode.
+- [x] Make resources available by token only, not login (like module Contribute).
+- [x] Make non-exclusive mode "ip" and "user".
 - [ ] Fix ip check for ipv6.
 - [ ] Use Omeka Store instead of local file system.
 - [x] Manage ip by item set or by user instead of sites?
-- [ ] Store openess in a specific table for performance and to manage embargo easier.
-- [ ] Manage the case where the embargo dates are private.
-- [ ] Add a mode to check for a specific value in the reserved access property instead of exist/not exist.
+- [x] Store openess in a specific table for performance and to manage embargo easier.
+- [x] Manage the case where the embargo dates are private.
+- [x] Add a mode to check for a specific value in the reserved access property instead of exist/not exist.
 - [x] Reindexation (trigger event) when embargo is updated automatically.
-- [ ] Recheck all new features with mode "individual".
+- [x] Recheck all new features with modes "individual".
+- [x] Manage embargo dates separately from the property values.
 
 
 Warning
@@ -419,6 +379,9 @@ Copyright
 [Blocks Disposition]: https://gitlab.com/Daniel-KM/Omeka-S-module-BlocksDisposition
 [Group]: https://gitlab.com/Daniel-KM/Omeka-S-module-Group/-/releases
 [Contact Us]: https://gitlab.com/Daniel-KM/Omeka-S-module-ContactUs
+[CAS]: https://github.com/biblibre/Omeka-S-module-CAS
+[LDAP]: https://gitlab.com/Daniel-KM/Omeka-S-module-Ldap
+[Single Sign On]: https://gitlab.com/Daniel-KM/Omeka-S-module-SingleSignOn
 [Numeric Datatypes]: https://github.com/omeka-s-modules/NumericDatatypes
 [Easy Admin]: https://gitlab.com/Daniel-KM/Omeka-S-module-EasyAdmin
 [Statistics]: https://gitlab.com/Daniel-KM/Omeka-S-module-Statistics
