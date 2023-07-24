@@ -2,11 +2,7 @@
 
 namespace AccessResource\Job;
 
-use const AccessResource\ACCESS_STATUS_FREE;
-use const AccessResource\ACCESS_STATUS_RESERVED;
-use const AccessResource\ACCESS_STATUS_PROTECTED;
-use const AccessResource\ACCESS_STATUS_FORBIDDEN;
-
+use AccessResource\Entity\AccessStatus;
 use Omeka\Job\AbstractJob;
 use Omeka\Stdlib\Message;
 
@@ -72,25 +68,25 @@ class AccessStatusUpdate extends AbstractJob
     /**
      * @var string
      */
-    protected $accessProperty;
+    protected $levelProperty;
 
     /**
-     * For mode property / status, list the possible status.
+     * For mode property / level, list the possible levels.
      *
      * @var array
      */
-    protected $accessPropertyStatuses;
+    protected $levelPropertyLevels;
 
     /**
-     * For mode property / status, list the possible status.
+     * For mode property / level, list the default levels.
      *
      * @var array
      */
-    protected $accessPropertyStatusesDefault = [
-        ACCESS_STATUS_FREE => 'free',
-        ACCESS_STATUS_RESERVED => 'reserved',
-        ACCESS_STATUS_PROTECTED => 'protected',
-        ACCESS_STATUS_FORBIDDEN => 'forbidden',
+    protected $levelPropertyLevelsDefault = [
+        AccessStatus::FREE => 'free',
+        AccessStatus::RESERVED => 'reserved',
+        AccessStatus::PROTECTED => 'protected',
+        AccessStatus::FORBIDDEN => 'forbidden',
     ];
 
     /**
@@ -155,10 +151,10 @@ class AccessStatusUpdate extends AbstractJob
             'Starting indexation of access statuses of all resources.' // @translate
         ));
 
-        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
+        $accessViaProperty = (bool) $settings->get('accessresource_level_via_property');
         if ($accessViaProperty) {
-            $this->accessProperty = $settings->get('accessresource_access_property');
-            $this->accessPropertyStatuses = $settings->get('accessresource_access_property_statuses', $this->accessPropertyStatusesDefault);
+            $this->accessProperty = $settings->get('accessresource_level_property');
+            $this->accessPropertyLevels = $settings->get('accessresource_level_property_levels', $this->accessPropertyLevelsDefault);
             $this->updateAccessViaProperty();
         } else {
             $this->updateAccessViaVisibility();
@@ -177,7 +173,7 @@ class AccessStatusUpdate extends AbstractJob
         if (in_array($this->missingMode, ['free', 'reserved', 'protected', 'forbidden'])) {
             $sql = <<<SQL
 # Set the specified status for all missing resources.
-INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
+INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
 SELECT `id`, {$this->missingMode}, NULL, NULL
 FROM `resource`
 ON DUPLICATE KEY UPDATE
@@ -188,7 +184,7 @@ SQL;
             $mode = substr($this->missingMode, 11);
             $sql = <<<SQL
 # Set free all missing public resources.
-INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
+INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
 SELECT `id`, "free", NULL, NULL
 FROM `resource`
 WHERE `is_public` = 1
@@ -196,7 +192,7 @@ ON DUPLICATE KEY UPDATE
    `id` = `resource`.`id`
 ;
 # Set reserved/protected/forbidden all missing private resources.
-INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
+INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
 SELECT `id`, "$mode", NULL, NULL
 FROM `resource`
 WHERE `is_public` = 0
@@ -231,11 +227,11 @@ SQL;
         }
         $propertyId = reset($propertyId);
 
-        $list = array_intersect_key($this->accessPropertyStatuses, $this->accessPropertyStatusesDefault);
+        $list = array_intersect_key($this->accessPropertyLevels, $this->accessPropertyLevelsDefault);
         if (count($list) !== 4) {
             $this->logger->err(new Message(
-                'List of property statuses is incomplete, missing "%s".', // @translate
-                implode('", "', array_flip(array_diff_key($this->accessPropertyStatusesDefault, $this->accessPropertyStatuses)))
+                'List of property levels is incomplete, missing "%s".', // @translate
+                implode('", "', array_flip(array_diff_key($this->accessPropertyLevelsDefault, $this->accessPropertyLevels)))
             ));
             return false;
         }
@@ -256,7 +252,7 @@ SQL;
 
         $sql = <<<SQL
 # Set access statuses according to values.
-INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
+INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
 SELECT
     `resource`.`id`,
     (CASE `value`.`value`

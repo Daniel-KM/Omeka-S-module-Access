@@ -67,10 +67,10 @@ class AccessStatus extends \AccessResource\Entity\AccessStatus implements \Doctr
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'id', 'status', 'embargoStart', 'embargoEnd'];
+            return ['__isInitialized__', 'id', 'level', 'embargoStart', 'embargoEnd'];
         }
 
-        return ['__isInitialized__', 'id', 'status', 'embargoStart', 'embargoEnd'];
+        return ['__isInitialized__', 'id', 'level', 'embargoStart', 'embargoEnd'];
     }
 
     /**
@@ -213,23 +213,23 @@ class AccessStatus extends \AccessResource\Entity\AccessStatus implements \Doctr
     /**
      * {@inheritDoc}
      */
-    public function setStatus(string $status): \AccessResource\Entity\AccessStatus
+    public function setLevel(string $level): \AccessResource\Entity\AccessStatus
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setStatus', [$status]);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setLevel', [$level]);
 
-        return parent::setStatus($status);
+        return parent::setLevel($level);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getStatus(): string
+    public function getLevel(): string
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getStatus', []);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getLevel', []);
 
-        return parent::getStatus();
+        return parent::getLevel();
     }
 
     /**

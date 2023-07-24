@@ -28,7 +28,7 @@ class Module extends AbstractModule
     /**
      * The classes are not ready on load of the class, so use a method.
      */
-    protected function accessStatuses(): array
+    protected function accessLevels(): array
     {
         return [
             AccessStatus::FREE => AccessStatus::FREE,
@@ -372,9 +372,9 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
+        $levelViaProperty = (bool) $settings->get('accessresource_level_via_property');
         $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
-        if ($accessViaProperty && $embargoViaProperty) {
+        if ($levelViaProperty && $embargoViaProperty) {
             unset($data['accessresource']);
             $request->setContent($data);
             return;
@@ -385,12 +385,12 @@ class Module extends AbstractModule
             'is_batch_process' => true,
         ];
 
-        // Access status.
-        if ($accessViaProperty) {
+        // Access level.
+        if ($levelViaProperty) {
             // TODO Manage batch update for properties.
         } else {
-            if (!empty($rawData['o-access:status']) && in_array($rawData['o-access:status'], $this->accessStatuses())) {
-                $newData['o-access:status'] = $rawData['o-access:status'];
+            if (!empty($rawData['o-access:level']) && in_array($rawData['o-access:level'], $this->accessLevels())) {
+                $newData['o-access:level'] = $rawData['o-access:level'];
             }
         }
 
@@ -426,7 +426,7 @@ class Module extends AbstractModule
             }
         }
 
-        $needProcess = array_key_exists('o-access:status', $newData)
+        $needProcess = array_key_exists('o-access:level', $newData)
             || array_key_exists('o-access:embargoStart', $newData)
             || array_key_exists('o-access:embargoEnd', $newData);
 
@@ -463,12 +463,12 @@ class Module extends AbstractModule
             return;
         }
 
-        $status = array_key_exists('o-access:status', $data) ? $data['o-access:status'] : false;
+        $level = array_key_exists('o-access:level', $data) ? $data['o-access:level'] : false;
         $embargoStart = array_key_exists('o-access:embargoStart', $data) ? $data['o-access:embargoStart'] : false;
         $embargoEnd = array_key_exists('o-access:embargoEnd', $data) ? $data['o-access:embargoEnd'] : false;
 
         // Check if a process is needed (normally already done).
-        if ($status === false && $embargoStart === false && $embargoEnd === false) {
+        if ($level === false && $embargoStart === false && $embargoEnd === false) {
             return;
         }
 
@@ -488,7 +488,7 @@ class Module extends AbstractModule
         // Doctrine does not allow to do an "insert on duplicate", so two ways:
         // - Use a direct sql on the ids of the response, since rights and
         //   errors are checked.
-        // - Get existings access status and update them, then create new ones.
+        // - Get existing access statuses and update them, then create new ones.
 
         $services = $this->getServiceLocator();
         $entityManager = $services->get('Omeka\EntityManager');
@@ -504,10 +504,10 @@ class Module extends AbstractModule
             $qb
                 ->update(AccessStatus::class, 'access_status')
                 ->where($expr->in('access_status.id', $existingIds));
-            if ($status !== false) {
+            if ($level !== false) {
                 $qb
-                    ->set('access_status.status', ':status')
-                    ->setParameter('status', $status, \Doctrine\DBAL\ParameterType::STRING);
+                    ->set('access_status.level', ':level')
+                    ->setParameter('level', $level, \Doctrine\DBAL\ParameterType::STRING);
             }
             if ($embargoStart !== false) {
                 $qb
@@ -533,7 +533,7 @@ class Module extends AbstractModule
                 $accessStatus = new AccessStatus();
                 $accessStatus
                     ->setId($resource)
-                    ->setStatus($status ?: AccessStatus::FREE)
+                    ->setLevel($level ?: AccessStatus::FREE)
                     ->setEmbargoStart($embargoStart ?: null)
                     ->setEmbargoEnd($embargoEnd ?: null);
                 $entityManager->persist($accessStatus);
@@ -576,7 +576,7 @@ class Module extends AbstractModule
 
         $this->manageAccessStatusForResource($resource, $resourceData);
 
-        // Create the access statuses for new media: there is no event during
+        // Create the access statuses for new medias: there is no event during
         // media creation via item.
         if ($resource->getResourceName() === 'items'
             && empty($resourceData['access_recursive'])
@@ -615,31 +615,31 @@ class Module extends AbstractModule
             $accessStatus->setId($resource);
         }
 
-        // TODO Make the access status editable via api (already possible via the key "o-access:status" anyway).
+        // TODO Make the access status editable via api (already possible via the key "o-access:level" anyway).
         // Request "isPartial" does not check "should hydrate" for properties,
         // so properties are always managed, but not access keys.
 
-        $accessStatuses = $this->accessStatuses();
+        $accessLevels = $this->accessLevels();
 
         // TODO Access recursive is not allowed for property process for now.
         // For now, recursivity with properties require to run a separate process.
         $accessRecursive = false;
 
-        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
-        $accessProperty = $accessViaProperty ? $settings->get('accessresource_access_property') : null;
-        if ($accessProperty) {
-            $accessPropertyStatuses = array_intersect_key(array_replace($accessStatuses, $settings->get('accessresource_access_property_statuses', $accessStatuses)), $accessStatuses);
+        $levelViaProperty = (bool) $settings->get('accessresource_level_via_property');
+        $levelProperty = $levelViaProperty ? $settings->get('accessresource_level_property') : null;
+        if ($levelProperty) {
+            $levelPropertyLevels = array_intersect_key(array_replace($accessLevels, $settings->get('accessresource_level_property_levels', $accessLevels)), $accessLevels);
             /** @see \Omeka\Api\Adapter\AbstractResourceEntityAdapter::hydrate() */
-            $accessIsSet = array_key_exists($accessProperty, $resourceData);
-            $status = empty($resourceData[$accessProperty])
+            $levelIsSet = array_key_exists($levelProperty, $resourceData);
+            $level = empty($resourceData[$levelProperty])
                 ? null
-                : (array_values($resourceData[$accessProperty])[0]['@value'] ?? null);
-            if ($status) {
-                $status = array_search($status, $accessPropertyStatuses) ?: null;
+                : (array_values($resourceData[$levelProperty])[0]['@value'] ?? null);
+            if ($level) {
+                $level = array_search($level, $levelPropertyLevels) ?: null;
             }
         } else {
-            $accessIsSet = array_key_exists('o-access:status', $resourceData);
-            $status = $resourceData['o-access:status'] ?? null;
+            $levelIsSet = array_key_exists('o-access:level', $resourceData);
+            $level = $resourceData['o-access:level'] ?? null;
             $accessRecursive = !empty($resourceData['access_recursive']);
         }
 
@@ -687,15 +687,15 @@ class Module extends AbstractModule
         }
 
         // Keep the database consistent instead of filling a bad value.
-        // Update access status and embargo only when the keys are set.
+        // Update access level and embargo only when the keys are set.
 
-        if (!empty($accessIsSet)) {
-            // Default status is free
-            // TODO Create access status "unknown" or "undefined"? Probably better, but complexify later.
-            if (empty($status) || !in_array($status, $accessStatuses)) {
-                $status = AccessStatus::FREE;
+        if (!empty($levelIsSet)) {
+            // Default level is free.
+            // TODO Create access level "unknown" or "undefined"? Probably better, but complexify later.
+            if (!in_array($level, $accessLevels)) {
+                $level = AccessStatus::FREE;
             }
-            $accessStatus->setStatus($status);
+            $accessStatus->setLevel($level);
         }
 
         if (!empty($embargoStartIsSet)) {
@@ -806,7 +806,7 @@ class Module extends AbstractModule
          * @var \Laminas\View\Renderer\PhpRenderer $view
          * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
          * @var \AccessResource\Entity\AccessStatus $accessStatus
-         * @var \AccessResource\Mvc\Controller\Plugin\AccessStatusForResource $accessStatusForResource
+         * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus $accessStatusForResource
          */
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
@@ -817,12 +817,12 @@ class Module extends AbstractModule
 
         $view = $event->getTarget();
 
-        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
+        $levelViaProperty = (bool) $settings->get('accessresource_level_via_property');
         $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
 
         $view = $event->getTarget();
         $plugins = $services->get('ControllerPluginManager');
-        $accessStatusForResource = $plugins->get('accessStatusForResource');
+        $accessStatusForResource = $plugins->get('accessStatus');
 
         $assetUrl = $view->plugin('assetUrl');
         $view->headLink()
@@ -832,11 +832,11 @@ class Module extends AbstractModule
         $resource = $view->vars()->offsetGet('resource');
         $accessStatus = $accessStatusForResource($resource);
         if ($accessStatus) {
-            $status = $accessStatus->getStatus();
+            $level = $accessStatus->getLevel();
             $embargoStart = $accessStatus->getEmbargoStart();
             $embargoEnd = $accessStatus->getEmbargoEnd();
         } else {
-            $status = null;
+            $level = null;
             $embargoStart = null;
             $embargoEnd = null;
         }
@@ -852,24 +852,24 @@ class Module extends AbstractModule
         $fullAccess = (bool) $settings->get('accessresource_full');
         if (!$fullAccess) {
             unset($valueOptions[AccessStatus::PROTECTED]);
-            if ($status === AccessStatus::PROTECTED) {
-                $status = AccessStatus::RESERVED;
+            if ($level === AccessStatus::PROTECTED) {
+                $level = AccessStatus::RESERVED;
             }
         }
 
-        $statusElement = new \AccessResource\Form\Element\OptionalRadio('o-access:status');
-        $statusElement
-            ->setLabel('Access status') // @translate
+        $levelElement = new \AccessResource\Form\Element\OptionalRadio('o-access:level');
+        $levelElement
+            ->setLabel('Access level') // @translate
             ->setValueOptions($valueOptions)
             ->setAttributes([
-                'id' => 'o-access-status',
-                'value' => $status,
-                'disabled' => $accessViaProperty ? 'disabled' : false,
+                'id' => 'o-access-level',
+                'value' => $level,
+                'disabled' => $levelViaProperty ? 'disabled' : false,
             ]);
-        if ($accessViaProperty) {
-            $accessProperty = $settings->get('accessresource_access_property');
-            $statusElement
-                ->setLabel(sprintf('Access status is managed via property %s.', $accessProperty)); // @translate
+        if ($levelViaProperty) {
+            $levelProperty = $settings->get('accessresource_level_property');
+            $levelElement
+                ->setLabel(sprintf('Access level is managed via property %s.', $levelProperty)); // @translate
         }
 
         // Html element "datetime" is deprecated and "datetime-local" requires
@@ -915,7 +915,7 @@ class Module extends AbstractModule
                 ->setLabel(sprintf('Access embargo is managed via properties %1$s and %2$s.', $embargoStartProperty, $embargoEndProperty)); // @translate
         }
 
-        if (!$accessViaProperty || !$embargoViaProperty) {
+        if (!$levelViaProperty || !$embargoViaProperty) {
             $resourceName = $resource ? $resource->resourceName() : $this->resourceNameFromRoute();
             if (($resourceName === 'item_sets' && $resource->itemCount())
                 // Media may are not yet stored during creation.
@@ -938,7 +938,7 @@ class Module extends AbstractModule
             }
         }
 
-        echo $view->formRow($statusElement);
+        echo $view->formRow($levelElement);
         echo preg_replace('~<div class="inputs">(\s*.*\s*)</div>~mU', '<div class="inputs">$1' . $view->formTime($embargoStartElementTime) . '</div>', $view->formRow($embargoStartElementDate));
         echo preg_replace('~<div class="inputs">(\s*.*\s*)</div>~mU', '<div class="inputs">$1' . $view->formTime($embargoEndElementTime) . '</div>', $view->formRow($embargoEndElementDate));
         if (isset($recursiveElement)) {
@@ -954,15 +954,15 @@ class Module extends AbstractModule
          * @var \Omeka\Settings\Settings $settings
          * @var \Omeka\View\Helper\I18n $i18n
          * @var \AccessResource\Entity\AccessStatus $accessStatus
-         * @var \AccessResource\Mvc\Controller\Plugin\AccessStatusForResource $accessStatusForResource
+         * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus $accessStatusForResource
          */
         $services = $this->getServiceLocator();
         $plugins = $services->get('ControllerPluginManager');
         $settings = $services->get('Omeka\Settings');
 
-        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
+        $levelViaProperty = (bool) $settings->get('accessresource_level_via_property');
         $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
-        if ($accessViaProperty && $embargoViaProperty) {
+        if ($levelViaProperty && $embargoViaProperty) {
             return;
         }
 
@@ -971,20 +971,20 @@ class Module extends AbstractModule
 
         $i18n = $view->plugin('i18n');
         $translate = $plugins->get('translate');
-        $accessStatusForResource = $plugins->get('accessStatusForResource');
+        $accessStatusForResource = $plugins->get('accessStatus');
 
         $resource = $vars->offsetGet('resource');
         $accessStatus = $accessStatusForResource($resource);
 
-        if (!$accessViaProperty) {
-            $accessStatuses = [
+        if (!$levelViaProperty) {
+            $accessLevels = [
                 AccessStatus::FREE => 'Free', // @translate'
                 AccessStatus::RESERVED => 'Reserved', // @translate
                 AccessStatus::PROTECTED => 'Protected', // @translate
                 AccessStatus::FORBIDDEN => 'Forbidden', // @translate
             ];
-            $status = $accessStatus ? $accessStatus->getStatus() : AccessStatus::FREE;
-            $htmlStatus = sprintf('<div class="value">%s</div>', $translate($accessStatuses[$status]));
+            $level = $accessStatus ? $accessStatus->getLevel() : AccessStatus::FREE;
+            $htmlLevel = sprintf('<div class="value">%s</div>', $translate($accessLevels[$level]));
         }
 
         if (!$embargoViaProperty) {
@@ -1009,7 +1009,7 @@ HTML;
         echo sprintf(
             $html,
             $translate('Access status'), // @translate
-            $htmlStatus ?? '',
+            $htmlLevel ?? '',
             $htmlEmbargo ?? ''
         );
     }
@@ -1137,9 +1137,9 @@ HTML;
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
+        $levelViaProperty = (bool) $settings->get('accessresource_level_via_property');
         $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
-        if ($accessViaProperty && $embargoViaProperty) {
+        if ($levelViaProperty && $embargoViaProperty) {
             return;
         }
 
@@ -1149,7 +1149,7 @@ HTML;
         $fieldset = $formElementManager->get(BatchEditFieldset::class, [
             'full_access' => (bool) $settings->get('accessresource_full'),
             'resource_type' => $event->getTarget()->getOption('resource_type'),
-            'access_via_property' => $accessViaProperty,
+            'level_via_property' => $levelViaProperty,
             'embargo_via_property' => $embargoViaProperty,
         ]);
 
@@ -1168,7 +1168,7 @@ HTML;
         $inputFilter
             ->get('accessresource')
             ->add([
-                'name' => 'o-access:status',
+                'name' => 'o-access:level',
                 'required' => false,
             ])
             ->add([
@@ -1259,17 +1259,17 @@ HTML;
         // People who can view all have all rights to update statuses.
         $isAllowed = $services->get('Omeka\Acl')->userIsAllowed(Resource::class, 'view-all');
 
-        $status = $accessStatus->getStatus();
+        $level = $accessStatus->getLevel();
         $embargoStart = $accessStatus->getEmbargoStart();
         $embargoEnd = $accessStatus->getEmbargoEnd();
 
         $bind = [
-            'status' => $status,
+            'level' => $level,
             'embargo_start' => $embargoStart ? $embargoStart->format('Y-m-d H:i:s') : null,
             'embargo_end' => $embargoEnd ? $embargoEnd->format('Y-m-d H:i:s') : null,
         ];
         $types = [
-            'status' => \Doctrine\DBAL\ParameterType::STRING,
+            'level' => \Doctrine\DBAL\ParameterType::STRING,
             'embargo_start' => $embargoStart ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL,
             'embargo_end' => $embargoEnd ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL,
         ];
@@ -1289,8 +1289,8 @@ HTML;
             $expr = $qb->expr();
             $qb
                 ->update(AccessStatus::class, 'access_status')
-                ->set('access_status.status', ':status')
-                ->setParameter('status', $status)
+                ->set('access_status.level', ':level')
+                ->setParameter('level', $level)
                 ->where($expr->in('access_status.id', ':ids'))
                 ->setParameter('ids', $mediaIds, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY)
             ;
@@ -1319,13 +1319,13 @@ HTML;
             // Use insert into instead of update, because the access statuses
             // may not exist yet.
             $sql = <<<SQL
-INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
-SELECT `media`.`id`, :status, :embargo_start, :embargo_end
+INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+SELECT `media`.`id`, :level, :embargo_start, :embargo_end
 FROM `media`
 WHERE `media`.`item_id` = :item_id
     $whereMedias
 ON DUPLICATE KEY UPDATE
-    `status` = :status,
+    `level` = :level,
     `embargo_start` = :embargo_start,
     `embargo_end` = :embargo_end
 ;
@@ -1341,12 +1341,12 @@ SQL;
 
         if ($isAllowed) {
             $sql = <<<SQL
-INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
-SELECT `item_item_set`.`item_id`, :status, :embargo_start, :embargo_end
+INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+SELECT `item_item_set`.`item_id`, :level, :embargo_start, :embargo_end
 FROM `item_item_set`
 WHERE `item_item_set`.`item_set_id` = :item_set_id
 ON DUPLICATE KEY UPDATE
-    `status` = :status,
+    `level` = :level,
     `embargo_start` = :embargo_start,
     `embargo_end` = :embargo_end
 ;
@@ -1354,13 +1354,13 @@ SQL;
             $entityManager->getConnection()->executeStatement($sql, $bind, $types);
 
             $sql = <<<SQL
-INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
-SELECT `media`.`id`, :status, :embargo_start, :embargo_end
+INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+SELECT `media`.`id`, :level, :embargo_start, :embargo_end
 FROM `media`
 JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
 WHERE `item_item_set`.`item_set_id` = :item_set_id
 ON DUPLICATE KEY UPDATE
-    `status` = :status,
+    `level` = :level,
     `embargo_start` = :embargo_start,
     `embargo_end` = :embargo_end
 ;
@@ -1380,13 +1380,13 @@ SQL;
         $types['item_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
 
         $sql = <<<SQL
-INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
-SELECT `item_item_set`.`item_id`, :status, :embargo_start, :embargo_end
+INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+SELECT `item_item_set`.`item_id`, :level, :embargo_start, :embargo_end
 FROM `item_item_set`
 WHERE `item_item_set`.`item_set_id` = :item_set_id
     AND `item_item_set`.`item_id` IN (:item_ids)
 ON DUPLICATE KEY UPDATE
-    `status` = :status,
+    `level` = :level,
     `embargo_start` = :embargo_start,
     `embargo_end` = :embargo_end
 ;
@@ -1418,8 +1418,8 @@ SQL;
         }
 
         $sql = <<<SQL
-INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
-SELECT `media`.`id`, :status, :embargo_start, :embargo_end
+INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+SELECT `media`.`id`, :level, :embargo_start, :embargo_end
 FROM `media`
 JOIN `resource` ON `resource`.`id` = `media`.`id`
 JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
@@ -1427,7 +1427,7 @@ WHERE `item_item_set`.`item_set_id` = :item_set_id
     AND `media`.`item_id` IN (:item_ids)
     AND (`resource`.`is_public` = 1 $orWhereUser)
 ON DUPLICATE KEY UPDATE
-    `status` = :status,
+    `level` = :level,
     `embargo_start` = :embargo_start,
     `embargo_end` = :embargo_end
 ;

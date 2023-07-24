@@ -13,7 +13,7 @@ class AccessResourceRequestFormFactory implements FactoryInterface
         $plugins = $services->get('ControllerPluginManager');
         return new AccessResourceRequestForm(
             $plugins->get('api'),
-            $plugins->get('accessStatus'),
+            $plugins->get('accessLevel'),
             $services->get('FormElementManager')
         );
     }

@@ -2,10 +2,9 @@
 
 namespace AccessResource\View\Helper;
 
-use AccessResource\ACCESS_STATUS_RESERVED;
-
+use AccessResource\Entity\AccessStatus;
 use AccessResource\Form\AccessRequestForm;
-use AccessResource\Mvc\Controller\Plugin\AccessStatus;
+use AccessResource\Mvc\Controller\Plugin\AccessLevel;
 use Laminas\Form\FormElementManager;
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Mvc\Controller\Plugin\Api;
@@ -18,9 +17,9 @@ class AccessResourceRequestForm extends AbstractHelper
     protected $api;
 
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus
+     * @var \AccessResource\Mvc\Controller\Plugin\AccessLevel
      */
-    protected $accessStatus;
+    protected $accessLevel;
 
     /**
      * @var \Laminas\Form\FormElementManager;
@@ -42,10 +41,10 @@ class AccessResourceRequestForm extends AbstractHelper
      */
     protected $inaccessibleReservedResources;
 
-    public function __construct(Api $api, AccessStatus $accessStatus, FormElementManager $formElementManager)
+    public function __construct(Api $api, AccessLevel $accessLevel, FormElementManager $formElementManager)
     {
         $this->api = $api;
-        $this->accessStatus = $accessStatus;
+        $this->accessLevel = $accessLevel;
         $this->formElementManager = $formElementManager;
     }
 
@@ -108,7 +107,7 @@ class AccessResourceRequestForm extends AbstractHelper
         $reserveds = [];
         /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource */
         foreach ($this->getResources() as $resource) {
-            if ($this->accessStatus->__invoke($resource) === ACCESS_STATUS_RESERVED) {
+            if ($this->accessLevel->__invoke($resource) === AccessStatus::RESERVED) {
                 $reserveds[] = $resource;
             }
         }

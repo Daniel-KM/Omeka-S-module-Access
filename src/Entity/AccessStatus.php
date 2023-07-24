@@ -9,7 +9,7 @@ use Omeka\Entity\Resource;
 /**
  * Access status of resources.
  *
- * To store all statuses (free, reserved, protected, forbidden) for all selected
+ * To store all levels (free, reserved, protected, forbidden) for all selected
  * resources (item sets, items and media), and not only "reserved", allows to
  * get it directly for any mode and any param (with or without item/media…) and
  * without php processing.
@@ -18,7 +18,7 @@ use Omeka\Entity\Resource;
  * @Table(
  *      indexes={
  *          @Index(
- *              columns={"status"}
+ *              columns={"level"}
  *          )
  *      }
  * )
@@ -26,7 +26,7 @@ use Omeka\Entity\Resource;
 class AccessStatus extends AbstractEntity
 {
     /**#@+
-     * Access statuses.
+     * Access levels.
      *
      * A resource can have four statuses from the most open to the most close.
      *
@@ -60,15 +60,13 @@ class AccessStatus extends AbstractEntity
     protected $id;
 
     /**
-     * @ŧodo There is no tinyint in doctrine.
-     *
      * @Column(
      *     type="string",
      *     length=15,
      *     nullable=false
      * )
      */
-    protected $status;
+    protected $level;
 
     /**
      * The embargo starts at this date.
@@ -110,15 +108,15 @@ class AccessStatus extends AbstractEntity
         return $this->id->getId();
     }
 
-    public function setStatus(string $status): self
+    public function setLevel(string $level): self
     {
-        $this->status = $status;
+        $this->level = $level;
         return $this;
     }
 
-    public function getStatus(): string
+    public function getLevel(): string
     {
-        return $this->status;
+        return $this->level;
     }
 
     public function setEmbargoStart(?DateTime $embargoStart): self

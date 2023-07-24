@@ -19,15 +19,12 @@ class AccessStatus extends AbstractPlugin
     }
 
     /**
-     * Get access status of a resource (free, reserved, protected or forbidden).
-     *
-     * The access status is independant from the visibility public or private.
-     * The default status is free.
+     * Get access status entity of a resource.
      */
-    public function __invoke($resource): string
+    public function __invoke($resource): ?EntityAccessStatus
     {
         if (!$resource) {
-            return EntityAccessStatus::FREE;
+            return null;
         } elseif ($resource instanceof \Omeka\Api\Representation\AbstractResourceEntityRepresentation) {
             $resourceId = (int) $resource->id();
         } elseif ($resource instanceof \Omeka\Entity\Resource) {
@@ -37,12 +34,8 @@ class AccessStatus extends AbstractPlugin
         } elseif (is_array($resource) && !empty($resource['o:id'])) {
             $resourceId = (int) $resource['o:id'];
         } else {
-            return EntityAccessStatus::FREE;
+            return null;
         }
-        /** @var \AccessResource\Entity\AccessStatus $status */
-        $status = $this->entityManager->find(EntityAccessStatus::class, $resourceId);
-        return $status
-            ? $status->getStatus()
-            : EntityAccessStatus::FREE;
+        return $this->entityManager->find(EntityAccessStatus::class, $resourceId);
     }
 }

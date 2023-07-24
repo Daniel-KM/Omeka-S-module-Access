@@ -11,7 +11,7 @@ class BatchEditFieldset extends Fieldset
 {
     protected $fullAccess = false;
     protected $resourceType = null;
-    protected $accessViaProperty = false;
+    protected $levelViaProperty = false;
     protected $embargoViaProperty = false;
 
     public function __construct($name = null, array $options = [])
@@ -23,8 +23,8 @@ class BatchEditFieldset extends Fieldset
         if (isset($options['resource_type'])) {
             $this->resourceType = (string) $options['resource_type'];
         }
-        if (isset($options['access_via_property'])) {
-            $this->accessViaProperty = (bool) $options['access_via_property'];
+        if (isset($options['level_via_property'])) {
+            $this->levelViaProperty = (bool) $options['level_via_property'];
         }
         if (isset($options['embargo_via_property'])) {
             $this->embargoViaProperty = (bool) $options['embargo_via_property'];
@@ -62,36 +62,18 @@ class BatchEditFieldset extends Fieldset
             ])
 
             ->add([
-                'name' => 'o-access:status',
+                'name' => 'o-access:level',
                 'type' => AccessResourceElement\OptionalRadio::class,
                 'options' => [
-                    'label' => 'New status', // @translate
+                    'label' => 'New level', // @translate
                     'value_options' => [
                         '' => 'No change', // @translate
                     ] + $valueOptions,
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_o_access_status',
+                    'id' => 'accessresource_o_access_level',
                     'class' => 'accessresource',
-                    'disabled' => $this->accessViaProperty ? 'disabled' : false,
-                    // This attribute is required to make "batch edit all" working.
-                    'data-collection-action' => 'replace',
-                ],
-            ])
-
-            ->add([
-                'name' => 'o-access:status',
-                'type' => AccessResourceElement\OptionalRadio::class,
-                'options' => [
-                    'label' => 'New status', // @translate
-                    'value_options' => [
-                        '' => 'No change', // @translate
-                    ] + $valueOptions,
-                ],
-                'attributes' => [
-                    'id' => 'accessresource_o_access_status',
-                    'class' => 'accessresource',
-                    'disabled' => $this->accessViaProperty ? 'disabled' : false,
+                    'disabled' => $this->levelViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -195,7 +177,7 @@ class BatchEditFieldset extends Fieldset
             ])
         ;
 
-        if (!($this->accessViaProperty && $this->embargoViaProperty)
+        if (!($this->levelViaProperty && $this->embargoViaProperty)
             && in_array($this->resourceType, ['itemSet', 'item'])
         ) {
             $this
@@ -210,7 +192,7 @@ class BatchEditFieldset extends Fieldset
                     'attributes' => [
                         'id' => 'access_recursive',
                         'class' => 'accessresource',
-                        'disabled' => $this->accessViaProperty ? 'disabled' : false,
+                        'disabled' => $this->levelViaProperty ? 'disabled' : false,
                         // This attribute is required to make "batch edit all" working.
                         'data-collection-action' => 'replace',
                     ],

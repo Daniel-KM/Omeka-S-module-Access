@@ -4,6 +4,7 @@ namespace AccessResource\Mvc\Controller\Plugin;
 
 use AccessResource\Entity\AccessResource;
 use AccessResource\Entity\AccessStatus;
+use AccessResource\Mvc\Controller\Plugin\AccessStatus as AccessStatusPlugin;
 use Doctrine\ORM\EntityManager;
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Http\PhpEnvironment\RemoteAddress;
@@ -27,9 +28,9 @@ class IsAllowedMediaContent extends AbstractPlugin
     protected $userIsAllowed;
 
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\AccessStatusForResource
+     * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus
      */
-    protected $accessStatusForResource;
+    protected $accessStatus;
 
     /**
      * @var \AccessResource\Mvc\Controller\Plugin\IsExternalUser
@@ -54,7 +55,7 @@ class IsAllowedMediaContent extends AbstractPlugin
     public function __construct(
         EntityManager $entityManager,
         UserIsAllowed $userIsAllowed,
-        AccessStatusForResource $accessStatusForResource,
+        AccessStatusPlugin $accessStatus,
         IsExternalUser $isExternalUser,
         AuthenticationService $authenticationService,
         Settings $settings,
@@ -62,7 +63,7 @@ class IsAllowedMediaContent extends AbstractPlugin
     ) {
         $this->entityManager = $entityManager;
         $this->userIsAllowed = $userIsAllowed;
-        $this->accessStatusForResource = $accessStatusForResource;
+        $this->accessStatus = $accessStatus;
         $this->isExternalUser = $isExternalUser;
         $this->authenticationService = $authenticationService;
         $this->settings = $settings;
@@ -72,7 +73,7 @@ class IsAllowedMediaContent extends AbstractPlugin
     /**
      * Check if access to media content is allowed for the current user.
      *
-     * The check is done on status and embargo.
+     * The check is done on level and embargo.
      *
      * Accessibility and visibility are decorrelated, so, for example, a visitor
      * cannot see a private media or a public media with restricted content.
@@ -102,13 +103,13 @@ class IsAllowedMediaContent extends AbstractPlugin
         }
 
         /** @var \AccessResource\Entity\AccessStatus $accessStatus */
-        $accessStatus = $this->accessStatusForResource->__invoke($media);
+        $accessStatus = $this->accessStatus->__invoke($media);
         if (!$accessStatus) {
             return true;
         }
 
-        $status = $accessStatus->status();
-        if ($status === AccessStatus::FORBIDDEN) {
+        $level = $accessStatus->getLevel();
+        if ($level === AccessStatus::FORBIDDEN) {
             return false;
         }
 
@@ -117,7 +118,7 @@ class IsAllowedMediaContent extends AbstractPlugin
             return false;
         }
 
-        if ($status === AccessStatus::FREE) {
+        if ($level === AccessStatus::FREE) {
             return true;
         }
 

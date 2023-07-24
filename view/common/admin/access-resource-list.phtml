@@ -13,9 +13,9 @@ $assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
 $hyperlink = $plugins->get('hyperlink');
 $urlHelper = $plugins->get('url');
-$accessStatus = $plugins->get('accessStatus');
+$accessLevel = $plugins->get('accessLevel');
 
-$resourceAccessStatus = $accessStatus($resource);
+$level = $accessLevel($resource);
 
 $this->headLink()
     ->appendStylesheet($assetUrl('css/access-resource-admin.css', 'AccessResource'));
@@ -142,19 +142,19 @@ $this->headScript()
     <div>
         <h4><?= $translate('Add an access') ?></h4>
 
-     <?php if ($resourceAccessStatus ===  'free'): ?>
+     <?php if ($level ===  'free'): ?>
 
         <div class="no-resources">
             <p><?= $translate('Free access'); ?></p>
         </div>
 
-    <?php elseif ($resourceAccessStatus ===  'forbidden'): ?>
+    <?php elseif ($level ===  'forbidden'): ?>
 
         <div class="no-resources">
             <p><?= $translate('Forbidden access'); ?></p>
         </div>
 
-    <?php // Manage access to reserved resource (resources with other statuses cannot be requested). ?>
+    <?php // Manage access to reserved resource (resources with other levels cannot be requested). ?>
     <?php else: ?>
 
         <form action="<?= $this->url("admin/access-resource/default", [

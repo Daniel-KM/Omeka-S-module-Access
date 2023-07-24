@@ -140,7 +140,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         }
 
         if (isset($data['o:status']) && !$data['o:status'] === '' && is_string($data['o:status'])) {
-            $entity->setStatus($data['o:status']);
+            $entity->setLevel($data['o:status']);
         }
 
         $this->updateTimestamps($request, $entity);

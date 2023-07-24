@@ -6,7 +6,7 @@ use AccessResource\Entity\AccessStatus;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 
-class AccessStatusForResource extends AbstractPlugin
+class AccessLevel extends AbstractPlugin
 {
     /**
      * @var \Doctrine\ORM\EntityManager
@@ -19,12 +19,15 @@ class AccessStatusForResource extends AbstractPlugin
     }
 
     /**
-     * Get access status entity of a resource.
+     * Get access level of a resource (free, reserved, protected or forbidden).
+     *
+     * The access level is independant from the visibility public or private.
+     * The default level is free.
      */
-    public function __invoke($resource): ?AccessStatus
+    public function __invoke($resource): string
     {
         if (!$resource) {
-            return null;
+            return AccessStatus::FREE;
         } elseif ($resource instanceof \Omeka\Api\Representation\AbstractResourceEntityRepresentation) {
             $resourceId = (int) $resource->id();
         } elseif ($resource instanceof \Omeka\Entity\Resource) {
@@ -34,8 +37,12 @@ class AccessStatusForResource extends AbstractPlugin
         } elseif (is_array($resource) && !empty($resource['o:id'])) {
             $resourceId = (int) $resource['o:id'];
         } else {
-            return null;
+            return AccessStatus::FREE;
         }
-        return $this->entityManager->find(AccessStatus::class, $resourceId);
+        /** @var \AccessResource\Entity\AccessStatus $accessStatus */
+        $accessStatus = $this->entityManager->find(AccessStatus::class, $resourceId);
+        return $accessStatus
+            ? $accessStatus->getLevel()
+            : AccessStatus::FREE;
     }
 }

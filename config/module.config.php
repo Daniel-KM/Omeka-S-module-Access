@@ -36,8 +36,7 @@ return [
     'view_helpers' => [
         'factories' => [
             'accessResourceRequestForm' => Service\ViewHelper\AccessResourceRequestFormFactory::class,
-            'accessStatus' => Service\ViewHelper\AccessStatusFactory::class,
-            'accessStatusItemMedia' => Service\ViewHelper\AccessStatusItemMediaFactory::class,
+            'accessLevel' => Service\ViewHelper\AccessLevelFactory::class,
             'isUnderEmbargo' => Service\ViewHelper\IsUnderEmbargoFactory::class,
         ],
     ],
@@ -69,8 +68,8 @@ return [
     'controller_plugins' => [
         'factories' => [
             'accessEmbargo' => Service\ControllerPlugin\AccessEmbargoFactory::class,
+            'accessLevel' => Service\ControllerPlugin\AccessLevelFactory::class,
             'accessStatus' => Service\ControllerPlugin\AccessStatusFactory::class,
-            'accessStatusForResource' => Service\ControllerPlugin\AccessStatusForResourceFactory::class,
             'isAllowedMediaContent' => Service\ControllerPlugin\IsAllowedMediaContentFactory::class,
             'isExternalUser' => Service\ControllerPlugin\IsExternalUserFactory::class,
             'isUnderEmbargo' => Service\ControllerPlugin\IsUnderEmbargoFactory::class,
@@ -268,9 +267,9 @@ return [
                 'guest',
             ],
 
-            'accessresource_access_via_property' => false,
-            'accessresource_access_property' => null,
-            'accessresource_access_property_statuses' => [
+            'accessresource_level_via_property' => false,
+            'accessresource_level_property' => null,
+            'accessresource_level_property_levels' => [
                 AccessStatus::FREE => 'free',
                 AccessStatus::RESERVED => 'reserved',
                 AccessStatus::PROTECTED => 'protected',

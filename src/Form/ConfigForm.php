@@ -56,13 +56,13 @@ class ConfigForm extends Form
             ])
 
             ->add([
-                'name' => 'accessresource_access_via_property',
+                'name' => 'accessresource_level_via_property',
                 'type' => Element\Radio::class,
                 'options' => [
                     'label' => 'Set access via property', // @translate
                     'value_options' => [
                         '' => 'Do not use property', // @translate
-                        'status' => 'Access via property with mode "status" (four possible values)', // @translate
+                        'level' => 'Access via property with mode "level" (four possible values)', // @translate
                         // 'reserved' => 'Access via property with mode "reserved" (presence or not of a value)', // @translate
                         // 'protected' => 'Access via property with mode "protected" (presence or not of a value)', // @translate
                     ],
@@ -71,13 +71,13 @@ class ConfigForm extends Form
                     ],
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_access_via_property',
+                    'id' => 'accessresource_level_via_property',
                     'required' => false,
                     'style' => 'display: inline-block;',
                 ],
             ])
             ->add([
-                'name' => 'accessresource_access_property',
+                'name' => 'accessresource_level_property',
                 'type' => OmekaElement\PropertySelect::class,
                 'options' => [
                     'label' => 'Set property when access uses property', // @translate
@@ -85,37 +85,27 @@ class ConfigForm extends Form
                     'empty_option' => '',
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_access_property',
+                    'id' => 'accessresource_level_property',
                     'class' => 'chosen-select',
                     'multiple' => false,
                     'data-placeholder' => 'Select property…', // @translate
                 ],
             ])
             ->add([
-                'name' => 'accessresource_access_property_statuses',
+                'name' => 'accessresource_level_property_levels',
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
-                    'label' => 'Labels for the four statuses for mode property/status', // @translate
+                    'label' => 'Labels for the four levels for mode property/level', // @translate
                     'as_key_value' => true,
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_access_property_statuses',
+                    'id' => 'accessresource_level_property_levels',
                     'rows' => 4,
                     'placeholder' => 'free = free
 reserved = reserved
 protected = protected
 forbidden = forbidden
 ',
-                ],
-            ])
-            ->add([
-                'name' => 'accessresource_hide_in_advanced_tab',
-                'type' => Element\Checkbox::class,
-                'options' => [
-                    'label' => 'Hide the access status in advanced tab of resource form when mode is property', // @translate
-                ],
-                'attributes' => [
-                    'id' => 'accessresource_hide_in_advanced_tab',
                 ],
             ])
 
@@ -172,6 +162,17 @@ forbidden = forbidden
             ])
 
             ->add([
+                'name' => 'accessresource_hide_in_advanced_tab',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Hide the access status in advanced tab of resource form properties are used', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_hide_in_advanced_tab',
+                ],
+            ])
+
+            ->add([
                 'name' => 'accessresource_ip_item_sets',
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
@@ -189,13 +190,13 @@ forbidden = forbidden
             ])
         ;
 
-        // Process indexation of missing access status for items and medias.
+        // Process indexation of missing access levels for items and medias.
         $this
             ->add([
                 'name' => 'fieldset_index',
                 'type' => Fieldset::class,
                 'options' => [
-                    'label' => 'Update accesses status and visibility of all resources', // @translate
+                    'label' => 'Create missing access status of all resources', // @translate
                 ],
             ]);
 
@@ -208,13 +209,13 @@ forbidden = forbidden
                     'label' => 'Fill missing statuses', // @translate
                     'value_options' => [
                         'skip' => 'Skip', // @translate
-                        'free' => 'Set access status free for all resources without status', // @translate
-                        'reserved' => 'Set access status reserved for all resources without status', // @translate
-                        'protected' => 'Set access status protected for all resources without status', // @translate
-                        'forbidden' => 'Set access status forbidden for all resources without status', // @translate
-                        'visibility_reserved' => 'Set access status free when public and reserved when private', // @translate
-                        'visibility_protected' => 'Set access status free when public and protected when private', // @translate
-                        'visibility_forbidden' => 'Set access status free when public and forbidden when private', // @translate
+                        'free' => 'Set access level free for all resources without status', // @translate
+                        'reserved' => 'Set access level reserved for all resources without status', // @translate
+                        'protected' => 'Set access level protected for all resources without status', // @translate
+                        'forbidden' => 'Set access level forbidden for all resources without status', // @translate
+                        'visibility_reserved' => 'Set access level free when public and reserved when private', // @translate
+                        'visibility_protected' => 'Set access level free when public and protected when private', // @translate
+                        'visibility_forbidden' => 'Set access level free when public and forbidden when private', // @translate
                     ],
                 ],
                 'attributes' => [
@@ -244,11 +245,11 @@ forbidden = forbidden
                 'required' => false,
             ])
             ->add([
-                'name' => 'accessresource_access_via_property',
+                'name' => 'accessresource_level_via_property',
                 'required' => false,
             ])
             ->add([
-                'name' => 'accessresource_access_property',
+                'name' => 'accessresource_level_property',
                 'required' => false,
             ])
             ->add([

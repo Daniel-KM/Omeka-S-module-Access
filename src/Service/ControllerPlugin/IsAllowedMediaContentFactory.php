@@ -17,7 +17,7 @@ class IsAllowedMediaContentFactory implements FactoryInterface
         return new IsAllowedMediaContent(
             $services->get('Omeka\EntityManager'),
             $plugins->get('userIsAllowed'),
-            $plugins->get('accessStatusForResource'),
+            $plugins->get('accessStatus'),
             $plugins->get('isExternalUser'),
             $services->get('Omeka\AuthenticationService'),
             $services->get('Omeka\Settings'),

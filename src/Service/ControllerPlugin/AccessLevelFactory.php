@@ -2,15 +2,15 @@
 
 namespace AccessResource\Service\ControllerPlugin;
 
-use AccessResource\Mvc\Controller\Plugin\AccessStatusForResource;
+use AccessResource\Mvc\Controller\Plugin\AccessLevel;
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
-class AccessStatusForResourceFactory implements FactoryInterface
+class AccessLevelFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $services, $requestedName, array $options = null)
     {
-        return new AccessStatusForResource(
+        return new AccessLevel(
             $services->get('Omeka\EntityManager')
         );
     }
