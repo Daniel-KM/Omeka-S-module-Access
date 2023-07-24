@@ -759,7 +759,7 @@ msgstr ""
 #: data/scripts/upgrade.php:154
 msgid ""
 "Warning: if you use specific properties (not \"curation:reserved\", "
-"\"curation:dateStart\", \"curation:dateEnd\"), you need to update the table "
+"\"curation:start\", \"curation:end\"), you need to update the table "
 "\"access_reserved\"."
 msgstr ""
 

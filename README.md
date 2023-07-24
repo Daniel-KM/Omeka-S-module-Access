@@ -290,8 +290,8 @@ visible for public and restricted resources.
 An option in the config can be used to use it with or without the restricted
 access.
 
-To create an embargo on a file, simply set the dates in `curation:dateStart`
-and/or `curation:dateEnd`.
+To create an embargo on a file, simply set the dates in `curation:start`
+and/or `curation:end`.
 
 It is recommended to use the datatype "numeric timestamp" from the module [Numeric Datatypes],
 but a literal is fine. The date must be an iso one (`2022-03-14`). A time can be

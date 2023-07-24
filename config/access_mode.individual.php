@@ -9,5 +9,5 @@ const ACCESS_VIA_PROPERTY = false;
 const PROPERTY_STATUS = null;
 const PROPERTY_RESERVED = null;
 
-const PROPERTY_EMBARGO_START = 'curation:dateStart';
-const PROPERTY_EMBARGO_END = 'curation:dateEnd';
+const PROPERTY_EMBARGO_START = 'curation:start';
+const PROPERTY_EMBARGO_END = 'curation:end';
