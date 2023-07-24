@@ -46,22 +46,16 @@ class Module extends AbstractModule
     protected function postInstall(): void
     {
         $services = $this->getServiceLocator();
-
         $translator = $services->get('MvcTranslator');
-        $message = new \Omeka\Stdlib\Message(
-            $translator->translate('To control access to files, you must add a rule in file .htaccess at the root of Omeka. See %sreadme%s.'), // @translate
-            '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource" target="_blank">', '</a>'
-        );
-        $message->setEscapeHtml(false);
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
+
+        // Don't add the job to update initial status: use config form.
+        $message = new \Omeka\Stdlib\Message(
+            $translator->translate('It is recommenced to run the job in config form to initialize all access statuses.') // @translate
+        );
         $messenger->addWarning($message);
 
-        // This is a quick job, so make it synchronous.
-        $services->get(\Omeka\Job\Dispatcher::class)->dispatch(
-            \AccessResource\Job\AccessStatusUpdate::class,
-            ['missing' => AccessStatus::FREE],
-            $services->get('Omeka\Job\DispatchStrategy\Synchronous')
-        );
+        $this->warnConfig();
     }
 
     public function onBootstrap(MvcEvent $event): void
@@ -301,6 +295,8 @@ class Module extends AbstractModule
 
     public function getConfigForm(PhpRenderer $renderer)
     {
+        $this->warnConfig();
+
         $renderer->headScript()
             ->appendFile($renderer->assetUrl('js/access-resource-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
         return '<style>fieldset[name=fieldset_index] .inputs label {display: block;}</style>'
@@ -309,6 +305,8 @@ class Module extends AbstractModule
 
     public function handleConfigForm(AbstractController $controller)
     {
+        $this->warnConfig();
+
         $result = parent::handleConfigForm($controller);
         if (!$result) {
             return false;
@@ -1200,6 +1198,24 @@ HTML;
                 'required' => false,
             ])
         ;
+    }
+
+    protected function warnConfig(): void
+    {
+        $htaccess = file_get_contents(OMEKA_PATH . '/.htaccess');
+        if (strpos($htaccess, '/access/')) {
+            return;
+        }
+
+        $services = $this->getServiceLocator();
+        $translator = $services->get('MvcTranslator');
+        $message = new \Omeka\Stdlib\Message(
+            $translator->translate('To control access to files, you must add a rule in file .htaccess at the root of Omeka. See %1$sreadme%2$s.'), // @translate
+            '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource" target="_blank">', '</a>'
+        );
+        $message->setEscapeHtml(false);
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+        $messenger->addError($message);
     }
 
     protected function processUpdateMissingStatus(array $vars): void
