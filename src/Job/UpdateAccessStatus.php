@@ -126,9 +126,13 @@ class UpdateAccessStatus extends AbstractJob
 
         $missingModes = [
             'skip',
+            'free',
             'reserved',
             'protected',
             'forbidden',
+            'visibility_reserved',
+            'visibility_protected',
+            'visibility_forbidden',
         ];
         $this->missingMode = $this->getArg('missing');
         if (!in_array($this->missingMode, $missingModes)) {
@@ -162,7 +166,19 @@ class UpdateAccessStatus extends AbstractJob
 
     protected function updateViaVisibility(): bool
     {
-        $sql = <<<SQL
+        if (in_array($this->missingMode, ['free', 'reserved', 'protected', 'forbidden'])) {
+            $sql = <<<SQL
+# Set the specified status for all missing resources.
+INSERT INTO `access_status` (`id`, `status`, `start_date`, `end_date`)
+SELECT `id`, {$this->missingMode}, NULL, NULL
+FROM `resource`
+ON DUPLICATE KEY UPDATE
+   `id` = `resource`.`id`
+;
+SQL;
+        } else {
+            $mode = substr($this->missingMode, 11);
+            $sql = <<<SQL
 # Set free all missing public resources.
 INSERT INTO `access_status` (`id`, `status`, `start_date`, `end_date`)
 SELECT `id`, "free", NULL, NULL
@@ -173,7 +189,7 @@ ON DUPLICATE KEY UPDATE
 ;
 # Set reserved/protected/forbidden all missing private resources.
 INSERT INTO `access_status` (`id`, `status`, `start_date`, `end_date`)
-SELECT `id`, "{$this->missingMode}", NULL, NULL
+SELECT `id`, "$mode", NULL, NULL
 FROM `resource`
 WHERE `is_public` = 0
 ON DUPLICATE KEY UPDATE
@@ -181,6 +197,7 @@ ON DUPLICATE KEY UPDATE
 ;
 
 SQL;
+        }
 
         $this->connection->executeStatement($sql);
 
@@ -222,6 +239,12 @@ SQL;
         $quotedListString = implode(', ', $quotedList);
 
         // Insert missing access according to property values.
+        if (in_array($this->missingMode, ['free', 'reserved', 'protected', 'forbidden'])) {
+            $subSql = "'$this->missingMode'";
+        } else {
+            $mode = substr($this->missingMode, 11);
+            $subSql = "IF(`resource`.`is_public` = 1, 'free', '$mode')";
+        }
 
         $sql = <<<SQL
 # Set access statuses according to values.
@@ -233,7 +256,7 @@ SELECT
         WHEN {$quotedList['reserved']} THEN 'reserved'
         WHEN {$quotedList['protected']} THEN 'protected'
         WHEN {$quotedList['forbidden']} THEN 'forbidden'
-        ELSE '{$this->missingMode}'
+        ELSE $subSql
     END),
     NULL,
     NULL

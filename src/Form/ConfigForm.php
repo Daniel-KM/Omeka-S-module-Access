@@ -173,9 +173,13 @@ forbidden = forbidden
                     'label' => 'Fill missing statuses', // @translate
                     'value_options' => [
                         'skip' => 'Skip', // @translate
-                        'reserved' => 'Set access status free when public and reserved when private', // @translate
-                        'protected' => 'Set access status free when public and protected when private', // @translate
-                        'forbidden' => 'Set access status free when public and forbidden when private', // @translate
+                        'free' => 'Set access status free for all resources without status', // @translate
+                        'reserved' => 'Set access status reserved for all resources without status', // @translate
+                        'protected' => 'Set access status protected for all resources without status', // @translate
+                        'forbidden' => 'Set access status forbidden for all resources without status', // @translate
+                        'visibility_reserved' => 'Set access status free when public and reserved when private', // @translate
+                        'visibility_protected' => 'Set access status free when public and protected when private', // @translate
+                        'visibility_forbidden' => 'Set access status free when public and forbidden when private', // @translate
                     ],
                 ],
                 'attributes' => [
