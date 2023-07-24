@@ -43,6 +43,21 @@ class Module extends AbstractModule
         $message->setEscapeHtml(false);
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
         $messenger->addWarning($message);
+
+        // Fill the table with data in private/public.
+        $sql = <<<SQL
+INSERT INTO `access_status` (`id`, `status`, `start_date`, `end_date`)
+SELECT `id`, "free", NULL, NULL
+FROM `resource`
+WHERE `is_public` = 1;
+
+INSERT INTO `access_status` (`id`, `status`, `start_date`, `end_date`)
+SELECT `id`, "forbidden", NULL, NULL
+FROM `resource`
+WHERE `is_public` = 0;
+SQL;
+        $connection = $services->get('Omeka\Connection');
+        $connection->executeStatement($sql);
     }
 
     public function onBootstrap(MvcEvent $event): void
