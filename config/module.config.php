@@ -247,6 +247,13 @@ return [
             ],
         ],
     ],
+    'column_types' => [
+        'invokables' => [
+            'accessLevel' => ColumnType\AccessLevel::class,
+            'embargoDate' => ColumnType\EmbargoDate::class,
+            'isUnderEmbargo' => ColumnType\IsUnderEmbargo::class,
+        ],
+    ],
     'translator' => [
         'translation_file_patterns' => [
             [
