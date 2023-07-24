@@ -6,7 +6,7 @@ use const AccessResource\ACCESS_STATUS_FREE;
 use const AccessResource\ACCESS_STATUS_RESERVED;
 use const AccessResource\ACCESS_STATUS_FORBIDDEN;
 
-// use AccessResource\Entity\AccessReserved;
+use AccessResource\Entity\AccessStatus as EntityAccessStatus;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Omeka\Entity\Resource;

@@ -11,7 +11,7 @@ if (ACCESS_MODE === ACCESS_MODE_INDIVIDUAL) {
 
 return [
     'entity_manager' => [
-        // Only for AccessReserved.
+        // Only for AccessStatus.
         'mapping_classes_paths' => [
             dirname(__DIR__) . '/src/Entity',
         ],

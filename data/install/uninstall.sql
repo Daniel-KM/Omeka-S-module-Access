@@ -3,4 +3,5 @@ DROP TABLE IF EXISTS `access_log`;
 DROP TABLE IF EXISTS `access_request`;
 DROP TABLE IF EXISTS `access_resource`;
 DROP TABLE IF EXISTS `access_reserved`;
+DROP TABLE IF EXISTS `access_status`;
 SET FOREIGN_KEY_CHECKS=1;

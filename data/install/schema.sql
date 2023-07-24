@@ -21,13 +21,6 @@ CREATE TABLE `access_log` (
     PRIMARY KEY(`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
 
-CREATE TABLE `access_reserved` (
-    `id` INT NOT NULL,
-    `start_date` DATETIME DEFAULT NULL,
-    `end_date` DATETIME DEFAULT NULL,
-    PRIMARY KEY(`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
-
 CREATE TABLE `access_resource` (
     `id` INT AUTO_INCREMENT NOT NULL,
     `resource_id` INT NOT NULL,
@@ -41,6 +34,15 @@ CREATE TABLE `access_resource` (
     `modified` DATETIME DEFAULT NULL,
     INDEX IDX_D184352789329D25 (`resource_id`),
     INDEX IDX_D1843527A76ED395 (`user_id`),
+    PRIMARY KEY(`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
+
+CREATE TABLE `access_status` (
+    `id` INT NOT NULL,
+    `status` VARCHAR(15) NOT NULL,
+    `start_date` DATETIME DEFAULT NULL,
+    `end_date` DATETIME DEFAULT NULL,
+    INDEX IDX_898BF02E7B00651C (`status`),
     PRIMARY KEY(`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
 

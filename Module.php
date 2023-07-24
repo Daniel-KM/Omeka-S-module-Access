@@ -12,6 +12,7 @@ const ACCESS_MODE_GLOBAL = 'global';
 const ACCESS_MODE_IP = 'ip';
 const ACCESS_MODE_INDIVIDUAL = 'individual';
 
+// Like \AccessResource\Entity\AccessStatus.
 const ACCESS_STATUS_FREE = 'free';
 const ACCESS_STATUS_RESERVED = 'reserved';
 const ACCESS_STATUS_FORBIDDEN = 'forbidden';
@@ -22,7 +23,7 @@ use const AccessResource\ACCESS_VIA_PROPERTY;
 use const AccessResource\PROPERTY_STATUS;
 use const AccessResource\PROPERTY_RESERVED;
 
-use AccessResource\Entity\AccessReserved;
+use AccessResource\Entity\AccessStatus;
 use AccessResource\Form\Admin\BatchEditFieldset;
 use Doctrine\DBAL\ParameterType;
 use Generic\AbstractModule;
@@ -214,17 +215,17 @@ class Module extends AbstractModule
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\ItemAdapter',
             'api.hydrate.pre',
-            [$this, 'updateAccessReserved']
+            [$this, 'updateAccessStatus']
         );
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\MediaAdapter',
             'api.hydrate.pre',
-            [$this, 'updateAccessReserved']
+            [$this, 'updateAccessStatus']
         );
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\ItemSetAdapter',
             'api.hydrate.pre',
-            [$this, 'updateAccessReserved']
+            [$this, 'updateAccessStatus']
         );
 
         // Attach tab to Item and Media resource.
@@ -546,7 +547,7 @@ class Module extends AbstractModule
     }
 
     /**
-     * Logic for media filter.
+     * Logic for media search filter.
      */
     public function filterMedia(Event $event): void
     {
@@ -596,11 +597,12 @@ class Module extends AbstractModule
             // Users can view records of all resources with access reserved.
             // Only files are protected (via htaccess).
             $qbs = $em->createQueryBuilder();
-            $accessReservedAlias = $adapter->createAlias();
+            $accessStatusAlias = $adapter->createAlias();
             $qbs
-                ->select("$accessReservedAlias.id")
-                ->from(\AccessResource\Entity\AccessReserved::class, $accessReservedAlias)
-                ->where($expr->eq("$accessReservedAlias.id", 'omeka_root.id'));
+                ->select("$accessStatusAlias.id")
+                ->from(AccessStatus::class, $accessStatusAlias)
+                ->where($expr->eq("$accessStatusAlias.id", 'omeka_root.id'))
+                ->andWhere($expr->neq("$accessStatusAlias.status", 'forbidden'));
             $conditions[] = $expr->exists($qbs->getDQL());
         }
 
@@ -632,7 +634,10 @@ class Module extends AbstractModule
         }
     }
 
-    public function updateAccessReserved(Event $event): void
+    /**
+     * Update access status according to resource edit request.
+     */
+    public function updateAccessStatus(Event $event): void
     {
         /**
          * @var \Doctrine\ORM\EntityManager $entityManager

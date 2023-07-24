@@ -9,7 +9,7 @@ use Omeka\Job\AbstractJob;
 use Omeka\Stdlib\Message;
 
 /**
- * @todo Take care of the current status (property or AccessReserved)?
+ * @todo Take care of the current status (property or AccessStatus)?
  */
 class UpdateVisibilityForEmbargo extends AbstractJob
 {
