@@ -265,6 +265,7 @@ return [
                 'guest',
                 // 'external',
                 // 'individual',
+                // 'email',
                 // 'token',
             ],
 

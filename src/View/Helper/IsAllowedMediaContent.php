@@ -34,7 +34,8 @@ class IsAllowedMediaContent extends AbstractHelper
      * - External: authenticated externally (cas for now, ldap or sso later).
      * - Guest: guest users.
      * - Individual: users with requests and anonymous with token.
-     * - Token: user or visitor with a token.
+     * - Token: visitor with a request token.
+     * - Email: visitor identified by email with a request.
      *
      * The embargo is checked first.
      *

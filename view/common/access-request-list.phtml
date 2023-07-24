@@ -15,6 +15,8 @@ $escape = $plugins->get('escapeHtml');
 $assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
 
+$allowIndividualRequests = (bool) array_intersect(['individual', 'token', 'email'], $this->setting('accessresource_access_modes'));
+
 $this->headLink()
     ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
 $this->headScript()
@@ -48,7 +50,7 @@ $this->headScript()
         <li class="access-request value tag" data-id="<?= $accessRequest->id() ?>">
             <span><?= $accessRequest->displayRequester() ?></span>
             <span><?= $accessRequest->displayTemporal() ?></span>
-            <?php if ($allowUpdate): ?>
+            <?php if ($allowIndividualRequests && $allowUpdate): ?>
             <span class="single actions"><a href="<?= $url('admin/access-request/id', ['id' => $accessRequest->id(), 'action' => 'edit']) ?>"
                 class="o-icon-edit"
                 aria-label="<?= $escape($translate('Edit')) ?>"
@@ -59,6 +61,8 @@ $this->headScript()
                 data-status="<?= $status ?>"
                 aria-label="<?= $escape($translate('Enable of disable')) ?>"
                 title="<?= $escape($translate('Enable or disable')) ?>"></a></span>
+            <?php endif; ?>
+            <?php if ($allowUpdate): ?>
             <span class="single actions"><a href="#"
                 class="o-icon-delete"
                 data-status-toggle-url="<?= $this->url('admin/access-request/id', ['id' => $accessRequest->id(), 'action' => 'remove']) ?>"

@@ -2,10 +2,12 @@
 
 namespace AccessResource\Mvc\Controller\Plugin;
 
-use AccessResource\Entity\AccessResource;
+use AccessResource\Entity\AccessRequest;
 use AccessResource\Entity\AccessStatus;
 use AccessResource\Mvc\Controller\Plugin\AccessStatus as AccessStatusPlugin;
+// use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
+// use Doctrine\ORM\Query\Parameter;
 use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Laminas\Mvc\Controller\Plugin\Params;
@@ -85,7 +87,8 @@ class IsAllowedMediaContent extends AbstractPlugin
      * - External: authenticated externally (cas for now, ldap or sso later).
      * - Guest: guest users.
      * - Individual: users with requests and anonymous with token.
-     * - Token: user or visitor with a token.
+     * - Token: visitor with a request token.
+     * - Email: visitor identified by email with a request.
      *
      * The embargo is checked first.
      *
@@ -153,6 +156,11 @@ class IsAllowedMediaContent extends AbstractPlugin
             return true;
         }
 
+        $modeEmail = in_array('email', $modes);
+        if ($modeEmail && $this->checkEmail($media)) {
+            return true;
+        }
+
         $modeToken = in_array('token', $modes);
         if ($modeToken && $this->checkToken($media)) {
             return true;
@@ -191,13 +199,13 @@ class IsAllowedMediaContent extends AbstractPlugin
         return (bool) array_intersect($mediaItemSetIds, $itemSetIds);
     }
 
-     /**
-      * Check if the ip of the user is reserved and limited to some item sets.
-      *
-      * @return array|null Null if the user is not listed in reserved ips, else
-      *   array of item sets, that may be empty.
-      */
-     protected function reservedItemSetsForClientIp(): ?array
+    /**
+     * Check if the ip of the user is reserved and limited to some item sets.
+     *
+     * @return array|null Null if the user is not listed in reserved ips, else
+     *   array of item sets, that may be empty.
+     */
+    protected function reservedItemSetsForClientIp(): ?array
      {
          // This method is called one time for each file, but each file is
          // called by a difrerent request.
@@ -227,96 +235,272 @@ class IsAllowedMediaContent extends AbstractPlugin
          }
 
          return null;
-     }
+    }
 
-     /**
-      * Get the ip of the client (ipv4 or ipv6), or empty ip ("::").
-      */
-     protected function getClientIp(): string
-     {
-         // Use $_SERVER['REMOTE_ADDR'], the most reliable.
-         $remoteAddress = new RemoteAddress();
-         $ip = $remoteAddress->getIpAddress();
-         if (!$ip) {
-             return '::';
+    /**
+     * Get the ip of the client (ipv4 or ipv6), or empty ip ("::").
+     */
+    protected function getClientIp(): string
+    {
+        // Use $_SERVER['REMOTE_ADDR'], the most reliable.
+        $remoteAddress = new RemoteAddress();
+        $ip = $remoteAddress->getIpAddress();
+        if (!$ip) {
+            return '::';
+        }
+
+        // A proxy or a htaccess rule can return the server ip, so check it too.
+        // The server itself is a trusted proxy when used in htacess or config (see RemoteAddress::getIpAddressFromProxy()).
+        $remoteAddress
+            ->setUseProxy(true)
+            ->setTrustedProxies([$_SERVER['SERVER_ADDR']]);
+        return $remoteAddress->getIpAddress() ?: '::';
+    }
+
+    /**
+     * Check for an accepted request of the user.
+     */
+    protected function checkIndividual(MediaRepresentation $media, ?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        /** @var \AccessResource\Entity\AccessRequest $accessRequest */
+        // TODO How to query on resources with entity manager?
+        /*
+        $accessRequest = $this->entityManager
+            ->getRepository(\AccessResource\Entity\AccessRequest::class)
+            ->findOneBy([
+                'resources' => $media->id(),
+                'enabled' => true,
+                'user' => $user->getId(),
+            ]);
+        */
+
+        /*
+        $dql = <<<'DQL'
+SELECT ar
+FROM AccessResource\Entity\AccessRequest ar
+JOIN ar.resources r
+WHERE
+    ar.enabled = 1
+    AND ar.user = :user_id
+    AND r.id = :media_id
+ORDER BY ar.created DESC
+DQL;
+        $query = $this->entityManager
+            ->createQuery($dql)
+            ->setParameters(new ArrayCollection([
+                new Parameter('user_id', $user->getId(), \Doctrine\DBAL\ParameterType::INTEGER),
+                new Parameter('media_id', $media->id(), \Doctrine\DBAL\ParameterType::INTEGER),
+            ]));
+        $accessRequest = $query->getSingleResult();
+        if (!$accessRequest) {
+            return false;
+        }
+        */
+
+         $sql = <<<'SQL'
+SELECT ar.id
+FROM access_request AS ar
+JOIN access_resource AS r ON r.access_request_id = ar.id
+WHERE
+    ar.enabled = 1
+    AND ar.user_id = :user_id
+    AND r.resource_id = :media_id
+ORDER BY ar.created DESC
+SQL;
+         $bind = [
+             'user_id' => $user->getId(),
+             'media_id' => $media->id(),
+         ];
+         $types = [
+             'user_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+             'media_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+         ];
+         $accessRequestId = $this->entityManager->getConnection()
+             ->executeQuery($sql, $bind, $types)
+             ->fetchOne();
+         if (!$accessRequestId) {
+             return false;
          }
 
-         // A proxy or a htaccess rule can return the server ip, so check it too.
-         // The server itself is a trusted proxy when used in htacess or config (see RemoteAddress::getIpAddressFromProxy()).
-         $remoteAddress
-             ->setUseProxy(true)
-             ->setTrustedProxies([$_SERVER['SERVER_ADDR']]);
-         return $remoteAddress->getIpAddress() ?: '::';
-     }
+        $accessRequest = $this->entityManager->find(\AccessResource\Entity\AccessRequest::class, $accessRequestId);
+        return $this->checkAccess($accessRequest);
+    }
 
-     /**
-      * Check for a valid token for the resource.
-      */
-     protected function checkToken(MediaRepresentation $media): bool
-     {
-         $token = $this->params->fromQuery('token');
-         if (!$token) {
-             return false;
-         }
-         /** @var \AccessResource\Entity\AccessResource $accessResource */
-         $accessResource = $this->entityManager
-             ->getRepository(\AccessResource\Entity\AccessResource::class)
-             ->findOneBy([
-                 'resource' => $media->id(),
-                 'enabled' => true,
-                 'token' => $token,
-             ]);
-         if (!$accessResource) {
-             return false;
-         }
-         return $this->checkAccess($accessResource);
-     }
+    /**
+     * Check for an accepted request of the user.
+     */
+    protected function checkEmail(MediaRepresentation $media): bool
+    {
+        $email = $this->params->fromQuery('email');
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
 
-     /**
-      * Check for an accepted request of the user.
-      */
-     protected function checkIndividual(MediaRepresentation $media, ?User $user): bool
-     {
-         if (!$user) {
-             return false;
-         }
-         /** @var \AccessResource\Entity\AccessResource $accessResource */
-         $accessResource = $this->entityManager
-             ->getRepository(\AccessResource\Entity\AccessResource::class)
-             ->findOneBy([
-                 'resource' => $media->id(),
-                 'enabled' => true,
-                 'user' => $user->getId(),
-             ]);
-         if (!$accessResource) {
-             return false;
-         }
-         return $this->checkAccess($accessResource);
-     }
+        /** @var \AccessResource\Entity\AccessRequest $accessRequest */
+        // TODO How to query on resources with entity manager?
+        /*
+        $accessRequest = $this->entityManager
+            ->getRepository(\AccessResource\Entity\AccessRequest::class)
+            ->findOneBy([
+                'resources' => $media->id(),
+                'enabled' => true,
+                'email' => $email,
+            ]);
+        */
 
-     /**
-      * Check if access is time limited.
-      */
-     protected function checkAccess(AccessResource $accessResource): bool
-     {
-         if (!$accessResource->enabled()) {
-             return false;
-         }
-         if (!$accessResource->temporal()) {
-             return true;
-         }
-         $accessStartDate = $accessResource->getStartDate();
-         $accessEndDate = $accessResource->getEndDate();
-         if (!$accessStartDate && !$accessEndDate) {
-             return false;
-         }
-         $now = time();
-         if ($accessStartDate && $now <= $accessStartDate->format('U')) {
-             return false;
-         }
-         if ($accessEndDate && $now >= $accessEndDate->format('U')) {
-             return false;
-         }
-         return true;
-     }
+        /*
+        $dql = <<<DQL
+SELECT ar
+FROM AccessResource\Entity\AccessRequest ar
+JOIN ar.resources r
+WHERE
+    ar.enabled = 1
+    AND ar.email = :email
+    AND r.id = :media_id
+ORDER BY ar.created DESC
+DQL;
+        $query = $this->entityManager
+            ->createQuery($dql)
+            ->setParameters(new ArrayCollection([
+                new Parameter('email', $email, \Doctrine\DBAL\ParameterType::STRING),
+                new Parameter('media_id', $media->id(), \Doctrine\DBAL\ParameterType::INTEGER),
+            ]));
+        $accessRequest = $query->getSingleResult();
+        if (!$accessRequest) {
+            return false;
+        }
+        */
+
+        $sql = <<<'SQL'
+SELECT ar.id
+FROM access_request AS ar
+JOIN access_resource AS r ON r.access_request_id = ar.id
+WHERE
+    ar.enabled = 1
+    AND ar.email = :email
+    AND r.resource_id = :media_id
+ORDER BY ar.created DESC
+SQL;
+        $bind = [
+            'email' => $email,
+            'media_id' => $media->id(),
+        ];
+        $types = [
+            'email' => \Doctrine\DBAL\ParameterType::STRING,
+            'media_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+        ];
+        $accessRequestId = $this->entityManager->getConnection()
+            ->executeQuery($sql, $bind, $types)
+            ->fetchOne();
+        if (!$accessRequestId) {
+            return false;
+        }
+
+        $accessRequest = $this->entityManager->find(\AccessResource\Entity\AccessRequest::class, $accessRequestId);
+        return $this->checkAccess($accessRequest);
+    }
+
+    /**
+     * Check for a valid token for the resource.
+     */
+    protected function checkToken(MediaRepresentation $media): bool
+    {
+        $token = $this->params->fromQuery('token');
+        if (!$token) {
+            return false;
+        }
+
+        /** @var \AccessResource\Entity\AccessRequest $accessRequest */
+        // TODO How to query on resources with entity manager?
+        /*
+        $accessRequest = $this->entityManager
+            ->getRepository(\AccessResource\Entity\AccessRequest::class)
+            ->findOneBy([
+                'resources' => $media->id(),
+                'enabled' => true,
+                'token' => $token,
+            ]);
+        */
+
+        /*
+        $dql = <<<'DQL'
+SELECT ar
+FROM AccessResource\Entity\AccessRequest ar
+JOIN ar.resources r
+WHERE
+    ar.enabled = 1
+    AND ar.token = :token
+    AND r.id = :media_id
+ORDER BY ar.created DESC
+DQL;
+        $query = $this->entityManager
+            ->createQuery($dql)
+            ->setParameters(new ArrayCollection([
+                new Parameter('token', $token, \Doctrine\DBAL\ParameterType::STRING),
+                new Parameter('media_id', $media->id(), \Doctrine\DBAL\ParameterType::INTEGER),
+            ]));
+        $accessRequest = $query->getSingleResult();
+        if (!$accessRequest) {
+            return false;
+        }
+     */
+
+        $sql = <<<'SQL'
+SELECT ar.id
+FROM access_request AS ar
+JOIN access_resource AS r ON r.access_request_id = ar.id
+WHERE
+    ar.enabled = 1
+    AND ar.token = :token
+    AND r.resource_id = :media_id
+ORDER BY ar.created DESC
+SQL;
+        $bind = [
+            'token' => $token,
+            'media_id' => $media->id(),
+        ];
+        $types = [
+            'token' => \Doctrine\DBAL\ParameterType::STRING,
+            'media_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+        ];
+        $accessRequestId = $this->entityManager->getConnection()
+            ->executeQuery($sql, $bind, $types)
+            ->fetchOne();
+        if (!$accessRequestId) {
+            return false;
+        }
+
+        $accessRequest = $this->entityManager->find(\AccessResource\Entity\AccessRequest::class, $accessRequestId);
+        return $this->checkAccess($accessRequest);
+    }
+
+    /**
+     * Check if access is time limited.
+     */
+    protected function checkAccess(AccessRequest $accessRequest): bool
+    {
+        if (!$accessRequest->getEnabled()) {
+            return false;
+        }
+        if (!$accessRequest->getTemporal()) {
+            return true;
+        }
+        $accessStartDate = $accessRequest->getStartDate();
+        $accessEndDate = $accessRequest->getEndDate();
+        if (!$accessStartDate && !$accessEndDate) {
+            return false;
+        }
+        $now = time();
+        if ($accessStartDate && $now <= $accessStartDate->format('U')) {
+            return false;
+        }
+        if ($accessEndDate && $now >= $accessEndDate->format('U')) {
+            return false;
+        }
+        return true;
+    }
 }

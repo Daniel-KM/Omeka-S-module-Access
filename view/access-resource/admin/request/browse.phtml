@@ -8,11 +8,12 @@
 
 $plugins = $this->getHelperPluginManager();
 $url = $plugins->get('url');
-$i18n = $plugins->get('i18n');
 $escape = $plugins->get('escapeHtml');
 $assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
 $hyperlink = $plugins->get('hyperlink');
+
+$allowIndividualRequests = (bool) array_intersect(['individual', 'token', 'email'], $this->setting('accessresource_access_modes'));
 
 $this->headLink()
     ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
@@ -30,7 +31,7 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
 </div>
 
 <div id="page-actions">
-    <?php if ($this->userIsAllowed(\AccessResource\Entity\AccessRequest::class, 'create')): ?>
+    <?php if ($allowIndividualRequests && $this->userIsAllowed(\AccessResource\Entity\AccessRequest::class, 'create')): ?>
         <?= $hyperlink($translate('Add new request'), $url('admin/access-request/default', ['action' => 'add']), ['class' => 'button']) ?>
     <?php endif; ?>
 </div>
@@ -64,7 +65,7 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
                 */ ?>
                 <?= sprintf($translate('#%s'), $accessRequest->id()) ?>
                 <ul class="actions">
-                    <?php if ($accessRequest->userIsAllowed('update')): ?>
+                    <?php if ($allowIndividualRequests && $accessRequest->userIsAllowed('update')): ?>
                     <li><?= $accessRequest->link('', 'edit', [
                         'class' => 'o-icon-edit',
                         'title' => $translate('Edit'),

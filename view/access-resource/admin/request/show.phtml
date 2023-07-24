@@ -11,6 +11,8 @@ $escape = $plugins->get('escapeHtml');
 $assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
 
+$allowIndividualRequests = (bool) array_intersect(['individual', 'token', 'email'], $this->setting('accessresource_access_modes'));
+
 $this->headLink()
     ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
 $this->headScript()
@@ -22,7 +24,7 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests show');
 <?= $this->pageTitle('#' . $escape($accessRequest->id()), 1, $translate('Access requests')) ?>
 
 <div id="page-actions">
-    <?php if ($accessRequest->userIsAllowed('update')): ?>
+    <?php if ($allowIndividualRequests && $accessRequest->userIsAllowed('update')): ?>
         <a class="button" href="<?= $escape($accessRequest->url('edit')) ?>"><?= $translate('Edit access request') ?></a>
     <?php endif; ?>
 </div>

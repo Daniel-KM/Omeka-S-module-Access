@@ -42,7 +42,8 @@ class ConfigForm extends Form
                         'guest' => 'Guest: all users, included guests, have access to all reserved medias', // @translate
                         'external' => 'External: users externally authenticated (cas) have access to all reserved medias', // @translate
                         'individual' => 'Individual: users should request access to specific reserved medias', // @translate
-                        'token' => 'Token: A user or a visitor with a token have access to specific reserved medias', // @translate
+                        'email' => 'Email: A visitor identified by email should request access to specific reserved medias', // @translate
+                        'token' => 'Token: A user or visitor with a token have access to specific reserved medias', // @translate
                     ],
                     'label_attributes' => [
                         'style' => 'display: block;',

@@ -11,6 +11,8 @@ $plugins = $this->getHelperPluginManager();
 $assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
 
+$allowIndividualRequests = (bool) array_intersect(['individual', 'token', 'email'], $this->setting('accessresource_access_modes'));
+
 $level = $accessStatus ? $accessStatus->level() : 'free';
 
 if ($level !== 'free' && $level !== 'forbidden')  {
@@ -38,6 +40,12 @@ if ($level !== 'free' && $level !== 'forbidden')  {
 
         <div class="no-resources">
             <p><?= $translate('Forbidden access'); ?></p>
+        </div>
+
+    <?php elseif (!$allowIndividualRequests): ?>
+
+        <div class="no-resources">
+            <p><?= $translate("Access settings don't allow individual requests."); ?></p>
         </div>
 
     <?php // Manage access to reserved resource (resources with other levels cannot be requested). ?>
