@@ -3,12 +3,19 @@
 namespace AccessResource\Entity;
 
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
 use Omeka\Entity\AbstractEntity;
-use Omeka\Entity\Resource;
 use Omeka\Entity\User;
 
 /**
  * @Entity
+ * @Table(
+ *      indexes={
+ *          @Index(
+ *              columns={"token"}
+ *          )
+ *      }
+ * )
  */
 class AccessRequest extends AbstractEntity
 {
@@ -38,19 +45,6 @@ class AccessRequest extends AbstractEntity
     protected $id;
 
     /**
-     * @var \Omeka\Entity\Resource
-     *
-     * @ManyToOne(
-     *     targetEntity="Omeka\Entity\Resource"
-     * )
-     * @JoinColumn(
-     *     onDelete="CASCADE",
-     *     nullable=false
-     * )
-     */
-    protected $resource;
-
-    /**
      * @var \Omeka\Entity\User
      *
      * @ManyToOne(
@@ -58,10 +52,32 @@ class AccessRequest extends AbstractEntity
      * )
      * @JoinColumn(
      *     onDelete="CASCADE",
-     *     nullable=false
+     *     nullable=true
      * )
      */
     protected $user;
+
+    /**
+     * @var string
+     *
+     * @Column(
+     *     type="string",
+     *     length=190,
+     *     nullable=true
+     * )
+     */
+    protected $email;
+
+    /**
+     * @var string
+     *
+     * @Column(
+     *     type="string",
+     *     length=16,
+     *     nullable=true
+     * )
+     */
+    protected $token;
 
     /**
      * @var string
@@ -76,6 +92,60 @@ class AccessRequest extends AbstractEntity
      * )
      */
     protected $status = self::STATUS_NEW;
+
+    /**
+     * @var bool
+     *
+     * Shortcut to check if the request is accepted without checking status.
+     * For now, automatically set when updated.
+     *
+     * @Column(
+     *     type="boolean",
+     *     nullable=false,
+     *     options={
+     *         "default": false
+     *     }
+     * )
+     */
+    protected $enabled = false;
+
+    /**
+     * @var bool
+     *
+     * Shortcut to check if the request is temporal without checking dates.
+     * Require a cron task. For now, automatically set when there is a date.
+     *
+     * @Column(
+     *     type="boolean",
+     *     nullable=false,
+     *     options={
+     *         "default": false
+     *     }
+     * )
+     */
+    protected $temporal = false;
+
+    /**
+     * @var DateTime
+     *
+     * @Column(
+     *     name="`start`",
+     *     type="datetime",
+     *     nullable=true
+     * )
+     */
+    protected $start;
+
+    /**
+     * @var DateTime
+     *
+     * @Column(
+     *     name="`end`",
+     *     type="datetime",
+     *     nullable=true
+     * )
+     */
+    protected $end;
 
     /**
      * @var \DateTime
@@ -100,31 +170,65 @@ class AccessRequest extends AbstractEntity
      */
     protected $modified;
 
+    /**
+     * This relation cannot be set in the core, so it is unidirectional.
+     *
+     * @ManyToMany(
+     *     targetEntity="Omeka\Entity\Resource",
+     *     indexBy="id"
+     * )
+     * @JoinTable(
+     *     name="access_resource"
+     * )
+     */
+    protected $resources;
+
+    public function __construct()
+    {
+        $this->resources = new ArrayCollection();
+    }
+
     public function getId()
     {
         return $this->id;
     }
 
-    public function setResource(Resource $resource): self
+    public function getResources()
     {
-        $this->resource = $resource;
-        return $this;
+        return $this->resources;
     }
 
-    public function getResource(): Resource
-    {
-        return $this->resource;
-    }
-
-    public function setUser(User $user): self
+    public function setUser(?User $user): self
     {
         $this->user = $user;
         return $this;
     }
 
-    public function getUser(): User
+    public function getUser(): ?User
     {
         return $this->user;
+    }
+
+    public function setEmail(?string $email): self
+    {
+        $this->email = $email;
+        return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setToken(?string $token): self
+    {
+        $this->token = $token;
+        return $this;
+    }
+
+    public function getToken(): ?string
+    {
+        return $this->token;
     }
 
     public function setStatus(string $status): self
@@ -136,6 +240,50 @@ class AccessRequest extends AbstractEntity
     public function getStatus(): string
     {
         return $this->status;
+    }
+
+    public function setEnabled($enabled): self
+    {
+        $this->enabled = (bool) $enabled;
+        return $this;
+    }
+
+    public function getEnabled(): bool
+    {
+        return $this->enabled;
+    }
+
+    public function setTemporal($temporal): self
+    {
+        $this->temporal = (bool) $temporal;
+        return $this;
+    }
+
+    public function getTemporal(): bool
+    {
+        return $this->temporal;
+    }
+
+    public function setStart(?DateTime $start = null): self
+    {
+        $this->start = $start;
+        return $this;
+    }
+
+    public function getStart(): ?DateTime
+    {
+        return $this->start;
+    }
+
+    public function setEnd(?DateTime $end = null): self
+    {
+        $this->end = $end;
+        return $this;
+    }
+
+    public function getEnd(): ?DateTime
+    {
+        return $this->end;
     }
 
     public function setCreated(DateTime $dateTime): self

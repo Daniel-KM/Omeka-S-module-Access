@@ -8,7 +8,6 @@ return [
     'api_adapters' => [
         'invokables' => [
             'access_requests' => Api\Adapter\AccessRequestAdapter::class,
-            'access_resources' => Api\Adapter\AccessResourceAdapter::class,
         ],
     ],
     'entity_manager' => [

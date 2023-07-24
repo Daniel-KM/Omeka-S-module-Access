@@ -10,7 +10,7 @@ $plugins = $this->getHelperPluginManager();
 $translate = $plugins->get('translate');
 $escape = $plugins->get('escapeHtml');
 
-/** @var \AccessResource\Api\Representation\AccessResourceRepresentation $accessRequest */
+/** @var \AccessResource\Api\Representation\AccessRequestRepresentation $accessRequest */
 $accessRequest = $resource;
 
 if ($user = $accessRequest->user()):

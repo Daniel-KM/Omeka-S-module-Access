@@ -67,10 +67,10 @@ class AccessRequest extends \AccessResource\Entity\AccessRequest implements \Doc
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'id', 'resource', 'user', 'status', 'created', 'modified'];
+            return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'enabled', 'temporal', 'start', 'end', 'created', 'modified', 'resources'];
         }
 
-        return ['__isInitialized__', 'id', 'resource', 'user', 'status', 'created', 'modified'];
+        return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'enabled', 'temporal', 'start', 'end', 'created', 'modified', 'resources'];
     }
 
     /**
@@ -195,29 +195,18 @@ class AccessRequest extends \AccessResource\Entity\AccessRequest implements \Doc
     /**
      * {@inheritDoc}
      */
-    public function setResource(\Omeka\Entity\Resource $resource): \AccessResource\Entity\AccessRequest
+    public function getResources()
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setResource', [$resource]);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getResources', []);
 
-        return parent::setResource($resource);
+        return parent::getResources();
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getResource(): \Omeka\Entity\Resource
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getResource', []);
-
-        return parent::getResource();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setUser(\Omeka\Entity\User $user): \AccessResource\Entity\AccessRequest
+    public function setUser(?\Omeka\Entity\User $user): \AccessResource\Entity\AccessRequest
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'setUser', [$user]);
@@ -228,12 +217,56 @@ class AccessRequest extends \AccessResource\Entity\AccessRequest implements \Doc
     /**
      * {@inheritDoc}
      */
-    public function getUser(): \Omeka\Entity\User
+    public function getUser(): ?\Omeka\Entity\User
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getUser', []);
 
         return parent::getUser();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setEmail(?string $email): \AccessResource\Entity\AccessRequest
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setEmail', [$email]);
+
+        return parent::setEmail($email);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getEmail(): ?string
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getEmail', []);
+
+        return parent::getEmail();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setToken(?string $token): \AccessResource\Entity\AccessRequest
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setToken', [$token]);
+
+        return parent::setToken($token);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getToken(): ?string
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getToken', []);
+
+        return parent::getToken();
     }
 
     /**
@@ -256,6 +289,94 @@ class AccessRequest extends \AccessResource\Entity\AccessRequest implements \Doc
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getStatus', []);
 
         return parent::getStatus();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setEnabled($enabled): \AccessResource\Entity\AccessRequest
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setEnabled', [$enabled]);
+
+        return parent::setEnabled($enabled);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getEnabled(): bool
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getEnabled', []);
+
+        return parent::getEnabled();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setTemporal($temporal): \AccessResource\Entity\AccessRequest
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setTemporal', [$temporal]);
+
+        return parent::setTemporal($temporal);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getTemporal(): bool
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getTemporal', []);
+
+        return parent::getTemporal();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setStart(\DateTime $start = NULL): \AccessResource\Entity\AccessRequest
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setStart', [$start]);
+
+        return parent::setStart($start);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getStart(): ?\DateTime
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getStart', []);
+
+        return parent::getStart();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setEnd(\DateTime $end = NULL): \AccessResource\Entity\AccessRequest
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setEnd', [$end]);
+
+        return parent::setEnd($end);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getEnd(): ?\DateTime
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getEnd', []);
+
+        return parent::getEnd();
     }
 
     /**

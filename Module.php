@@ -83,11 +83,6 @@ class Module extends AbstractModule
             )
             ->allow(
                 null,
-                [\AccessResource\Api\Adapter\AccessResourceAdapter::class],
-                ['search', 'read']
-            )
-            ->allow(
-                null,
                 [\AccessResource\Api\Adapter\AccessRequestAdapter::class],
                 ['search', 'create', 'update', 'read']
             )
