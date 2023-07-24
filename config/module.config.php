@@ -192,9 +192,10 @@ return [
     ],
     'navigation' => [
         'AdminModule' => [
-            [
-                'label' => 'Access Resources', // @translate
-                'route' => 'admin/access-resource',
+            'access-resource' => [
+                'label' => 'Accesses', // @translate
+                'class' => 'o-icon- fa-key',
+                'route' => 'admin/access-request',
                 'controller' => 'access',
                 'pages' => [
                     [
