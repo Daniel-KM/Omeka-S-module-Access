@@ -1,0 +1,25 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
+ * @var \AccessResource\Api\Representation\AccessStatusRepresentation|null $accessStatus
+ */
+
+// Display the access status of a resource.
+
+if (!$accessStatus) return;
+
+$plugins = $this->getHelperPluginManager();
+$translate = $plugins->get('translate');
+
+$level = $accessStatus->displayLevel();
+$embargo = $accessStatus->displayEmbargo('medium');
+?>
+
+<div class="meta-group access-status">
+    <h4><?= $translate('Access status') ?></h4>
+    <div class="value"><?= $level ?></div>
+    <?php if ($embargo): ?>
+    <div class="value"><?= $embargo ?></div>
+    <?php endif; ?>
+</div>

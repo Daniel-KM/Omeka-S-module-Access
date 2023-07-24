@@ -13,9 +13,12 @@ $assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
 $hyperlink = $plugins->get('hyperlink');
 $urlHelper = $plugins->get('url');
-$accessLevel = $plugins->get('accessLevel');
+$accessStatus = $plugins->get('accessStatus');
 
-$level = $accessLevel($resource);
+// TODO Use the property values if any.
+// Support php 7.4.
+$accessStatus = $accessStatus($resource);
+$level = $accessStatus ? $accessStatus->level() : 'free';
 
 $this->headLink()
     ->appendStylesheet($assetUrl('css/access-resource-admin.css', 'AccessResource'));

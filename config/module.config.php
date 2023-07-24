@@ -36,8 +36,14 @@ return [
         'factories' => [
             'accessResourceRequestForm' => Service\ViewHelper\AccessResourceRequestFormFactory::class,
             'accessLevel' => Service\ViewHelper\AccessLevelFactory::class,
+            'accessStatus' => Service\ViewHelper\AccessStatusFactory::class,
             'isAllowedMediaContent' => Service\ViewHelper\IsAllowedMediaContentFactory::class,
             'isUnderEmbargo' => Service\ViewHelper\IsUnderEmbargoFactory::class,
+        ],
+    ],
+    'resource_page_block_layouts' => [
+        'invokables' => [
+            'accessStatus' => Site\ResourcePageBlockLayout\AccessStatus::class,
         ],
     ],
     'form_elements' => [
@@ -67,7 +73,6 @@ return [
     ],
     'controller_plugins' => [
         'factories' => [
-            'accessEmbargo' => Service\ControllerPlugin\AccessEmbargoFactory::class,
             'accessLevel' => Service\ControllerPlugin\AccessLevelFactory::class,
             'accessStatus' => Service\ControllerPlugin\AccessStatusFactory::class,
             'isAllowedMediaContent' => Service\ControllerPlugin\IsAllowedMediaContentFactory::class,

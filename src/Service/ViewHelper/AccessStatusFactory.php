@@ -1,17 +1,17 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Service\ControllerPlugin;
+namespace AccessResource\Service\ViewHelper;
 
-use AccessResource\Mvc\Controller\Plugin\AccessEmbargo;
+use AccessResource\View\Helper\AccessStatus;
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
-class AccessEmbargoFactory implements FactoryInterface
+class AccessStatusFactory implements FactoryInterface
 {
     public function __invoke(ContainerInterface $services, $requestedName, array $options = null)
     {
-        return new AccessEmbargo(
-            $services->get('Omeka\EntityManager')
+        return new AccessStatus(
+            $services->get('ControllerPluginManager')->get('accessStatus')
         );
     }
 }

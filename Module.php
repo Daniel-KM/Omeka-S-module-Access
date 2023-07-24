@@ -1045,34 +1045,14 @@ class Module extends AbstractModule
         $view = $event->getTarget();
         $vars = $view->vars();
 
-        $i18n = $view->plugin('i18n');
-        $translate = $plugins->get('translate');
-        $accessStatusForResource = $plugins->get('accessStatus');
-
         $resource = $vars->offsetGet('resource');
+        $accessStatusForResource = $plugins->get('accessStatus');
+        $accessStatus = $accessStatusForResource($resource);
 
-        /** @var \AccessResource\Api\Representation\AccessStatusRepresentation $accessStatus */
-        $accessStatus = $accessStatusForResource($resource, true);
-
-        $level = $accessStatus ? $accessStatus->displayLevel() : $translate(AccessStatus::FREE);
-        $htmlLevel = sprintf('<div class="value">%s</div>', $level);
-
-        $embargo = $accessStatus ? $accessStatus->displayEmbargo() : '';
-        $htmlEmbargo= $embargo ? sprintf('<div class="value">%s</div>', $embargo) : ''; // @translate
-
-        $html = <<<'HTML'
-<div class="meta-group">
-    <h4>%1$s</h4>
-    %2$s
-    %3$s
-</div>
-HTML;
-        echo sprintf(
-            $html,
-            $translate('Access status'), // @translate
-            $htmlLevel ?? '',
-            $htmlEmbargo ?? ''
-        );
+        echo $view->partial('common/access-status', [
+            'resource' => $resource,
+            'accessStatus' => $accessStatus,
+        ]);
     }
 
     /**

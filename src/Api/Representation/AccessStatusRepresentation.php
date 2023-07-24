@@ -120,20 +120,35 @@ class AccessStatusRepresentation extends AbstractEntityRepresentation
         return $this->getTranslator()->translate(self::LEVELS[$level] ?? AccessStatus::FREE);
     }
 
-    public function displayEmbargo(): string
+    /**
+     * Get a string according to embargo.
+     *
+     * @param string $dateTimeFormat May be one of the "short", "medium" or "long".
+     * @return string The string is empty when there is no defined embargo.
+     */
+    public function displayEmbargo(?string $dateTimeFormat = 'medium'): string
     {
         $embargoStart = $this->embargoStart();
         $embargoEnd = $this->embargoEnd();
         if (!$embargoStart && !$embargoEnd) {
             return '';
         }
+        /** @var \Omeka\View\Helper\i18n $i18n */
         $i18n = $this->getServiceLocator()->get('ViewHelperManager')->get('i18n');
         if (!$embargoEnd) {
-            return sprintf($this->translator()->translate('Embargo from %1$s'), $i18n->dateFormat($embargoStart, $i18n::DATE_FORMAT_LONG, $i18n::DATE_FORMAT_SHORT)); // @translate
+            $hasStartTime = $embargoStart->format('H:i:s') !== '00:00:00';
+            $formatStartTime = $hasStartTime ? $i18n::DATE_FORMAT_SHORT : $i18n::DATE_FORMAT_NONE;
+            return sprintf($this->translator()->translate('from %s'), $i18n->dateFormat($i18n->dateFormat($embargoStart, $dateTimeFormat, $formatStartTime))); // @translate
         } elseif (!$embargoStart) {
-            return sprintf($this->translator()->translate('Embargo until %1$s'), $i18n->dateFormat($embargoEnd, $i18n::DATE_FORMAT_LONG, $i18n::DATE_FORMAT_SHORT)); // @translate
+            $hasEndTime = $embargoEnd->format('H:i:s') !== '00:00:00';
+            $formatEndTime = $hasEndTime ? $i18n::DATE_FORMAT_SHORT : $i18n::DATE_FORMAT_NONE;
+            return sprintf($this->translator()->translate('until %s'), $i18n->dateFormat($i18n->dateFormat($embargoEnd, $dateTimeFormat, $formatEndTime))); // @translate
         } else {
-            return sprintf($this->translator()->translate('Embargo from %1$s until %2$s'), $i18n->dateFormat($embargoStart, $i18n::DATE_FORMAT_LONG, $i18n::DATE_FORMAT_SHORT), $i18n->dateFormat($embargoEnd, $i18n::DATE_FORMAT_LONG, $i18n::DATE_FORMAT_SHORT)); // @translate
+            $hasStartTime = $embargoStart->format('H:i:s') !== '00:00:00';
+            $hasEndTime = $embargoEnd->format('H:i:s') !== '00:00:00';
+            $formatStartTime = $hasStartTime ? $i18n::DATE_FORMAT_SHORT : $i18n::DATE_FORMAT_NONE;
+            $formatEndTime = $hasEndTime ? $i18n::DATE_FORMAT_SHORT : $i18n::DATE_FORMAT_NONE;
+            return sprintf($this->translator()->translate('from %1$s until %2$s'), $i18n->dateFormat($embargoStart, $dateTimeFormat, $formatStartTime), $i18n->dateFormat($embargoEnd, $dateTimeFormat, $formatEndTime)); // @translate
         }
     }
 }

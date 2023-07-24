@@ -30,8 +30,6 @@ class AccessStatus extends AbstractPlugin
      * Get access status entity or representation of a resource.
      *
      * @return \AccessResource\Entity\AccessStatus|\AccessResource\Api\Representation\AccessStatusRepresentation|null
-     * A representation is returned if a representation is set in argument, else
-     * an entity.
      */
     public function __invoke($resource, bool $asRepresentation = false)
     {
