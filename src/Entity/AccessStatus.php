@@ -105,6 +105,11 @@ class AccessStatus extends AbstractEntity
         return $this->id;
     }
 
+    public function getIdResource(): ?int
+    {
+        return $this->id->getId();
+    }
+
     public function setStatus(string $status): self
     {
         $this->status = $status;

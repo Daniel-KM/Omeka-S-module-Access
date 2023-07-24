@@ -130,31 +130,57 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
-        // Store status.
-        // Use hydrade.post since the resource id is required.
-        $sharedEventManager->attach(
-            'Omeka\Api\Adapter\ItemAdapter',
-            'api.hydrate.post',
-            [$this, 'updateAccessStatus']
-        );
-        $sharedEventManager->attach(
-            'Omeka\Api\Adapter\MediaAdapter',
-            'api.hydrate.post',
-            [$this, 'updateAccessStatus']
-        );
-        $sharedEventManager->attach(
-            'Omeka\Api\Adapter\ItemSetAdapter',
-            'api.hydrate.post',
-            [$this, 'updateAccessStatus']
-        );
+        // No events are simple to use:
+        // - api.hydrate.post: no id for create; errors are not thrown yet.
+        // - entity.persist.post: no id for create and not called during batch
+        //   and data are not available.
+        // - api.create/update.post: skipped without finalize; no call for media
+        //   and require a second flush.
+        // - api.batch_create.post: redirect to api.create.post and no
+        //   optimisations are possible, since each resource may be different.
+        // - api.batch_update.post: require another event, double checks and
+        //   hard to fix issues with doctrine "new entity is found", because
+        //   another module may have flushed during process.
+        // So use api.create/update.post because the checks are done. So the
+        // action "finalize" should not be skipped.
+        // Furthermore, the batch update process is used and allow to skip the
+        // individual process to avoid complexity with doctrine issues and
+        // flush/not flush.
+        // In all cases, new medias are managed, the option "recursive" too and
+        // the direct or background batch.
+        // The api post events were used in a previous version, but removed to
+        // simplify process.
 
-        // Attach tab to resources.
-        $controllers = [
-            'Omeka\Controller\Admin\Item',
-            'Omeka\Controller\Admin\Media',
-            'Omeka\Controller\Admin\ItemSet',
+        $adaptersAndControllers = [
+            \Omeka\Api\Adapter\ItemAdapter::class => 'Omeka\Controller\Admin\Item',
+            \Omeka\Api\Adapter\MediaAdapter::class => 'Omeka\Controller\Admin\Media',
+            \Omeka\Api\Adapter\ItemSetAdapter::class => 'Omeka\Controller\Admin\ItemSet',
+            // \Annotate\Api\Adapter\AnnotationAdapter::class => \Annotate\Controller\Admin\AnnotationController::class,
         ];
-        foreach ($controllers as $controller) {
+        foreach ($adaptersAndControllers as $adapter => $controller) {
+            // Store status.
+            $sharedEventManager->attach(
+                $adapter,
+                'api.create.post',
+                [$this, 'handleCreateUpdateResource']
+            );
+            $sharedEventManager->attach(
+                $adapter,
+                'api.update.post',
+                [$this, 'handleCreateUpdateResource']
+            );
+            $sharedEventManager->attach(
+                $adapter,
+                'api.preprocess_batch_update',
+                [$this, 'handleBatchUpdatePreprocess']
+            );
+            $sharedEventManager->attach(
+                $adapter,
+                'api.batch_update.post',
+                [$this, 'handleBatchUpdatePost']
+            );
+
+            // Attach tab to resources.
             $sharedEventManager->attach(
                 $controller,
                 'view.add.form.advanced',
@@ -203,21 +229,8 @@ class Module extends AbstractModule
             'form.add_input_filters',
             [$this, 'formAddInputFiltersResourceBatchUpdateForm']
         );
-        $sharedEventManager->attach(
-            \Omeka\Api\Adapter\ItemSetAdapter::class,
-            'api.preprocess_batch_update',
-            [$this, 'handleResourceBatchUpdatePreprocess']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Api\Adapter\ItemAdapter::class,
-            'api.preprocess_batch_update',
-            [$this, 'handleResourceBatchUpdatePreprocess']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Api\Adapter\MediaAdapter::class,
-            'api.preprocess_batch_update',
-            [$this, 'handleResourceBatchUpdatePreprocess']
-        );
+
+        // Management of individual accesses.
 
         // Attach to Doctrine events Access Request update, to trigger Access
         // resource management.
@@ -233,6 +246,7 @@ class Module extends AbstractModule
         );
 
         // Attach to view render, to inject guest user request form.
+        // TODO Replace by resource blocks.
         $sharedEventManager->attach(
             'Omeka\Controller\Site\Item',
             'view.browse.after',
@@ -299,6 +313,7 @@ class Module extends AbstractModule
             return false;
         }
 
+        // Message are already prepared  when issues.
         $result = $this->prepareIpItemSets();
         if (!$result) {
             return false;
@@ -316,39 +331,250 @@ class Module extends AbstractModule
     }
 
     /**
-     * Update access status according to resource edit request.
+     * Clean params for batch update to avoid to do it for each resource.
+     */
+    public function handleBatchUpdatePreprocess(Event $event): void
+    {
+        /**
+         * @var \Omeka\Settings\Settings $settings
+         * @var \AccessResource\Form\Admin\BatchEditFieldset $fieldset
+         * @var \Omeka\Api\Request $request
+         */
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $request = $event->getParam('request');
+
+        $post = $request->getValue('accessresource');
+        $data = $event->getParam('data');
+
+        $data['is_batch_process'] = true;
+
+        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
+        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
+        if ($accessViaProperty && $embargoViaProperty) {
+            $event->setParam('data', $data);
+            return;
+        }
+
+        // Access status.
+        if ($accessViaProperty) {
+            // TODO Manage batch update for properties.
+        } else {
+            if (empty($post['o-access:status']) || !in_array($post['o-access:status'], $this->accessStatuses())) {
+                unset($data['accessresource']['o-access:status']);
+            } else {
+                $data['accessresource']['o-access:status'] = $post['o-access:status'];
+            }
+        }
+
+        // Access embargo.
+        if ($embargoViaProperty) {
+            unset($data['accessresource']['o-access:embargoStart']);
+            unset($data['accessresource']['o-access:embargoEnd']);
+        } else {
+            // Embargo start.
+            if (empty($post['embargo_start_update'])) {
+                unset($data['accessresource']['o-access:embargoStart']);
+            } elseif ($post['embargo_start_update'] === 'remove') {
+                $data['accessresource']['o-access:embargoStart'] = null;
+            } elseif ($post['embargo_start_update'] === 'set') {
+                $embargoStart = $post['embargo_start_date'] ?? null;
+                $embargoStart = trim((string) $embargoStart) ?: null;
+                if ($embargoStart) {
+                    $embargoStart .= 'T' . (empty($post['embargo_start_time']) ? '00:00:00' : $post['embargo_start_time']  . ':00');
+                }
+                $data['accessresource']['o-access:embargoStart'] = $embargoStart;
+            }
+            // Embargo end.
+            if (empty($post['embargo_end_update'])) {
+                unset($data['accessresource']['o-access:embargoEnd']);
+            } elseif ($post['embargo_end_update'] === 'remove') {
+                $data['accessresource']['o-access:embargoEnd'] = null;
+            } elseif ($post['embargo_end_update'] === 'set') {
+                $embargoEnd = $post['embargo_end_date'] ?? null;
+                $embargoEnd = trim((string) $embargoEnd) ?: null;
+                if ($embargoEnd) {
+                    $embargoEnd .= 'T' . (empty($post['embargo_end_time']) ? '00:00:00' : $post['embargo_end_time'] . ':00');
+                }
+                $data['accessresource']['o-access:embargoEnd'] = $embargoEnd;
+            }
+        }
+        unset($data['accessresource']['accessresource']);
+
+        $needProcess = array_key_exists('o-access:status', $data['accessresource'])
+            || array_key_exists('o-access:embargoStart', $data['accessresource'])
+            || array_key_exists('o-access:embargoEnd', $data['accessresource']);
+
+        if ($needProcess) {
+            if (!empty($post['access_recursive'])) {
+                $data['accessresource']['access_recursive'] = true;
+            }
+        } else {
+            unset($data['accessresource']);
+        }
+
+        $event->setParam('data', $data);
+    }
+
+    public function handleBatchUpdatePost(Event $event): void
+    {
+        /**
+         * @var \Doctrine\ORM\EntityManager $entityManager
+         * @var \Omeka\Entity\Resource $resource
+         * @var \Omeka\Api\Request $request
+         * @var \Omeka\Api\Response $response
+         * @var \Omeka\Settings\Settings $settings
+         */
+        // The data are already checked during preprocess.
+        $request = $event->getParam('request');
+        $data = $request->getValue('accessresource');
+        if (!$data) {
+            return;
+        }
+
+        $status = array_key_exists('o-access:status', $data) ? $data['o-access:status'] : false;
+        $embargoStart = array_key_exists('o-access:embargoStart', $data) ? $data['o-access:embargoStart'] : false;
+        $embargoEnd = array_key_exists('o-access:embargoEnd', $data) ? $data['o-access:embargoEnd'] : false;
+
+        // Check if a process is needed.
+        if ($status === false && $embargoStart === false && $embargoEnd === false) {
+            return;
+        }
+
+        $response = $event->getParam('response');
+
+        $resources = $response->getContent();
+        if (!count($resources)) {
+            return;
+        }
+
+        $ids = [];
+        foreach ($resources as $resource) {
+            $ids[] = $resource->getId();
+        }
+
+        // Use the ids of the response: rights and errors are checked.
+        // Doctrine does not allow to do an "insert on duplicate", so two ways:
+        // - Use a direct sql on the ids of the response, since rights and
+        //   errors are checked.
+        // - Get existings access status and update them, then create new ones.
+
+        $services = $this->getServiceLocator();
+        $entityManager = $services->get('Omeka\EntityManager');
+
+        $accessStatuses = $entityManager->getRepository(AccessStatus::class)->findBy(['id' => $resources]);
+        if ($accessStatuses) {
+            $existingIds = [];
+            foreach ($accessStatuses as $accessStatus) {
+                $existingIds[] = $accessStatus->getIdResource();
+            }
+            $qb = $entityManager->createQueryBuilder();
+            $expr = $qb->expr();
+            $qb
+                ->update(AccessStatus::class, 'access_status')
+                ->where($expr->in('access_status.id', $existingIds));
+            if ($status !== false) {
+                $qb
+                    ->set('access_status.status', ':status')
+                    ->setParameter('status', $status, \Doctrine\DBAL\ParameterType::STRING);
+            }
+            if ($embargoStart !== false) {
+                $qb
+                    ->set('access_status.embargo_start', ':embargo_start')
+                    ->setParameter('embargo_start', $embargoStart, $embargoStart ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL);
+            }
+            if ($embargoEnd !== false) {
+                $qb
+                    ->set('access_status.embargo_end', ':embargo_end')
+                    ->setParameter('embargo_end', $embargoEnd, $embargoEnd ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL);
+            }
+            $qb->getQuery()->execute();
+        }
+
+        $remainingIds = isset($existingIds) ? array_diff($ids, $existingIds) : $ids;
+        if ($remainingIds) {
+            foreach ($remainingIds as $id) {
+                $resource = $entityManager->find(Resource::class, $id);
+                $accessStatus = new AccessStatus();
+                $accessStatus
+                    ->setId($resource)
+                    ->setStatus($status ?: AccessStatus::FREE)
+                    ->setEmbargoStart($embargoStart ?: null)
+                    ->setEmbargoEnd($embargoEnd ?: null);
+                $entityManager->persist($accessStatus);
+            }
+            // In post, the flush is possible and required anyway.
+            $entityManager->flush();
+        }
+
+        if (!empty($data['access_recursive'])) {
+            // TODO Currently, the recursive process requires a single resource.
+            foreach ($resources as $resource) {
+                $accessStatus = $entityManager->find(AccessStatus::class, $resource->getId());
+                $this->recursiveUpdate($resource, $accessStatus);
+            }
+        }
+    }
+
+    /**
+     * Create access status according to resource add request.
      *
      * The access status is decorrelated from the visibility since version 3.4.17.
      */
-    public function updateAccessStatus(Event $event): void
+    public function handleCreateUpdateResource(Event $event): void
     {
-        // In api.hydrate.pre, the representation is not yet stored and the
-        // representation cannot be used (it will use the previous one, even
-        // with getRepresentation()) on resource). So use api.hydrate.post
-        // without early check (useless anyway, and with decorrelation, the
-        // current resource is no more modified).
-
         /**
          * @var \Doctrine\ORM\EntityManager $entityManager
          * @var \Omeka\Entity\Resource $resource
          * @var \Omeka\Api\Request $request
          * @var \Omeka\Settings\Settings $settings
          */
-        $resource = $event->getParam('entity');
-        $resourceId = $resource->getId();
-        if (!$resourceId) {
+        $request = $event->getParam('request');
+        $resourceData = $request->getContent();
+
+        if (!empty($resourceData['is_batch_process'])) {
             return;
         }
 
+        // This is an api-post event, so id is ready and checks are done.
+        $resource = $event->getParam('response')->getContent();
+
+        $this->manageAccessStatusForResource($resource, $resourceData);
+
+        // Create the access statuses for new media: there is no event during
+        // media creation via item.
+        if ($resource->getResourceName() === 'items'
+            && empty($resourceData['access_recursive'])
+        ) {
+            $services = $this->getServiceLocator();
+            $entityManager = $services->get('Omeka\EntityManager');
+            $isUpdate = $event->getName() === 'api.update.post';
+            foreach ($resource->getMedia() as $media) {
+                // Don't modify media with an existing status during update.
+                if ($isUpdate && $entityManager->getReference(AccessStatus::class, $media->getId())) {
+                    continue;
+                }
+                $this->manageAccessStatusForResource($media, $resourceData);
+            }
+        }
+    }
+
+    protected function manageAccessStatusForResource(Resource $resource, array $resourceData): void
+    {
+        /**
+         * @var \Doctrine\ORM\EntityManager $entityManager
+         * @var \Omeka\Entity\Resource $resource
+         * @var \Omeka\Settings\Settings $settings
+         */
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
         $entityManager = $services->get('Omeka\EntityManager');
 
-        $request = $event->getParam('request');
-        $resourceData = $request->getContent();
+        $resourceId = $resource->getId();
+        $resourceName = $resource->getResourceName();
 
         // Get current access if any.
-        $accessStatus = $entityManager->find(AccessStatus::class, $resourceId);
+        $accessStatus = $resourceId ? $entityManager->find(AccessStatus::class, $resourceId) : null;
         if (!$accessStatus) {
             $accessStatus = new AccessStatus();
             $accessStatus->setId($resource);
@@ -359,6 +585,10 @@ class Module extends AbstractModule
         // so properties are always managed, but not access keys.
 
         $accessStatuses = $this->accessStatuses();
+
+        // TODO Access recursive is not allowed for property process for now.
+        // For now, recursivity with properties require to run a separate process.
+        $accessRecursive = false;
 
         $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
         $accessProperty = $accessViaProperty ? $settings->get('accessresource_access_property') : null;
@@ -452,18 +682,17 @@ class Module extends AbstractModule
         }
 
         $entityManager->persist($accessStatus);
+
         // Flush a single entity is required in batch update, but a deprecation
         // warning occurs, so use the unit of work.
         // In hydrate post, most of the checks are done, except files anyway.
+        // $entityManager->flush($accessStatus);
         if (!$entityManager->isOpen()) {
             return;
         }
-
-        // $entityManager->flush($accessStatus);
         $entityManager->getUnitOfWork()->commit($accessStatus);
 
-        $resourceName = $resource->getResourceName();
-        if (!empty($accessRecursive) && in_array($resourceName, ['item_sets', 'items'])) {
+        if ($accessRecursive && in_array($resourceName, ['item_sets', 'items'])) {
             $this->recursiveUpdate($resource, $accessStatus);
         }
     }
@@ -520,7 +749,7 @@ class Module extends AbstractModule
         $resource = $event->getTarget()->resource;
         $this->displayAccessesAccessResource($event, $resource);
         // if ($allowed) {
-        // echo $this->createAddAccessForm($event);
+        //     echo $this->createAddAccessForm($event);
         // }
         echo '</div>';
     }
@@ -652,9 +881,9 @@ class Module extends AbstractModule
         }
 
         if (!$accessViaProperty || !$embargoViaProperty) {
-            $resourceName = $resource->resourceName();
+            $resourceName = $resource ? $resource->resourceName() : $this->resourceNameFromRoute();
             if (($resourceName === 'item_sets' && $resource->itemCount())
-                // Media may not be stored yet?
+                // Media may are not yet stored during creation.
                 || $resourceName === 'items'
             ) {
                 $recursiveElement = new \Laminas\Form\Element\Checkbox('access_recursive');
@@ -665,7 +894,11 @@ class Module extends AbstractModule
                     )
                     ->setAttributes([
                         'id' => 'o-access-recursive',
-                        'value' => false,
+                        // The status is recursive only when creating items to
+                        // avoid to override individual statuses of related
+                        // resources.
+                        'value' => $resourceName === 'items'
+                            && $event->getName() === 'view.add.form.advanced',
                     ]);
             }
         }
@@ -890,6 +1123,8 @@ HTML;
 
     /**
      * Form filters shouldn't be needed.
+     *
+     * @todo To be removed.
      */
     public function formAddInputFiltersResourceBatchUpdateForm(Event $event): void
     {
@@ -932,86 +1167,6 @@ HTML;
         ;
     }
 
-    /**
-     * Clean params for batch update to avoid to do it for each resource.
-     */
-    public function handleResourceBatchUpdatePreprocess(Event $event): void
-    {
-        /**
-         * @var \Omeka\Settings\Settings $settings
-         * @var \AccessResource\Form\Admin\BatchEditFieldset $fieldset
-         * @var \Omeka\Api\Request $request
-         */
-        $services = $this->getServiceLocator();
-        $settings = $services->get('Omeka\Settings');
-        $request = $event->getParam('request');
-
-        $post = $request->getValue('accessresource');
-        $data = $event->getParam('data');
-
-        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
-        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
-        if ($accessViaProperty && $embargoViaProperty) {
-            unset($data['accessresource']);
-            $event->setParam('data', $data);
-            return;
-        }
-
-        // Access status.
-        if (!$accessViaProperty) {
-            if (empty($post['o-access:status']) || !in_array($post['o-access:status'], $this->accessStatuses())) {
-                unset($data['o-access:status']);
-            } else {
-                $data['o-access:status'] = $post['o-access:status'];
-            }
-        }
-
-        // Access embargo.
-        if ($embargoViaProperty) {
-            unset($data['o-access:embargoStart']);
-            unset($data['o-access:embargoEnd']);
-        } else {
-            // Embargo start.
-            if (empty($post['embargo_start_update'])) {
-                unset($data['o-access:embargoStart']);
-            } elseif ($post['embargo_start_update'] === 'remove') {
-                $data['o-access:embargoStart'] = null;
-            } elseif ($post['embargo_start_update'] === 'set') {
-                $embargoStart = $post['embargo_start_date'] ?? null;
-                $embargoStart = trim((string) $embargoStart) ?: null;
-                if ($embargoStart) {
-                    $embargoStart .= 'T' . (empty($post['embargo_start_time']) ? '00:00:00' : $post['embargo_start_time']  . ':00');
-                }
-                $data['o-access:embargoStart'] = $embargoStart;
-            }
-            // Embargo end.
-            if (empty($post['embargo_end_update'])) {
-                unset($data['o-access:embargoEnd']);
-            } elseif ($post['embargo_end_update'] === 'remove') {
-                $data['o-access:embargoEnd'] = null;
-            } elseif ($post['embargo_end_update'] === 'set') {
-                $embargoEnd = $post['embargo_end_date'] ?? null;
-                $embargoEnd = trim((string) $embargoEnd) ?: null;
-                if ($embargoEnd) {
-                    $embargoEnd .= 'T' . (empty($post['embargo_end_time']) ? '00:00:00' : $post['embargo_end_time']  . ':00');
-                }
-                $data['o-access:embargoEnd'] = $embargoEnd;
-            }
-        }
-        unset($data['accessresource']);
-
-        if (!empty($post['access_recursive'])
-            && (array_key_exists('o-access:status', $data)
-                || array_key_exists('o-access:embargoStart', $data)
-                || array_key_exists('o-access:embargoEnd', $data)
-            )
-        ) {
-            $data['access_recursive'] = true;
-        }
-
-        $event->setParam('data', $data);
-    }
-
     protected function processUpdateMissingStatus(array $vars): void
     {
         $services = $this->getServiceLocator();
@@ -1037,8 +1192,19 @@ HTML;
         $messenger->addSuccess($message);
     }
 
+    /**
+     * Recursivity should not be used with properties.
+     *
+     * @todo Manage recursivity when properties are used at least for media when an item is updated.
+     * @todo Manage recursive update for multiple resources via ids.
+     */
     protected function recursiveUpdate(Resource $resource, AccessStatus $accessStatus): void
     {
+        $resourceId = $resource->getId();
+        if (!$resourceId) {
+            return;
+        }
+
         // A job is required, because there may be many items in an item set and
         // many media in an item.
         // But for now, just use a quick sql, because this is a post hydration.
@@ -1051,10 +1217,12 @@ HTML;
         $services = $this->getServiceLocator();
         $entityManager = $services->get('Omeka\EntityManager');
 
-        $acl = $services->get('Omeka\Acl');
-        $isAllowed = $acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all');
+        // TODO Add a argument to avoid to check rights during creation.
+        // When creating an item set, there is no item, so no recursivity, so no
+        // rights to check.
 
-        $resourceId = $resource->getId();
+        // People who can view all have all rights to update statuses.
+        $isAllowed = $services->get('Omeka\Acl')->userIsAllowed(Resource::class, 'view-all');
 
         $status = $accessStatus->getStatus();
         $embargoStart = $accessStatus->getEmbargoStart();
@@ -1332,5 +1500,37 @@ SQL;
         $range['low'] = (ip2long($cidr[0])) & ((-1 << (32 - (int) $cidr[1])));
         $range['high'] = (ip2long(long2ip($range['low']))) + 2 ** (32 - (int) $cidr[1]) - 1;
         return $range;
+    }
+
+    protected function resourceNameFromRoute(): ?string
+    {
+        /** @var \Omeka\Mvc\Status $status */
+        $services = $this->getServiceLocator();
+        $status = $services->get('Omeka\Status');
+
+        // Limit resource templates to the current resource type.
+        // The resource type can be known only via the route.
+        $controllerToResourceNames = [
+            'Omeka\Controller\Admin\Item' => 'items',
+            'Omeka\Controller\Admin\Media' => 'media',
+            'Omeka\Controller\Admin\ItemSet' => 'item_sets',
+            'Omeka\Controller\Site\Item' => 'items',
+            'Omeka\Controller\Site\Media' => 'media',
+            'Omeka\Controller\Site\ItemSet' => 'item_sets',
+            'item' => 'items',
+            'media' => 'media',
+            'item-set' => 'item_sets',
+            'items' => 'items',
+            'itemset' => 'item_sets',
+            'item_sets' => 'item_sets',
+            // Module Annotate.
+            'Annotate\Controller\Admin\Annotation' => 'annotations',
+            'Annotate\Controller\Site\Annotation' => 'annotations',
+            'annotation' => 'annotations',
+            'annotations' => 'annotations',
+        ];
+        $params = $status->getRouteMatch()->getParams();
+        $controller = $params['__CONTROLLER__'] ?? $params['controller'] ?? null;
+        return $controllerToResourceNames[$controller] ?? null;
     }
 }

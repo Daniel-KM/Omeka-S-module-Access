@@ -202,6 +202,17 @@ class AccessStatus extends \AccessResource\Entity\AccessStatus implements \Doctr
     /**
      * {@inheritDoc}
      */
+    public function getIdResource(): ?int
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getIdResource', []);
+
+        return parent::getIdResource();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function setStatus(string $status): \AccessResource\Entity\AccessStatus
     {
 
