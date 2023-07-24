@@ -151,18 +151,10 @@ class IsAllowedMediaContent extends AbstractPlugin
             return true;
         }
 
-        $modeIndividual = in_array('individual', $modes);
-        if ($modeIndividual && $this->checkIndividual($media, $this->user)) {
-            return true;
-        }
-
-        $modeEmail = in_array('email', $modes);
-        if ($modeEmail && $this->checkEmail($media)) {
-            return true;
-        }
-
-        $modeToken = in_array('token', $modes);
-        if ($modeToken && $this->checkToken($media)) {
+        // Use a single process for all single accesses to avoid multiple
+        // queries, that are nearly the same.
+        $singleModes = array_intersect(['individual', 'email', 'token'], $modes);
+        if ($singleModes && $this->checkSingleAccesses($media, $singleModes, $this->user)) {
             return true;
         }
 
@@ -195,8 +187,18 @@ class IsAllowedMediaContent extends AbstractPlugin
         if (!$media || !$itemSetIds) {
             return false;
         }
-        $mediaItemSetIds = array_keys($media->item()->itemSets());
+        $mediaItemSetIds = $this->mediaItemSetIds($media);
         return (bool) array_intersect($mediaItemSetIds, $itemSetIds);
+    }
+
+    protected function mediaItemSetIds(MediaRepresentation $media): array
+    {
+        static $mediaItemSetIds = [];
+        $mediaId = $media->id();
+        if (!isset($mediaItemSetIds[$mediaId])) {
+            $mediaItemSetIds[$mediaId] = array_keys($media->item()->itemSets());
+        }
+        return $mediaItemSetIds[$mediaId];
     }
 
     /**
@@ -257,27 +259,54 @@ class IsAllowedMediaContent extends AbstractPlugin
         return $remoteAddress->getIpAddress() ?: '::';
     }
 
-    /**
-     * Check for an accepted request of the user.
-     */
-    protected function checkIndividual(MediaRepresentation $media, ?User $user): bool
+    protected function checkSingleAccesses(MediaRepresentation $media, array $singleModes, ?User $user = null): bool
     {
-        if (!$user) {
+        $bind = [];
+        $types = [];
+        $sqlModes = [];
+
+        foreach ($singleModes as $mode) switch ($mode) {
+            case 'individual':
+                if (!$user) {
+                    continue 2;
+                }
+                $bind['user_id'] = $user->getId();
+                $types['user_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
+                $sqlModes['Individual'] = 'ar.user_id = :user_id';
+                break;
+            case 'email':
+                $email = $this->params->fromQuery('email');
+                if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    continue 2;
+                }
+                $bind['email'] = $email;
+                $types['email'] = \Doctrine\DBAL\ParameterType::STRING;
+                $sqlModes['email'] = 'ar.email = :email';
+                break;
+            case 'token':
+                $token = $this->params->fromQuery('token');
+                if (!$token) {
+                    continue 2;
+                }
+                $bind['token'] = $token;
+                $types['token'] = \Doctrine\DBAL\ParameterType::STRING;
+                $sqlModes['token'] = 'ar.token = :token';
+                break;
+            default:
+                // Nothing.
+                break;
+        }
+        if ($sqlModes === []) {
             return false;
         }
+        $sqlModesString = implode("\n        OR ", $sqlModes);
 
-        $bind = [
-            'user_id' => $user->getId(),
-            'media_id' => $media->id(),
-            'item_id' => $media->item()->id(),
-        ];
-        $types = [
-            'user_id' => \Doctrine\DBAL\ParameterType::INTEGER,
-            'media_id' => \Doctrine\DBAL\ParameterType::INTEGER,
-            'item_id' => \Doctrine\DBAL\ParameterType::INTEGER,
-        ];
+        $bind['media_id'] = $media->id();
+        $bind['item_id'] = $media->item()->id();
+        $types['media_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
+        $types['item_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
 
-        $mediaItemSetIds = array_keys($media->item()->itemSets());
+        $mediaItemSetIds = $this->mediaItemSetIds($media);
         if ($mediaItemSetIds) {
             $orInItemSets = 'OR (ar.recursive = 1 AND r.resource_id IN (:item_set_ids))';
             $bind['item_set_ids'] = $mediaItemSetIds;
@@ -295,18 +324,17 @@ class IsAllowedMediaContent extends AbstractPlugin
                 'user' => $user->getId(),
             ]);
         */
-
         /*
-        $dql = <<<'DQL'
+        $dql = <<<DQL
 SELECT ar
 FROM AccessResource\Entity\AccessRequest ar
 JOIN ar.resources r
 WHERE
     ar.enabled = 1
-    AND ar.user = :user_id
+    AND ($sqlModesString)
     AND r.id = :media_id
-ORDER BY ar.created DESC
-DQL;
+ ORDER BY ar.created DESC
+        DQL;
         $query = $this->entityManager
             ->createQuery($dql)
             ->setParameters(new ArrayCollection([
@@ -319,215 +347,47 @@ DQL;
         }
         */
 
-         $sql = <<<SQL
-SELECT ar.id
-FROM access_request AS ar
-JOIN access_resource AS r ON r.access_request_id = ar.id
-WHERE
-    ar.enabled = 1
-    AND ar.user_id = :user_id
-    AND (
-        r.resource_id = :media_id
-        OR (ar.recursive = 1 AND r.resource_id = :item_id)
-        $orInItemSets
-    )
-ORDER BY ar.created DESC
-SQL;
-        $accessRequestId = $this->entityManager->getConnection()
-            ->executeQuery($sql, $bind, $types)
-            ->fetchOne();
-        if (!$accessRequestId) {
-            return false;
-        }
-
-        $accessRequest = $this->entityManager->find(\AccessResource\Entity\AccessRequest::class, $accessRequestId);
-        return $this->checkAccess($accessRequest);
-    }
-
-    /**
-     * Check for an accepted request of the user.
-     */
-    protected function checkEmail(MediaRepresentation $media): bool
-    {
-        $email = $this->params->fromQuery('email');
-        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return false;
-        }
-
-        $bind = [
-            'email' => $email,
-            'media_id' => $media->id(),
-            'item_id' => $media->item()->id(),
-        ];
-        $types = [
-            'email' => \Doctrine\DBAL\ParameterType::STRING,
-            'media_id' => \Doctrine\DBAL\ParameterType::INTEGER,
-            'item_id' => \Doctrine\DBAL\ParameterType::INTEGER,
-        ];
-
-        $mediaItemSetIds = array_keys($media->item()->itemSets());
-        if ($mediaItemSetIds) {
-            $orInItemSets = 'OR (ar.recursive = 1 AND r.resource_id IN (:item_set_ids))';
-            $bind['item_set_ids'] = $mediaItemSetIds;
-            $types['item_set_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
-        }
-
-        /** @var \AccessResource\Entity\AccessRequest $accessRequest */
-        // TODO How to query on resources with entity manager?
-        /*
-        $accessRequest = $this->entityManager
-            ->getRepository(\AccessResource\Entity\AccessRequest::class)
-            ->findOneBy([
-                'resources' => $media->id(),
-                'enabled' => true,
-                'email' => $email,
-            ]);
-         */
-
-        /*
-        $dql = <<<DQL
-SELECT ar
-FROM AccessResource\Entity\AccessRequest ar
-JOIN ar.resources r
-WHERE
-    ar.enabled = 1
-    AND ar.email = :email
-    AND r.id = :media_id
-ORDER BY ar.created DESC
-DQL;
-        $query = $this->entityManager
-            ->createQuery($dql)
-            ->setParameters(new ArrayCollection([
-                new Parameter('email', $email, \Doctrine\DBAL\ParameterType::STRING),
-                new Parameter('media_id', $media->id(), \Doctrine\DBAL\ParameterType::INTEGER),
-            ]));
-        $accessRequest = $query->getSingleResult();
-        if (!$accessRequest) {
-            return false;
-        }
-        */
-
         $sql = <<<SQL
 SELECT ar.id
 FROM access_request AS ar
 JOIN access_resource AS r ON r.access_request_id = ar.id
 WHERE
     ar.enabled = 1
-    AND ar.email = :email
+    AND (
+        $sqlModesString
+    )
     AND (
         r.resource_id = :media_id
         OR (ar.recursive = 1 AND r.resource_id = :item_id)
         $orInItemSets
     )
-ORDER BY ar.created DESC
+ORDER BY ar.id DESC
 SQL;
-        $accessRequestId = $this->entityManager->getConnection()
+        $accessRequestIds = $this->entityManager->getConnection()
             ->executeQuery($sql, $bind, $types)
-            ->fetchOne();
-        if (!$accessRequestId) {
+            ->fetchFirstColumn();
+        if (!$accessRequestIds) {
             return false;
         }
 
-        $accessRequest = $this->entityManager->find(\AccessResource\Entity\AccessRequest::class, $accessRequestId);
-        return $this->checkAccess($accessRequest);
-    }
+        // TODO Include an automatic cron task (once a day each time a data is requested) to check temporal directly.
 
-    /**
-     * Check for a valid token for the resource.
-     */
-    protected function checkToken(MediaRepresentation $media): bool
-    {
-        $token = $this->params->fromQuery('token');
-        if (!$token) {
-            return false;
+        // Most of the time, there is only one access request by user.
+        foreach ($accessRequestIds as $accessRequestId) {
+            $accessRequest = $this->entityManager->find(\AccessResource\Entity\AccessRequest::class, $accessRequestId);
+            if ($this->checkAccessTemporal($accessRequest)) {
+                return true;
+            }
         }
 
-        $bind = [
-            'token' => $token,
-            'media_id' => $media->id(),
-            'item_id' => $media->item()->id(),
-        ];
-        $types = [
-            'token' => \Doctrine\DBAL\ParameterType::STRING,
-            'media_id' => \Doctrine\DBAL\ParameterType::INTEGER,
-            'item_id' => \Doctrine\DBAL\ParameterType::INTEGER,
-        ];
-
-        $mediaItemSetIds = array_keys($media->item()->itemSets());
-        if ($mediaItemSetIds) {
-            $orInItemSets = 'OR (ar.recursive = 1 AND r.resource_id IN (:item_set_ids))';
-            $bind['item_set_ids'] = $mediaItemSetIds;
-            $types['item_set_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
-        }
-
-        /** @var \AccessResource\Entity\AccessRequest $accessRequest */
-        // TODO How to query on resources with entity manager?
-        /*
-        $accessRequest = $this->entityManager
-            ->getRepository(\AccessResource\Entity\AccessRequest::class)
-            ->findOneBy([
-                'resources' => $media->id(),
-                'enabled' => true,
-                'token' => $token,
-            ]);
-        */
-
-        /*
-        $dql = <<<'DQL'
-SELECT ar
-FROM AccessResource\Entity\AccessRequest ar
-JOIN ar.resources r
-WHERE
-    ar.enabled = 1
-    AND ar.token = :token
-    AND r.id = :media_id
-ORDER BY ar.created DESC
-DQL;
-        $query = $this->entityManager
-            ->createQuery($dql)
-            ->setParameters(new ArrayCollection([
-                new Parameter('token', $token, \Doctrine\DBAL\ParameterType::STRING),
-                new Parameter('media_id', $media->id(), \Doctrine\DBAL\ParameterType::INTEGER),
-            ]));
-        $accessRequest = $query->getSingleResult();
-        if (!$accessRequest) {
-            return false;
-        }
-        */
-
-        $sql = <<<SQL
-SELECT ar.id
-FROM access_request AS ar
-JOIN access_resource AS r ON r.access_request_id = ar.id
-WHERE
-    ar.enabled = 1
-    AND ar.token = :token
-    AND (
-        r.resource_id = :media_id
-        OR (ar.recursive = 1 AND r.resource_id = :item_id)
-        $orInItemSets
-    )
-ORDER BY ar.created DESC
-SQL;
-        $accessRequestId = $this->entityManager->getConnection()
-            ->executeQuery($sql, $bind, $types)
-            ->fetchOne();
-        if (!$accessRequestId) {
-            return false;
-        }
-
-        $accessRequest = $this->entityManager->find(\AccessResource\Entity\AccessRequest::class, $accessRequestId);
-        return $this->checkAccess($accessRequest);
+        return false;
     }
 
     /**
      * Check if access is time limited.
      */
-    protected function checkAccess(AccessRequest $accessRequest): bool
+    protected function checkAccessTemporal(AccessRequest $accessRequest): bool
     {
-        if (!$accessRequest->getEnabled()) {
-            return false;
-        }
         if (!$accessRequest->getTemporal()) {
             return true;
         }
