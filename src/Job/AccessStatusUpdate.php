@@ -2,7 +2,7 @@
 
 namespace AccessResource\Job;
 
-use AccessResource\Entity\AccessStatus;
+use AccessResource\Api\Representation\AccessStatusRepresentation;
 use Omeka\Job\AbstractJob;
 use Omeka\Stdlib\Message;
 
@@ -78,18 +78,6 @@ class AccessStatusUpdate extends AbstractJob
     protected $levelPropertyLevels;
 
     /**
-     * For mode property / level, list the default levels.
-     *
-     * @var array
-     */
-    protected $levelPropertyLevelsDefault = [
-        AccessStatus::FREE => 'free',
-        AccessStatus::RESERVED => 'reserved',
-        AccessStatus::PROTECTED => 'protected',
-        AccessStatus::FORBIDDEN => 'forbidden',
-    ];
-
-    /**
      * @var string
      */
     protected $embargoPropertyStart;
@@ -154,7 +142,7 @@ class AccessStatusUpdate extends AbstractJob
         $accessViaProperty = (bool) $settings->get('accessresource_level_via_property');
         if ($accessViaProperty) {
             $this->levelProperty = $settings->get('accessresource_level_property');
-            $this->levelPropertyLevels = $settings->get('accessresource_level_property_levels', $this->levelPropertyLevelsDefault);
+            $this->levelPropertyLevels = array_intersect_key(AccessStatusRepresentation::LEVELS, array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])));
             $this->updateLevelViaProperty();
         } else {
             $this->updateLevelViaVisibility();

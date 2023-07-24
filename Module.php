@@ -112,6 +112,23 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
+        // Add the status to the representation.
+        $sharedEventManager->attach(
+            \Omeka\Api\Representation\ItemRepresentation::class,
+            'rep.resource.json',
+            [$this, 'filterEntityJsonLd']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Api\Representation\MediaRepresentation::class,
+            'rep.resource.json',
+            [$this, 'filterEntityJsonLd']
+        );
+        $sharedEventManager->attach(
+            \Omeka\Api\Representation\ItemSetRepresentation::class,
+            'rep.resource.json',
+            [$this, 'filterEntityJsonLd']
+        );
+
         // No events are simple to use:
         // - api.hydrate.post: no id for create; errors are not thrown yet.
         // - entity.persist.post: no id for create and not called during batch
@@ -315,6 +332,29 @@ class Module extends AbstractModule
         }
 
         return true;
+    }
+
+    /**
+     * Add the status to the resource JSON-LD.
+     *
+     * Use getJsonLd() instead of jsonSerialize() because access status is not
+     * an api for now.
+     */
+    public function filterEntityJsonLd(Event $event): void
+    {
+        $resource = $event->getTarget();
+
+        /** @var \AccessResource\Api\Representation\AccessStatusRepresentation $accessStatus */
+        $plugins = $this->getServiceLocator()->get('ControllerPluginManager');
+        $accessStatusForResource = $plugins->get('accessStatus');
+        $accessStatus = $accessStatusForResource($resource, true);
+        if (!$accessStatus) {
+            return;
+        }
+
+        $jsonLd = $event->getParam('jsonLd');
+        $jsonLd['o-access:status'] = $accessStatus->getJsonLd();
+        $event->setParam('jsonLd', $jsonLd);
     }
 
     /**

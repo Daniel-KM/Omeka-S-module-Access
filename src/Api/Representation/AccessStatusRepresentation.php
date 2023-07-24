@@ -4,6 +4,7 @@ namespace AccessResource\Api\Representation;
 
 use AccessResource\Entity\AccessStatus;
 use DateTime;
+use Laminas\ServiceManager\ServiceLocatorInterface;
 use Omeka\Api\Representation\AbstractEntityRepresentation;
 
 class AccessStatusRepresentation extends AbstractEntityRepresentation
@@ -15,37 +16,61 @@ class AccessStatusRepresentation extends AbstractEntityRepresentation
         AccessStatus::FORBIDDEN => AccessStatus::FORBIDDEN,
     ];
 
+    /**
+     * Construct the value representation object.
+     *
+     * @todo Adapter for access status?
+     */
+    public function __construct(AccessStatus $accessStatus, ServiceLocatorInterface $serviceLocator)
+    {
+        // Set the service locator first.
+        $this->setServiceLocator($serviceLocator);
+        $this->resource = $accessStatus;
+    }
+
     public function getJsonLdType()
     {
         return 'o-access:Status';
     }
 
+    /**
+     * The json-ld does not include id: see item or media.
+     *
+     * @todo Create adapter for access status? Create a full representation.
+     *
+     * {@inheritDoc}
+     * @see \Omeka\Api\Representation\AbstractResourceRepresentation::getJsonLd()
+     */
     public function getJsonLd()
     {
+        $jsonLd = [
+            'level' => $this->level(),
+        ];
+
+        // Append the start and the end if there is at least one of them.
         $embargoStart = $this->embargoStart();
+        $embargoEnd = $this->embargoEnd();
         if ($embargoStart) {
             $embargoStart = [
                 '@value' => $this->getDateTime($embargoStart),
                 '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
             ];
         }
-
-        $embargoEnd = $this->embargoEnd();
         if ($embargoEnd) {
             $embargoEnd = [
                 '@value' => $this->getDateTime($embargoEnd),
                 '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
             ];
         }
-
-        return [
-            'o:id' => $this->id(),
-            'o:resource' => $this->resource()->getReference(),
-            'o-access:level' => $this->level(),
-            'o-access:embargoStart ' => $embargoStart,
-            'o-access:embargoEnd' => $embargoEnd,
-        ];
+        if ($embargoStart || $embargoEnd) {
+            $jsonLd += [
+                'embargoStart ' => $embargoStart,
+                'embargoEnd' => $embargoEnd,
+            ];
+        }
+        return $jsonLd;
     }
+
 
     public function id()
     {
