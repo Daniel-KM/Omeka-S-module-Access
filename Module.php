@@ -691,15 +691,26 @@ class Module extends AbstractModule
             $embargoEnd = null;
         }
 
+        $valueOptions = [
+            AccessStatus::FREE => 'Free', // @translate'
+            AccessStatus::RESERVED => 'Restricted', // @translate
+            AccessStatus::PROTECTED => 'Protected', // @translate
+            AccessStatus::FORBIDDEN => 'Forbidden', // @translate
+        ];
+        // There is no difference between reserved and protected when only the
+        // file is protected.
+        $fullAccess = (bool) $settings->get('accessresource_full');
+        if (!$fullAccess) {
+            unset($valueOptions[AccessStatus::PROTECTED]);
+            if ($status === AccessStatus::PROTECTED) {
+                $status = AccessStatus::RESERVED;
+            }
+        }
+
         $statusElement = new \AccessResource\Form\Element\OptionalRadio('o-access:status');
         $statusElement
             ->setLabel('Access status') // @translate
-            ->setValueOptions([
-                AccessStatus::FREE => 'Free', // @translate'
-                AccessStatus::RESERVED => 'Restricted', // @translate
-                AccessStatus::PROTECTED => 'Protected', // @translate
-                AccessStatus::FORBIDDEN => 'Forbidden', // @translate
-            ])
+            ->setValueOptions($valueOptions)
             ->setAttributes([
                 'id' => 'o-access-status',
                 'value' => $status,
@@ -961,6 +972,7 @@ HTML;
 
         $fieldset = $formElementManager->get(BatchEditFieldset::class);
         $fieldset
+            ->setOption('full_access', (bool) $settings->get('accessresource_full'))
             ->setOption('access_via_property', $accessViaProperty)
             ->setOption('embargo_via_property', $embargoViaProperty);
 

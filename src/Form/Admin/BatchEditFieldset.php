@@ -11,8 +11,21 @@ class BatchEditFieldset extends Fieldset
 {
     public function init(): void
     {
+        $fullAccess = (bool) $this->getOption('full_access');
         $accessViaProperty = (bool) $this->getOption('access_via_property');
         $embargoViaProperty = (bool) $this->getOption('embargo_via_property');
+
+        $valueOptions = [
+            AccessStatus::FREE => 'Free', // @translate'
+            AccessStatus::RESERVED => 'Restricted', // @translate
+            AccessStatus::PROTECTED => 'Protected', // @translate
+            AccessStatus::FORBIDDEN => 'Forbidden', // @translate
+        ];
+        // There is no difference between reserved and protected when only the
+        // file is protected.
+        if (!$fullAccess) {
+            unset($valueOptions[AccessStatus::PROTECTED]);
+        }
 
         $this
             ->setName('accessresource')
@@ -31,11 +44,7 @@ class BatchEditFieldset extends Fieldset
                     'label' => 'New status', // @translate
                     'value_options' => [
                         '' => 'No change', // @translate
-                        AccessStatus::FREE => 'Free', // @translate
-                        AccessStatus::RESERVED => 'Restricted', // @translate
-                        AccessStatus::PROTECTED => 'Protected', // @translate
-                        AccessStatus::FORBIDDEN => 'Forbidden', // @translate
-                    ],
+                    ] + $valueOptions,
                 ],
                 'attributes' => [
                     'id' => 'accessresource_o_access_status',
