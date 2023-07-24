@@ -113,7 +113,7 @@ class AccessStatusRepresentation extends AbstractEntityRepresentation
     {
         $level = $this->level();
         $settings = $this->getServiceLocator()->get('Omeka\Settings');
-        $accessLevels = $settings->get('accessresource_level_property_levels', []);
+        $accessLevels = $settings->get('accessresource_property_levels', []);
         if ($accessLevels && isset($accessLevels[$level])) {
             return $accessLevels[$level];
         }

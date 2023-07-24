@@ -177,42 +177,27 @@
         }
 
         const accessViaProperty = function() {
-            const element = $('input[name=accessresource_level_via_property]:checked');
-            if (element.val() === 'level') {
-                $('#accessresource_level_property').closest('.field').show(300);
-                $('#accessresource_level_property_levels').closest('.field').show(300);
-                $('#accessresource_hide_in_advanced_tab').closest('.field').show(300);
-            } else {
-                $('#accessresource_level_property').closest('.field').hide(300);
-                $('#accessresource_level_property_levels').closest('.field').hide(300);
-                if (!$('input[type=checkbox][name=accessresource_embargo_via_property]').prop('checked')) {
-                    $('#accessresource_hide_in_advanced_tab').closest('.field').hide(300);
-                }
-            }
-        }
-
-        const embargoViaProperty = function () {
-            const element = $('input[type=checkbox][name=accessresource_embargo_via_property]');
+            const element = $('input[type=checkbox][name=accessresource_property]');
             if (element.prop('checked')) {
-                $('#accessresource_embargo_property_start').closest('.field').show(300);
-                $('#accessresource_embargo_property_end').closest('.field').show(300);
-                $('#accessresource_hide_in_advanced_tab').closest('.field').show(300);
+                $('#accessresource_property_level').closest('.field').show(300);
+                $('#accessresource_property_levels').closest('.field').show(300);
+                $('#accessresource_property_embargo_start').closest('.field').show(300);
+                $('#accessresource_property_embargo_end').closest('.field').show(300);
+                $('#accessresource_property_hide_in_advanced_tab').closest('.field').show(300);
             } else {
-                $('#accessresource_embargo_property_start').closest('.field').hide(300);
-                $('#accessresource_embargo_property_end').closest('.field').hide(300);
-                if ($('input[name=accessresource_level_via_property]:checked').val() !== 'level') {
-                    $('#accessresource_hide_in_advanced_tab').closest('.field').hide(300);
-                }
+                $('#accessresource_property_level').closest('.field').hide(300);
+                $('#accessresource_property_levels').closest('.field').hide(300);
+                $('#accessresource_property_embargo_start').closest('.field').hide(300);
+                $('#accessresource_property_embargo_end').closest('.field').hide(300);
+                $('#accessresource_property_hide_in_advanced_tab').closest('.field').hide(300);
             }
         }
 
         $('input[name="accessresource_access_modes[]"][value=ip]').on('click', modeIp);
-        $('input[name=accessresource_level_via_property]').on('click', accessViaProperty);
-        $('input[type=checkbox][name=accessresource_embargo_via_property]').on('click', embargoViaProperty);
+        $('input[name=accessresource_property]').on('click', accessViaProperty);
 
         modeIp();
         accessViaProperty();
-        embargoViaProperty();
 
     });
 

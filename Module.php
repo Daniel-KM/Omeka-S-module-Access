@@ -342,10 +342,17 @@ class Module extends AbstractModule
      */
     public function filterEntityJsonLd(Event $event): void
     {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $accessViaProperty = (bool) $settings->get('accessresource_property');
+        if ($accessViaProperty) {
+            return;
+        }
+
         $resource = $event->getTarget();
 
         /** @var \AccessResource\Api\Representation\AccessStatusRepresentation $accessStatus */
-        $plugins = $this->getServiceLocator()->get('ControllerPluginManager');
+        $plugins = $services->get('ControllerPluginManager');
         $accessStatusForResource = $plugins->get('accessStatus');
         $accessStatus = $accessStatusForResource($resource, true);
         if (!$accessStatus) {
@@ -398,9 +405,9 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $levelViaProperty = (bool) $settings->get('accessresource_level_via_property');
-        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
-        if ($levelViaProperty && $embargoViaProperty) {
+        // TODO Manage batch update for properties (reindexation in fact).
+        $accessViaProperty = (bool) $settings->get('accessresource_property');
+        if ($accessViaProperty) {
             unset($data['accessresource']);
             $request->setContent($data);
             return;
@@ -412,44 +419,35 @@ class Module extends AbstractModule
         ];
 
         // Access level.
-        if ($levelViaProperty) {
-            // TODO Manage batch update for properties.
-        } else {
-            if (!empty($rawData['o-access:level']) && in_array($rawData['o-access:level'], AccessStatusRepresentation::LEVELS)) {
-                $newData['o-access:level'] = $rawData['o-access:level'];
-            }
+        if (!empty($rawData['o-access:level']) && in_array($rawData['o-access:level'], AccessStatusRepresentation::LEVELS)) {
+            $newData['o-access:level'] = $rawData['o-access:level'];
         }
 
-        // Access embargo.
-        if ($embargoViaProperty) {
-            // TODO Manage batch update for properties.
-        } else {
-            // Embargo start.
-            if (empty($rawData['embargo_start_update'])) {
-                // Nothing to do.
-            } elseif ($rawData['embargo_start_update'] === 'remove') {
-                $newData['o-access:embargoStart'] = null;
-            } elseif ($rawData['embargo_start_update'] === 'set') {
-                $embargoStart = $rawData['embargo_start_date'] ?? null;
-                $embargoStart = trim((string) $embargoStart) ?: null;
-                if ($embargoStart) {
-                    $embargoStart .= 'T' . (empty($rawData['embargo_start_time']) ? '00:00:00' : $rawData['embargo_start_time']  . ':00');
-                }
-                $newData['o-access:embargoStart'] = $embargoStart;
+        // Embargo start.
+        if (empty($rawData['embargo_start_update'])) {
+            // Nothing to do.
+        } elseif ($rawData['embargo_start_update'] === 'remove') {
+            $newData['o-access:embargoStart'] = null;
+        } elseif ($rawData['embargo_start_update'] === 'set') {
+            $embargoStart = $rawData['embargo_start_date'] ?? null;
+            $embargoStart = trim((string) $embargoStart) ?: null;
+            if ($embargoStart) {
+                $embargoStart .= 'T' . (empty($rawData['embargo_start_time']) ? '00:00:00' : $rawData['embargo_start_time']  . ':00');
             }
-            // Embargo end.
-            if (empty($rawData['embargo_end_update'])) {
-                // Nothing to do.
-            } elseif ($rawData['embargo_end_update'] === 'remove') {
-                $newData['o-access:embargoEnd'] = null;
-            } elseif ($rawData['embargo_end_update'] === 'set') {
-                $embargoEnd = $rawData['embargo_end_date'] ?? null;
-                $embargoEnd = trim((string) $embargoEnd) ?: null;
-                if ($embargoEnd) {
-                    $embargoEnd .= 'T' . (empty($rawData['embargo_end_time']) ? '00:00:00' : $rawData['embargo_end_time']  . ':00');
-                }
-                $newData['o-access:embargoEnd'] = $embargoEnd;
+            $newData['o-access:embargoStart'] = $embargoStart;
+        }
+        // Embargo end.
+        if (empty($rawData['embargo_end_update'])) {
+            // Nothing to do.
+        } elseif ($rawData['embargo_end_update'] === 'remove') {
+            $newData['o-access:embargoEnd'] = null;
+        } elseif ($rawData['embargo_end_update'] === 'set') {
+            $embargoEnd = $rawData['embargo_end_date'] ?? null;
+            $embargoEnd = trim((string) $embargoEnd) ?: null;
+            if ($embargoEnd) {
+                $embargoEnd .= 'T' . (empty($rawData['embargo_end_time']) ? '00:00:00' : $rawData['embargo_end_time']  . ':00');
             }
+            $newData['o-access:embargoEnd'] = $embargoEnd;
         }
 
         $needProcess = array_key_exists('o-access:level', $newData)
@@ -649,41 +647,38 @@ class Module extends AbstractModule
         // For now, recursivity with properties require to run a separate process.
         $accessRecursive = false;
 
-        $levelViaProperty = (bool) $settings->get('accessresource_level_via_property');
-        $levelProperty = $levelViaProperty ? $settings->get('accessresource_level_property') : null;
-        if ($levelProperty) {
-            $levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_level_property_levels', [])), AccessStatusRepresentation::LEVELS);
-            /** @see \Omeka\Api\Adapter\AbstractResourceEntityAdapter::hydrate() */
-            $levelIsSet = array_key_exists($levelProperty, $resourceData);
-            $level = empty($resourceData[$levelProperty])
+        $accessViaProperty = (bool) $settings->get('accessresource_property');
+        if ($accessViaProperty) {
+            $levelProperty = $accessViaProperty ? $settings->get('accessresource_property_level') : null;
+            if ($levelProperty) {
+                $levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])), AccessStatusRepresentation::LEVELS);
+                /** @see \Omeka\Api\Adapter\AbstractResourceEntityAdapter::hydrate() */
+                $levelIsSet = array_key_exists($levelProperty, $resourceData);
+                $level = empty($resourceData[$levelProperty])
+                    ? null
+                    : (array_values($resourceData[$levelProperty])[0]['@value'] ?? null);
+                if ($level) {
+                    $level = array_search($level, $levelPropertyLevels) ?: null;
+                }
+            }
+            $embargoStartProperty = $accessViaProperty ? $settings->get('accessresource_property_embargo_start') : null;
+            if ($embargoStartProperty) {
+                $embargoStartIsSet = array_key_exists($embargoStartProperty, $resourceData);
+                $embargoStart = empty($resourceData[$embargoStartProperty])
                 ? null
-                : (array_values($resourceData[$levelProperty])[0]['@value'] ?? null);
-            if ($level) {
-                $level = array_search($level, $levelPropertyLevels) ?: null;
+                : (array_values($resourceData[$embargoStartProperty])[0]['@value'] ?? null);
+            }
+            $embargoEndProperty = $accessViaProperty ? $settings->get('accessresource_property_embargo_end') : null;
+            if ($embargoEndProperty) {
+                $embargoEndIsSet = array_key_exists($embargoEndProperty, $resourceData);
+                $embargoEnd = empty($resourceData[$embargoEndProperty])
+                ? null
+                : (array_values($resourceData[$embargoEndProperty])[0]['@value'] ?? null);
             }
         } else {
             $levelIsSet = array_key_exists('o-access:level', $resourceData);
             $level = $resourceData['o-access:level'] ?? null;
             $accessRecursive = !empty($resourceData['access_recursive']);
-        }
-
-        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
-        if ($embargoViaProperty) {
-            $embargoStartProperty = $embargoViaProperty ? $settings->get('accessresource_embargo_property_start') : null;
-            if ($embargoStartProperty) {
-                $embargoStartIsSet = array_key_exists($embargoStartProperty, $resourceData);
-                $embargoStart = empty($resourceData[$embargoStartProperty])
-                    ? null
-                    : (array_values($resourceData[$embargoStartProperty])[0]['@value'] ?? null);
-            }
-            $embargoEndProperty = $embargoViaProperty ? $settings->get('accessresource_embargo_property_end') : null;
-            if ($embargoEndProperty) {
-                $embargoEndIsSet = array_key_exists($embargoEndProperty, $resourceData);
-                $embargoEnd = empty($resourceData[$embargoEndProperty])
-                    ? null
-                    : (array_values($resourceData[$embargoEndProperty])[0]['@value'] ?? null);
-            }
-        } else {
             // The process via resource form returns two keys (date and time),
             // but the background process use the right key.
             $embargoStartIsSet = array_key_exists('o-access:embargoStart', $resourceData);
@@ -835,14 +830,13 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        if ($settings->get('accessresource_hide_in_advanced_tab')) {
+        if ($settings->get('accessresource_property_hide_in_advanced_tab')) {
             return;
         }
 
         $view = $event->getTarget();
 
-        $levelViaProperty = (bool) $settings->get('accessresource_level_via_property');
-        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
+        $accessViaProperty = (bool) $settings->get('accessresource_property');
 
         $view = $event->getTarget();
         $plugins = $services->get('ControllerPluginManager');
@@ -888,10 +882,10 @@ class Module extends AbstractModule
             ->setAttributes([
                 'id' => 'o-access-level',
                 'value' => $level,
-                'disabled' => $levelViaProperty ? 'disabled' : false,
+                'disabled' => $accessViaProperty ? 'disabled' : false,
             ]);
-        if ($levelViaProperty) {
-            $levelProperty = $settings->get('accessresource_level_property');
+        if ($accessViaProperty) {
+            $levelProperty = $settings->get('accessresource_property_level');
             $levelElement
                 ->setLabel(sprintf('Access level is managed via property %s.', $levelProperty)); // @translate
         }
@@ -905,7 +899,7 @@ class Module extends AbstractModule
             ->setAttributes([
                 'id' => 'o-access-embargo-start-date',
                 'value' => $embargoStart ? $embargoStart->format('Y-m-d') : '',
-                'disabled' => $embargoViaProperty ? 'disabled' : false,
+                'disabled' => $accessViaProperty ? 'disabled' : false,
             ]);
         $embargoStartElementTime = new \Laminas\Form\Element\Time('embargo_start_time');
         $embargoStartElementTime
@@ -913,7 +907,7 @@ class Module extends AbstractModule
             ->setAttributes([
                 'id' => 'o-access-embargo-start-time',
                 'value' => $embargoStart ? $embargoStart->format('H:i') : '',
-                'disabled' => $embargoViaProperty ? 'disabled' : false,
+                'disabled' => $accessViaProperty ? 'disabled' : false,
             ]);
 
         $embargoEndElementDate = new \Laminas\Form\Element\Date('embargo_end_date');
@@ -922,7 +916,7 @@ class Module extends AbstractModule
             ->setAttributes([
                 'id' => 'o-access-embargo-end-date',
                 'value' => $embargoEnd ? $embargoEnd->format('Y-m-d') : '',
-                'disabled' => $embargoViaProperty ? 'disabled' : false,
+                'disabled' => $accessViaProperty ? 'disabled' : false,
             ]);
         $embargoEndElementTime = new \Laminas\Form\Element\Time('embargo_end_time');
         $embargoEndElementTime
@@ -930,16 +924,16 @@ class Module extends AbstractModule
             ->setAttributes([
                 'id' => 'o-access-embargo-end-time',
                 'value' => $embargoEnd ? $embargoEnd->format('H:i') : '',
-                'disabled' => $embargoViaProperty ? 'disabled' : false,
+                'disabled' => $accessViaProperty ? 'disabled' : false,
             ]);
-        if ($embargoViaProperty) {
-            $embargoStartProperty = $settings->get('accessresource_embargo_property_start');
-            $embargoEndProperty = $settings->get('accessresource_embargo_property_end');
+        if ($accessViaProperty) {
+            $embargoStartProperty = $settings->get('accessresource_property_embargo_start');
+            $embargoEndProperty = $settings->get('accessresource_property_embargo_end');
             $embargoStartElementDate
                 ->setLabel(sprintf('Access embargo is managed via properties %1$s and %2$s.', $embargoStartProperty, $embargoEndProperty)); // @translate
         }
 
-        if (!$levelViaProperty || !$embargoViaProperty) {
+        if (!$accessViaProperty) {
             $resourceName = $resource ? $resource->resourceName() : $this->resourceNameFromRoute();
             if (($resourceName === 'item_sets' && $resource->itemCount())
                 // Media may are not yet stored during creation.
@@ -984,9 +978,8 @@ class Module extends AbstractModule
         $plugins = $services->get('ControllerPluginManager');
         $settings = $services->get('Omeka\Settings');
 
-        $levelViaProperty = (bool) $settings->get('accessresource_level_via_property');
-        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
-        if ($levelViaProperty && $embargoViaProperty) {
+        $accessViaProperty = (bool) $settings->get('accessresource_property');
+        if ($accessViaProperty) {
             return;
         }
 
@@ -1002,15 +995,11 @@ class Module extends AbstractModule
         /** @var \AccessResource\Api\Representation\AccessStatusRepresentation $accessStatus */
         $accessStatus = $accessStatusForResource($resource, true);
 
-        if (!$levelViaProperty) {
-            $level = $accessStatus ? $accessStatus->displayLevel() : $translate(AccessStatus::FREE);
-            $htmlLevel = sprintf('<div class="value">%s</div>', $level);
-        }
+        $level = $accessStatus ? $accessStatus->displayLevel() : $translate(AccessStatus::FREE);
+        $htmlLevel = sprintf('<div class="value">%s</div>', $level);
 
-        if (!$embargoViaProperty) {
-            $embargo = $accessStatus ? $accessStatus->displayEmbargo() : '';
-            $htmlEmbargo= $embargo ? sprintf('<div class="value">%s</div>', $embargo) : ''; // @translate
-        }
+        $embargo = $accessStatus ? $accessStatus->displayEmbargo() : '';
+        $htmlEmbargo= $embargo ? sprintf('<div class="value">%s</div>', $embargo) : ''; // @translate
 
         $html = <<<'HTML'
 <div class="meta-group">
@@ -1150,9 +1139,8 @@ HTML;
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $levelViaProperty = (bool) $settings->get('accessresource_level_via_property');
-        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
-        if ($levelViaProperty && $embargoViaProperty) {
+        $accessViaProperty = (bool) $settings->get('accessresource_property');
+        if ($accessViaProperty) {
             return;
         }
 
@@ -1162,8 +1150,7 @@ HTML;
         $fieldset = $formElementManager->get(BatchEditFieldset::class, [
             'full_access' => (bool) $settings->get('accessresource_full'),
             'resource_type' => $event->getTarget()->getOption('resource_type'),
-            'level_via_property' => $levelViaProperty,
-            'embargo_via_property' => $embargoViaProperty,
+            'access_via_property' => $accessViaProperty,
         ]);
 
         $form->add($fieldset);

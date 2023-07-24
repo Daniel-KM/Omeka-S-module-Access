@@ -139,20 +139,16 @@ class AccessStatusUpdate extends AbstractJob
             'Starting indexation of access statuses of all resources.' // @translate
         ));
 
-        $accessViaProperty = (bool) $settings->get('accessresource_level_via_property');
+        $accessViaProperty = (bool) $settings->get('accessresource_property');
         if ($accessViaProperty) {
-            $this->levelProperty = $settings->get('accessresource_level_property');
+            $this->levelProperty = $settings->get('accessresource_property_level');
             $this->levelPropertyLevels = array_intersect_key(AccessStatusRepresentation::LEVELS, array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])));
+            $this->embargoPropertyStart = $settings->get('accessresource_property_embargo_start');
+            $this->embargoPropertyEnd = $settings->get('accessresource_property_embargo_end');
             $this->updateLevelViaProperty();
+            $this->updateEmbargoViaProperty();
         } else {
             $this->updateLevelViaVisibility();
-        }
-
-        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
-        if  ($embargoViaProperty) {
-            $this->embargoPropertyStart = $settings->get('accessresource_embargo_property_start');
-            $this->embargoPropertyEnd = $settings->get('accessresource_embargo_property_end');
-            $this->updateEmbargoViaProperty();
         }
 
         $this->logger->info(new Message(

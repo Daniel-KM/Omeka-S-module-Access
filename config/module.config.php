@@ -272,22 +272,24 @@ return [
                 // 'token',
             ],
 
-            'accessresource_level_via_property' => false,
-            'accessresource_level_property' => null,
-            'accessresource_level_property_levels' => [
+            'accessresource_ip_item_sets' => [],
+
+            'accessresource_property' => false,
+
+            'accessresource_property_level' => null,
+            'accessresource_property_levels' => [
                 AccessStatus::FREE => 'free',
                 AccessStatus::RESERVED => 'reserved',
                 AccessStatus::PROTECTED => 'protected',
                 AccessStatus::FORBIDDEN => 'forbidden',
             ],
-            'accessresource_hide_in_advanced_tab' => false,
 
-            'accessresource_embargo_via_property' => false,
-            'accessresource_embargo_property_start' => null,
-            'accessresource_embargo_property_end' => null,
+            'accessresource_property_embargo_start' => null,
+            'accessresource_property_embargo_end' => null,
+
+            'accessresource_property_hide_in_advanced_tab' => false,
+
             'accessresource_embargo_bypass' => false,
-
-            'accessresource_ip_item_sets' => [],
 
             // Hidden settings automatically filled after saving config.
             // It contains the same data than "accessresource_ip_item_sets", but
