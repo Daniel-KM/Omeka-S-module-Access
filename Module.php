@@ -597,11 +597,19 @@ class Module extends AbstractModule
             } else {
                 $accessStatusValues = [];
             }
-            // TODO Currently, the recursive process requires a single resource.
-            foreach ($resources as $resource) {
-                $accessStatus = $entityManager->find(AccessStatus::class, $resource);
-                $this->recursiveUpdate($resource, $accessStatus, $accessStatusValues);
-            }
+            // A job is required, because there may be many items in an item set and
+            // many media in an item.
+
+            // Nevertheless, the job is just a quick sql for now, and this is a
+            // post event, so use a synchronous job.
+            // TODO Here, this is already a job, so don't prepare a new job, but run it directly. How to get the running job id?
+
+            $args = [
+                'resource_ids' => $ids,
+                'values' => $accessStatusValues,
+            ];
+           $services->get(\Omeka\Job\Dispatcher::class)
+                ->dispatch(\AccessResource\Job\AccessStatusRecursive::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
         }
     }
 
@@ -787,7 +795,16 @@ class Module extends AbstractModule
         $entityManager->getUnitOfWork()->commit($accessStatus);
 
         if ($accessRecursive && in_array($resourceName, ['item_sets', 'items'])) {
-            $this->recursiveUpdate($resource, $accessStatus, $accessStatusValues);
+            // A job is required, because there may be many items in an item set
+            // and many media in an item.
+            // Nevertheless, the job is just a quick sql for now, and this is a
+            // post event, so use a synchronous job.
+            $args = [
+                'resource_id' => $resourceId,
+                'values' => $accessStatusValues,
+            ];
+            $services->get(\Omeka\Job\Dispatcher::class)
+                ->dispatch(\AccessResource\Job\AccessStatusRecursive::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
         }
     }
 
@@ -1275,234 +1292,6 @@ HTML;
         );
         $message->setEscapeHtml(false);
         $messenger->addSuccess($message);
-    }
-
-    /**
-     * @todo Manage recursive update for multiple resources via ids.
-     */
-    protected function recursiveUpdate(Resource $resource, AccessStatus $accessStatus, array $accessStatusValues = []): void
-    {
-        $resourceId = $resource->getId();
-        if (!$resourceId) {
-            return;
-        }
-
-        $resourceName = $resource->getResourceName();
-        if (!in_array($resourceName, ['item_sets', 'items'])) {
-            return;
-        }
-
-        // A job is required, because there may be many items in an item set and
-        // many media in an item.
-        // But for now, just use a quick sql, because this is a post event.
-        // TODO Use dql/orm to update status of items and media of an item set?
-
-        /**
-         * @var \Doctrine\ORM\EntityManager $entityManager
-         * @var \Omeka\Settings\Settings $settings
-         * @var \Omeka\Api\Manager $api
-         */
-        $services = $this->getServiceLocator();
-        $entityManager = $services->get('Omeka\EntityManager');
-        $settings = $services->get('Omeka\Settings');
-
-        // TODO Add a argument to avoid to check rights during creation.
-        // When creating an item set, there is no item, so no recursivity, so no
-        // rights to check.
-
-        // People who can view all have all rights to update statuses.
-        $isAllowed = $services->get('Omeka\Acl')->userIsAllowed(Resource::class, 'view-all');
-
-        $level = $accessStatus->getLevel();
-        $embargoStart = $accessStatus->getEmbargoStart();
-        $embargoEnd = $accessStatus->getEmbargoEnd();
-
-        $bind = [
-            'level' => $level,
-            'embargo_start' => $embargoStart ? $embargoStart->format('Y-m-d H:i:s') : null,
-            'embargo_end' => $embargoEnd ? $embargoEnd->format('Y-m-d H:i:s') : null,
-        ];
-        $types = [
-            'level' => \Doctrine\DBAL\ParameterType::STRING,
-            'embargo_start' => $embargoStart ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL,
-            'embargo_end' => $embargoEnd ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL,
-        ];
-
-        $accessViaProperty = (bool) $settings->get('accessresource_property');
-
-        // Items: update medias.
-
-        if ($resourceName === 'items') {
-            /*
-            // Join is not possible with doctrine 2, so use the list of media.
-            $mediaIds = [];
-            foreach ($resource->getMedia() as $media) {
-                $mediaIds[] = $media->getId();
-            }
-            $qb = $entityManager->createQueryBuilder();
-            $expr = $qb->expr();
-            $qb
-                ->update(AccessStatus::class, 'access_status')
-                ->set('access_status.level', ':level')
-                ->setParameter('level', $level)
-                ->where($expr->in('access_status.id', ':ids'))
-                ->setParameter('ids', $mediaIds, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY)
-            ;
-            $qb->getQuery()->execute();
-            */
-
-            $bind['item_id'] = $resourceId;
-            $types['item_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
-
-            // To check rights via sql, the media ids are passed to the query
-            // even if most of  the time, if the user has rights on the item, he
-            // has rights on all its media.
-            if ($isAllowed) {
-                $whereMedias = '';
-            } else {
-                $mediaIds = $services->get('Omeka\ApiManager')
-                    ->search('media', ['item_id' => $resourceId], ['initialize' => false, 'returnScalar' => 'id'])->getContent();
-                if (!$mediaIds) {
-                    return;
-                }
-                $whereMedias = 'AND `media`.`id` IN (:media_ids)';
-                $bind['media_ids'] = $mediaIds;
-                $types['media_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
-            }
-
-            // Use insert into instead of update, because the access statuses
-            // may not exist yet.
-            $sql = <<<SQL
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `media`.`id`, :level, :embargo_start, :embargo_end
-FROM `media`
-WHERE `media`.`item_id` = :item_id
-    $whereMedias
-ON DUPLICATE KEY UPDATE
-    `level` = :level,
-    `embargo_start` = :embargo_start,
-    `embargo_end` = :embargo_end
-;
-SQL;
-            $entityManager->getConnection()->executeStatement($sql, $bind, $types);
-            if ($accessViaProperty) {
-                $vars = [
-                    'resource_id' => $resourceId,
-                    'values' => $accessStatusValues,
-                ];
-                $services->get(\Omeka\Job\Dispatcher::class)->dispatch(\AccessResource\Job\AccessStatusRecursiveProperties::class, $vars, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
-            }
-            return;
-        }
-
-        // Item sets: update items and medias.
-
-        $bind['item_set_id'] = $resourceId;
-        $types['item_set_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
-
-        // Update all resources without check when user can view all resources.
-
-        if ($isAllowed) {
-            $sql = <<<SQL
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `item_item_set`.`item_id`, :level, :embargo_start, :embargo_end
-FROM `item_item_set`
-WHERE `item_item_set`.`item_set_id` = :item_set_id
-ON DUPLICATE KEY UPDATE
-    `level` = :level,
-    `embargo_start` = :embargo_start,
-    `embargo_end` = :embargo_end
-;
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `media`.`id`, :level, :embargo_start, :embargo_end
-FROM `media`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :item_set_id
-ON DUPLICATE KEY UPDATE
-    `level` = :level,
-    `embargo_start` = :embargo_start,
-    `embargo_end` = :embargo_end
-;
-SQL;
-            $entityManager->getConnection()->executeStatement($sql, $bind, $types);
-            if ($accessViaProperty) {
-                $vars = [
-                    'resource_id' => $resourceId,
-                    'values' => $accessStatusValues,
-                ];
-                $services->get(\Omeka\Job\Dispatcher::class)->dispatch(\AccessResource\Job\AccessStatusRecursiveProperties::class, $vars, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
-            }
-            return;
-        }
-
-        // Update all resources with check of rights.
-
-        // To check rights via sql, the item ids are passed to the query.
-        $countItems = $services->get('Omeka\ApiManager')
-            ->search('items', ['item_set_id' => $resourceId], ['initialize' => false, 'finalize' =>  false])->getTotalResults();
-        if (!$countItems) {
-            return;
-        }
-
-        // The standard api does not allow to search media by item set or
-        // media by a list of items.
-        /*
-        $countMedias = $services->get('Omeka\ApiManager')
-            ->search('media', ['item_set_id' => $resourceId], ['initialize' => false, 'finalize' => false])->getTotalResults();
-        if ($countMedias) {
-            return;
-        }
-        */
-
-        // So use the standard db visibility check. Normally, there is always a
-        // user here.
-        /** @see \Omeka\Db\Filter\ResourceVisibilityFilter */
-        $user = $services->get('Omeka\AuthenticationService')->getIdentity();
-        if ($user) {
-            $orWhereUser = 'OR `resource`.`owner_id` = :user_id';
-            $bind['user_id'] = $user->getId();
-            $types['user_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
-        } else {
-            $orWhereUser = '';
-        }
-
-        $sql = <<<SQL
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `item_item_set`.`item_id`, :level, :embargo_start, :embargo_end
-FROM `item_item_set`
-JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :item_set_id
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-ON DUPLICATE KEY UPDATE
-    `level` = :level,
-    `embargo_start` = :embargo_start,
-    `embargo_end` = :embargo_end
-;
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `media`.`id`, :level, :embargo_start, :embargo_end
-FROM `media`
-JOIN `resource` ON `resource`.`id` = `media`.`id`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :item_set_id
-    AND (`resource_item`.`is_public` = 1 $orWhereUser)
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-ON DUPLICATE KEY UPDATE
-    `level` = :level,
-    `embargo_start` = :embargo_start,
-    `embargo_end` = :embargo_end
-;
-SQL;
-
-        $entityManager->getConnection()->executeStatement($sql, $bind, $types);
-
-        if ($accessViaProperty) {
-            $vars = [
-                'resource_id' => $resourceId,
-                'values' => $accessStatusValues,
-            ];
-            $services->get(\Omeka\Job\Dispatcher::class)->dispatch(\AccessResource\Job\AccessStatusRecursiveProperties::class, $vars, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
-        }
     }
 
     /**
