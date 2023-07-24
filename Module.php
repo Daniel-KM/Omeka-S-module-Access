@@ -1105,7 +1105,7 @@ HTML;
 
         $resource = $vars->offsetGet('resource');
         $accessStatusForResource = $plugins->get('accessStatus');
-        $accessStatus = $accessStatusForResource($resource);
+        $accessStatus = $accessStatusForResource($resource, true);
 
         echo $view->partial('common/access-status', [
             'resource' => $resource,
