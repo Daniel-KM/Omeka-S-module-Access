@@ -33,6 +33,7 @@ class ConfigForm extends Form
                     'style' => 'display: block;',
                 ],
             ])
+
             ->add([
                 'name' => 'accessresource_access_via_property',
                 'type' => Element\Radio::class,
@@ -52,14 +53,29 @@ class ConfigForm extends Form
                 ],
             ])
             ->add([
-                'name' => 'accessresource_access_via_property_statuses',
+                'name' => 'accessresource_access_property',
+                'type' => OmekaElement\PropertySelect::class,
+                'options' => [
+                    'label' => 'Set property when access uses property', // @translate
+                    'term_as_value' => true,
+                    'empty_value' => '',
+                ],
+                'attributes' => [
+                    'id' => 'accessresource_access_property',
+                    'class' => 'chosen-select',
+                    'multiple' => false,
+                    'data-placeholder' => 'Select property…', // @translate
+                ],
+            ])
+            ->add([
+                'name' => 'accessresource_access_property_statuses',
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
                     'label' => 'Labels for the four statuses for mode property/status', // @translate
                     'as_key_value' => true,
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_access_via_property_statuses',
+                    'id' => 'accessresource_access_property_statuses',
                     'rows' => 4,
                     'placeholder' => 'free = free
 reserved = reserved
