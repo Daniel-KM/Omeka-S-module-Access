@@ -334,15 +334,17 @@ class Module extends AbstractModule
             return true;
         }
 
+        /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
+        $translator = $services->get('MvcTranslator');
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+
         $levelProperty = (bool) $settings->get('accessresource_property_level');
         $embargoStartProperty = (bool) $settings->get('accessresource_property_embargo_start');
         $embargoEndProperty = (bool) $settings->get('accessresource_property_embargo_end');
         if (!$levelProperty || !$embargoStartProperty || !$embargoEndProperty) {
-            $translator = $services->get('MvcTranslator');
             $message = new \Omeka\Stdlib\Message(
                 $translator->translate('When properties are used, three properties should be defined for "level", "embargo start" and "embargo end".'), // @translate
             );
-            $messenger = $services->get('ControllerPluginManager')->get('messenger');
             $messenger->addError($message);
             return false;
         }
@@ -350,10 +352,18 @@ class Module extends AbstractModule
         $post = $controller->getRequest()->getPost();
         if (!empty($post['fieldset_index']['process_index'])) {
             $vars = [
+                'recursive' => $post['fieldset_index']['recursive'] ?? [],
                 'sync' => $post['fieldset_index']['sync'] ?? 'skip',
                 'missing' => $post['fieldset_index']['missing'] ?? 'skip',
             ];
-            $this->processUpdateStatus($vars);
+            if ($vars === ['recursive' => [], 'sync' => 'skip', 'missing' => 'skip']) {
+                $message = new \Omeka\Stdlib\Message(
+                    $translator->translate('Job is not launched: no option was set.'), // @translate
+                );
+                $messenger->addWarning($message);
+            } else {
+                $this->processUpdateStatus($vars);
+            }
         }
 
         return true;
@@ -1279,6 +1289,7 @@ HTML;
         $messenger = $plugins->get('messenger');
 
         $vars += [
+            'recursive' => [],
             'sync' => 'skip',
             'missing' => 'skip',
         ];

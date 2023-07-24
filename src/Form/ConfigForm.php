@@ -223,6 +223,21 @@ forbidden = forbidden
         $fieldset = $this->get('fieldset_index');
         $fieldset
             ->add([
+                'name' => 'recursive',
+                'type' => Element\MultiCheckbox::class,
+                'options' => [
+                    'label' => 'Copy level and embargo', // @translate
+                    'value_options' => [
+                        'from_item_sets_to_items_and_media' => 'From item sets to items and medias', // @translate
+                        'from_items_to_media' => 'From items to medias', // @translate
+                        // TODO Add "when not set".
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'recursive',
+                ],
+            ])
+            ->add([
                 'name' => 'sync',
                 'type' => Element\Radio::class,
                 'options' => [
@@ -296,6 +311,10 @@ forbidden = forbidden
                 'required' => false,
             ])
             ->get('fieldset_index')
+            ->add([
+                'name' => 'recursive',
+                'required' => false,
+            ])
             ->add([
                 'name' => 'sync',
                 'required' => false,

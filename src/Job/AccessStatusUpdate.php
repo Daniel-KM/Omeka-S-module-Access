@@ -48,6 +48,11 @@ class AccessStatusUpdate extends AbstractJob
     protected $syncMode = 'skip';
 
     /**
+     * @var array
+     */
+    protected $recursiveProcesses = [];
+
+    /**
      * @var int
      */
     protected $totalSucceed;
@@ -128,9 +133,25 @@ class AccessStatusUpdate extends AbstractJob
             return;
         }
 
-        if ($this->syncMode === 'skip' && $this->missingMode === 'skip') {
+        $this->recursiveProcesses = $this->getArg('recursive', []);
+        $recursives = [
+            'from_item_sets_to_items_and_media',
+            'from_items_to_media',
+        ];
+        if ($this->recursiveProcesses && count($this->recursiveProcesses) !== count(array_intersect($this->recursiveProcesses, $recursives))) {
+            $this->logger->err(new Message(
+                'These recursive processes are unknown: "%s".', // @translate
+                implode('", "', array_diff($this->recursiveProcesses, $recursives))
+            ));
+            return;
+        }
+
+        if ($this->syncMode === 'skip'
+            && $this->missingMode === 'skip'
+            && $this->recursiveProcesses === []
+        ) {
             $this->logger->warn(new Message(
-                'Synchronization and missing modes are set as "skip".' // @translate
+                'Synchronization and missing modes are set as "skip" and no recursive processes are set.' // @translate
             ));
             return;
         }
@@ -154,6 +175,29 @@ class AccessStatusUpdate extends AbstractJob
         ));
 
         // Warning: this is not a full sync: only existing properties and indexes are updated.
+
+        if (in_array('from_item_sets_to_items_and_media',  $this->recursiveProcesses)) {
+            $ids = $this->api->search('item_sets', [], ['returnScalar' => 'id'])->getContent();
+            if ($ids) {
+                $args = $this->job->getArgs();
+                $args['resource_ids'] = $ids;
+                $this->job->setArgs($args);
+                $subJob = new AccessStatusRecursive($this->job, $services);
+                $subJob->perform();
+            }
+        }
+
+        // There may be items without item sets.
+        if (in_array('from_items_to_media',  $this->recursiveProcesses)) {
+            $ids = $this->api->search('items', [], ['returnScalar' => 'id'])->getContent();
+            if ($ids) {
+                $args = $this->job->getArgs();
+                $args['resource_ids'] = $ids;
+                $this->job->setArgs($args);
+                $subJob = new AccessStatusRecursive($this->job, $services);
+                $subJob->perform();
+            }
+        }
 
         if ($this->syncMode === 'from_properties_to_index') {
             // In fact, sync and missing modes are the same process when the
