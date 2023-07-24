@@ -130,34 +130,6 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
-        // Override the two core filters for media in order to detach two events
-        // of Omeka\Module used to filter media belonging to private items.
-        // It allows to filter reserved media and to search by storage_id.
-        /** @see \Omeka\Module::filterMedia() */
-        $listenersByEvent = [];
-        $listenersByEvent['api.search.query'] = $sharedEventManager
-            ->getListeners([\Omeka\Api\Adapter\MediaAdapter::class], 'api.search.query');
-        $listenersByEvent['api.find.query'] = $sharedEventManager
-            ->getListeners([\Omeka\Api\Adapter\MediaAdapter::class], 'api.find.query');
-        foreach ($listenersByEvent as $listeners) {
-            foreach ($listeners as $listener) {
-                $sharedEventManager->detach(
-                    [$listener[0][0], $listener[0][1]],
-                    \Omeka\Api\Adapter\MediaAdapter::class
-                );
-            }
-        }
-        $sharedEventManager->attach(
-            \Omeka\Api\Adapter\MediaAdapter::class,
-            'api.search.query',
-            [$this, 'filterMedia']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Api\Adapter\MediaAdapter::class,
-            'api.find.query',
-            [$this, 'filterMedia']
-        );
-
         // Store status.
         // Use hydrade.post since the resource id is required.
         $sharedEventManager->attach(
@@ -356,102 +328,6 @@ class Module extends AbstractModule
             );
             $messenger = $services->get('ControllerPluginManager')->get('messenger');
             $messenger->addError($message);
-        }
-    }
-
-    /**
-     * Logic for media search filter.
-     */
-    public function filterMedia(Event $event): void
-    {
-        $this->filterMediaOverride($event);
-        $this->filterMediaAdditional($event);
-    }
-
-    /**
-     * Override the default event for media in order to add the check for the status.
-     *
-     * @see \Omeka\Module::filterMedia()
-     */
-    protected function filterMediaOverride(Event $event): void
-    {
-        $services = $this->getServiceLocator();
-        $acl = $services->get('Omeka\Acl');
-        if ($acl->userIsAllowed(\Omeka\Entity\Resource::class, 'view-all')) {
-            return;
-        }
-
-        /**
-         * @var \Omeka\Api\Adapter\MediaAdapter $adapter
-         * @var \Doctrine\ORM\QueryBuilder $qb
-         */
-        $adapter = $event->getTarget();
-        $itemAlias = $adapter->createAlias();
-        $qb = $event->getParam('queryBuilder');
-        $qb->innerJoin('omeka_root.item', $itemAlias);
-
-        $em = $qb->getEntityManager();
-        $expr = $qb->expr();
-
-        // Users can view media they do not own that belong to public items.
-        $conditions = [
-            $expr->eq("$itemAlias.isPublic", true),
-        ];
-
-        // Anonymous or user can view media if a token is used in query
-        // and if they have access to it.
-        $token = $services->get('Request')->getQuery('token');
-        $access = $em->getRepository(\AccessResource\Entity\AccessResource::class)
-            ->findOneBy(['token' => $token]);
-        if ($access) {
-            $conditions[] = $expr->eq('omeka_root.id', $access->getResource()->getId());
-        }
-
-        $identity = $services->get('Omeka\AuthenticationService')->getIdentity();
-        if ($identity) {
-            // Users can view all media they own.
-            $conditions[] = $expr->eq($itemAlias . '.owner', $adapter->createNamedParameter($qb, $identity));
-
-            // Users can view records of all resources with access reserved.
-            // Only files are protected (via htaccess, redirected to controller).
-            $qbs = $em->createQueryBuilder();
-            $accessStatusAlias = $adapter->createAlias();
-            $qbs
-                ->select("$accessStatusAlias.id")
-                ->from(AccessStatus::class, $accessStatusAlias)
-                ->where($expr->eq("$accessStatusAlias.id", 'omeka_root.id'))
-                ->andWhere($expr->neq("$accessStatusAlias.status", 'protected'))
-                ->andWhere($expr->neq("$accessStatusAlias.status", 'forbidden'));
-            $conditions[] = $expr->exists($qbs->getDQL());
-        }
-
-        $expression = $expr->orX();
-        foreach ($conditions as $condition) {
-            $expression->add($condition);
-        }
-
-        $qb->andWhere($expression);
-    }
-
-    /**
-     *Add the ability to search media by storage_id.
-     */
-    protected function filterMediaAdditional(Event $event): void
-    {
-        $adapter = $event->getTarget();
-        /** @var \Doctrine\ORM\QueryBuilder $qb */
-        $qb = $event->getParam('queryBuilder');
-        $request = $event->getParam('request');
-        if (!$request) {
-            return;
-        }
-
-        $query = $request->getContent();
-        if (isset($query['storage_id'])) {
-            $qb->andWhere($qb->expr()->eq(
-                'omeka_root.storageId',
-                $adapter->createNamedParameter($qb, $query['storage_id'])
-            ));
         }
     }
 
