@@ -16,23 +16,27 @@ class ConfigForm extends Form
                 'name' => 'accessresource_full',
                 'type' => Element\Radio::class,
                 'options' => [
-                    'label' => 'Protect records and media content (files)', // @translate
+                    'label' => 'Protection', // @translate
                     'value_options' => [
                         '0' => 'Protect media content only (files)', // @translate
                         '1' => 'Protect records and content (not supported currently)', // @translate
+                    ],
+                    'label_attributes' => [
+                        'style' => 'display: block;',
                     ],
                 ],
                 'attributes' => [
                     'id' => 'accessresource_full',
                     'disabled' => 'disabled',
+                    'style' => 'display: inline-block;',
                 ],
             ])
 
             ->add([
-                'name' => 'accessresource_access_mode',
+                'name' => 'accessresource_access_modes',
                 'type' => Element\MultiCheckbox::class,
                 'options' => [
-                    'label' => 'Reserved access modes', // @translate
+                    'label' => 'Access modes', // @translate
                     'value_options' => [
                         'ip' => 'IP: visitors with specified ips have access to all reserved medias', // @translate
                         'guest' => 'Guest: all users, included guests, have access to all reserved medias', // @translate
@@ -40,11 +44,14 @@ class ConfigForm extends Form
                         'token' => 'Token: A user or a visitor with a token have access to specific reserved medias', // @translate
                         'individual' => 'Individual: users should request access to specific reserved medias', // @translate
                     ],
+                    'label_attributes' => [
+                        'style' => 'display: block;',
+                    ],
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_access_mode',
+                    'id' => 'accessresource_access_modes',
                     'required' => false,
-                    'style' => 'display: block;',
+                    'style' => 'display: inline-block;',
                 ],
             ])
 
@@ -59,11 +66,14 @@ class ConfigForm extends Form
                         // 'reserved' => 'Access via property with mode "reserved" (presence or not of a value)', // @translate
                         // 'protected' => 'Access via property with mode "protected" (presence or not of a value)', // @translate
                     ],
+                    'label_attributes' => [
+                        'style' => 'display: block;',
+                    ],
                 ],
                 'attributes' => [
                     'id' => 'accessresource_access_via_property',
                     'required' => false,
-                    'style' => 'display: block;',
+                    'style' => 'display: inline-block;',
                 ],
             ])
             ->add([
@@ -72,7 +82,7 @@ class ConfigForm extends Form
                 'options' => [
                     'label' => 'Set property when access uses property', // @translate
                     'term_as_value' => true,
-                    'empty_value' => '',
+                    'empty_option' => '',
                 ],
                 'attributes' => [
                     'id' => 'accessresource_access_property',
@@ -126,7 +136,7 @@ forbidden = forbidden
                 'options' => [
                     'label' => 'Set property to use for embargo start', // @translate
                     'term_as_value' => true,
-                    'empty_value' => '',
+                    'empty_option' => '',
                 ],
                 'attributes' => [
                     'id' => 'accessresource_embargo_property_start',
@@ -141,10 +151,10 @@ forbidden = forbidden
                 'options' => [
                     'label' => 'Set property to use for embargo end', // @translate
                     'term_as_value' => true,
-                    'empty_value' => '',
+                    'empty_option' => '',
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_embargo_property_start',
+                    'id' => 'accessresource_embargo_property_end',
                     'class' => 'chosen-select',
                     'multiple' => false,
                     'data-placeholder' => 'Select property…', // @translate
@@ -226,11 +236,27 @@ forbidden = forbidden
 
         $this->getInputFilter()
             ->add([
-                'name' => 'accessresource_access_mode',
+                'name' => 'accessresource_full',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'accessresource_access_modes',
                 'required' => false,
             ])
             ->add([
                 'name' => 'accessresource_access_via_property',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'accessresource_access_property',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'accessresource_embargo_property_start',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'accessresource_embargo_property_end',
                 'required' => false,
             ])
             ->get('fieldset_index')

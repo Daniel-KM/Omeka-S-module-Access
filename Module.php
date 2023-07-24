@@ -315,6 +315,8 @@ class Module extends AbstractModule
     public function getConfigForm(PhpRenderer $renderer)
     {
         $this->warnConfig();
+        $renderer->headScript()
+            ->appendFile($renderer->assetUrl('js/access-resource-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
         return '<style>fieldset[name=fieldset_index] .inputs label {display: block;}</style>'
             . parent::getConfigForm($renderer);
     }

@@ -136,6 +136,49 @@
         $('#accessresource')
             .prepend('<legend>' + Omeka.jsTranslate('Access resource') + '</legend>');
 
+        // Config form.
+
+        const modeIp = function() {
+            const element = $('input[name="accessresource_access_modes[]"][value=ip]');
+            if (element.prop('checked')) {
+                $('#accessresource_ip_item_sets').closest('.field').show(300);
+            } else {
+                $('#accessresource_ip_item_sets').closest('.field').hide();
+            }
+        }
+
+        const accessViaProperty = function() {
+            const element = $('input[name=accessresource_access_via_property]:checked');
+            if (element.val() === 'status') {
+                $('#accessresource_access_property').closest('.field').show(300);
+                $('#accessresource_access_property_statuses').closest('.field').show(300);
+                $('#accessresource_hide_in_advanced_tab').closest('.field').show(300);
+            } else {
+                $('#accessresource_access_property').closest('.field').hide();
+                $('#accessresource_access_property_statuses').closest('.field').hide();
+                $('#accessresource_hide_in_advanced_tab').closest('.field').hide();
+            }
+        }
+
+        const embargoViaProperty = function () {
+            const element = $('input[type=checkbox][name=accessresource_embargo_via_property]');
+            if (element.prop('checked')) {
+                $('#accessresource_embargo_property_start').closest('.field').show(300);
+                $('#accessresource_embargo_property_end').closest('.field').show(300);
+            } else {
+                $('#accessresource_embargo_property_start').closest('.field').hide();
+                $('#accessresource_embargo_property_end').closest('.field').hide();
+            }
+        }
+
+        $('input[name="accessresource_access_modes[]"][value=ip]').on('click', modeIp);
+        $('input[name=accessresource_access_via_property]').on('click', accessViaProperty);
+        $('input[type=checkbox][name=accessresource_embargo_via_property]').on('click', embargoViaProperty);
+
+        modeIp();
+        accessViaProperty();
+        embargoViaProperty();
+
     });
 
 })(jQuery);
