@@ -16,14 +16,14 @@ class RequestMailer extends AbstractPlugin
     protected $mailer;
 
     /**
-     * @var \Omeka\Settings;
-     */
-    protected $settings;
-
-    /**
      * @var AuthenticationService
      */
     protected $authenticationService;
+
+    /**
+     * @var \Omeka\Settings;
+     */
+    protected $settings;
 
     /**
      * @var array
@@ -37,14 +37,14 @@ class RequestMailer extends AbstractPlugin
 
     public function __construct(
         Mailer $mailer,
-        Settings $settings,
         AuthenticationService $authenticationService,
+        Settings $settings,
         array $config,
         User $adminUser
     ) {
         $this->mailer = $mailer;
-        $this->settings = $settings;
         $this->authenticationService = $authenticationService;
+        $this->settings = $settings;
         $this->config = $config;
         $this->adminUser = $adminUser;
     }
