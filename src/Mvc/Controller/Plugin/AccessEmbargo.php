@@ -21,11 +21,13 @@ class AccessEmbargo extends AbstractPlugin
     /**
      * Get access embargo of a resource.
      *
-     * @return array Associative array of start and end to DateTime or null.
+     * @return array Associative array of active (null or boolean), start and
+     * end (DateTime or null).
      */
     public function __invoke($resource): array
     {
         $result = [
+            'active' => null,
             'start' => null,
             'end' => null,
         ];
@@ -48,6 +50,7 @@ class AccessEmbargo extends AbstractPlugin
         $status = $this->entityManager->find(AccessStatus::class, $resourceId);
         return $status
             ? [
+                'active' => $status->isUnderEmbargo(),
                 'start' => $status->getEmbargoStart(),
                 'end' => $status->getEmbargoEnd(),
             ]

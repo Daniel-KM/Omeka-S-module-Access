@@ -6,7 +6,6 @@ use AccessResource\Entity\AccessResource;
 use AccessResource\Entity\AccessStatus;
 use AccessResource\Mvc\Controller\Plugin\AccessStatus as AccessStatusPlugin;
 use Doctrine\ORM\EntityManager;
-use Laminas\Authentication\AuthenticationService;
 use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Laminas\Mvc\Controller\Plugin\Params;
@@ -38,9 +37,9 @@ class IsAllowedMediaContent extends AbstractPlugin
     protected $isExternalUser;
 
     /**
-     * @var Laminas\Authentication\AuthenticationService;
+     * @var \Omeka\Entity\User;
      */
-    protected $authenticationService;
+    protected $user;
 
     /**
      * @var \Omeka\Settings\Settings
@@ -57,7 +56,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         UserIsAllowed $userIsAllowed,
         AccessStatusPlugin $accessStatus,
         IsExternalUser $isExternalUser,
-        AuthenticationService $authenticationService,
+        ?User $user,
         Settings $settings,
         Params $params
     ) {
@@ -65,7 +64,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         $this->userIsAllowed = $userIsAllowed;
         $this->accessStatus = $accessStatus;
         $this->isExternalUser = $isExternalUser;
-        $this->authenticationService = $authenticationService;
+        $this->user = $user;
         $this->settings = $settings;
         $this->params = $params;
     }
@@ -98,7 +97,12 @@ class IsAllowedMediaContent extends AbstractPlugin
             return false;
         }
 
-        if ($this->userIsAllowed->__invoke(\Omeka\Entity\Resource::class, 'view-all')) {
+        $owner = $media->owner();
+        if ($this->user && $owner && (int) $owner->id() === (int) $this->user->getId()) {
+            return true;
+        }
+
+        if ($this->user && $this->userIsAllowed->__invoke(\Omeka\Entity\Resource::class, 'view-all')) {
             return true;
         }
 
@@ -134,16 +138,13 @@ class IsAllowedMediaContent extends AbstractPlugin
             return true;
         }
 
-        /** @var \Omeka\Entity\User $user */
-        $user = $this->authenticationService->getIdentity();
-
         $modeGuest = in_array('guest', $modes);
-        if ($modeGuest && $user && $user->getRole() === 'guest') {
+        if ($modeGuest && $this->user && $this->user->getRole() === 'guest') {
             return true;
         }
 
         $modeExternal = in_array('external', $modes);
-        if ($modeExternal && $user && $this->isExternalUser->__invoke($user)) {
+        if ($modeExternal && $this->user && $this->isExternalUser->__invoke($this->user)) {
             return true;
         }
 
@@ -153,7 +154,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         }
 
         $modeIndividual = in_array('individual', $modes);
-        if ($modeIndividual && $this->checkIndividual($media, $user)) {
+        if ($modeIndividual && $this->checkIndividual($media, $this->user)) {
             return true;
         }
 
@@ -166,22 +167,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         if ($bypassEmbargo) {
             return false;
         }
-        $embargoStartDate = $accessStatus->getEmbargoStart();
-        $embargoEndDate = $accessStatus->getEmbargoEnd();
-        if (!$embargoStartDate && !$embargoEndDate) {
-            return false;
-        }
-        $now = time();
-        if ($embargoStartDate && $embargoEndDate) {
-            return $now >= $embargoStartDate->format('U')
-                && $now <= $embargoEndDate->format('U');
-        } elseif ($embargoStartDate) {
-            return $now >= $embargoStartDate->format('U');
-        } elseif ($embargoEndDate) {
-            return $now <= $embargoEndDate->format('U');
-        } else {
-            return false;
-        }
+        return (bool) $accessStatus->isUnderEmbargo();
     }
 
     protected function isMediaInReservedItemSets(MediaRepresentation $media): bool

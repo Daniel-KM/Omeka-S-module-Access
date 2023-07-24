@@ -153,11 +153,11 @@ class AccessStatusUpdate extends AbstractJob
 
         $accessViaProperty = (bool) $settings->get('accessresource_level_via_property');
         if ($accessViaProperty) {
-            $this->accessProperty = $settings->get('accessresource_level_property');
-            $this->accessPropertyLevels = $settings->get('accessresource_level_property_levels', $this->accessPropertyLevelsDefault);
-            $this->updateAccessViaProperty();
+            $this->levelProperty = $settings->get('accessresource_level_property');
+            $this->levelPropertyLevels = $settings->get('accessresource_level_property_levels', $this->levelPropertyLevelsDefault);
+            $this->updateLevelViaProperty();
         } else {
-            $this->updateAccessViaVisibility();
+            $this->updateLevelViaVisibility();
         }
 
         $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
@@ -166,15 +166,19 @@ class AccessStatusUpdate extends AbstractJob
             $this->embargoPropertyEnd = $settings->get('accessresource_embargo_property_end');
             $this->updateEmbargoViaProperty();
         }
+
+        $this->logger->info(new Message(
+            'End of indexation.' // @translate
+        ));
     }
 
-    protected function updateViaVisibility(): bool
+    protected function updateLevelViaVisibility(): bool
     {
         if (in_array($this->missingMode, ['free', 'reserved', 'protected', 'forbidden'])) {
             $sql = <<<SQL
 # Set the specified status for all missing resources.
 INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `id`, {$this->missingMode}, NULL, NULL
+SELECT `id`, "{$this->missingMode}", NULL, NULL
 FROM `resource`
 ON DUPLICATE KEY UPDATE
    `id` = `resource`.`id`
@@ -208,30 +212,30 @@ SQL;
         return true;
     }
 
-    protected function updateAccessViaProperty(): bool
+    protected function updateLevelViaProperty(): bool
     {
-        if (!$this->accessProperty) {
+        if (!$this->levelProperty) {
             $this->logger->err(new Message(
                 'Property to set access resource is not defined.' // @translate
             ));
             return false;
         }
 
-        $propertyId = $this->api->search('properties', ['term' => $this->accessProperty])->getContent();
+        $propertyId = $this->api->search('properties', ['term' => $this->levelProperty])->getContent();
         if (!$propertyId) {
             $this->logger->err(new Message(
                 'Property "%1$s" does not exist.', // @translate
-                $this->accessProperty
+                $this->levelProperty
             ));
             return false;
         }
         $propertyId = reset($propertyId);
 
-        $list = array_intersect_key($this->accessPropertyLevels, $this->accessPropertyLevelsDefault);
+        $list = array_intersect_key($this->levelPropertyLevels, $this->levelPropertyLevelsDefault);
         if (count($list) !== 4) {
             $this->logger->err(new Message(
                 'List of property levels is incomplete, missing "%s".', // @translate
-                implode('", "', array_flip(array_diff_key($this->accessPropertyLevelsDefault, $this->accessPropertyLevels)))
+                implode('", "', array_flip(array_diff_key($this->levelPropertyLevelsDefault, $this->levelPropertyLevels)))
             ));
             return false;
         }

@@ -279,6 +279,17 @@ class AccessStatus extends \AccessResource\Entity\AccessStatus implements \Doctr
     /**
      * {@inheritDoc}
      */
+    public function isUnderEmbargo(): ?bool
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'isUnderEmbargo', []);
+
+        return parent::isUnderEmbargo();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getResourceId()
     {
 

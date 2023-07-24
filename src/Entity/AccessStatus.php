@@ -140,4 +140,30 @@ class AccessStatus extends AbstractEntity
     {
         return $this->embargoEnd;
     }
+
+    /**
+     * Check if embargo is set and check it.
+     *
+     * @return bool|null Null if the embargo dates are not set, true if resource
+     * is under embargo, else false.
+     *
+     * @todo Move to AccessStatus representation.
+     */
+    public function isUnderEmbargo(): ?bool
+    {
+        if (!$this->embargoStart && !$this->embargoEnd) {
+            return null;
+        }
+        $now = time();
+        if ($this->embargoStart && $this->embargoEnd) {
+            return $now >= $this->embargoStart->format('U')
+                && $now <= $this->embargoEnd->format('U');
+        } elseif ($this->embargoStart) {
+            return $now >= $this->embargoStart->format('U');
+        } elseif ($this->embargoEnd) {
+            return $now <= $this->embargoEnd->format('U');
+        } else {
+            return null;
+        }
+    }
 }

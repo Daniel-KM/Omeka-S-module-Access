@@ -19,7 +19,7 @@ class IsAllowedMediaContentFactory implements FactoryInterface
             $plugins->get('userIsAllowed'),
             $plugins->get('accessStatus'),
             $plugins->get('isExternalUser'),
-            $services->get('Omeka\AuthenticationService'),
+            $services->get('Omeka\AuthenticationService')->getIdentity(),
             $services->get('Omeka\Settings'),
             $plugins->get('params')
         );
