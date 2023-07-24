@@ -140,19 +140,20 @@ SQL;
         );
 
         // Store status reserved.
+        // Use hydrade.post since the resource id is required.
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\ItemAdapter',
-            'api.hydrate.pre',
+            'api.hydrate.post',
             [$this, 'updateAccessStatus']
         );
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\MediaAdapter',
-            'api.hydrate.pre',
+            'api.hydrate.post',
             [$this, 'updateAccessStatus']
         );
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\ItemSetAdapter',
-            'api.hydrate.pre',
+            'api.hydrate.post',
             [$this, 'updateAccessStatus']
         );
 
@@ -545,6 +546,9 @@ SQL;
         }
 
         $currentAccessStatus->setStatus($resourceAccessStatus);
+        if (!$resource->getId()) {
+            return;
+        }
         $entityManager->persist($currentAccessStatus);
     }
 
