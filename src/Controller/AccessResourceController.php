@@ -153,6 +153,8 @@ class AccessResourceController extends AbstractActionController
      * @see \AccessResource\Controller\AccessResourceController::sendFile()
      * @see \DerivativeMedia\Controller\IndexController::sendFile()
      * @see \Statistics\Controller\DownloadController::sendFile()
+     * and
+     * @see \ImageServer\Controller\ImageController::fetchAction()
      */
     protected function sendFile(
         string $filepath,
@@ -186,11 +188,14 @@ class AccessResourceController extends AbstractActionController
                 ->addHeaderLine(sprintf('Expires: %s', gmdate('D, d M Y H:i:s', time() + 2592000) . ' GMT'));
         }
 
+        // Fix deprecated warning in \Laminas\Http\PhpEnvironment\Response::sendHeaders() (l. 113).
+        $errorReporting = error_reporting();
+        error_reporting($errorReporting & ~E_DEPRECATED);
+
         // Send headers separately to handle large files.
         $response->sendHeaders();
 
-        // TODO Fix issue with session. See readme of module XmlViewer.
-        ini_set('display_errors', '0');
+        error_reporting($errorReporting);
 
         // Normally, these formats are not used, so check quality.
         // TODO Why xml content is managed separately when sending file?
@@ -217,6 +222,9 @@ class AccessResourceController extends AbstractActionController
             ob_end_clean();
         }
         readfile($filepath);
+
+        // TODO Fix issue with session. See readme of module XmlViewer.
+        ini_set('display_errors', '0');
 
         // Return response to avoid default view rendering and to manage events.
         return $response;
