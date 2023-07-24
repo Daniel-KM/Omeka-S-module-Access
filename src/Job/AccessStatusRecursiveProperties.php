@@ -37,6 +37,11 @@ class AccessStatusRecursiveProperties extends AbstractJob
     protected $api;
 
     /**
+     * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus
+     */
+    protected $accessStatusForResource;
+
+    /**
      * @var string
      */
     protected $levelProperty;
@@ -78,6 +83,11 @@ class AccessStatusRecursiveProperties extends AbstractJob
      */
     protected $isAllowed;
 
+    /**
+     * @var bool
+     */
+    protected $hasNumericDataTypes;
+
     public function perform(): void
     {
         $services = $this->getServiceLocator();
@@ -95,7 +105,7 @@ class AccessStatusRecursiveProperties extends AbstractJob
         $this->api = $services->get('Omeka\ApiManager');
 
         $plugins = $services->get('ControllerPluginManager');
-        $accessStatusForResource = $plugins->get('accessStatus');
+        $this->accessStatusForResource = $plugins->get('accessStatus');
 
         $settings = $services->get('Omeka\Settings');
 
@@ -143,43 +153,13 @@ class AccessStatusRecursiveProperties extends AbstractJob
         $this->embargoEndPropertyId = reset($this->embargoEndPropertyId);
 
         $resourceId = (int) $this->getArg('resource_id');
-        if (!$resourceId) {
+        $resourceIds = array_filter(array_map('intval', $this->getArg('resource_ids', [])));
+        if (!$resourceId && !$resourceIds) {
             $this->logger->warn(new Message(
                 'No resource to process.' // @translate
             ));
             return;
         }
-
-        /** @var \Omeka\Entity\Resource $resource */
-        $resource = $this->entityManager->find(\Omeka\Entity\Resource::class, $resourceId);
-        if (!$resource) {
-            $this->logger->warn(new Message(
-                'No resource "%d" to process.', // @translate
-                $resourceId
-            ));
-            return;
-        }
-
-        $resourceName = $resource->getResourceName();
-        if (!in_array($resourceName, ['items', 'item_sets'])) {
-            $this->logger->warn(new Message(
-                'No resource "%d" to process.', // @translate
-                $resourceId
-            ));
-            return;
-        }
-
-        /** @var \AccessResource\Entity\AccessStatus $accessStatus */
-        $accessStatus = $accessStatusForResource($resource);
-        if (!$accessStatus) {
-            $this->logger->warn(new Message(
-                'No access status for resource "%d".', // @translate
-                $resourceId
-            ));
-            return;
-        }
-
-        $accessStatusValues = $this->getArg('values', []);
 
         // People who can view all have all rights to update statuses.
         $this->isAllowed = $services->get('Omeka\Acl')->userIsAllowed(Resource::class, 'view-all');
@@ -187,8 +167,64 @@ class AccessStatusRecursiveProperties extends AbstractJob
         /** @var \Omeka\Module\Manager $moduleManager */
         $moduleManager = $services->get('Omeka\ModuleManager');
         $module = $moduleManager->getModule('NumericDataTypes');
-        $hasNumericDataType = $module
+        $this->hasNumericDataTypes = $module
             && $module->getState() === \Omeka\Module\Manager::STATE_ACTIVE;
+
+        $this->levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])), AccessStatusRepresentation::LEVELS);
+
+        $accessStatusValues = $this->getArg('values', []);
+
+        $ids = $resourceId && $resourceIds
+            ? array_merge([$resourceId] + $resourceIds)
+            : ($resourceId ? [$resourceId] : $resourceIds);
+
+        foreach ($ids as $id) {
+            $resourceBindTypes = $this->prepareBind($id, $accessStatusValues);
+            if ($resourceBindTypes === null) {
+                continue;
+            }
+            [$resource, $bind, $types] = array_values($resourceBindTypes);
+            $resourceName = $resource->getResourceName();
+            $resourceName === 'items'
+                ? $this->processUpdateItems($bind, $types)
+                :  $this->processUpdateItemSets($bind, $types);
+        }
+
+        $this->logger->info(new Message(
+            'End of indexation of access statuses in properties.' // @translate
+        ));
+    }
+
+    protected function prepareBind(int $resourceId, array $accessStatusValues): ?array
+    {
+        /** @var \Omeka\Entity\Resource $resource */
+        $resource = $this->entityManager->find(\Omeka\Entity\Resource::class, $resourceId);
+        if (!$resource) {
+            $this->logger->warn(new Message(
+                'No resource "%d" to process.', // @translate
+                $resourceId
+            ));
+            return null;
+        }
+
+        $resourceName = $resource->getResourceName();
+        if (!in_array($resourceName, ['items', 'item_sets'])) {
+            $this->logger->warn(new Message(
+                'Resource #%d is not an item or an item set.', // @translate
+                $resourceId
+            ));
+            return null;
+        }
+
+        /** @var \AccessResource\Entity\AccessStatus $accessStatus */
+        $accessStatus = $this->accessStatusForResource->__invoke($resource);
+        if (!$accessStatus) {
+            $this->logger->warn(new Message(
+                'No access status for resource "%d".', // @translate
+                $resourceId
+            ));
+            return null;
+        }
 
         $level = $accessStatus->getLevel();
         $embargoStart = $accessStatus->getEmbargoStart();
@@ -197,8 +233,7 @@ class AccessStatusRecursiveProperties extends AbstractJob
         $embargoEndStatus = $embargoEnd ? $embargoEnd->format('Y-m-d H:i:s') : null;
 
         // Level values.
-        $levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])), AccessStatusRepresentation::LEVELS);
-        $levelVal = $levelPropertyLevels[$level] ?? $level;
+        $levelVal = $this->levelPropertyLevels[$level] ?? $level;
         if (empty($accessStatusValues['o-access:level']['type'])) {
             try {
                 $anyLevel = $this->api->read('values', ['property' => $this->levelPropertyId], [], ['responseContent' => 'resource'])->getContent();
@@ -233,7 +268,7 @@ class AccessStatusRecursiveProperties extends AbstractJob
             : $accessStatusValues['o-access:embargo_start']['value'];
         if ($embargoStartVal) {
             $embargoStartType = empty($accessStatusValues['o-access:embargo_start']['type'])
-                ? ($hasNumericDataType ? 'numeric:timestamp' : 'literal')
+                ? ($this->hasNumericDataTypes ? 'numeric:timestamp' : 'literal')
                 : $accessStatusValues['o-access:embargo_start']['type'];
             $bind += [
                 'embargo_start_value' => $embargoStartVal,
@@ -243,6 +278,10 @@ class AccessStatusRecursiveProperties extends AbstractJob
                 'embargo_start_value' => \Doctrine\DBAL\ParameterType::STRING,
                 'embargo_start_type' => \Doctrine\DBAL\ParameterType::STRING,
             ];
+            if ($this->hasNumericDataTypes) {
+                $bind['embargo_start_timestamp'] = $embargoStart->getTimestamp();
+                $types['embargo_start_timestamp'] = \Doctrine\DBAL\ParameterType::INTEGER;
+            }
         }
 
         // Embargo end values.
@@ -251,7 +290,7 @@ class AccessStatusRecursiveProperties extends AbstractJob
             : $accessStatusValues['o-access:embargo_end']['value'];
         if ($embargoEndVal) {
             $embargoEndType = empty($accessStatusValues['o-access:embargo_end']['type'])
-                ? ($hasNumericDataType ? 'numeric:timestamp' : 'literal')
+                ? ($this->hasNumericDataTypes ? 'numeric:timestamp' : 'literal')
                 : $accessStatusValues['o-access:embargo_end']['type'];
             $bind += [
                 'embargo_end_value' => $embargoEndVal,
@@ -261,15 +300,17 @@ class AccessStatusRecursiveProperties extends AbstractJob
                 'embargo_end_value' => \Doctrine\DBAL\ParameterType::STRING,
                 'embargo_end_type' => \Doctrine\DBAL\ParameterType::STRING,
             ];
+            if ($this->hasNumericDataTypes) {
+                $bind['embargo_end_timestamp'] = $embargoEnd->getTimestamp();
+                $types['embargo_end_timestamp'] = \Doctrine\DBAL\ParameterType::INTEGER;
+            }
         }
 
-        $resourceName === 'items'
-            ? $this->processUpdateItems($bind, $types)
-            :  $this->processUpdateItemSets($bind, $types);
-
-        $this->logger->info(new Message(
-            'End of indexation of access statuses in properties.' // @translate
-        ));
+        return [
+            'resource' => $resource,
+            'bind' => $bind,
+            'types' => $types,
+        ];
     }
 
     protected function processUpdateItems(array $bind, array $types): void
@@ -298,6 +339,21 @@ WHERE `media`.`item_id` = :resource_id
     $whereMedias
     AND `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
 ;
+SQL;
+
+        if ($this->hasNumericDataTypes) {
+            $sql .= "\n" . <<<SQL
+DELETE `numeric_data_types_timestamp`
+FROM `numeric_data_types_timestamp`
+JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
+WHERE `media`.`item_id` = :resource_id
+    $whereMedias
+    AND `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
+;
+SQL;
+        }
+
+        $sql .= "\n" . <<<SQL
 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
 SELECT `media`.`id`, :property_level, :level_type, :level_value, 1
 FROM `media`
@@ -315,6 +371,16 @@ WHERE `media`.`item_id` = :resource_id
     $whereMedias
 ;
 SQL;
+            if ($this->hasNumericDataTypes) {
+                $sql .= "\n" . <<<SQL
+INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
+FROM `media`
+WHERE `media`.`item_id` = :resource_id
+    $whereMedias
+;
+SQL;
+            }
         }
 
         if (!empty($bind['embargo_end_value'])) {
@@ -326,9 +392,17 @@ WHERE `media`.`item_id` = :resource_id
     $whereMedias
 ;
 SQL;
+            if ($this->hasNumericDataTypes) {
+                $sql .= "\n" . <<<SQL
+INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
+FROM `media`
+WHERE `media`.`item_id` = :resource_id
+    $whereMedias
+;
+SQL;
+            }
         }
-
-        // TODO Numeric timestamps.
 
         $this->entityManager->getConnection()->executeStatement($sql, $bind, $types);
     }
@@ -356,6 +430,21 @@ JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
 WHERE `item_item_set`.`item_set_id` = :resource_id
     AND `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
 ;
+SQL;
+
+        if ($this->hasNumericDataTypes) {
+            $sql .= "\n" . <<<SQL
+DELETE `numeric_data_types_timestamp`
+FROM `numeric_data_types_timestamp`
+JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
+JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+WHERE `item_item_set`.`item_set_id` = :resource_id
+    AND `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
+;
+SQL;
+        }
+
+        $sql .= "\n" . <<<SQL
 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
 SELECT `item_item_set`.`item_id`, :property_level, :level_type, :level_value, 1
 FROM `item_item_set`
@@ -383,6 +472,21 @@ JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
 WHERE `item_item_set`.`item_set_id` = :resource_id
 ;
 SQL;
+            if ($this->hasNumericDataTypes) {
+                $sql .= "\n" . <<<SQL
+INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_timestamp
+FROM `item_item_set`
+WHERE `item_item_set`.`item_set_id` = :resource_id
+;
+INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
+FROM `media`
+JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+WHERE `item_item_set`.`item_set_id` = :resource_id
+;
+SQL;
+            }
         }
 
         if (!empty($bind['embargo_end_value'])) {
@@ -399,9 +503,22 @@ JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
 WHERE `item_item_set`.`item_set_id` = :resource_id
 ;
 SQL;
+            if ($this->hasNumericDataTypes) {
+                $sql .= "\n" . <<<SQL
+INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_timestamp
+FROM `item_item_set`
+WHERE `item_item_set`.`item_set_id` = :resource_id
+;
+INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
+FROM `media`
+JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+WHERE `item_item_set`.`item_set_id` = :resource_id
+;
+SQL;
+            }
         }
-
-        // TODO Numeric timestamps.
 
         $this->entityManager->getConnection()->executeStatement($sql, $bind, $types);
     }
@@ -440,6 +557,33 @@ WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :prope
     AND (`resource_item`.`is_public` = 1 $orWhereUser)
     AND (`resource`.`is_public` = 1 $orWhereUser)
 ;
+SQL;
+
+        if ($this->hasNumericDataTypes) {
+            $sql .= "\n" . <<<SQL
+DELETE `numeric_data_types_timestamp`
+FROM `numeric_data_types_timestamp`
+JOIN `item_item_set` ON `item_item_set`.`item_id` = `numeric_data_types_timestamp`.`resource_id`
+JOIN `resource` ON `resource_item`.`id` = `item_item_set`.`item_id`
+WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
+    AND `item_item_set`.`item_set_id` = :resource_id
+    AND (`resource`.`is_public` = 1 $orWhereUser)
+;
+DELETE `numeric_data_types_timestamp`
+FROM `numeric_data_types_timestamp`
+JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
+JOIN `resource` ON `resource`.`id` = `media`.`id`
+JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
+WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
+    AND `item_item_set`.`item_set_id` = :resource_id
+    AND (`resource_item`.`is_public` = 1 $orWhereUser)
+    AND (`resource`.`is_public` = 1 $orWhereUser)
+;
+SQL;
+        }
+
+            $sql .= "\n" . <<<SQL
 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
 SELECT `item_item_set`.`item_id`, :property_level, :level_type, :level_value, 1
 FROM `item_item_set`
@@ -479,6 +623,27 @@ WHERE `item_item_set`.`item_set_id` = :resource_id
     AND (`resource`.`is_public` = 1 $orWhereUser)
 ;
 SQL;
+            if ($this->hasNumericDataTypes) {
+                $sql .= "\n" . <<<SQL
+INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_timestamp
+FROM `item_item_set`
+JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
+WHERE `item_item_set`.`item_set_id` = :resource_id
+    AND (`resource`.`is_public` = 1 $orWhereUser)
+;
+INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
+FROM `media`
+JOIN `resource` ON `resource`.`id` = `media`.`id`
+JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
+WHERE `item_item_set`.`item_set_id` = :resource_id
+    AND (`resource_item`.`is_public` = 1 $orWhereUser)
+    AND (`resource`.`is_public` = 1 $orWhereUser)
+;
+SQL;
+            }
         }
 
         if (!empty($bind['embargo_end_value'])) {
@@ -501,9 +666,28 @@ WHERE `item_item_set`.`item_set_id` = :resource_id
     AND (`resource`.`is_public` = 1 $orWhereUser)
 ;
 SQL;
+            if ($this->hasNumericDataTypes) {
+                $sql .= "\n" . <<<SQL
+INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_timestamp
+FROM `item_item_set`
+JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
+WHERE `item_item_set`.`item_set_id` = :resource_id
+    AND (`resource`.`is_public` = 1 $orWhereUser)
+;
+INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
+FROM `media`
+JOIN `resource` ON `resource`.`id` = `media`.`id`
+JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
+WHERE `item_item_set`.`item_set_id` = :resource_id
+    AND (`resource_item`.`is_public` = 1 $orWhereUser)
+    AND (`resource`.`is_public` = 1 $orWhereUser)
+;
+SQL;
+            }
         }
-
-        // TODO Numeric timestamps.
 
         $this->entityManager->getConnection()->executeStatement($sql, $bind, $types);
     }
