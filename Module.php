@@ -171,8 +171,9 @@ class Module extends AbstractModule
             );
             $sharedEventManager->attach(
                 $adapter,
-                'api.preprocess_batch_update',
-                [$this, 'handleBatchUpdatePreprocess']
+                // "api.preprocess_batch_update" is used only for individuals.
+                'api.batch_update.pre',
+                [$this, 'handleBatchUpdatePre']
             );
             $sharedEventManager->attach(
                 $adapter,
@@ -332,88 +333,117 @@ class Module extends AbstractModule
 
     /**
      * Clean params for batch update to avoid to do it for each resource.
+     * Anyway, the individual proces is skipped for process without property.
      */
-    public function handleBatchUpdatePreprocess(Event $event): void
+    public function handleBatchUpdatePre(Event $event): void
     {
         /**
+         * A batch update process is launched one to three times in the core, at
+         * least with option "collectionAction" = "replace" (Omeka < 4.1).
+         * Batch updates are always partial.
+         *
+         * @see \Omeka\Job\BatchUpdate::perform()
+         * @var \Omeka\Api\Request $request
+         */
+        $request = $event->getParam('request');
+        // Warning: collectionAction is not set in background job.
+        $collectionAction = $request->getOption('collectionAction');
+        if (in_array($collectionAction, ['remove', 'append'])) {
+            return;
+        }
+
+        $request = $event->getParam('request');
+
+        $data = $request->getContent('data');
+        if (empty($data['accessresource'])) {
+            unset($data['accessresource']);
+            $request->setContent($data);
+            return;
+        }
+
+        if (!empty($data['accessresource']['is_batch_process'])) {
+            return;
+        }
+
+        /**
          * @var \Omeka\Settings\Settings $settings
-         * @var \AccessResource\Form\Admin\BatchEditFieldset $fieldset
          * @var \Omeka\Api\Request $request
          */
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
-        $request = $event->getParam('request');
-
-        $post = $request->getValue('accessresource');
-        $data = $event->getParam('data');
-
-        $data['is_batch_process'] = true;
 
         $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
         $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
         if ($accessViaProperty && $embargoViaProperty) {
-            $event->setParam('data', $data);
+            unset($data['accessresource']);
+            $request->setContent($data);
             return;
         }
+
+        $rawData = $data['accessresource'];
+        $newData = [
+            'is_batch_process' => true,
+        ];
 
         // Access status.
         if ($accessViaProperty) {
             // TODO Manage batch update for properties.
         } else {
-            if (empty($post['o-access:status']) || !in_array($post['o-access:status'], $this->accessStatuses())) {
-                unset($data['accessresource']['o-access:status']);
-            } else {
-                $data['accessresource']['o-access:status'] = $post['o-access:status'];
+            if (!empty($rawData['o-access:status']) && in_array($rawData['o-access:status'], $this->accessStatuses())) {
+                $newData['o-access:status'] = $rawData['o-access:status'];
             }
         }
 
         // Access embargo.
         if ($embargoViaProperty) {
-            unset($data['accessresource']['o-access:embargoStart']);
-            unset($data['accessresource']['o-access:embargoEnd']);
+            // TODO Manage batch update for properties.
         } else {
             // Embargo start.
-            if (empty($post['embargo_start_update'])) {
-                unset($data['accessresource']['o-access:embargoStart']);
-            } elseif ($post['embargo_start_update'] === 'remove') {
-                $data['accessresource']['o-access:embargoStart'] = null;
-            } elseif ($post['embargo_start_update'] === 'set') {
-                $embargoStart = $post['embargo_start_date'] ?? null;
+            if (empty($rawData['embargo_start_update'])) {
+                // Nothing to do.
+            } elseif ($rawData['embargo_start_update'] === 'remove') {
+                $newData['o-access:embargoStart'] = null;
+            } elseif ($rawData['embargo_start_update'] === 'set') {
+                $embargoStart = $rawData['embargo_start_date'] ?? null;
                 $embargoStart = trim((string) $embargoStart) ?: null;
                 if ($embargoStart) {
-                    $embargoStart .= 'T' . (empty($post['embargo_start_time']) ? '00:00:00' : $post['embargo_start_time']  . ':00');
+                    $embargoStart .= 'T' . (empty($rawData['embargo_start_time']) ? '00:00:00' : $rawData['embargo_start_time']  . ':00');
                 }
-                $data['accessresource']['o-access:embargoStart'] = $embargoStart;
+                $newData['o-access:embargoStart'] = $embargoStart;
             }
             // Embargo end.
-            if (empty($post['embargo_end_update'])) {
-                unset($data['accessresource']['o-access:embargoEnd']);
-            } elseif ($post['embargo_end_update'] === 'remove') {
-                $data['accessresource']['o-access:embargoEnd'] = null;
-            } elseif ($post['embargo_end_update'] === 'set') {
-                $embargoEnd = $post['embargo_end_date'] ?? null;
+            if (empty($rawData['embargo_end_update'])) {
+                // Nothing to do.
+            } elseif ($rawData['embargo_end_update'] === 'remove') {
+                $newData['o-access:embargoEnd'] = null;
+            } elseif ($rawData['embargo_end_update'] === 'set') {
+                $embargoEnd = $rawData['embargo_end_date'] ?? null;
                 $embargoEnd = trim((string) $embargoEnd) ?: null;
                 if ($embargoEnd) {
-                    $embargoEnd .= 'T' . (empty($post['embargo_end_time']) ? '00:00:00' : $post['embargo_end_time'] . ':00');
+                    $embargoEnd .= 'T' . (empty($rawData['embargo_end_time']) ? '00:00:00' : $rawData['embargo_end_time']  . ':00');
                 }
-                $data['accessresource']['o-access:embargoEnd'] = $embargoEnd;
+                $newData['o-access:embargoEnd'] = $embargoEnd;
             }
         }
-        unset($data['accessresource']['accessresource']);
 
-        $needProcess = array_key_exists('o-access:status', $data['accessresource'])
-            || array_key_exists('o-access:embargoStart', $data['accessresource'])
-            || array_key_exists('o-access:embargoEnd', $data['accessresource']);
+        $needProcess = array_key_exists('o-access:status', $newData)
+            || array_key_exists('o-access:embargoStart', $newData)
+            || array_key_exists('o-access:embargoEnd', $newData);
 
         if ($needProcess) {
-            if (!empty($post['access_recursive'])) {
-                $data['accessresource']['access_recursive'] = true;
+            if (!empty($rawData['access_recursive'])) {
+                $newData['access_recursive'] = true;
             }
+            $this->getServiceLocator()->get('Omeka\Logger')->info(new Message(
+                "Cleaned params used for access resources:\n%s", // @translate
+                json_encode($newData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_LINE_TERMINATORS)
+            ));
+            $data['accessresource'] = $newData;
         } else {
             unset($data['accessresource']);
         }
 
-        $event->setParam('data', $data);
+        $request->setContent($data);
     }
 
     public function handleBatchUpdatePost(Event $event): void
@@ -428,6 +458,7 @@ class Module extends AbstractModule
         // The data are already checked during preprocess.
         $request = $event->getParam('request');
         $data = $request->getValue('accessresource');
+
         if (!$data) {
             return;
         }
@@ -436,7 +467,7 @@ class Module extends AbstractModule
         $embargoStart = array_key_exists('o-access:embargoStart', $data) ? $data['o-access:embargoStart'] : false;
         $embargoEnd = array_key_exists('o-access:embargoEnd', $data) ? $data['o-access:embargoEnd'] : false;
 
-        // Check if a process is needed.
+        // Check if a process is needed (normally already done).
         if ($status === false && $embargoStart === false && $embargoEnd === false) {
             return;
         }
@@ -480,15 +511,19 @@ class Module extends AbstractModule
             }
             if ($embargoStart !== false) {
                 $qb
-                    ->set('access_status.embargo_start', ':embargo_start')
+                    ->set('access_status.embargoStart', ':embargo_start')
                     ->setParameter('embargo_start', $embargoStart, $embargoStart ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL);
             }
             if ($embargoEnd !== false) {
                 $qb
-                    ->set('access_status.embargo_end', ':embargo_end')
+                    ->set('access_status.embargoEnd', ':embargo_end')
                     ->setParameter('embargo_end', $embargoEnd, $embargoEnd ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL);
             }
             $qb->getQuery()->execute();
+            // Refresh entity manager cache after update via query.
+            foreach ($accessStatuses as $accessStatus) {
+                $entityManager->refresh($accessStatus);
+            }
         }
 
         $remainingIds = isset($existingIds) ? array_diff($ids, $existingIds) : $ids;
@@ -510,7 +545,7 @@ class Module extends AbstractModule
         if (!empty($data['access_recursive'])) {
             // TODO Currently, the recursive process requires a single resource.
             foreach ($resources as $resource) {
-                $accessStatus = $entityManager->find(AccessStatus::class, $resource->getId());
+                $accessStatus = $entityManager->find(AccessStatus::class, $resource);
                 $this->recursiveUpdate($resource, $accessStatus);
             }
         }
@@ -1111,12 +1146,12 @@ HTML;
         $form = $event->getTarget();
         $formElementManager = $services->get('FormElementManager');
 
-        $fieldset = $formElementManager->get(BatchEditFieldset::class);
-        $fieldset
-            ->setOption('full_access', (bool) $settings->get('accessresource_full'))
-            ->setOption('resource_type', $event->getTarget()->getOption('resource_type'))
-            ->setOption('access_via_property', $accessViaProperty)
-            ->setOption('embargo_via_property', $embargoViaProperty);
+        $fieldset = $formElementManager->get(BatchEditFieldset::class, [
+            'full_access' => (bool) $settings->get('accessresource_full'),
+            'resource_type' => $event->getTarget()->getOption('resource_type'),
+            'access_via_property' => $accessViaProperty,
+            'embargo_via_property' => $embargoViaProperty,
+        ]);
 
         $form->add($fieldset);
     }

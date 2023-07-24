@@ -131,10 +131,39 @@
 
         // Batch edit form.
 
+        const startDate = function () {
+            if ($('input[name="accessresource[embargo_start_update]"]:checked').val() === 'set') {
+                $('#accessresource_embargo_start_date').closest('.field').show(300);
+            } else {
+                $('#accessresource_embargo_start_date').closest('.field').hide(300);
+            }
+        }
+
+        const endDate = function () {
+            if ($('input[name="accessresource[embargo_end_update]"]:checked').val() === 'set') {
+                $('#accessresource_embargo_end_date').closest('.field').show(300);
+            } else {
+                $('#accessresource_embargo_end_date').closest('.field').hide(300);
+            }
+        }
+
         $('.accessresource').closest('.field')
             .wrapAll('<fieldset id="accessresource" class="field-container">');
         $('#accessresource')
-            .prepend('<legend>' + Omeka.jsTranslate('Access resource') + '</legend>');
+            .prepend('<legend>' + Omeka.jsTranslate('Access resources') + '</legend>');
+        var removeField = $('#accessresource_embargo_start_time').closest('.field');
+        $('#accessresource_embargo_start_date')
+            .after($('#accessresource_embargo_start_time'));
+        removeField.remove();
+        removeField = $('#accessresource_embargo_end_time').closest('.field');
+        $('#accessresource_embargo_end_date')
+            .after($('#accessresource_embargo_end_time'));
+        removeField.remove();
+        $('input[name="accessresource[embargo_start_update]"]').on('click', startDate);
+        $('input[name="accessresource[embargo_end_update]"]').on('click', endDate);
+
+        startDate();
+        endDate();
 
         // Config form.
 

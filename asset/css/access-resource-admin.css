@@ -7,8 +7,11 @@
     }
 
     .inputs input[name=embargo_start_date],
-    .inputs input[name=embargo_end_date] {
+    .inputs input[name=embargo_end_date],
+    .inputs input[name="accessresource[embargo_start_date]"],
+    .inputs input[name="accessresource[embargo_end_date]"] {
         width: calc( 100% - 72px );
+        margin-right: 6px;
     }
 
     .access-resource table .resource-name {

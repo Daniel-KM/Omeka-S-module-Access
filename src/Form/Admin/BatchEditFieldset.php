@@ -9,13 +9,30 @@ use Laminas\Form\Fieldset;
 
 class BatchEditFieldset extends Fieldset
 {
+    protected $fullAccess = false;
+    protected $resourceType = null;
+    protected $accessViaProperty = false;
+    protected $embargoViaProperty = false;
+
+    public function __construct($name = null, array $options = [])
+    {
+        parent::__construct($name, $options);
+        if (isset($options['full_access'])) {
+            $this->fullAccess = (bool) $options['full_access'];
+        }
+        if (isset($options['resource_type'])) {
+            $this->resourceType = (string) $options['resource_type'];
+        }
+        if (isset($options['access_via_property'])) {
+            $this->accessViaProperty = (bool) $options['access_via_property'];
+        }
+        if (isset($options['embargo_via_property'])) {
+            $this->embargoViaProperty = (bool) $options['embargo_via_property'];
+        }
+    }
+
     public function init(): void
     {
-        $resourceType = $this->getOption('resource_type');
-        $fullAccess = (bool) $this->getOption('full_access');
-        $accessViaProperty = (bool) $this->getOption('access_via_property');
-        $embargoViaProperty = (bool) $this->getOption('embargo_via_property');
-
         $valueOptions = [
             AccessStatus::FREE => 'Free', // @translate'
             AccessStatus::RESERVED => 'Restricted', // @translate
@@ -24,7 +41,7 @@ class BatchEditFieldset extends Fieldset
         ];
         // There is no difference between reserved and protected when only the
         // file is protected.
-        if (!$fullAccess) {
+        if (!$this->fullAccess) {
             unset($valueOptions[AccessStatus::PROTECTED]);
         }
 
@@ -50,7 +67,7 @@ class BatchEditFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'accessresource_o_access_status',
                     'class' => 'accessresource',
-                    'disabled' => $accessViaProperty ? 'disabled' : false,
+                    'disabled' => $this->accessViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -68,7 +85,7 @@ class BatchEditFieldset extends Fieldset
                 'attributes' => [
                     'id' => 'accessresource_o_access_status',
                     'class' => 'accessresource',
-                    'disabled' => $accessViaProperty ? 'disabled' : false,
+                    'disabled' => $this->accessViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -82,18 +99,17 @@ class BatchEditFieldset extends Fieldset
                     'value_options' => [
                         '' => 'No change', // @translate
                         'remove' => 'Remove', // @translate
-                        // 'set' => 'Set date below', // @translate
+                        'set' => 'Set date below', // @translate
                     ],
                 ],
                 'attributes' => [
                     'id' => 'accessresource_embargo_start_update',
                     'class' => 'accessresource',
-                    'disabled' => $embargoViaProperty ? 'disabled' : false,
+                    'disabled' => $this->embargoViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
             ])
-            /*// TODO Issue with validation because there is a fieldset. EIther check array or remove vaiidator.
             ->add([
                 'name' => 'embargo_start_date',
                 'type' => Element\Date::class,
@@ -102,7 +118,8 @@ class BatchEditFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'accessresource_embargo_start_date',
-                    'disabled' => $embargoViaProperty ? 'disabled' : false,
+                    'class' => 'accessresource',
+                    'disabled' => $this->embargoViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -116,12 +133,12 @@ class BatchEditFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'accessresource_embargo_start_time',
-                    'disabled' => $embargoViaProperty ? 'disabled' : false,
+                    'class' => 'accessresource',
+                    'disabled' => $this->embargoViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
             ])
-            */
             ->add([
                 'name' => 'embargo_end_update',
                 'type' => AccessResourceElement\OptionalRadio::class,
@@ -130,18 +147,17 @@ class BatchEditFieldset extends Fieldset
                     'value_options' => [
                         '' => 'No change', // @translate
                         'remove' => 'Remove', // @translate
-                        // 'set' => 'Set date below', // @translate
+                        'set' => 'Set date below', // @translate
                     ],
                 ],
                 'attributes' => [
                     'id' => 'accessresource_embargo_end_update',
                     'class' => 'accessresource',
-                    'disabled' => $embargoViaProperty ? 'disabled' : false,
+                    'disabled' => $this->embargoViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
             ])
-            /*
             ->add([
                 'name' => 'embargo_end_date',
                 'type' => Element\Date::class,
@@ -150,7 +166,8 @@ class BatchEditFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'accessresource_embargo_end_date',
-                    'disabled' => $embargoViaProperty ? 'disabled' : false,
+                    'class' => 'accessresource',
+                    'disabled' => $this->embargoViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -164,30 +181,30 @@ class BatchEditFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'accessresource_embargo_end_time',
-                    'disabled' => $embargoViaProperty ? 'disabled' : false,
+                    'class' => 'accessresource',
+                    'disabled' => $this->embargoViaProperty ? 'disabled' : false,
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
             ])
-            */
         ;
 
-        if (!($accessViaProperty && $embargoViaProperty)
-            && in_array($resourceType, ['itemSet', 'item'])
+        if (!($this->accessViaProperty && $this->embargoViaProperty)
+            && in_array($this->resourceType, ['itemSet', 'item'])
         ) {
             $this
                 ->add([
                     'name' => 'access_recursive',
                     'type' => Element\Checkbox::class,
                     'options' => [
-                        'label' => $resourceType === 'itemSet'
+                        'label' => $this->resourceType === 'itemSet'
                             ? 'Apply access level and embargo to items and medias' // @translate
                             : 'Apply access level and embargo to medias', // @translate
                     ],
                     'attributes' => [
                         'id' => 'access_recursive',
                         'class' => 'accessresource',
-                        'disabled' => $accessViaProperty ? 'disabled' : false,
+                        'disabled' => $this->accessViaProperty ? 'disabled' : false,
                         // This attribute is required to make "batch edit all" working.
                         'data-collection-action' => 'replace',
                     ],
