@@ -286,7 +286,6 @@ class Module extends AbstractModule
 
     public function getConfigForm(PhpRenderer $renderer)
     {
-        $this->warnConfig();
         $renderer->headScript()
             ->appendFile($renderer->assetUrl('js/access-resource-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
         return '<style>fieldset[name=fieldset_index] .inputs label {display: block;}</style>'
@@ -295,8 +294,6 @@ class Module extends AbstractModule
 
     public function handleConfigForm(AbstractController $controller)
     {
-        $this->warnConfig();
-
         $result = parent::handleConfigForm($controller);
         if (!$result) {
             return false;
@@ -316,19 +313,6 @@ class Module extends AbstractModule
         }
 
         return true;
-    }
-
-    protected function warnConfig(): void
-    {
-        if ($this->isModuleActive('Group')) {
-            $services = $this->getServiceLocator();
-            $translator = $services->get('MvcTranslator');
-            $message = new \Omeka\Stdlib\Message(
-                $translator->translate('This module is currently not compatible with module Group, that should be disabled.') // @translate
-            );
-            $messenger = $services->get('ControllerPluginManager')->get('messenger');
-            $messenger->addError($message);
-        }
     }
 
     /**
