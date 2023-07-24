@@ -8,6 +8,7 @@ use Omeka\Stdlib\Message;
 /**
  * @var Module $this
  * @var \Laminas\ServiceManager\ServiceLocatorInterface $services
+ * @var bool $skipMessage
  */
 $services = $this->getServiceLocator();
 
@@ -27,9 +28,11 @@ $data = file_get_contents($filepath);
 $data = json_decode($data, true);
 $installResources->createOrUpdateVocabulary($data, $module);
 
-$messenger = $services->get('ControllerPluginManager')->get('messenger');
-$message = new Message(
-    'The vocabulary "%s" was updated successfully.', // @translate
-    pathinfo($filepath, PATHINFO_FILENAME)
-);
-$messenger->addSuccess($message);
+if (!empty($skipMessage)) {
+    $messenger = $services->get('ControllerPluginManager')->get('messenger');
+    $message = new Message(
+        'The vocabulary "%s" was updated successfully.', // @translate
+        pathinfo($filepath, PATHINFO_FILENAME)
+    );
+    $messenger->addSuccess($message);
+}
