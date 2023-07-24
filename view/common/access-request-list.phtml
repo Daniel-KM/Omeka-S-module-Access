@@ -59,7 +59,7 @@ $this->headScript()
                 class="status-toggle-access-request o-icon-<?= $status ?>"
                 data-status-toggle-url="<?= $this->url("admin/access-request/id", ['id' => $accessRequest->id(), 'action' => "toggle" ]) ?>"
                 data-status="<?= $status ?>"
-                aria-label="<?= $escape($translate('Enable of disable')) ?>"
+                aria-label="<?= $escape($translate('Enable or disable')) ?>"
                 title="<?= $escape($translate('Enable or disable')) ?>"></a></span>
             <?php endif; ?>
             <?php if ($allowUpdate): ?>

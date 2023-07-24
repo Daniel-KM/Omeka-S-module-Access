@@ -13,7 +13,7 @@ $services = $this->getServiceLocator();
 
 if (!method_exists($this, 'getInstallResources')) {
     throw new ModuleCannotInstallException((string) new Message(
-        'This module requires module %s version %s or greater.', // @translate
+        'This module requires module %1$s version %2$s or greater.', // @translate
         'Generic',
         '3.4.43'
     ));

@@ -141,7 +141,7 @@ class AccessStatusRecursive extends AbstractJob
         $accessStatus = $this->accessStatusForResource->__invoke($resource);
         if (!$accessStatus) {
             $this->logger->warn(new Message(
-                'No access status for resource "%d".', // @translate
+                'No access status for resource #%d.', // @translate
                 $resourceId
             ));
             return null;

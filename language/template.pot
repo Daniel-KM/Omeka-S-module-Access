@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-09 00:00+0000\n"
+"POT-Creation-Date: 2023-07-24 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,69 +17,117 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: Module.php:71
+#: Module.php:42
+msgid ""
+"It is recommenced to run the job in config form to initialize all access "
+"statuses."
+msgstr ""
+
+#: Module.php:332
+msgid ""
+"When properties are used, three properties should be defined for \"level\", "
+"\"embargo start\" and \"embargo end\"."
+msgstr ""
+
+#: Module.php:347
+msgid "Job is not launched: no option was set."
+msgstr ""
+
+#: Module.php:1164 view/access-resource/admin/request/browse.phtml:26
+#: view/access-resource/admin/request/edit.phtml:29
+#: view/access-resource/admin/request/edit.phtml:31
+#: view/access-resource/admin/request/show.phtml:24
+#: view/access-resource/site/request/browse.phtml:23
+msgid "Access requests"
+msgstr ""
+
+#: Module.php:1260
 #, php-format
 msgid ""
 "To control access to files, you must add a rule in file .htaccess at the "
-"root of Omeka. See %sreadme%s."
+"root of Omeka. See %1$sreadme%2$s."
 msgstr ""
 
-#: Module.php:449
+#: src/Api/Representation/AccessRequestRepresentation.php:173
+#, php-format
+msgid "Request #%d"
+msgstr ""
+
+#: src/Api/Representation/AccessRequestRepresentation.php:185
+#, php-format
+msgid "User: %s"
+msgstr ""
+
+#: src/Api/Representation/AccessRequestRepresentation.php:188
+#, php-format
+msgid "Visitor: %s"
+msgstr ""
+
+#: src/Api/Representation/AccessRequestRepresentation.php:192
+#, php-format
+msgid "Token: %s"
+msgstr ""
+
+#: src/Api/Representation/AccessRequestRepresentation.php:194
+msgid "Undefined"
+msgstr ""
+
+#: src/Api/Representation/AccessRequestRepresentation.php:232
+#: src/Api/Representation/AccessStatusRepresentation.php:156
+#, php-format
+msgid "from %s"
+msgstr ""
+
+#: src/Api/Representation/AccessRequestRepresentation.php:236
+#: src/Api/Representation/AccessStatusRepresentation.php:160
+#, php-format
+msgid "until %s"
+msgstr ""
+
+#: src/Api/Representation/AccessRequestRepresentation.php:242
+#: src/Api/Representation/AccessStatusRepresentation.php:166
+#, php-format
+msgid "from %1$s until %2$s"
+msgstr ""
+
+#: src/Controller/Admin/RequestController.php:217
+#: src/Controller/Admin/RequestController.php:237
+#: src/Controller/Site/RequestController.php:204
 msgid ""
-"The module is not configured: the key \"[accessresource][access_mode]\" "
-"should be set in the main config file of Omeka \"config/local.config.php\"."
+"The request was sent, but an issue occurred when sending the confirmation "
+"email."
 msgstr ""
 
-#: Module.php:459
-msgid ""
-"This module is currently not compatible with module Group, that should be "
-"disabled."
-msgstr ""
-
-#: Module.php:732
-msgid "Access resource"
-msgstr ""
-
-#: Module.php:734
+#: src/Controller/Admin/RequestController.php:308
+#: src/Controller/Admin/RequestController.php:350
 #, php-format
-msgid "Is restricted %s"
+msgid "The request #%s is invalid or unavailable."
 msgstr ""
 
-#: Module.php:735
-msgid "resource"
-msgstr ""
-
-#: Module.php:737
-msgid "Is not restricted"
-msgstr ""
-
-#: Module.php:839
-msgid "Resource access"
-msgstr ""
-
-#: src/Api/Representation/AccessRequestRepresentation.php:108
-#, php-format
-msgid "Access request #%d"
-msgstr ""
-
-#: src/Api/Representation/AccessResourceRepresentation.php:132
-#: view/access-resource/admin/access/edit.phtml:41
-#, php-format
-msgid "Access #%d"
-msgstr ""
-
-#: src/Controller/Admin/AccessController.php:297
-#: src/Controller/Admin/RequestController.php:224
-msgid "No rights to update status."
-msgstr ""
-
-#: src/Controller/Admin/AccessController.php:303
-#: src/Controller/Admin/RequestController.php:230
+#: src/Controller/Admin/RequestController.php:331
+#: src/Controller/Admin/RequestController.php:378
+#: src/Controller/Site/RequestController.php:84
 msgid "Method should be post."
 msgstr ""
 
+#: src/Controller/Site/RequestController.php:98
+msgid "Individual access requests are not allowed."
+msgstr ""
+
+#: src/Controller/Site/RequestController.php:113
+msgid "No resources were requested."
+msgstr ""
+
+#: src/Controller/Site/RequestController.php:128
+msgid "An email is required."
+msgstr ""
+
+#: src/Controller/Site/RequestController.php:141
+msgid "A valid email is required."
+msgstr ""
+
 #: src/Generic/AbstractModule.php:80 src/Generic/AbstractModule.php:88
-#: src/Generic/AbstractModule.php:861
+#: src/Generic/AbstractModule.php:890
 #, php-format
 msgid "This module requires the module \"%s\"."
 msgstr ""
@@ -99,316 +147,851 @@ msgid ""
 "remove them first."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:369
+#: src/Generic/AbstractModule.php:398
 #, php-format
 msgid "The module removed tables \"%s\" from a previous broken install."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:856
+#: src/Generic/AbstractModule.php:885
 #, php-format
 msgid "This module requires the module \"%1$s\", version %2$s or above."
 msgstr ""
 
-#: src/Generic/AbstractModule.php:953
+#: src/Generic/AbstractModule.php:982
 #, php-format
 msgid ""
 "The module \"%s\" was automatically deactivated because the dependencies are "
 "unavailable."
 msgstr ""
 
-#: view/access-resource/admin/access/browse.phtml:22
-#: view/access-resource/admin/access/browse.phtml:71
-#: view/access-resource/admin/access/show-details.phtml:45
-msgid "Enabled"
+#: src/Service/ViewHelper/IsAccessRequestableFactory.php:16
+msgid "Full access is not supported currently"
 msgstr ""
 
-#: view/access-resource/admin/access/browse.phtml:34
-#: view/access-resource/admin/access/browse.phtml:75
-msgid "Token"
-msgstr ""
-
-#: view/access-resource/admin/access/browse.phtml:38
-#: view/access-resource/admin/access/browse.phtml:77
-msgid "Start date"
-msgstr ""
-
-#: view/access-resource/admin/access/browse.phtml:42
-#: view/access-resource/admin/access/browse.phtml:78
-msgid "End date"
-msgstr ""
-
-#: view/access-resource/admin/access/browse.phtml:51
-#: view/access-resource/admin/access/edit.phtml:41
-#: view/access-resource/admin/access/edit.phtml:43
-msgid "Access resources"
-msgstr ""
-
-#: view/access-resource/admin/access/browse.phtml:55
-msgid "Add new access"
-msgstr ""
-
-#: view/access-resource/admin/access/browse.phtml:76
-msgid "Temporal"
-msgstr ""
-
-#: view/access-resource/admin/access/browse.phtml:87
-#: view/access-resource/admin/log/browse.phtml:41
-#: view/access-resource/admin/request/browse.phtml:71
-#: view/access-resource/admin/request/show-details.phtml:19
-msgid "[no user]"
-msgstr ""
-
-#: view/access-resource/admin/access/browse.phtml:153
-#: view/access-resource/admin/access/browse.phtml:171
-#: view/access-resource/admin/request/browse.phtml:135
-#: view/access-resource/admin/request/browse.phtml:153
-msgid "Delete records"
-msgstr ""
-
-#: view/access-resource/admin/access/browse.phtml:154
-#: view/access-resource/admin/request/browse.phtml:136
-msgid "Are you sure you would like to delete the selected records?"
-msgstr ""
-
-#: view/access-resource/admin/access/browse.phtml:156
-#: view/access-resource/admin/access/browse.phtml:174
-#: view/access-resource/admin/request/browse.phtml:138
-#: view/access-resource/admin/request/browse.phtml:156
-#, php-format
-msgid ""
-"%s: this action will permanently delete %s records and cannot be undone."
-msgstr ""
-
-#: view/access-resource/admin/access/browse.phtml:172
-#: view/access-resource/admin/request/browse.phtml:154
-msgid ""
-"Are you sure you would like to delete all records on all pages of this "
-"result?"
-msgstr ""
-
-#: view/access-resource/admin/access/browse.phtml:210
-#: view/access-resource/admin/log/browse.phtml:59
-#: view/access-resource/admin/request/browse.phtml:192
-msgid "No access records yet."
-msgstr ""
-
-#: view/access-resource/admin/access/browse.phtml:210
-#: view/access-resource/admin/log/browse.phtml:59
-#: view/access-resource/admin/request/browse.phtml:192
-#: view/guest/site/guest/access-resources.phtml:60
-msgid "Refresh page"
-msgstr ""
-
-#: view/access-resource/admin/access/edit.phtml:43
-#: view/common/admin/access-resource-list.phtml:164
-msgid "New access"
-msgstr ""
-
-#: view/access-resource/admin/access/edit.phtml:106
-#: view/access-resource/admin/request/edit.phtml:108
-msgid "Change user"
-msgstr ""
-
-#: view/access-resource/admin/access/edit.phtml:106
-#: view/access-resource/admin/request/edit.phtml:108
-#: view/common/admin/access-resource-list.phtml:176
-msgid "Select user"
-msgstr ""
-
-#: view/access-resource/admin/access/edit.phtml:107
-#: view/access-resource/admin/request/edit.phtml:109
-#: view/common/admin/access-resource-list.phtml:177
-msgid "Click on a user to select it."
-msgstr ""
-
-#: view/access-resource/admin/log/browse.phtml:14
+#: view/access-resource/admin/log/browse.phtml:21
 msgid "Access logs"
 msgstr ""
 
-#: view/access-resource/admin/log/browse.phtml:26
+#: view/access-resource/admin/log/browse.phtml:33
 msgid "Action"
 msgstr ""
 
-#: view/access-resource/admin/log/browse.phtml:27
+#: view/access-resource/admin/log/browse.phtml:34
 msgid "Record Id"
 msgstr ""
 
-#: view/access-resource/admin/request/browse.phtml:39
-#: view/access-resource/admin/request/edit.phtml:41
-#: view/access-resource/admin/request/edit.phtml:43
-msgid "Access requests"
+#: view/access-resource/admin/log/browse.phtml:47
+#: view/access-resource/admin/log/browse.phtml:50
+msgid "[no user]"
 msgstr ""
 
-#: view/access-resource/admin/request/browse.phtml:43
+#: view/access-resource/admin/log/browse.phtml:68
+msgid "No access records yet."
+msgstr ""
+
+#: view/access-resource/admin/log/browse.phtml:68
+#: view/access-resource/site/request/browse.phtml:60
+msgid "Refresh page"
+msgstr ""
+
+#: view/access-resource/admin/request/browse.phtml:35
 msgid "Add new request"
 msgstr ""
 
-#: view/access-resource/admin/request/edit.phtml:43
+#: view/access-resource/admin/request/browse.phtml:49
+msgid "Id"
+msgstr ""
+
+#: view/access-resource/admin/request/browse.phtml:51
+#: view/access-resource/admin/request/show-details.phtml:27
+#: view/access-resource/admin/request/show.phtml:35
+msgid "Requester"
+msgstr ""
+
+#: view/access-resource/admin/request/browse.phtml:53
+#: view/access-resource/admin/request/show-details.phtml:37
+#: view/access-resource/admin/request/show.phtml:43
+#: view/access-resource/site/request/browse.phtml:37
+msgid "Recursive"
+msgstr ""
+
+#: view/access-resource/admin/request/browse.phtml:55
+#: view/access-resource/admin/request/show-details.phtml:48
+#: view/access-resource/admin/request/show.phtml:52
+#: view/access-resource/site/request/browse.phtml:39
+msgid "Dates"
+msgstr ""
+
+#: view/access-resource/admin/request/browse.phtml:67
+#, php-format
+msgid "#%s"
+msgstr ""
+
+#: view/access-resource/admin/request/browse.phtml:119
+#: view/access-resource/admin/request/browse.phtml:137
+msgid "Delete access requests"
+msgstr ""
+
+#: view/access-resource/admin/request/browse.phtml:120
+msgid "Are you sure you would like to delete the selected access requests?"
+msgstr ""
+
+#: view/access-resource/admin/request/browse.phtml:122
+#: view/access-resource/admin/request/browse.phtml:140
+#, php-format
+msgid ""
+"%1$s: this action will permanently delete %2$s access requests and cannot be "
+"undone."
+msgstr ""
+
+#: view/access-resource/admin/request/browse.phtml:138
+msgid ""
+"Are you sure you would like to delete all access requests on all pages of "
+"this result?"
+msgstr ""
+
+#: view/access-resource/admin/request/browse.phtml:178
+msgid "No access requests."
+msgstr ""
+
+#: view/access-resource/admin/request/edit.phtml:31
 msgid "New access request"
 msgstr ""
 
-#: view/common/access-resource-request-form.phtml:21
-msgid "Request resource access"
+#: view/access-resource/admin/request/show.phtml:28
+msgid "Edit access request"
 msgstr ""
 
-#: view/common/access-resource-request-form.phtml:30
-msgid "Request Access"
+#: view/access-resource/site/request/browse.phtml:60
+msgid "No access requests yet."
 msgstr ""
 
-#: view/common/access-resource-request-form.phtml:58
-#, php-format
-msgid "To request access please %s or contact the publisher!"
+#: view/common/access-request-form.phtml:32
+msgid "Give access"
 msgstr ""
 
-#: view/common/access-resource-request-form.phtml:59
-#: view/common/access-resource-request-form.phtml:65
-msgid "Login"
+#: view/common/access-request-form.phtml:37
+msgid "Free access"
 msgstr ""
 
-#: view/common/access-resource-request-form.phtml:63
-#, php-format
-msgid "To request access please %s or %s!"
+#: view/common/access-request-form.phtml:43
+msgid "Forbidden access"
 msgstr ""
 
-#: view/common/access-resource-request-form.phtml:64
-msgid "Register"
+#: view/common/access-request-form.phtml:49
+msgid "Access settings don't allow individual requests."
 msgstr ""
 
-#: view/common/admin/access-resource-list.phtml:30
-msgid "User requests"
+#: view/common/access-request-form.phtml:57
+msgid "The access to this item is free, so the request should include medias."
 msgstr ""
 
-#: view/common/admin/access-resource-list.phtml:35
+#: view/common/access-request-form.phtml:61
+msgid ""
+"The access to this item set is free, so the request should include items and "
+"medias."
+msgstr ""
+
+#: view/common/access-request-list.phtml:29
+msgid "Requests"
+msgstr ""
+
+#: view/common/access-request-list.phtml:34
 msgid "There are no requests for this resource."
 msgstr ""
 
-#: view/common/admin/access-resource-list.phtml:55
-#: view/common/admin/access-resource-list.phtml:110
-#, php-format
-msgid "user: %s"
+#: view/common/access-request-list.phtml:62
+#: view/common/access-request-list.phtml:63
+msgid "Enable or disable"
 msgstr ""
 
-#: view/common/admin/access-resource-list.phtml:65
-#: view/common/admin/access-resource-list.phtml:66
-msgid "Toggle request"
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:70
-#: view/common/admin/access-resource-list.phtml:71
+#: view/common/access-request-list.phtml:69
+#: view/common/access-request-list.phtml:70
 msgid "Remove request"
 msgstr ""
 
-#: view/common/admin/access-resource-list.phtml:86
-msgid "Accesses"
+#: view/common/access-request.phtml:56 view/common/access-request.phtml:62
+msgid "Request access"
 msgstr ""
 
-#: view/common/admin/access-resource-list.phtml:91
-msgid "There are no access for this resource."
+#: view/common/access-request.phtml:84 view/common/access-request.phtml:98
+#, php-format
+msgid "To request access please %1$slogin%2$s or contact the publisher!"
 msgstr ""
 
-#: view/common/admin/access-resource-list.phtml:120
-#: view/common/admin/access-resource-list.phtml:121
-msgid "Toggle access"
+#: view/common/access-request.phtml:90
+#, php-format
+msgid "To request access please %1$slogin%3$s or %2$sregister%3$s!"
 msgstr ""
 
-#: view/common/admin/access-resource-list.phtml:125
-#: view/common/admin/access-resource-list.phtml:126
-msgid "Remove access"
+#: view/common/access-status.phtml:20
+msgid "Access status"
 msgstr ""
 
-#: view/common/admin/access-resource-list.phtml:141
-msgid "Add an access"
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:146
-msgid "This resource is public: no access is needed to view it."
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:152
-msgid ""
-"This resource is private and not marked reservable: no access is possible."
-msgstr ""
-
-#: view/common/admin/access-resource-list.phtml:180
-msgid "Add access"
-msgstr ""
-
-#: view/error/403-access-resource.phtml:4
+#: view/error/403-access-resource.phtml:1
 msgid "Access Forbidden"
 msgstr ""
 
-#: view/guest/site/guest/access-resources.phtml:18
-msgid "Resource access dashboard"
-msgstr ""
-
-#: view/guest/site/guest/access-resources.phtml:60
-msgid "No request records yet."
-msgstr ""
-
-#: view/guest/site/guest/widget/access-resource.phtml:15
+#: view/guest/site/guest/widget/access-requests.phtml:15
 msgid "Dashboard"
 msgstr ""
 
-#: Module.php:386
+#: data/scripts/upgrade_vocabulary.php:17
+#, php-format
+msgid "This module requires module %1$s version %2$s or greater."
+msgstr ""
+
+#: data/scripts/upgrade_vocabulary.php:34
+#, php-format
+msgid "The vocabulary \"%s\" was updated successfully."
+msgstr ""
+
+#: data/scripts/upgrade.php:73
+msgid ""
+"The reserved access by ip by site has been replaced by a reserved acces by "
+"ip by item set. You should check and resave your config if needed and "
+"eventually create item sets."
+msgstr ""
+
+#: data/scripts/upgrade.php:155
+msgid ""
+"A new option allows to set the access restricted status via a simple radio "
+"in resource form instead of a property."
+msgstr ""
+
+#: data/scripts/upgrade.php:160
+msgid ""
+"Warning: to use only the button is the default behavior. To keep the old "
+"behavior via the property, you must set the param level_via_property to true "
+"in the file config/local.config.php."
+msgstr ""
+
+#: data/scripts/upgrade.php:165
+msgid ""
+"Warning: if you use specific properties (not \"curation:reserved\", "
+"\"curation:start\", \"curation:end\"), you need to update the table "
+"\"access_reserved\"."
+msgstr ""
+
+#: data/scripts/upgrade.php:172
+msgid ""
+"A new option allows to set the access restricted status via a a property "
+"with three status (free, reserved, forbidden)."
+msgstr ""
+
+#: data/scripts/upgrade.php:177
+msgid ""
+"Warning: if you use the old mode \"property\", you must update your local."
+"config.php with status \"reserved\"."
+msgstr ""
+
+#: data/scripts/upgrade.php:182
+msgid ""
+"Warning: if you want to hide records and not only media files, the current "
+"version may have break some configs. Keep old releases (until 3.3.0.10) in "
+"that case for now."
+msgstr ""
+
+#: data/scripts/upgrade.php:348
+#, php-format
+msgid "An error occurred during upgrade of the database: %s"
+msgstr ""
+
+#: data/scripts/upgrade.php:382
+msgid ""
+"The structure of the module has been rewritten to make status easier to "
+"manage and quicker to check."
+msgstr ""
+
+#: data/scripts/upgrade.php:386
+msgid ""
+"The access status is now independant of the visibility status (public/"
+"private)."
+msgstr ""
+
+#: data/scripts/upgrade.php:390
+msgid ""
+"A new checkbox in resource form and a new api argument have been added to "
+"allow to recursively set a status."
+msgstr ""
+
+#: data/scripts/upgrade.php:394
+msgid ""
+"The config has been simplified and fully manageable in admin board. The "
+"modes \"guest\", \"ip\" and \"user\" are no more exclusive."
+msgstr ""
+
+#: data/scripts/upgrade.php:399
+msgid ""
+"The property mode \"presence\" of a value has been removed for now. The "
+"value \"free\", \"reserved\", \"protected\" or \"forbidden\" (or the "
+"specified ones) should be set."
+msgstr ""
+
+#: data/scripts/upgrade.php:405
+msgid ""
+"The property mode has been unset during upgrade. Update config, save it, "
+"then submit the job in config form."
+msgstr ""
+
+#: data/scripts/upgrade.php:411
+msgid ""
+"The embargo can be set via a specific setting in resource advanced tab or "
+"via a property as before. The option should be set in config."
+msgstr ""
+
+#: data/scripts/upgrade.php:415
+msgid ""
+"The properties for embargo has not been updated during upgrade. Update "
+"config, save it, then submit the job in config form."
+msgstr ""
+
+#: data/scripts/upgrade.php:420
+msgid ""
+"Warning: you may have to check the config and the resources statuses with "
+"the new config. If wrong, save config, then run the job."
+msgstr ""
+
+#: Module.php:471
+#, php-format
+msgid ""
+"Cleaned params used for access resources:\n"
+"%s"
+msgstr ""
+
+#: Module.php:814
+msgid "Access"
+msgstr ""
+
+#: Module.php:880 src/Controller/Admin/RequestController.php:182
+msgid "You should set either a user or an email or check box for token."
+msgstr ""
+
+#: Module.php:903 src/Controller/Admin/RequestController.php:208
+msgid "Access request successfully created."
+msgstr ""
+
+#: Module.php:978 src/Form/Admin/BatchEditFieldset.php:48
+msgid "Free"
+msgstr ""
+
+#: Module.php:979 src/Form/Admin/BatchEditFieldset.php:49
+msgid "Restricted"
+msgstr ""
+
+#: Module.php:980 src/Form/Admin/BatchEditFieldset.php:50
+msgid "Protected"
+msgstr ""
+
+#: Module.php:995 src/ColumnType/AccessLevel.php:13
+msgid "Access level"
+msgstr ""
+
+#: Module.php:1009 src/Form/Admin/BatchEditFieldset.php:87
+msgid "Embargo start"
+msgstr ""
+
+#: Module.php:1026 Module.php:1034 src/Form/Admin/BatchEditFieldset.php:132
+msgid "Embargo end"
+msgstr ""
+
+#: Module.php:1044
+#, php-format
+msgid "Access level (managed via property %s)"
+msgstr ""
+
+#: Module.php:1047
+#, php-format
+msgid "Embargo start (managed via property %s)"
+msgstr ""
+
+#: Module.php:1050
+#, php-format
+msgid "Embargo end (managed via property %s)"
+msgstr ""
+
+#: Module.php:1061 src/Form/Admin/BatchEditFieldset.php:186
+msgid "Apply access level and embargo to items and medias"
+msgstr ""
+
+#: Module.php:1062 src/Form/Admin/BatchEditFieldset.php:187
+msgid "Apply access level and embargo to medias"
+msgstr ""
+
+#: Module.php:1318
+#, php-format
+msgid ""
+"A job was launched in background to update access statuses according to "
+"parameters: (%1$sjob #%2$d%3$s, %4$slogs%3$s)."
+msgstr ""
+
+#: Module.php:1360
 #, php-format
 msgid "The ip \"%s\" is empty or invalid."
 msgstr ""
 
-#: Module.php:396
+#: Module.php:1370
 #, php-format
 msgid ""
 "The item sets list \"%1$s\" for ip \"%2$s\" is invalid: they should be "
 "numeric ids."
 msgstr ""
 
-#: Module.php:406
+#: Module.php:1380
 #, php-format
 msgid ""
 "The item sets list \"%1$s\" for ip \"%2$s\" contains unknown item sets "
 "(%3$s)."
 msgstr ""
 
-#: Module.php:649
-msgid "Access"
-msgstr ""
-
-#: Module.php:695
-msgid "Is restricted (requires the resource to be private)"
-msgstr ""
-
-#: Module.php:703
+#: src/Job/AccessStatusUpdate.php:111
 #, php-format
-msgid "Restricted access (managed via property \"%s\")"
+msgid "Sync mode \"%s\" is invalid."
 msgstr ""
 
-#: Module.php:704
-msgid "Restricted access"
-msgstr ""
-
-#: src/Job/UpdateVisibilityForEmbargo.php:27
+#: src/Job/AccessStatusUpdate.php:130
 #, php-format
-msgid "The property \"%s\" for start embargo is missing"
+msgid "Missing mode \"%s\" is invalid."
 msgstr ""
 
-#: src/Job/UpdateVisibilityForEmbargo.php:34
+#: src/Job/AccessStatusUpdate.php:143
 #, php-format
-msgid "The property \"%s\" for end embargo is missing"
+msgid "These recursive processes are unknown: \"%s\"."
 msgstr ""
 
-#: src/Job/UpdateVisibilityForEmbargo.php:92
+#: src/Job/AccessStatusUpdate.php:154
+msgid ""
+"Synchronization and missing modes are set as \"skip\" and no recursive "
+"processes are set."
+msgstr ""
+
+#: src/Job/AccessStatusUpdate.php:162
+msgid ""
+"Synchronization of property values and index is set, but the config for "
+"access mode does not use properties."
+msgstr ""
+
+#: src/Job/AccessStatusUpdate.php:174
+msgid "Starting indexation of access statuses of all resources."
+msgstr ""
+
+#: src/Job/AccessStatusUpdate.php:221
+msgid "End of indexation."
+msgstr ""
+
+#: src/Job/AccessStatusRecursive.php:82
+msgid "No resource to process."
+msgstr ""
+
+#: src/Job/AccessStatusRecursive.php:115
+msgid "End of indexation of access statuses in properties."
+msgstr ""
+
+#: src/Job/AccessStatusRecursive.php:125
 #, php-format
-msgid "A total of %d resources have been marked private for start embargo."
+msgid "No resource \"%d\" to process."
 msgstr ""
 
-#: src/Job/UpdateVisibilityForEmbargo.php:122
+#: src/Job/AccessStatusRecursive.php:134
 #, php-format
-msgid "A total of %d resources have been marked public for end of embargo."
+msgid "Resource #%d is not an item or an item set."
 msgstr ""
 
-#: src/Job/UpdateVisibilityForEmbargo.php:165
+#: src/Job/AccessStatusRecursive.php:144
+#, php-format
+msgid "No access status for resource #%d."
+msgstr ""
+
+#: src/Job/AccessPropertiesTrait.php:106
+#, php-format
+msgid "Property \"%1$s\" for level does not exist."
+msgstr ""
+
+#: src/Job/AccessPropertiesTrait.php:114
+msgid "Property to set access level is not defined."
+msgstr ""
+
+#: src/Job/AccessPropertiesTrait.php:126
+#, php-format
+msgid "Property \"%1$s\" for embargo start does not exist."
+msgstr ""
+
+#: src/Job/AccessPropertiesTrait.php:134
+msgid "Property to set embargo start is not defined."
+msgstr ""
+
+#: src/Job/AccessPropertiesTrait.php:146
+#, php-format
+msgid "Property \"%1$s\" for embargo end does not exist."
+msgstr ""
+
+#: src/Job/AccessPropertiesTrait.php:154
+msgid "Property to set embargo end is not defined."
+msgstr ""
+
+#: src/Job/AccessPropertiesTrait.php:164
+#, php-format
+msgid "List of property levels is incomplete, missing \"%s\"."
+msgstr ""
+
+#: src/Job/AccessPropertiesTrait.php:182
 #, php-format
 msgid ""
-"A total of %d resources have been marked private for start/end of embargo."
+"The data type for property level is not set, so \"%s\" will be used by "
+"default when it is not set in metadata."
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:11 src/Form/SettingsFieldset.php:14
+#: src/Form/Admin/BatchEditFieldset.php:34 config/module.config.php:275
+msgid "Access resource"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:28
+msgid "Send email to admin and user on access request or update"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:40
+msgid "Admin email subject"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:51
+msgid "Message to admin for new request"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:62
+msgid "Message to admin for updated request"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:74
+msgid "User email subject"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:85
+msgid "Message to user for new request"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:96
+msgid "Message to user for updated request"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:108
+msgid ""
+"Message for the block \"Access request text\" when a resource is not "
+"available"
+msgstr ""
+
+#: src/Form/ConfigForm.php:19
+msgid "Protection"
+msgstr ""
+
+#: src/Form/ConfigForm.php:21
+msgid "Protect media content only (files)"
+msgstr ""
+
+#: src/Form/ConfigForm.php:22
+msgid "Protect records and content (not supported currently)"
+msgstr ""
+
+#: src/Form/ConfigForm.php:39
+msgid "Access modes"
+msgstr ""
+
+#: src/Form/ConfigForm.php:41
+msgid "IP: visitors with specified ips have access to all reserved medias"
+msgstr ""
+
+#: src/Form/ConfigForm.php:42
+msgid "Guest: all users, included guests, have access to all reserved medias"
+msgstr ""
+
+#: src/Form/ConfigForm.php:43
+msgid ""
+"External: users externally authenticated (cas) have access to all reserved "
+"medias"
+msgstr ""
+
+#: src/Form/ConfigForm.php:44
+msgid ""
+"user: authenticated users should request access to specific reserved medias"
+msgstr ""
+
+#: src/Form/ConfigForm.php:45
+msgid ""
+"Email: A visitor identified by email should request access to specific "
+"reserved medias"
+msgstr ""
+
+#: src/Form/ConfigForm.php:46
+msgid ""
+"Token: A user or visitor with a token have access to specific reserved medias"
+msgstr ""
+
+#: src/Form/ConfigForm.php:63
+msgid "List of ips with open access, eventually limited to selected item sets"
+msgstr ""
+
+#: src/Form/ConfigForm.php:64
+msgid ""
+"These ips will have unrestricted access to all resources or only resources "
+"of the specified item sets. List them separated by a \"=\", one by line. "
+"Range ip are allowed (formatted as cidr)."
+msgstr ""
+
+#: src/Form/ConfigForm.php:80
+msgid "Set access level and embargo via property"
+msgstr ""
+
+#: src/Form/ConfigForm.php:84
+msgid "required"
+msgstr ""
+
+#: src/Form/ConfigForm.php:116
+msgid "Set property when access uses property"
+msgstr ""
+
+#: src/Form/ConfigForm.php:131
+msgid "Labels for the four levels for mode property/level"
+msgstr ""
+
+#: src/Form/ConfigForm.php:149
+msgid "Data type to use for the level"
+msgstr ""
+
+#: src/Form/ConfigForm.php:150
+msgid ""
+"A data type like \"literal\" (default) or \"customvocab:X\" (recommended), "
+"where X is the custom vocab id to set. This value is used for batch "
+"processes."
+msgstr ""
+
+#: src/Form/ConfigForm.php:163
+msgid "Set property to use for embargo start"
+msgstr ""
+
+#: src/Form/ConfigForm.php:178
+msgid "Set property to use for embargo end"
+msgstr ""
+
+#: src/Form/ConfigForm.php:194
+msgid ""
+"Show the access status in advanced tab of resource form when properties are "
+"used"
+msgstr ""
+
+#: src/Form/ConfigForm.php:206
+msgid "Bypass embargo dates for reserved resources"
+msgstr ""
+
+#: src/Form/ConfigForm.php:220
+msgid "Create missing access status of all resources"
+msgstr ""
+
+#: src/Form/ConfigForm.php:230
+msgid "Copy level and embargo"
+msgstr ""
+
+#: src/Form/ConfigForm.php:232
+msgid "From item sets to items and medias"
+msgstr ""
+
+#: src/Form/ConfigForm.php:233
+msgid "From items to medias"
+msgstr ""
+
+#: src/Form/ConfigForm.php:245
+msgid "Copy access level and embargo"
+msgstr ""
+
+#: src/Form/ConfigForm.php:247 src/Form/ConfigForm.php:262
+msgid "Skip"
+msgstr ""
+
+#: src/Form/ConfigForm.php:248
+msgid "Copy data from property values into indexes"
+msgstr ""
+
+#: src/Form/ConfigForm.php:249
+msgid "Copy data from indexes into property values"
+msgstr ""
+
+#: src/Form/ConfigForm.php:260
+msgid "Fill missing statuses"
+msgstr ""
+
+#: src/Form/ConfigForm.php:263
+msgid "Set access level free for all resources without status"
+msgstr ""
+
+#: src/Form/ConfigForm.php:264
+msgid "Set access level reserved for all resources without status"
+msgstr ""
+
+#: src/Form/ConfigForm.php:265
+msgid "Set access level protected for all resources without status"
+msgstr ""
+
+#: src/Form/ConfigForm.php:266
+msgid "Set access level forbidden for all resources without status"
+msgstr ""
+
+#: src/Form/ConfigForm.php:267
+msgid "Set access level free when public and reserved when private"
+msgstr ""
+
+#: src/Form/ConfigForm.php:268
+msgid "Set access level free when public and protected when private"
+msgstr ""
+
+#: src/Form/ConfigForm.php:269
+msgid "Set access level free when public and forbidden when private"
+msgstr ""
+
+#: src/Form/ConfigForm.php:280
+msgid "Process reindexation"
+msgstr ""
+
+#: src/Form/ConfigForm.php:284
+msgid "Process"
+msgstr ""
+
+#: src/Form/Admin/BatchEditFieldset.php:70
+msgid "New level"
+msgstr ""
+
+#: src/Form/Admin/BatchEditFieldset.php:72
+#: src/Form/Admin/BatchEditFieldset.php:89
+#: src/Form/Admin/BatchEditFieldset.php:134
+msgid "No change"
+msgstr ""
+
+#: src/Form/Admin/BatchEditFieldset.php:91
+#: src/Form/Admin/BatchEditFieldset.php:136
+msgid "Set date below"
+msgstr ""
+
+#: src/Form/Admin/BatchEditFieldset.php:105
+msgid "Embargo start date"
+msgstr ""
+
+#: src/Form/Admin/BatchEditFieldset.php:150
+msgid "Embargo end date"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:54
+msgid "New"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:55
+msgid "Renew"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:56
+msgid "Accepted"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:57
+msgid "Rejected"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:91
+msgid "Include medias"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:92
+msgid "Include items and medias"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:93
+msgid "Include items and media"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:132
+msgid "multiple"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:141
+msgid "Or email"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:151
+msgid "Or token"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:181
+msgid "value"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:236
+msgid "Start date"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:257
+msgid "End date"
+msgstr ""
+
+#: src/Form/Admin/AccessRequestForm.php:280
+msgid "Add access"
+msgstr ""
+
+#: src/Form/Site/AccessRequestForm.php:72
+msgid "Message"
+msgstr ""
+
+#: src/Form/Site/AccessRequestForm.php:112
+msgid "Send"
+msgstr ""
+
+#: src/Api/Adapter/AccessRequestAdapter.php:245
+msgid "The requested resources must be an array"
+msgstr ""
+
+#: src/Api/Adapter/AccessRequestAdapter.php:251
+msgid "The requested resources cannot be empty."
+msgstr ""
+
+#: src/Api/Adapter/AccessRequestAdapter.php:257
+#: src/Api/Adapter/AccessRequestAdapter.php:414
+msgid "The status must be one of the list of statuses."
+msgstr ""
+
+#: src/Api/Adapter/AccessRequestAdapter.php:410
+msgid "At least one resource must be requested."
+msgstr ""
+
+#: src/Api/Representation/AccessRequestRepresentation.php:15
+#: src/Entity/AccessRequest.php:32
+msgid "new"
+msgstr ""
+
+#: src/Api/Representation/AccessRequestRepresentation.php:16
+#: src/Entity/AccessRequest.php:33
+msgid "renew"
+msgstr ""
+
+#: src/Api/Representation/AccessRequestRepresentation.php:17
+#: src/Entity/AccessRequest.php:34
+msgid "accepted"
+msgstr ""
+
+#: src/Api/Representation/AccessRequestRepresentation.php:18
+#: src/Entity/AccessRequest.php:35
+msgid "rejected"
+msgstr ""
+
+#: src/Entity/AccessLog.php:24
+msgid "access"
+msgstr ""
+
+#: src/Entity/AccessLog.php:25
+msgid "request"
+msgstr ""
+
+#: src/ColumnType/IsUnderEmbargo.php:13
+msgid "Is under embargo"
+msgstr ""
+
+#: src/ColumnType/EmbargoDate.php:13
+msgid "Embargo date"
 msgstr ""
 
 #: src/Generic/InstallResources.php:84
@@ -485,290 +1068,103 @@ msgstr ""
 msgid "The custom vocab named \"%s\" is not available."
 msgstr ""
 
-#: src/Generic/InstallResources.php:1035
+#: src/Generic/InstallResources.php:1039
 msgid "No file or url set for the vocabulary."
 msgstr ""
 
-#: src/Generic/InstallResources.php:1045
+#: src/Generic/InstallResources.php:1049
 #, php-format
 msgid "The file \"%s\" cannot be read. Check the url."
 msgstr ""
 
-#: src/Generic/InstallResources.php:1055
+#: src/Generic/InstallResources.php:1059
 #, php-format
 msgid "The file \"%s\" cannot be read. Check the file."
 msgstr ""
 
-#: src/Generic/InstallResources.php:1076
+#: src/Generic/InstallResources.php:1080
 msgid "A vocabulary must have a namespace uri and a prefix."
 msgstr ""
 
-#: src/Form/ConfigForm.php:22
-msgid "Reserved access mode (to be set in config/local.config.php)"
-msgstr ""
-
-#: src/Form/ConfigForm.php:23
-msgid ""
-"Access to a media is \"reserved\" when it has the property \"curation:"
-"reserved\" filled, whatever it is."
-msgstr ""
-
-#: src/Form/ConfigForm.php:26
-msgid "Global: all users, included guests, have access to all reserved medias"
-msgstr ""
-
-#: src/Form/ConfigForm.php:27
-msgid "IP: visitors with specified ips have access to all reserved medias"
-msgstr ""
-
-#: src/Form/ConfigForm.php:28
-msgid "Individual: guests should request access to each reserved media"
-msgstr ""
-
-#: src/Form/ConfigForm.php:42
-msgid "Set access via property (to be set in config/local.config.php)"
-msgstr ""
-
-#: src/Form/ConfigForm.php:53
-msgid "Bypass embargo dates for reserved resources"
-msgstr ""
-
-#: src/Form/ConfigForm.php:63
-msgid "Automatically update visibility status"
-msgstr ""
-
-#: src/Form/ConfigForm.php:73
-msgid "List of ips with open access, eventually limited to selected item sets"
-msgstr ""
-
-#: src/Form/ConfigForm.php:74
-msgid ""
-"These ips will have unrestricted access to all resources or only resources "
-"of the specified item sets. List them separated by a \"=\", one by line. "
-"Range ip are allowed (formatted as cidr)."
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:20
-msgid "Send email to admin and user on access request or update"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:31
-msgid "Admin email subject"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:41
-msgid "Message to admin for new request"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:51
-msgid "Message to admin for updated request"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:62
-msgid "User email subject"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:72
-msgid "Message to user for new request"
-msgstr ""
-
-#: src/Form/SettingsFieldset.php:82
-msgid "Message to user for updated request"
-msgstr ""
-
-#: src/Form/AccessRequestForm.php:28
-msgid "Request"
-msgstr ""
-
-#: src/Form/Admin/AccessResourceForm.php:35
-msgid "Will be automatically set"
-msgstr ""
-
-#: src/Form/Admin/AccessResourceForm.php:42
-msgid "Limit to a period"
-msgstr ""
-
-#: src/Form/Admin/AccessResourceForm.php:53
-msgid " Format: 2000-01-01 00:00"
-msgstr ""
-
-#: src/Form/Admin/AccessResourceForm.php:68
-msgid "Format: 2000-01-01 00:00"
-msgstr ""
-
-#: src/Form/Admin/AccessRequestForm.php:21
-msgid " Status"
-msgstr ""
-
-#: src/Form/Admin/AccessRequestForm.php:48
-#: src/Api/Representation/AccessRequestRepresentation.php:15
-msgid "New"
-msgstr ""
-
-#: src/Form/Admin/AccessRequestForm.php:49
-#: src/Api/Representation/AccessRequestRepresentation.php:16
-msgid "Renew"
-msgstr ""
-
-#: src/Form/Admin/AccessRequestForm.php:50
-#: src/Api/Representation/AccessRequestRepresentation.php:17
-msgid "Accepted"
-msgstr ""
-
-#: src/Form/Admin/AccessRequestForm.php:51
-#: src/Api/Representation/AccessRequestRepresentation.php:18
-msgid "Rejected"
-msgstr ""
-
-#: src/Entity/AccessLog.php:14
-msgid "access"
-msgstr ""
-
-#: src/Entity/AccessLog.php:15
-msgid "request"
-msgstr ""
-
-#: src/Entity/AccessRequest.php:18
-msgid "new"
-msgstr ""
-
-#: src/Entity/AccessRequest.php:19
-msgid "renew"
-msgstr ""
-
-#: src/Entity/AccessRequest.php:20
-msgid "accepted"
-msgstr ""
-
-#: src/Entity/AccessRequest.php:21
-msgid "rejected"
-msgstr ""
-
-#: src/Controller/AccessResourceController.php:141
-msgid "Access forbidden"
-msgstr ""
-
-#: src/Controller/AccessResourceController.php:347
-#: src/Controller/AccessResourceController.php:351
-#: src/Controller/AccessResourceController.php:358
-msgid "File does not exist."
-msgstr ""
-
-#: src/Controller/Admin/RequestController.php:76
+#: src/Controller/Admin/RequestController.php:125
 #, php-format
 msgid "Access request record with id #%s does not exist"
 msgstr ""
 
-#: src/Controller/Admin/RequestController.php:125
-#: src/Controller/Admin/AccessController.php:154
-msgid "Resource is undefined."
+#: src/Controller/Admin/RequestController.php:228
+msgid "Access request successfully updated."
 msgstr ""
 
-#: src/Controller/Admin/RequestController.php:133
-msgid "Access request record successfully saved"
+#: src/Controller/Admin/RequestController.php:267
+msgid "access request"
 msgstr ""
 
-#: src/Controller/Admin/RequestController.php:158
-msgid "access request record"
+#: src/Controller/Admin/RequestController.php:286
+msgid "Access request successfully deleted"
 msgstr ""
 
-#: src/Controller/Admin/RequestController.php:176
-msgid "Access request record successfully deleted"
-msgstr ""
-
-#: src/Controller/Admin/AccessController.php:75
+#: src/Controller/AccessTrait.php:90
 #, php-format
-msgid "Access record with id #%s does not exist"
+msgid ""
+"Unable to send message to admin. Message:\n"
+"%s"
 msgstr ""
 
-#: src/Controller/Admin/AccessController.php:149
-msgid "Access record successfully saved"
+#: src/Controller/AccessTrait.php:141
+#, php-format
+msgid ""
+"Unable to send message from %1$s to admin. Message:\n"
+"%2$s"
 msgstr ""
 
-#: src/Controller/Admin/AccessController.php:178
-msgid "access record"
+#: src/Site/ResourcePageBlockLayout/AccessRequest.php:13
+msgid "Access request form"
 msgstr ""
 
-#: src/Controller/Admin/AccessController.php:215
-msgid "Access record successfully deleted"
+#: src/Site/ResourcePageBlockLayout/AccessRequestText.php:13
+msgid "Access request text"
 msgstr ""
 
-#: config/module.config.php:118 config/module.config.php:121
-#: config/module.config.individual.php:287
-#: config/module.config.individual.php:290
+#: config/module.config.php:217
+msgid "Accesses"
+msgstr ""
+
+#: config/module.config.php:236
+msgid "Logs"
+msgstr ""
+
+#: config/module.config.php:276
+msgid "The resource or the access doesn’t exist."
+msgstr ""
+
+#: config/module.config.php:335 config/module.config.php:338
 msgid "New request status!"
 msgstr ""
 
-#: config/module.config.php:119 config/module.config.individual.php:288
+#: config/module.config.php:336
 msgid ""
-"User created new request to AccessResource. Please, check request dashboard."
+"A user or visitor requested to access a resource. Please, check request "
+"dashboard."
 msgstr ""
 
-#: config/module.config.php:120 config/module.config.individual.php:289
-msgid "User request to resource access is updated."
-msgstr ""
-
-#: config/module.config.php:122 config/module.config.individual.php:291
+#: config/module.config.php:337
 msgid ""
-"Your request is sent to administrator. You will be inform when your request "
-"will change."
+"A user or visitor updated the request to access a resource. Please, check "
+"request dashboard."
 msgstr ""
 
-#: config/module.config.php:123 config/module.config.individual.php:292
+#: config/module.config.php:339
+msgid ""
+"Your request to access resource is sent to administrator. You will be inform "
+"when your request will change."
+msgstr ""
+
+#: config/module.config.php:340
 msgid ""
 "Your request to resource access is updated. You can check guest user "
 "requests dashboard."
 msgstr ""
 
-#: config/module.config.individual.php:185
-msgid "Access Resources"
-msgstr ""
-
-#: config/module.config.individual.php:190
-msgid "Access Management"
-msgstr ""
-
-#: config/module.config.individual.php:208
-msgid "Requests"
-msgstr ""
-
-#: config/module.config.individual.php:226
-msgid "Logs"
-msgstr ""
-
-#: data/scripts/upgrade.php:71
-msgid ""
-"The reserved access by ip by site has been replaced by a reserved acces by "
-"ip by item set. You should check and resave your config if needed and "
-"eventually create item sets."
-msgstr ""
-
-#: data/scripts/upgrade.php:144
-msgid ""
-"A new option allows to set the access restricted status via a simple radio "
-"in resource form instead of a property."
-msgstr ""
-
-#: data/scripts/upgrade.php:149
-msgid ""
-"Warning: to use only the button is the default behavior. To keep the old "
-"behavior via the property, you must set the param access_via_property to "
-"true in the file config/local.config.php."
-msgstr ""
-
-#: data/scripts/upgrade.php:154
-msgid ""
-"Warning: if you use specific properties (not \"curation:reserved\", "
-"\"curation:start\", \"curation:end\"), you need to update the table "
-"\"access_reserved\"."
-msgstr ""
-
-#: data/scripts/upgrade_vocabulary.php:15
-#, php-format
-msgid "This module requires module %s version %s or greater."
-msgstr ""
-
-#: data/scripts/upgrade_vocabulary.php:31
-#, php-format
-msgid "The vocabulary \"%s\" was updated successfully."
+#: config/module.config.php:341
+msgid "This resource is not available for now. Contact the webmaster."
 msgstr ""

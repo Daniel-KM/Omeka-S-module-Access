@@ -243,7 +243,7 @@ class AccessRequestForm extends Form
                 'name' => 'o-access:start-time',
                 'type' => Element\Time::class,
                 'options' => [
-                    'label' => ' ', // @translate
+                    'label' => ' ',
                     'format' => 'H:i',
                 ],
                 'attributes' => [
@@ -264,7 +264,7 @@ class AccessRequestForm extends Form
                 'name' => 'o-access:end-time',
                 'type' => Element\Time::class,
                 'options' => [
-                    'label' => ' ', // @translate
+                    'label' => ' ',
                     'format' => 'H:i',
                 ],
                 'attributes' => [
