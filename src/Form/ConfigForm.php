@@ -165,7 +165,7 @@ forbidden = forbidden
             ])
         ;
 
-        // Process reindexation of items and medias.
+        // Process indexation of missing access status for items and medias.
         $this
             ->add([
                 'name' => 'fieldset_index',

@@ -2,11 +2,11 @@
 
 namespace AccessResource\Mvc\Controller\Plugin;
 
-use AccessResource\Entity\AccessStatus as EntityAccessStatus;
+use AccessResource\Entity\AccessStatus;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 
-class AccessStatus extends AbstractPlugin
+class AccessEmbargo extends AbstractPlugin
 {
     /**
      * @var \Doctrine\ORM\EntityManager
@@ -19,15 +19,19 @@ class AccessStatus extends AbstractPlugin
     }
 
     /**
-     * Get access status of a resource (free, reserved, protected or forbidden).
+     * Get access embargo of a resource.
      *
-     * The access status is independant from the visibility public or private.
-     * The default status is free.
+     * @return array Associative array of start and end to DateTime or null.
      */
-    public function __invoke($resource): string
+    public function __invoke($resource): array
     {
+        $result = [
+            'start' => null,
+            'end' => null,
+        ];
+
         if (!$resource) {
-            return EntityAccessStatus::FREE;
+            return $result;
         } elseif ($resource instanceof \Omeka\Api\Representation\AbstractResourceEntityRepresentation) {
             $resourceId = (int) $resource->id();
         } elseif ($resource instanceof \Omeka\Entity\Resource) {
@@ -37,12 +41,16 @@ class AccessStatus extends AbstractPlugin
         } elseif (is_array($resource) && !empty($resource['o:id'])) {
             $resourceId = (int) $resource['o:id'];
         } else {
-            return EntityAccessStatus::FREE;
+            return $result;
         }
+
         /** @var \AccessResource\Entity\AccessStatus $status */
-        $status = $this->entityManager->find(EntityAccessStatus::class, $resourceId);
+        $status = $this->entityManager->find(AccessStatus::class, $resourceId);
         return $status
-            ? $status->getStatus()
-            : EntityAccessStatus::FREE;
+            ? [
+                'start' => $status->getEmbargoStart(),
+                'end' => $status->getEmbargoEnd(),
+            ]
+            : $result;
     }
 }

@@ -64,8 +64,9 @@ return [
     ],
     'controller_plugins' => [
         'factories' => [
+            'accessEmbargo' => Service\ControllerPlugin\AccessEmbargoFactory::class,
             'accessStatus' => Service\ControllerPlugin\AccessStatusFactory::class,
-            'accessStatusItemMedia' => Service\ControllerPlugin\AccessStatusItemMediaFactory::class,
+            'accessStatusForResource' => Service\ControllerPlugin\AccessStatusForResourceFactory::class,
             'isForbiddenFile' => Service\ControllerPlugin\IsForbiddenFileFactory::class,
             'isUnderEmbargo' => Service\ControllerPlugin\IsUnderEmbargoFactory::class,
             'mediaFilesize' => Service\ControllerPlugin\MediaFilesizeFactory::class,

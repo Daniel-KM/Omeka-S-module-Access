@@ -6,6 +6,11 @@
         content:"";
     }
 
+    .inputs input[name=embargo_start_date],
+    .inputs input[name=embargo_end_date] {
+        width: calc( 100% - 72px );
+    }
+
     .access-resource table .resource-name {
         display: inline-block;
         vertical-align: bottom;

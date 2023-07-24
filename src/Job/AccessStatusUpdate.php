@@ -10,7 +10,7 @@ use const AccessResource\ACCESS_STATUS_FORBIDDEN;
 use Omeka\Job\AbstractJob;
 use Omeka\Stdlib\Message;
 
-class UpdateAccessStatus extends AbstractJob
+class AccessStatusUpdate extends AbstractJob
 {
     /**
      * Limit for the loop to avoid heavy sql requests.
@@ -156,21 +156,19 @@ class UpdateAccessStatus extends AbstractJob
         ));
 
         $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
-        $this->accessProperty = $settings->get('accessresource_access_property');
-        $this->accessPropertyStatuses = $settings->get('accessresource_access_property_statuses', $this->accessPropertyStatusesDefault);
-
         if ($accessViaProperty) {
-            $this->updateViaProperty();
+            $this->accessProperty = $settings->get('accessresource_access_property');
+            $this->accessPropertyStatuses = $settings->get('accessresource_access_property_statuses', $this->accessPropertyStatusesDefault);
+            $this->updateAccessViaProperty();
         } else {
-            $this->updateViaVisibility();
+            $this->updateAccessViaVisibility();
         }
 
         $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
-        $this->embargoPropertyStart = $settings->get('accessresource_embargo_property_start');
-        $this->embargoPropertyEnd = $settings->get('accessresource_embargo_property_end');
-
         if  ($embargoViaProperty) {
-            $this->updateEmbargo();
+            $this->embargoPropertyStart = $settings->get('accessresource_embargo_property_start');
+            $this->embargoPropertyEnd = $settings->get('accessresource_embargo_property_end');
+            $this->updateEmbargoViaProperty();
         }
     }
 
@@ -179,7 +177,7 @@ class UpdateAccessStatus extends AbstractJob
         if (in_array($this->missingMode, ['free', 'reserved', 'protected', 'forbidden'])) {
             $sql = <<<SQL
 # Set the specified status for all missing resources.
-INSERT INTO `access_status` (`id`, `status`, `start_date`, `end_date`)
+INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
 SELECT `id`, {$this->missingMode}, NULL, NULL
 FROM `resource`
 ON DUPLICATE KEY UPDATE
@@ -190,7 +188,7 @@ SQL;
             $mode = substr($this->missingMode, 11);
             $sql = <<<SQL
 # Set free all missing public resources.
-INSERT INTO `access_status` (`id`, `status`, `start_date`, `end_date`)
+INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
 SELECT `id`, "free", NULL, NULL
 FROM `resource`
 WHERE `is_public` = 1
@@ -198,7 +196,7 @@ ON DUPLICATE KEY UPDATE
    `id` = `resource`.`id`
 ;
 # Set reserved/protected/forbidden all missing private resources.
-INSERT INTO `access_status` (`id`, `status`, `start_date`, `end_date`)
+INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
 SELECT `id`, "$mode", NULL, NULL
 FROM `resource`
 WHERE `is_public` = 0
@@ -214,7 +212,7 @@ SQL;
         return true;
     }
 
-    protected function updateViaProperty(): bool
+    protected function updateAccessViaProperty(): bool
     {
         if (!$this->accessProperty) {
             $this->logger->err(new Message(
@@ -258,7 +256,7 @@ SQL;
 
         $sql = <<<SQL
 # Set access statuses according to values.
-INSERT INTO `access_status` (`id`, `status`, `start_date`, `end_date`)
+INSERT INTO `access_status` (`id`, `status`, `embargo_start`, `embargo_end`)
 SELECT
     `resource`.`id`,
     (CASE `value`.`value`
@@ -295,7 +293,7 @@ SQL;
         return true;
     }
 
-    protected function updateEmbargo(): bool
+    protected function updateEmbargoViaProperty(): bool
     {
         $propertyStart = null;
         if ($this->embargoPropertyStart) {

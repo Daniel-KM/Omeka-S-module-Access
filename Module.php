@@ -14,6 +14,7 @@ const ACCESS_MODE_INDIVIDUAL = 'individual';
 
 use AccessResource\Entity\AccessStatus;
 use AccessResource\Form\Admin\BatchEditFieldset;
+use DateTime;
 use Generic\AbstractModule;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
@@ -27,6 +28,19 @@ class Module extends AbstractModule
 {
     const NAMESPACE = __NAMESPACE__;
 
+    /**
+     * The classes are not ready on load of the class, so use a method.
+     */
+    protected function accessStatuses(): array
+    {
+        return [
+            AccessStatus::FREE => AccessStatus::FREE,
+            AccessStatus::RESERVED => AccessStatus::RESERVED,
+            AccessStatus::PROTECTED => AccessStatus::PROTECTED,
+            AccessStatus::FORBIDDEN => AccessStatus::FORBIDDEN,
+        ];
+    }
+
     protected function preInstall(): void
     {
         require_once __DIR__ . '/data/scripts/upgrade_vocabulary.php';
@@ -35,6 +49,7 @@ class Module extends AbstractModule
     protected function postInstall(): void
     {
         $services = $this->getServiceLocator();
+
         $translator = $services->get('MvcTranslator');
         $message = new \Omeka\Stdlib\Message(
             $translator->translate('To control access to files, you must add a rule in file .htaccess at the root of Omeka. See %sreadme%s.'), // @translate
@@ -44,20 +59,12 @@ class Module extends AbstractModule
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
         $messenger->addWarning($message);
 
-        // Fill the table with data in private/public.
-        $sql = <<<SQL
-INSERT INTO `access_status` (`id`, `status`, `start_date`, `end_date`)
-SELECT `id`, "free", NULL, NULL
-FROM `resource`
-WHERE `is_public` = 1;
-
-INSERT INTO `access_status` (`id`, `status`, `start_date`, `end_date`)
-SELECT `id`, "forbidden", NULL, NULL
-FROM `resource`
-WHERE `is_public` = 0;
-SQL;
-        $connection = $services->get('Omeka\Connection');
-        $connection->executeStatement($sql);
+        // This is a quick job, so make it synchronous.
+        $services->get(\Omeka\Job\Dispatcher::class)->dispatch(
+            \AccessResource\Job\AccessStatusUpdate::class,
+            ['missing' => AccessStatus::FREE],
+            $services->get('Omeka\Job\DispatchStrategy\Synchronous')
+        );
     }
 
     public function onBootstrap(MvcEvent $event): void
@@ -139,7 +146,7 @@ SQL;
             [$this, 'filterMedia']
         );
 
-        // Store status reserved.
+        // Store status.
         // Use hydrade.post since the resource id is required.
         $sharedEventManager->attach(
             'Omeka\Api\Adapter\ItemAdapter',
@@ -157,7 +164,7 @@ SQL;
             [$this, 'updateAccessStatus']
         );
 
-        // Attach tab to Item and Media resource.
+        // Attach tab to resources.
         $controllers = [
             'Omeka\Controller\Admin\Item',
             'Omeka\Controller\Admin\Media',
@@ -184,6 +191,16 @@ SQL;
                 'view.details',
                 [$this, 'handleViewShowAfter']
             );
+            $sharedEventManager->attach(
+                $controller,
+                'view.show.section_nav',
+                [$this, 'addAccessTab']
+            );
+            $sharedEventManager->attach(
+                $controller,
+                'view.show.after',
+                [$this, 'displayListAndForm']
+            );
         }
 
         // Extend the batch edit form via js.
@@ -208,29 +225,14 @@ SQL;
             [$this, 'handleResourceBatchUpdatePreprocess']
         );
         $sharedEventManager->attach(
-            \Omeka\Api\Adapter\ItemSetAdapter::class,
-            'api.batch_update.post',
-            [$this, 'handleResourceBatchUpdatePost']
-        );
-        $sharedEventManager->attach(
             \Omeka\Api\Adapter\ItemAdapter::class,
             'api.preprocess_batch_update',
             [$this, 'handleResourceBatchUpdatePreprocess']
         );
         $sharedEventManager->attach(
-            \Omeka\Api\Adapter\ItemAdapter::class,
-            'api.batch_update.post',
-            [$this, 'handleResourceBatchUpdatePost']
-        );
-        $sharedEventManager->attach(
             \Omeka\Api\Adapter\MediaAdapter::class,
             'api.preprocess_batch_update',
             [$this, 'handleResourceBatchUpdatePreprocess']
-        );
-        $sharedEventManager->attach(
-            \Omeka\Api\Adapter\MediaAdapter::class,
-            'api.batch_update.post',
-            [$this, 'handleResourceBatchUpdatePost']
         );
 
         // Attach to Doctrine events Access Request update, to trigger Access
@@ -252,7 +254,6 @@ SQL;
             'view.browse.after',
             [$this, 'handleViewBrowseAfterItem']
         );
-
         $sharedEventManager->attach(
             'Omeka\Controller\Site\ItemSet',
             'view.browse.after',
@@ -271,6 +272,7 @@ SQL;
             [$this, 'handleViewShowAfterMedia']
         );
 
+        // Send email to admin/user when a request is created or updated.
         $sharedEventManager->attach(
             \AccessResource\Controller\Site\RequestController::class,
             'accessresource.request.created',
@@ -282,24 +284,6 @@ SQL;
             'accessresource.request.updated',
             [$this, 'handleRequestUpdated']
         );
-
-        // Attach tab to Item and Media resource.
-        $controllers = [
-            'Omeka\Controller\Admin\Item',
-            'Omeka\Controller\Admin\Media',
-        ];
-        foreach ($controllers as $controller) {
-            $sharedEventManager->attach(
-                $controller,
-                'view.show.section_nav',
-                [$this, 'addAccessTab']
-            );
-            $sharedEventManager->attach(
-                $controller,
-                'view.show.after',
-                [$this, 'displayListAndForm']
-            );
-        }
 
         // Guest user integration.
         $sharedEventManager->attach(
@@ -464,93 +448,142 @@ SQL;
      */
     public function updateAccessStatus(Event $event): void
     {
+        // In api.hydrate.pre, the representation is not yet stored and the
+        // representation cannot be used (it will use the previous one, even
+        // with getRepresentation()) on resource). So use api.hydrate.post
+        // without early check (useless anyway, and with decorrelation, the
+        // current resource is no more modified).
+
         /**
          * @var \Doctrine\ORM\EntityManager $entityManager
          * @var \Omeka\Entity\Resource $resource
          * @var \Omeka\Api\Request $request
+         * @var \Omeka\Settings\Settings $settings
          */
         $resource = $event->getParam('entity');
-        $request = $event->getParam('request');
-        $requestContent = $request->getContent();
-
-        // The resource may be partial and data should be hydrated or not.
-        // This rule applies only to "is public".
-        $isPublicBeforeUpdate = $resource->isPublic();
-        $isPublicInRequest = $requestContent['o:is_public'] ?? null;
-        $isPublicInRequest = is_null($isPublicInRequest)
-            ? $isPublicBeforeUpdate
-            : (bool) $isPublicInRequest;
-
-        // When option is to use property, set the visibility according to it.
-        // Else, use the option from the params or from the resource itself.
-        if ($this->accessViaProperty) {
-            if ($this->accessViaProperty === 'status') {
-                // In api.hydrate.pre, the representation is not yet stored
-                // and the representation cannot be used (it will use the
-                // previous one, even with getRepresentation()) on resource).
-                /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resourceRepr */
-                // $resourceRepr = $services->get('Omeka\ApiAdapterManager')->get('resources')->getRepresentation($resource);
-
-                // Request "isPartial" does not check "should hydrate" for
-                // properties, so properties are always managed.
-                /** @see \Omeka\Api\Adapter\AbstractResourceEntityAdapter::hydrate() */
-                if (empty($requestContent[PROPERTY_STATUS])) {
-                    $resourceAccessStatus = $isPublicInRequest ? ACCESS_STATUS_FREE : ACCESS_STATUS_FORBIDDEN;
-                } else {
-                    // $val = (string) $resourceRepr->value(PROPERTY_STATUS);
-                    $val = (string) (reset($requestContent[PROPERTY_STATUS]))['@value'];
-                    $resourceAccessStatus = array_search($val, $this->accessViaPropertyStatuses)
-                        // If value is not present or invalid, the status is the
-                        // visibility one.
-                        ?: ($isPublicInRequest ? ACCESS_STATUS_FREE : ACCESS_STATUS_FORBIDDEN);
-                }
-            } else {
-                // The mode "property reserved" requires two values to define
-                // the access. The public visibility forces the status.
-                if ($isPublicInRequest) {
-                    $resourceAccessStatus = ACCESS_STATUS_FREE;
-                } else {
-                    // $val = (bool) $resourceRepr->value(PROPERTY_RESERVED);
-                    $val = !empty($requestContent[PROPERTY_RESERVED]);
-                    $resourceAccessStatus = $val
-                        ? ACCESS_STATUS_RESERVED
-                        : ACCESS_STATUS_FORBIDDEN;
-                }
-            }
-        } else {
-            $resourceData = $event->getParam('request')->getContent();
-            $resourceAccessStatus = $resourceData['o-module-access-resource:status'] ?? null;
-            // TODO Make the access status editable via api (already possible via the key "o-module-access-resource:status" anyway).
-            if (!in_array($resourceAccessStatus, [ACCESS_STATUS_FREE, ACCESS_STATUS_RESERVED, ACCESS_STATUS_FORBIDDEN])) {
-                $resourceAccessStatus = $resource->isPublic()
-                    ? ACCESS_STATUS_FREE
-                    : ACCESS_STATUS_FORBIDDEN;
-            }
-        }
-
-        // Inside api.hydrate.pre, the request should be updated to be used.
-        $isPublicAfterUpdate = $resourceAccessStatus === ACCESS_STATUS_FREE;
-        $resource->setIsPublic($isPublicAfterUpdate);
-        // Set in all cases because a full update may override it.
-        $requestContent['o:is_public'] = $isPublicAfterUpdate;
-        $request->setContent($requestContent);
-
-        $services = $this->getServiceLocator();
-        $entityManager = $services->get('Omeka\EntityManager');
-
-        // Get current access reserved to keep.
-        $currentAccessStatus = $resource->getId()
-            ? $entityManager->find(AccessStatus::class, $resource->getId())
-            : null;
-        if (!$currentAccessStatus) {
-            $currentAccessStatus = new AccessStatus($resource);
-        }
-
-        $currentAccessStatus->setStatus($resourceAccessStatus);
-        if (!$resource->getId()) {
+        $resourceId = $resource->getId();
+        if (!$resourceId) {
             return;
         }
-        $entityManager->persist($currentAccessStatus);
+
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $entityManager = $services->get('Omeka\EntityManager');
+
+        $request = $event->getParam('request');
+        $resourceData = $request->getContent();
+
+        // Get current access if any.
+        $accessStatus = $entityManager->find(AccessStatus::class, $resourceId);
+        if (!$accessStatus) {
+            $accessStatus = new AccessStatus();
+            $accessStatus->setId($resource);
+        }
+
+        // TODO Make the access status editable via api (already possible via the key "o-access:status" anyway).
+        // Request "isPartial" does not check "should hydrate" for properties,
+        // so properties are always managed, but not access keys.
+
+        $accessStatuses = $this->accessStatuses();
+
+        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
+        $accessProperty = $accessViaProperty ? $settings->get('accessresource_access_property') : null;
+        if ($accessProperty) {
+            $accessPropertyStatuses = array_intersect_key(array_replace($accessStatuses, $settings->get('accessresource_access_property_statuses', $accessStatuses)), $accessStatuses);
+            /** @see \Omeka\Api\Adapter\AbstractResourceEntityAdapter::hydrate() */
+            $accessIsSet = array_key_exists($accessProperty, $resourceData);
+            $status = empty($resourceData[$accessProperty])
+                ? null
+                : (array_values($resourceData[$accessProperty])[0]['@value'] ?? null);
+            if ($status) {
+                $status = array_search($status, $accessPropertyStatuses) ?: null;
+            }
+        } else {
+            $accessIsSet = array_key_exists('o-access:status', $resourceData);
+            $status = $resourceData['o-access:status'] ?? null;
+        }
+
+        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
+        if ($embargoViaProperty) {
+            $embargoStartProperty = $embargoViaProperty ? $settings->get('accessresource_embargo_property_start') : null;
+            if ($embargoStartProperty) {
+                $embargoStartIsSet = array_key_exists($embargoStartProperty, $resourceData);
+                $embargoStart = empty($resourceData[$embargoStartProperty])
+                    ? null
+                    : (array_values($resourceData[$embargoStartProperty])[0]['@value'] ?? null);
+            }
+            $embargoEndProperty = $embargoViaProperty ? $settings->get('accessresource_embargo_property_end') : null;
+            if ($embargoEndProperty) {
+                $embargoEndIsSet = array_key_exists($embargoEndProperty, $resourceData);
+                $embargoEnd = empty($resourceData[$embargoEndProperty])
+                    ? null
+                    : (array_values($resourceData[$embargoEndProperty])[0]['@value'] ?? null);
+            }
+        } else {
+            // The process via resource form returns two keys (date and time),
+            // but the background process use the right key.
+            $embargoStartIsSet = array_key_exists('o-access:embargoStart', $resourceData);
+            $embargoStart = $resourceData['o-access:embargoStart'] ?? null;
+            // No standard keys means a form process.
+            // Merge date and time used in advanced tab of resource form.
+            if (!$embargoStartIsSet) {
+                $embargoStartIsSet = array_key_exists('embargo_start_date', $resourceData);
+                $embargoStart = $resourceData['embargo_start_date'] ?? null;
+                $embargoStart = trim((string) $embargoStart) ?: null;
+                if ($embargoStart) {
+                    $embargoStart .= 'T' . (empty($resourceData['embargo_start_time']) ? '00:00:00' : $resourceData['embargo_start_time']  . ':00');
+                }
+            }
+            $embargoEndIsSet = array_key_exists('o-access:embargoEnd', $resourceData);
+            $embargoEnd = $resourceData['o-access:embargoEnd'] ?? null;
+            if (!$embargoEndIsSet) {
+                $embargoEndIsSet = array_key_exists('embargo_end_date', $resourceData);
+                $embargoEnd = $resourceData['embargo_end_date'] ?? null;
+                $embargoEnd = trim((string) $embargoEnd) ?: null;
+                if ($embargoEnd) {
+                    $embargoEnd .= 'T' . (empty($resourceData['embargo_end_time']) ? '00:00:00' : $resourceData['embargo_end_time']  . ':00');
+                }
+            }
+        }
+
+        // Keep the database consistent instead of filling a bad value.
+        // Update access status and embargo only when the keys are set.
+
+        if (!empty($accessIsSet)) {
+            // Default status is free
+            // TODO Create access status "unknown" or "undefined"? Probably better, but complexify later.
+            if (empty($status) || !in_array($status, $accessStatuses)) {
+                $status = AccessStatus::FREE;
+            }
+            $accessStatus->setStatus($status);
+        }
+
+        if (!empty($embargoStartIsSet)) {
+            try {
+                $embargoStart = empty($embargoStart) ? null : new DateTime($embargoStart);
+            } catch (\Exception $e) {
+                $embargoStart = null;
+            }
+            $accessStatus->setEmbargoStart($embargoStart);
+        }
+
+        if (!empty($embargoEndIsSet)) {
+            try {
+                $embargoEnd = empty($embargoEnd) ? null : new DateTime($embargoEnd);
+            } catch (\Exception $e) {
+                $embargoEnd = null;
+            }
+            $accessStatus->setEmbargoEnd($embargoEnd);
+        }
+
+        $entityManager->persist($accessStatus);
+        // Flush a single entity is required in batch update, but a deprecation
+        // warning occurs, so use the unit of work.
+        // In hydrate post, most of the checks are done, except files;
+        if ($entityManager->isOpen()) {
+            // $entityManager->flush($accessStatus);
+            $entityManager->getUnitOfWork()->commit($accessStatus);
+        }
     }
 
     public function handleRequestCreated(Event $event): void
@@ -578,7 +611,7 @@ SQL;
     }
 
     /**
-     * Add a tab to section navigation.
+     * Add a tab to section navigation (show has no "advanced tab").
      */
     public function addAccessTab(Event $event): void
     {
@@ -621,123 +654,191 @@ SQL;
 
     public function addAccessElements(Event $event): void
     {
+        /**
+         * @var \Omeka\Api\Request $request
+         * @var \Omeka\Settings\Settings $settings
+         * @var \Laminas\View\Renderer\PhpRenderer $view
+         * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
+         * @var \AccessResource\Entity\AccessStatus $accessStatus
+         * @var \AccessResource\Mvc\Controller\Plugin\AccessStatusForResource $accessStatusForResource
+         */
         $services = $this->getServiceLocator();
-        if ($this->accessViaProperty
-            && $services->get('Omeka\Settings')->get('accessresource_hide_in_advanced_tab')
-        ) {
+        $settings = $services->get('Omeka\Settings');
+
+        if ($settings->get('accessresource_hide_in_advanced_tab')) {
             return;
         }
 
         $view = $event->getTarget();
-        $accessStatus = $services->get('ControllerPluginManager')->get('accessStatus');
 
-        $resource = $view->resource;
+        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
+        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
 
-        if (!$this->accessApplyToResource($resource)) {
-            return;
+        $view = $event->getTarget();
+        $plugins = $services->get('ControllerPluginManager');
+        $accessStatusForResource = $plugins->get('accessStatusForResource');
+
+        $assetUrl = $view->plugin('assetUrl');
+        $view->headLink()
+            ->appendStylesheet($assetUrl('css/access-resource-admin.css', 'AccessResource'));
+
+        // Get current access if any.
+        $resource = $view->vars()->offsetGet('resource');
+        $accessStatus = $accessStatusForResource($resource);
+        if ($accessStatus) {
+            $status = $accessStatus->getStatus();
+            $embargoStart = $accessStatus->getEmbargoStart();
+            $embargoEnd = $accessStatus->getEmbargoEnd();
+        } else {
+            $status = null;
+            $embargoStart = null;
+            $embargoEnd = null;
         }
 
-        $resourceAccessStatus = $accessStatus($resource);
-        $element = new \AccessResource\Form\Element\OptionalRadio('o-module-access-resource:status');
-        $element
+        $statusElement = new \AccessResource\Form\Element\OptionalRadio('o-access:status');
+        $statusElement
             ->setLabel('Access status') // @translate
-            ->setOption('info', 'This status will override the main visibility (public/private).') // @translate
             ->setValueOptions([
-                ACCESS_STATUS_FREE => 'Free access', // @translate'
-                ACCESS_STATUS_RESERVED => 'Restricted access', // @translate
-                ACCESS_STATUS_PROTECTED => 'Protected access', // @translate
-                ACCESS_STATUS_FORBIDDEN => 'Forbidden access', // @translate
+                AccessStatus::FREE => 'Free', // @translate'
+                AccessStatus::RESERVED => 'Restricted', // @translate
+                AccessStatus::PROTECTED => 'Protected', // @translate
+                AccessStatus::FORBIDDEN => 'Forbidden', // @translate
             ])
             ->setAttributes([
-                'id' => 'o-module-access-resource-status',
-                'value' => $resourceAccessStatus,
-                'disabled' => (bool) $this->accessViaProperty,
+                'id' => 'o-access-status',
+                'value' => $status,
+                'disabled' => $accessViaProperty ? 'disabled' : false,
             ]);
-        if ($this->accessViaProperty) {
-            $this->accessViaProperty === 'status'
-                ? $element->setLabel(sprintf('Access status is managed via property "%s"', PROPERTY_STATUS)) // @translate
-                : $element->setLabel(sprintf('Access status is managed via presence of property "%s"', PROPERTY_RESERVED)); // @translate
+        if ($accessViaProperty) {
+            $accessProperty = $settings->get('accessresource_access_property');
+            $statusElement
+                ->setLabel(sprintf('Access status is managed via property %s.', $accessProperty)); // @translate
         }
 
-        echo $view->formRow($element);
+        // Html element "datetime" is deprecated and "datetime-local" requires
+        // time, even with a pattern, so use elements date and time to avoid js.
+
+        $embargoStartElementDate = new \Laminas\Form\Element\Date('embargo_start_date');
+        $embargoStartElementDate
+            ->setLabel('Embargo start') // @translate
+            ->setAttributes([
+                'id' => 'o-access-embargo-start-date',
+                'value' => $embargoStart ? $embargoStart->format('Y-m-d') : '',
+                'disabled' => $embargoViaProperty ? 'disabled' : false,
+            ]);
+        $embargoStartElementTime = new \Laminas\Form\Element\Time('embargo_start_time');
+        $embargoStartElementTime
+            ->setLabel(' ')
+            ->setAttributes([
+                'id' => 'o-access-embargo-start-time',
+                'value' => $embargoStart ? $embargoStart->format('H:i') : '',
+                'disabled' => $embargoViaProperty ? 'disabled' : false,
+            ]);
+
+        $embargoEndElementDate = new \Laminas\Form\Element\Date('embargo_end_date');
+        $embargoEndElementDate
+            ->setLabel('Embargo end') // @translate
+            ->setAttributes([
+                'id' => 'o-access-embargo-end-date',
+                'value' => $embargoEnd ? $embargoEnd->format('Y-m-d') : '',
+                'disabled' => $embargoViaProperty ? 'disabled' : false,
+            ]);
+        $embargoEndElementTime = new \Laminas\Form\Element\Time('embargo_end_time');
+        $embargoEndElementTime
+            ->setLabel('Embargo end') // @translate
+            ->setAttributes([
+                'id' => 'o-access-embargo-end-time',
+                'value' => $embargoEnd ? $embargoEnd->format('H:i') : '',
+                'disabled' => $embargoViaProperty ? 'disabled' : false,
+            ]);
+        if ($embargoViaProperty) {
+            $embargoStartProperty = $settings->get('accessresource_embargo_property_start');
+            $embargoEndProperty = $settings->get('accessresource_embargo_property_end');
+            $embargoStartElementDate
+                ->setLabel(sprintf('Access embargo is managed via properties %1$s and %2$s.', $embargoStartProperty, $embargoEndProperty)); // @translate
+        }
+
+        echo $view->formRow($statusElement);
+        echo preg_replace('~<div class="inputs">(\s*.*\s*)</div>~mU', '<div class="inputs">$1' . $view->formTime($embargoStartElementTime) . '</div>', $view->formRow($embargoStartElementDate));
+        echo preg_replace('~<div class="inputs">(\s*.*\s*)</div>~mU', '<div class="inputs">$1' . $view->formTime($embargoEndElementTime) . '</div>', $view->formRow($embargoEndElementDate));
     }
 
     public function handleViewShowAfter(Event $event): void
     {
-        if ($this->accessViaProperty === 'status') {
+        /**
+         * @var \Laminas\View\Renderer\PhpRenderer $view
+         * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
+         * @var \Omeka\Settings\Settings $settings
+         * @var \Omeka\View\Helper\I18n $i18n
+         * @var \AccessResource\Entity\AccessStatus $accessStatus
+         * @var \AccessResource\Mvc\Controller\Plugin\AccessStatusForResource $accessStatusForResource
+         */
+        $services = $this->getServiceLocator();
+        $plugins = $services->get('ControllerPluginManager');
+        $settings = $services->get('Omeka\Settings');
+
+        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
+        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
+        if ($accessViaProperty && $embargoViaProperty) {
             return;
         }
 
         $view = $event->getTarget();
         $vars = $view->vars();
 
+        $i18n = $view->plugin('i18n');
+        $translate = $plugins->get('translate');
+        $accessStatusForResource = $plugins->get('accessStatusForResource');
+
         $resource = $vars->offsetGet('resource');
-        if (!$this->accessApplyToResource($resource)) {
-            return;
+        $accessStatus = $accessStatusForResource($resource);
+
+        if (!$accessViaProperty) {
+            $accessStatuses = [
+                AccessStatus::FREE => 'Free', // @translate'
+                AccessStatus::RESERVED => 'Reserved', // @translate
+                AccessStatus::PROTECTED => 'Protected', // @translate
+                AccessStatus::FORBIDDEN => 'Forbidden', // @translate
+            ];
+            $status = $accessStatus ? $accessStatus->getStatus() : AccessStatus::FREE;
+            $htmlStatus = sprintf('<div class="value">%s</div>', $translate($accessStatuses[$status]));
         }
 
-        $plugins = $view->getHelperPluginManager();
-        $translate = $plugins->get('translate');
-        $accessStatus = $plugins->get('accessStatus');
+        if (!$embargoViaProperty) {
+            $embargoStart = $accessStatus ? $accessStatus->getEmbargoStart() : null;
+            $embargoEnd = $accessStatus ? $accessStatus->getEmbargoEnd() : null;
+            if ($embargoStart && $embargoEnd) {
+                $htmlEmbargo= sprintf('<div class="value">%s</div>', sprintf($translate('Embargo from %1$s until %2$s'), $i18n->dateFormat($embargoStart, $i18n::DATE_FORMAT_LONG, $i18n::DATE_FORMAT_SHORT), $i18n->dateFormat($embargoEnd, $i18n::DATE_FORMAT_LONG, $i18n::DATE_FORMAT_SHORT))); // @translate
+            } elseif ($embargoStart) {
+                $htmlEmbargo= sprintf('<div class="value">%s</div>', sprintf($translate('Embargo from %1$s'), $i18n->dateFormat($embargoStart, $i18n::DATE_FORMAT_LONG, $i18n::DATE_FORMAT_SHORT))); // @translate
+            } elseif ($embargoEnd) {
+                $htmlEmbargo= sprintf('<div class="value">%s</div>', sprintf($translate('Embargo until %1$s'), $i18n->dateFormat($embargoEnd, $i18n::DATE_FORMAT_LONG, $i18n::DATE_FORMAT_SHORT))); // @translate
+            }
+        }
 
-        $resourceAccessStatus = $accessStatus($resource);
-
-        $accessStatuses = [
-            ACCESS_STATUS_FREE => 'Free access', // @translate'
-            ACCESS_STATUS_RESERVED => 'Reserved access', // @translate
-            ACCESS_STATUS_PROTECTED => 'Protected access', // @translate
-            ACCESS_STATUS_FORBIDDEN => 'Forbidden access', // @translate
-        ];
-
-        echo sprintf('<div class="meta-group">'
-            . '<h4>%s</h4>'
-            . '<div class="value">%s</div>'
-            . '</div>',
+        $html = <<<'HTML'
+<div class="meta-group">
+    <h4>%1$s</h4>
+    %2$s
+    %3$s
+</div>
+HTML;
+        echo sprintf(
+            $html,
             $translate('Access status'), // @translate
-            $translate($accessStatuses[$resourceAccessStatus])
+            $htmlStatus ?? '',
+            $htmlEmbargo ?? ''
         );
     }
 
-    protected function accessApplyToResource($resource): bool
-    {
-        // TODO Check why resource can be entity, representation or array.
-        if (!$resource) {
-            return false;
-        } elseif ($resource instanceof \Omeka\Entity\Resource) {
-            $resourceName = $resource->getResourceName();
-        } elseif ($resource instanceof \Omeka\Api\Representation\AbstractResourceEntityRepresentation) {
-            $resourceName = $resource->resourceName();
-        } elseif (is_numeric($resource)) {
-            $resourceId = (int) $resource;
-            $resource = $this->getServiceLocator()->get('Omeka\EntityManager')->find(\Omeka\Entity\Resource::class, $resourceId);
-            if (!$resource) {
-                return false;
-            }
-            $resourceName = $resource->getResourceName();
-        } elseif (is_array($resource) && !empty($resource['o:id'])) {
-            $resourceId = (int) $resource['o:id'];
-            $resource = $this->getServiceLocator()->get('Omeka\EntityManager')->find(\Omeka\Entity\Resource::class, $resourceId);
-            if (!$resource) {
-                return false;
-            }
-            $resourceName = $resource->getResourceName();
-        } else {
-            return false;
-        }
-
-        return in_array($resourceName, $this->accessApply);
-    }
-
     /**
-     * Helper to display the access for a resource.
+     * Helper to display the accesses and requests for a resource.
      *
      * @param Event $event
      * @param AbstractResourceEntityRepresentation $resource
      */
-    protected function displayAccessesAccessResource(
-        Event $event,
-        AbstractResourceEntityRepresentation $resource
-    ): void {
+    protected function displayAccessesAccessResource(Event $event, AbstractResourceEntityRepresentation $resource): void
+    {
         $services = $this->getServiceLocator();
         $api = $services->get('Omeka\ApiManager');
 
@@ -760,11 +861,11 @@ SQL;
         $entity = $event->getTarget();
 
         // Process only if status is 'accepted'.
-        if ($entity->getStatus() != \AccessResource\Entity\AccessRequest::STATUS_ACCEPTED) {
+        if ($entity->getStatus() !== \AccessResource\Entity\AccessRequest::STATUS_ACCEPTED) {
             return;
         }
 
-        // Find access record.
+        // Find last access record.
         /** @var \Omeka\Api\Manager $api */
         $api = $this->getServiceLocator()->get('Omeka\ApiManager');
 
@@ -845,146 +946,140 @@ SQL;
 
     public function formAddElementsResourceBatchUpdateForm(Event $event): void
     {
-        // Add elements only if the resource type is managed.
-        $resourceType = $this->currentResourceType();
-        if (!$resourceType
-            || !in_array($resourceType, $this->accessApply)
-        ) {
+        /**
+         * @var \Omeka\Settings\Settings $settings
+         * @var \Omeka\Form\ResourceBatchUpdateForm $form
+         * @var \AccessResource\Form\Admin\BatchEditFieldset $fieldset
+         */
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
+        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
+        if ($accessViaProperty && $embargoViaProperty) {
             return;
         }
 
-        /** @var \Omeka\Form\ResourceBatchUpdateForm $form */
         $form = $event->getTarget();
-        $services = $this->getServiceLocator();
         $formElementManager = $services->get('FormElementManager');
 
         $fieldset = $formElementManager->get(BatchEditFieldset::class);
+        $fieldset
+            ->setOption('access_via_property', $accessViaProperty)
+            ->setOption('embargo_via_property', $embargoViaProperty);
+
         $form->add($fieldset);
     }
 
+    /**
+     * Form filters shouldn't be needed.
+     */
     public function formAddInputFiltersResourceBatchUpdateForm(Event $event): void
     {
-        // Add elements only if the resource type is managed.
-        $resourceType = $this->currentResourceType();
-        if (!$resourceType
-            || !in_array($resourceType, $this->accessApply)
-        ) {
-            return;
-        }
-
         /** @var \Laminas\InputFilter\InputFilterInterface $inputFilter */
         $inputFilter = $event->getParam('inputFilter');
         $inputFilter
             ->get('accessresource')
             ->add([
-                'name' => 'status',
+                'name' => 'o-access:status',
                 'required' => false,
             ])
             ->add([
-                'name' => 'apply',
+                'name' => 'embargo_start_update',
                 'required' => false,
-            ]);
-    }
-
-    protected function currentResourceType(): ?string
-    {
-        // Add elements only if the resource type is managed.
-        $services = $this->getServiceLocator();
-        /** @var \Omeka\Mvc\Status $status */
-        $status = $services->get('Omeka\Status');
-        $controller = $status->getRouteParam('__CONTROLLER__') ?? $status->getRouteParam('controller');
-        $controllersToTypes = [
-            'item' => 'items',
-            'items' => 'items',
-            'media' => 'media',
-            'item_sets' => 'item_sets',
-            'item-set' => 'item_sets',
-        ];
-        return $controllersToTypes[$controller] ?? null;
+            ])
+            ->add([
+                'name' => 'embargo_start_date',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'embargo_start_time',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'embargo_end_update',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'embargo_end_date',
+                'required' => false,
+            ])
+            ->add([
+                'name' => 'embargo_end_time',
+                'required' => false,
+            ])
+        ;
     }
 
     /**
-     * Clean params for batch update.
+     * Clean params for batch update to avoid to do it for each resource.
      */
     public function handleResourceBatchUpdatePreprocess(Event $event): void
     {
-        /** @var \Omeka\Api\Request $request */
+        /**
+         * @var \Omeka\Settings\Settings $settings
+         * @var \AccessResource\Form\Admin\BatchEditFieldset $fieldset
+         * @var \Omeka\Api\Request $request
+         */
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
         $request = $event->getParam('request');
-        $post = $request->getContent();
+
+        $post = $request->getValue('accessresource');
         $data = $event->getParam('data');
 
-        if (empty($data['accessresource']) || !array_filter($data['accessresource'])) {
+        $accessViaProperty = (bool) $settings->get('accessresource_access_via_property');
+        $embargoViaProperty = (bool) $settings->get('accessresource_embargo_via_property');
+        if ($accessViaProperty && $embargoViaProperty) {
             unset($data['accessresource']);
             $event->setParam('data', $data);
             return;
         }
 
-        if (empty($post['accessresource']['status'])
-            || !in_array($post['accessresource']['status'], ['free', 'reserved', 'protected', 'forbidden'])
-        ) {
-            unset($data['accessresource']);
-            $event->setParam('data', $data);
-            return;
+        // Access status.
+        if (!$accessViaProperty) {
+            if (empty($post['o-access:status']) || !in_array($post['o-access:status'], $this->accessStatuses())) {
+                unset($data['o-access:status']);
+            } else {
+                $data['o-access:status'] = $post['o-access:status'];
+            }
         }
 
-        $data['accessresource'] = [
-            'status' => $post['accessresource']['status'],
-        ];
+        // Access embargo.
+        if ($embargoViaProperty) {
+            unset($data['o-access:embargoStart']);
+            unset($data['o-access:embargoEnd']);
+        } else {
+            // Embargo start.
+            if (empty($post['embargo_start_update'])) {
+                unset($data['o-access:embargoStart']);
+            } elseif ($post['embargo_start_update'] === 'remove') {
+                $data['o-access:embargoStart'] = null;
+            } elseif ($post['embargo_start_update'] === 'set') {
+                $embargoStart = $post['embargo_start_date'] ?? null;
+                $embargoStart = trim((string) $embargoStart) ?: null;
+                if ($embargoStart) {
+                    $embargoStart .= 'T' . (empty($post['embargo_start_time']) ? '00:00:00' : $post['embargo_start_time']  . ':00');
+                }
+                $data['o-access:embargoStart'] = $embargoStart;
+            }
+            // Embargo end.
+            if (empty($post['embargo_end_update'])) {
+                unset($data['o-access:embargoEnd']);
+            } elseif ($post['embargo_end_update'] === 'remove') {
+                $data['o-access:embargoEnd'] = null;
+            } elseif ($post['embargo_end_update'] === 'set') {
+                $embargoEnd = $post['embargo_end_date'] ?? null;
+                $embargoEnd = trim((string) $embargoEnd) ?: null;
+                if ($embargoEnd) {
+                    $embargoEnd .= 'T' . (empty($post['embargo_end_time']) ? '00:00:00' : $post['embargo_end_time']  . ':00');
+                }
+                $data['o-access:embargoEnd'] = $embargoEnd;
+            }
+        }
+        unset($data['accessresource']);
 
         $event->setParam('data', $data);
-    }
-
-    /**
-     * Process action on batch update (all or partial) via direct sql.
-     *
-     * Data may need to be reindexed if a module like Search is used, even if
-     * the results are probably the same with a simple trimming.
-     */
-    public function handleResourceBatchUpdatePost(Event $event): void
-    {
-        /** @var \Omeka\Api\Request $request */
-        $request = $event->getParam('request');
-        $data = $request->getContent();
-        if (empty($data['accessresource']['status'])
-            || !in_array($data['accessresource']['status'], ['free', 'reserved', 'forbidden'])
-        ) {
-            return;
-        }
-
-        $ids = (array) $request->getIds();
-        $ids = array_filter(array_map('intval', $ids));
-        if (empty($ids)) {
-            return;
-        }
-
-        $status = $data['accessresource']['status'];
-
-        /** @var \Doctrine\DBAL\Connection $connection */
-        $connection = $this->getServiceLocator()->get('Omeka\Connection');
-        $sql = <<<SQL
-INSERT `access_status` (`id`, `status`, `start_date`, `end_date`)
-SELECT `id`, :status, NULL, NULL
-FROM `resource`
-WHERE `resource`.`id` IN :ids
-ON DUPLICATE KEY UPDATE
-    SET `status` = :status;
-
-UPDATE `resource`
-SET `is_public` = :is_public
-WHERE `resource`.`id` IN :ids;
-SQL;
-
-        $bind = [
-            'status' => $status,
-            'ids' => $ids,
-            'is_public' => (int) ($status === 'free'),
-        ];
-        $types = [
-            'status' => \Doctrine\DBAL\ParameterType::STRING,
-            'ids' => $connection::PARAM_INT_ARRAY,
-            'is_public' => \Doctrine\DBAL\ParameterType::INTEGER,
-        ];
-        $connection->executeStatement($sql, $bind, $types);
     }
 
     protected function processUpdateMissingStatus(array $vars): void
@@ -996,7 +1091,7 @@ SQL;
         $messenger = $plugins->get('messenger');
 
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
-        $job = $dispatcher->dispatch(\AccessResource\Job\UpdateAccessStatus::class, $vars);
+        $job = $dispatcher->dispatch(\AccessResource\Job\AccessStatusUpdate::class, $vars);
         $message = new Message(
             'A job was launched in background to update access statuses according to parameters: (%1$sjob #%2$d%3$s, %4$slogs%3$s).', // @translate
             sprintf('<a href="%s">',
