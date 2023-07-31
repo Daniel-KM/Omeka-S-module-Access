@@ -356,7 +356,7 @@ SQL;
 
     $settings->set('access_full', false);
 
-    $settings->set('access_access_modes', [empty($config['accessresource']['access_mode']) ? 'guest' : $config['accessresource']['access_mode']]);
+    $settings->set('access_access_modes', [empty($config['access']['access_mode']) ? 'guest' : $config['access']['access_mode']]);
     $settings->delete('access_access_mode');
 
     // For the upgrade, status is set to false in all cases. The admin should rerun the

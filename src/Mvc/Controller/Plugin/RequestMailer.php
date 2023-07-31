@@ -65,11 +65,11 @@ class RequestMailer extends AbstractPlugin
         $mail['to'] = $this->adminUser->getEmail();
         $mail['toName'] = $this->adminUser->getName();
         if ($action === 'created') {
-            $mail['subject'] = $this->settings->get('access_message_admin_subject', $this->config['accessresource']['settings']['access_message_admin_subject']);
-            $mail['body'] = $this->settings->get('access_message_admin_request_created', $this->config['accessresource']['settings']['access_message_admin_request_created']);
+            $mail['subject'] = $this->settings->get('access_message_admin_subject', $this->config['access']['settings']['access_message_admin_subject']);
+            $mail['body'] = $this->settings->get('access_message_admin_request_created', $this->config['access']['settings']['access_message_admin_request_created']);
         } elseif ($action === 'updated') {
-            $mail['subject'] = $this->settings->get('access_message_admin_subject', $this->config['accessresource']['settings']['access_message_admin_subject']);
-            $mail['body'] = $this->settings->get('access_message_admin_request_updated', $this->config['accessresource']['settings']['access_message_admin_request_updated']);
+            $mail['subject'] = $this->settings->get('access_message_admin_subject', $this->config['access']['settings']['access_message_admin_subject']);
+            $mail['body'] = $this->settings->get('access_message_admin_request_updated', $this->config['access']['settings']['access_message_admin_request_updated']);
         }
 
         $message = $this->mailer->createMessage();
@@ -97,11 +97,11 @@ class RequestMailer extends AbstractPlugin
         $mail['to'] = $user->getEmail();
         $mail['toName'] = $user->getName();
         if ($action === 'created') {
-            $mail['subject'] = $this->settings->get('access_message_user_subject', $this->config['accessresource']['settings']['access_message_user_subject']);
-            $mail['body'] = $this->settings->get('access_message_user_request_created', $this->config['accessresource']['settings']['access_message_user_request_created']);
+            $mail['subject'] = $this->settings->get('access_message_user_subject', $this->config['access']['settings']['access_message_user_subject']);
+            $mail['body'] = $this->settings->get('access_message_user_request_created', $this->config['access']['settings']['access_message_user_request_created']);
         } elseif ($action === 'updated') {
-            $mail['subject'] = $this->settings->get('access_message_user_subject', $this->config['accessresource']['settings']['access_message_user_subject']);
-            $mail['body'] = $this->settings->get('access_message_user_request_updated', $this->config['accessresource']['settings']['access_message_user_request_updated']);
+            $mail['subject'] = $this->settings->get('access_message_user_subject', $this->config['access']['settings']['access_message_user_subject']);
+            $mail['body'] = $this->settings->get('access_message_user_request_updated', $this->config['access']['settings']['access_message_user_request_updated']);
         }
 
         $message = $this->mailer->createMessage();

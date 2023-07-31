@@ -54,7 +54,7 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $acl = $services->get('Omeka\Acl');
 
-        // Since Omeka 1.4, modules are ordered, so Guest come after AccessResource.
+        // Since Omeka 1.4, modules are ordered, so Guest comes after Access.
         // See \Guest\Module::onBootstrap(). Manage other roles too: contributor, etc.
         // No need to add role guest_private, since he can view all.
         if (!$acl->hasRole('guest')) {
@@ -404,13 +404,13 @@ class Module extends AbstractModule
         $request = $event->getParam('request');
 
         $data = $request->getContent('data');
-        if (empty($data['accessresource'])) {
-            unset($data['accessresource']);
+        if (empty($data['access'])) {
+            unset($data['access']);
             $request->setContent($data);
             return;
         }
 
-        if (!empty($data['accessresource']['is_batch_process'])) {
+        if (!empty($data['access']['is_batch_process'])) {
             return;
         }
 
@@ -421,7 +421,7 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $rawData = $data['accessresource'];
+        $rawData = $data['access'];
         $newData = [];
 
         // Access level.
@@ -468,15 +468,15 @@ class Module extends AbstractModule
 
         if ($needProcess) {
             $this->getServiceLocator()->get('Omeka\Logger')->info(new Message(
-                "Cleaned params used for access resources:\n%s", // @translate
+                "Cleaned params used for Access:\n%s", // @translate
                 json_encode($newData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_LINE_TERMINATORS)
             ));
             $newData = [
                 'is_batch_process' => true,
             ] + $newData;
-            $data['accessresource'] = $newData;
+            $data['access'] = $newData;
         } else {
-            unset($data['accessresource']);
+            unset($data['access']);
         }
 
         $request->setContent($data);
@@ -493,7 +493,7 @@ class Module extends AbstractModule
          */
         // The data are already checked during preprocess.
         $request = $event->getParam('request');
-        $data = $request->getValue('accessresource');
+        $data = $request->getValue('access');
 
         if (!$data) {
             return;
@@ -625,7 +625,7 @@ class Module extends AbstractModule
         $request = $event->getParam('request');
         $resourceData = $request->getContent();
 
-        if (!empty($resourceData['accessresource']['is_batch_process'])) {
+        if (!empty($resourceData['access']['is_batch_process'])) {
             return;
         }
 
@@ -1215,7 +1215,7 @@ HTML;
 
         $inputFilter = $event->getParam('inputFilter');
         $inputFilter
-            ->get('accessresource')
+            ->get('access')
             ->add([
                 'name' => 'o-access:level',
                 'required' => false,
@@ -1258,7 +1258,7 @@ HTML;
         $translator = $services->get('MvcTranslator');
         $message = new \Omeka\Stdlib\Message(
             $translator->translate('To control access to files, you must add a rule in file .htaccess at the root of Omeka. See %1$sreadme%2$s.'), // @translate
-            '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource" target="_blank">', '</a>'
+            '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-Access" target="_blank">', '</a>'
         );
         $message->setEscapeHtml(false);
         $messenger = $services->get('ControllerPluginManager')->get('messenger');

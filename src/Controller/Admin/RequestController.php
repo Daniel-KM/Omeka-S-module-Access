@@ -265,7 +265,7 @@ class RequestController extends AbstractActionController
         $view = new ViewModel([
             'resource' => $resource,
             'resourceLabel' => 'access request', // @translate
-            'partialPath' => 'access-resource/admin/request/show-details',
+            'partialPath' => 'access/admin/request/show-details',
             'linkTitle' => $linkTitle,
             'accessRequest' => $resource,
             'values' => json_encode($values),

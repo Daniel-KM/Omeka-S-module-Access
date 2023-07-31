@@ -1335,11 +1335,11 @@ msgstr ""
 #~ msgstr " "
 
 #~ msgid ""
-#~ "The module is not configured: the key \"[accessresource][access_mode]\" "
+#~ "The module is not configured: the key \"[access][access_mode]\" "
 #~ "should be set in the main config file of Omeka \"config/local.config.php"
 #~ "\"."
 #~ msgstr ""
-#~ "Le module n’est pas configuré : la clé \"[accessresource][access_mode]\" "
+#~ "Le module n’est pas configuré : la clé \"[access][access_mode]\" "
 #~ "devrait être définie dans le fichier de configuration principal d’Omeka "
 #~ "\"config/local.config.php\"."
 

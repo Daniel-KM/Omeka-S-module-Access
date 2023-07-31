@@ -3,7 +3,7 @@
 namespace Access\Form\Admin;
 
 use Access\Entity\AccessStatus;
-use Access\Form\Element as AccessResourceElement;
+use Access\Form\Element as AccessElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 
@@ -30,10 +30,10 @@ class BatchEditFieldset extends Fieldset
     public function init(): void
     {
         $this
-            ->setName('accessresource')
-            ->setLabel('Access resource') // @translate
+            ->setName('access')
+            ->setLabel('Access') // @translate
             ->setAttributes([
-                'id' => 'accessresource',
+                'id' => 'access',
                 'class' => 'field-container',
                 // This attribute is required to make "batch edit all" working.
                 'data-collection-action' => 'replace',
@@ -65,7 +65,7 @@ class BatchEditFieldset extends Fieldset
         $this
             ->add([
                 'name' => 'o-access:level',
-                'type' => AccessResourceElement\OptionalRadio::class,
+                'type' => AccessElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'New level', // @translate
                     'value_options' => [
@@ -74,7 +74,7 @@ class BatchEditFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'access_o_access_level',
-                    'class' => 'accessresource',
+                    'class' => 'access',
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -82,7 +82,7 @@ class BatchEditFieldset extends Fieldset
 
             ->add([
                 'name' => 'embargo_start_update',
-                'type' => AccessResourceElement\OptionalRadio::class,
+                'type' => AccessElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'Embargo start', // @translate
                     'value_options' => [
@@ -93,7 +93,7 @@ class BatchEditFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'access_embargo_start_update',
-                    'class' => 'accessresource',
+                    'class' => 'access',
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -106,7 +106,7 @@ class BatchEditFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'access_embargo_start_date',
-                    'class' => 'accessresource',
+                    'class' => 'access',
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -120,14 +120,14 @@ class BatchEditFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'access_embargo_start_time',
-                    'class' => 'accessresource',
+                    'class' => 'access',
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
             ])
             ->add([
                 'name' => 'embargo_end_update',
-                'type' => AccessResourceElement\OptionalRadio::class,
+                'type' => AccessElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'Embargo end', // @translate
                     'value_options' => [
@@ -138,7 +138,7 @@ class BatchEditFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'access_embargo_end_update',
-                    'class' => 'accessresource',
+                    'class' => 'access',
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -151,7 +151,7 @@ class BatchEditFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'access_embargo_end_date',
-                    'class' => 'accessresource',
+                    'class' => 'access',
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -165,7 +165,7 @@ class BatchEditFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'access_embargo_end_time',
-                    'class' => 'accessresource',
+                    'class' => 'access',
                     // This attribute is required to make "batch edit all" working.
                     'data-collection-action' => 'replace',
                 ],
@@ -188,7 +188,7 @@ class BatchEditFieldset extends Fieldset
                     ],
                     'attributes' => [
                         'id' => 'access_recursive',
-                        'class' => 'accessresource',
+                        'class' => 'access',
                         // This attribute is required to make "batch edit all" working.
                         'data-collection-action' => 'replace',
                     ],

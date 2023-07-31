@@ -338,7 +338,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         /*
         $dql = <<<DQL
 SELECT ar
-FROM AccessResource\Entity\AccessRequest ar
+FROM Access\Entity\AccessRequest ar
 JOIN ar.resources r
 WHERE
     ar.enabled = 1

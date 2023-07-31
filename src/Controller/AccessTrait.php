@@ -67,11 +67,11 @@ trait AccessTrait
         $mail['toName'] = null;
         // $mail['toName'] = 'Omeka S Admin';
         if ($action === 'created') {
-            $mail['subject'] = $settings->get('access_message_admin_subject', $this->translate($moduleConfig['accessresource']['settings']['access_message_admin_subject']));
-            $mail['body'] = $settings->get('access_message_admin_request_created', $this->translate($moduleConfig['accessresource']['settings']['access_message_admin_request_created']));
+            $mail['subject'] = $settings->get('access_message_admin_subject', $this->translate($moduleConfig['access']['settings']['access_message_admin_subject']));
+            $mail['body'] = $settings->get('access_message_admin_request_created', $this->translate($moduleConfig['access']['settings']['access_message_admin_request_created']));
         } elseif ($action === 'updated') {
-            $mail['subject'] = $settings->get('access_message_admin_subject', $this->translate($moduleConfig['accessresource']['settings']['access_message_admin_subject']));
-            $mail['body'] = $settings->get('access_message_admin_request_updated', $this->translate($moduleConfig['accessresource']['settings']['access_message_admin_request_updated']));
+            $mail['subject'] = $settings->get('access_message_admin_subject', $this->translate($moduleConfig['access']['settings']['access_message_admin_subject']));
+            $mail['body'] = $settings->get('access_message_admin_request_updated', $this->translate($moduleConfig['access']['settings']['access_message_admin_request_updated']));
         }
 
         /** @var \Omeka\Stdlib\Mailer $mailer */
@@ -118,11 +118,11 @@ trait AccessTrait
         $mail['to'] = $post['o:email'];
         $mail['toName'] = $post['o:name'] ?? null;
         if ($action === 'created') {
-            $mail['subject'] = $settings->get('access_message_user_subject', $this->translate($moduleConfig['accessresource']['settings']['access_message_user_subject']));
-            $mail['body'] = $settings->get('access_message_user_request_created', $this->translate($moduleConfig['accessresource']['settings']['access_message_user_request_created']));
+            $mail['subject'] = $settings->get('access_message_user_subject', $this->translate($moduleConfig['access']['settings']['access_message_user_subject']));
+            $mail['body'] = $settings->get('access_message_user_request_created', $this->translate($moduleConfig['access']['settings']['access_message_user_request_created']));
         } elseif ($action === 'updated') {
-            $mail['subject'] = $settings->get('access_message_user_subject', $this->translate($moduleConfig['accessresource']['settings']['access_message_user_subject']));
-            $mail['body'] = $settings->get('access_message_user_request_updated', $this->translate($moduleConfig['accessresource']['settings']['access_message_user_request_updated']));
+            $mail['subject'] = $settings->get('access_message_user_subject', $this->translate($moduleConfig['access']['settings']['access_message_user_subject']));
+            $mail['body'] = $settings->get('access_message_user_request_updated', $this->translate($moduleConfig['access']['settings']['access_message_user_request_updated']));
         }
 
         /** @var \Omeka\Stdlib\Mailer $mailer */

@@ -42,13 +42,13 @@ See general end user documentation for [installing a module].
 
 * From the zip
 
-Download the last release [AccessResource.zip] from the list of releases, and
-uncompress it in the `modules` directory.
+Download the last release [Access.zip] from the list of releases, and uncompress
+it in the `modules` directory.
 
 * From the source and for development:
 
 If the module was installed from the source, rename the name of the folder of
-the module to `AccessResource`.
+the module to `Access`.
 
 ### Configuration of the web server
 
@@ -132,15 +132,15 @@ RewriteRule "^files/(original|large)/(.*)$" "http://%{HTTP_HOST}/digital-library
 The module is compatible with the module [Statistics].
 
 Because Omeka doesn't protect files by default, **it is important to redirect the urls of the original files**
-to the routes of the module Access Resource. If you keep the redirection with
-`download`, the check for restricted access won't be done, so **a private file will become public**,
+to the routes of the module Access. If you keep the redirection with `download`,
+the check for restricted access won't be done, so **a private file will become public**,
 even if a user as a no restricted access to it. For example:
 
 ```apache
-# Redirect direct access to files to the module Access Resource.
+# Redirect direct access to files to the module Access.
 RewriteRule "^files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
 
-# Redirect direct download of files to the module Access Resource.
+# Redirect direct download of files to the module Access.
 RewriteRule "^download/files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
 ```
 
@@ -370,7 +370,7 @@ Copyright
 * Copyright Saki (image [Locked file], see [Saki])
 
 
-[Access]: https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource
+[Access]: https://gitlab.com/Daniel-KM/Omeka-S-module-Access
 [Omeka S]: https://omeka.org/s
 [Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
 [Guest]: https://gitlab.com/Daniel-KM/Omeka-S-module-Guest
@@ -385,10 +385,10 @@ Copyright
 [Easy Admin]: https://gitlab.com/Daniel-KM/Omeka-S-module-EasyAdmin
 [Statistics]: https://gitlab.com/Daniel-KM/Omeka-S-module-Statistics
 [Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
-[AccessResource.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource/-/releases
+[Access.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/releases
 [Protect original files]: #protect-original-files
 [.htaccess]: https://github.com/omeka/omeka-s/blob/develop/.htaccess.dist#L4
-[module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource/-/issues
+[module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/issues
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
 [GNU/GPL]: https://www.gnu.org/licenses/gpl-3.0.html
 [FSF]: https://www.fsf.org

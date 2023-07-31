@@ -13,8 +13,8 @@
     beStrictAboutTodoAnnotatedTests="true"
     >
     <testsuites>
-        <testsuite name="AccessResource">
-            <directory suffix="Test.php">test/AccessResourceTest</directory>
+        <testsuite name="Access">
+            <directory suffix="Test.php">test/AccessTest</directory>
         </testsuite>
     </testsuites>
     <filter>

@@ -102,7 +102,7 @@ class ConfigForm extends Form
                 ],
                 'attributes' => [
                     'id' => 'access_property_level_mode',
-                    'class' => 'accessresource-property',
+                    'class' => 'access-property',
                     'required' => false,
                     'style' => 'display: inline-block;',
                 ],
@@ -119,7 +119,7 @@ class ConfigForm extends Form
                 ],
                 'attributes' => [
                     'id' => 'access_property_level',
-                    'class' => 'chosen-select accessresource-property',
+                    'class' => 'chosen-select access-property',
                     'multiple' => false,
                     'data-placeholder' => 'Select property…', // @translate
                 ],
@@ -133,7 +133,7 @@ class ConfigForm extends Form
                 ],
                 'attributes' => [
                     'id' => 'access_property_levels',
-                    'class' => 'accessresource-property',
+                    'class' => 'access-property',
                     'rows' => 4,
                     'placeholder' => 'free = free
 reserved = reserved
@@ -151,7 +151,7 @@ forbidden = forbidden
                 ],
                 'attributes' => [
                     'id' => 'access_property_level_datatype',
-                    'class' => 'accessresource-property',
+                    'class' => 'access-property',
                     'placeholder' => 'customvocab:2',
                 ],
             ])
@@ -166,7 +166,7 @@ forbidden = forbidden
                 ],
                 'attributes' => [
                     'id' => 'access_property_embargo_start',
-                    'class' => 'chosen-select accessresource-property',
+                    'class' => 'chosen-select access-property',
                     'multiple' => false,
                     'data-placeholder' => 'Select property…', // @translate
                 ],
@@ -181,7 +181,7 @@ forbidden = forbidden
                 ],
                 'attributes' => [
                     'id' => 'access_property_embargo_end',
-                    'class' => 'chosen-select accessresource-property',
+                    'class' => 'chosen-select access-property',
                     'multiple' => false,
                     'data-placeholder' => 'Select property…', // @translate
                 ],
@@ -195,7 +195,7 @@ forbidden = forbidden
                 ],
                 'attributes' => [
                     'id' => 'access_property_show_in_advanced_tab',
-                    'class' => 'accessresource-property'
+                    'class' => 'access-property'
                 ],
             ])
 

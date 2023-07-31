@@ -7,8 +7,8 @@
 
     .inputs input[name=embargo_start_date],
     .inputs input[name=embargo_end_date],
-    .inputs input[name="accessresource[embargo_start_date]"],
-    .inputs input[name="accessresource[embargo_end_date]"] ,
+    .inputs input[name="access[embargo_start_date]"],
+    .inputs input[name="access[embargo_end_date]"] ,
     .inputs input[name="o-access:start-date"],
     .inputs input[name="o-access:end-date"] {
         width: calc( 100% - 72px );
@@ -16,8 +16,8 @@
     }
     .inputs input[name=embargo_start_time],
     .inputs input[name=embargo_end_time],
-    .inputs input[name="accessresource[embargo_start_time]"],
-    .inputs input[name="accessresource[embargo_end_time]"],
+    .inputs input[name="access[embargo_start_time]"],
+    .inputs input[name="access[embargo_end_time]"],
     .inputs input[name="o-access:start-time"],
     .inputs input[name="o-access:end-time"] {
         min-width: 62px;

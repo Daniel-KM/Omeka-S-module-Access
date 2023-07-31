@@ -8,16 +8,16 @@ use Omeka\Form\Element\CkeditorInline;
 
 class SettingsFieldset extends Fieldset
 {
-    protected $label = 'Access resource'; // @translate
+    protected $label = 'Access'; // @translate
 
     protected $elementGroups = [
-        'access' => 'Access resource', // @translate
+        'access' => 'Access', // @translate
     ];
 
     public function init(): void
     {
         $this
-            ->setAttribute('id', 'access-resource')
+            ->setAttribute('id', 'access')
             ->setOption('element_groups', $this->elementGroups)
 
             ->add([

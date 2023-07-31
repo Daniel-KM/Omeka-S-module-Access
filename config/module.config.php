@@ -20,7 +20,7 @@ return [
         /* TODO To be reused when records will be protected. Use another filter or a delegator instead of overriding default one, so it will remain compatible with other modules (group).
         'filters' => [
             // Override Omeka core resource visibility with a new condition.
-            'resource_visibility' => Db\Filter\AccessResourceVisibilityFilter::class,
+            'resource_visibility' => Db\Filter\AccessVisibilityFilter::class,
         ],
         */
     ],
@@ -213,7 +213,7 @@ return [
     ],
     'navigation' => [
         'AdminModule' => [
-            'access-resource' => [
+            'access' => [
                 'label' => 'Accesses', // @translate
                 'class' => 'o-icon- fa-key',
                 'route' => 'admin/access-request',
@@ -272,12 +272,12 @@ return [
         ],
     ],
     'js_translate_strings' => [
-        'Access resource', // @translate
+        'Access', // @translate
         'The resource or the access doesn’t exist.', // @translate
         'Something went wrong', // @translate
         '[Untitled]', // @translate
     ],
-    'accessresource' => [
+    'access' => [
         'config' => [
             // True means that recods are protected, not only media contents (files).
             'access_full' => false,
@@ -337,7 +337,7 @@ return [
             'access_message_admin_request_updated' => 'A user or visitor updated the request to access a resource. Please, check request dashboard.', //@translate
             'access_message_user_subject' => 'New request status!', //@translate
             'access_message_user_request_created' => 'Your request to access resource is sent to administrator. You will be inform when your request will change.', //@translate
-            'access_message_user_request_updated' => 'Your request to resource access is updated. You can check guest user requests dashboard.', //@translate
+            'access_message_user_request_updated' => 'Your request to access resource is updated. You can check guest user requests dashboard.', //@translate
             'access_message_access_text' => 'This resource is not available for now. Contact the webmaster.', //@translate
         ],
     ],
