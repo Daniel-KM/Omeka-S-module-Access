@@ -18,6 +18,7 @@ use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
+use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Entity\Resource;
 use Omeka\Stdlib\Message;
@@ -26,9 +27,51 @@ class Module extends AbstractModule
 {
     const NAMESPACE = __NAMESPACE__;
 
-    protected function preInstall(): void
+    public function install(ServiceLocatorInterface $services): void
     {
+        $this->setServiceLocator($services);
+        /** @var bool $skipMessage */
+        $skipMessage = true;
         require_once __DIR__ . '/data/scripts/upgrade_vocabulary.php';
+
+        /** @var \Doctrine\DBAL\Connection $connection */
+        $connection = $services->get('Omeka\Connection');
+        try {
+            $connection->executeQuery('SELECT id FROM access_log LIMIT 1')->fetchOne();
+        } catch (\Exception $e) {
+            parent::checkAllResourcesToInstall($services);
+            return;
+        }
+
+        // Check upgrade from old module AccessResource if any.
+        $moduleManager = $services->get('Omeka\ModuleManager');
+        $module = $moduleManager->getModule('AccessResource');
+        $version = $module ? $module->getIni('version') : null;
+        if ($version && version_compare($version, '3.4.17', '<')) {
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException(
+                'To be automatically upgraded and replaced by this module, the module "Access Resource" should be updated first to version 3.4.17, else uninstall it first, but you will lose access statuses and requests.' // @translate
+            );
+        }
+
+        $plugins = $services->get('ControllerPluginManager');
+        $messenger = $plugins->get('messenger');
+
+        if (!$version || ($module && in_array($module->getState(), [
+            \Omeka\Module\Manager::STATE_ACTIVE,
+            \Omeka\Module\Manager::STATE_NOT_ACTIVE,
+            \Omeka\Module\Manager::STATE_NEEDS_UPGRADE,
+        ]))) {
+            try {
+                $filepath = $this->modulePath() . '/data/scripts/upgrade_from_accessresource.php';
+                require_once $filepath;
+            } catch (\Exception $e) {
+                $message = new Message(
+                    'An error occurred during migration of module "%s". Check the config and uninstall it manually.', // @translate
+                    'AccessResource'
+                );
+                $messenger->addError($message);
+            }
+        }
     }
 
     protected function postInstall(): void
