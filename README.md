@@ -1,9 +1,13 @@
 Access Resource (module for Omeka S)
 ====================================
 
+> ***IMPORTANT***: This module is deprecated and has been replaced by the module
+> [Access] and won’t be updated any more. The upgrade from it is automatic.
+
 > __New versions of this module and support for Omeka S version 3.0 and above
 > are available on [GitLab], which seems to respect users and privacy better
 > than the previous repository.__
+
 
 [Access Resource] is a module for [Omeka S] that allows to protect files to be
 accessed from the anonymous visitors, but nevertheless available globally or on
@@ -372,6 +376,7 @@ Copyright
 
 
 [Access Resource]: https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource
+[Access]: https://gitlab.com/Daniel-KM/Omeka-S-module-Access
 [Omeka S]: https://omeka.org/s
 [Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
 [Guest]: https://gitlab.com/Daniel-KM/Omeka-S-module-Guest
