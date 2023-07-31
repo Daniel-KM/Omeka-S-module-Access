@@ -155,7 +155,7 @@ class AccessRequest extends AbstractHelper
     {
         /** @var \Access\Form\Site\AccessRequestForm $form */
         $formOptions = [
-            'full_access' => (bool) $this->view->setting('accessresource_full'),
+            'full_access' => (bool) $this->view->setting('access_full'),
             'resources' => $this->getRequestableResources(),
             'user' => $this->view->identity(),
         ];

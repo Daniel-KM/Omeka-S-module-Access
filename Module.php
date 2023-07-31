@@ -121,7 +121,7 @@ class Module extends AbstractModule
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
         $settings = $this->getServiceLocator()->get('Omeka\Settings');
-        $accessViaProperty = (bool) $settings->get('accessresource_property');
+        $accessViaProperty = (bool) $settings->get('access_property');
         if (!$accessViaProperty) {
             // Add the status to the representation.
             $sharedEventManager->attach(
@@ -315,7 +315,7 @@ class Module extends AbstractModule
 
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
-        $accessViaProperty = (bool) $settings->get('accessresource_property');
+        $accessViaProperty = (bool) $settings->get('access_property');
         if (!$accessViaProperty) {
             return true;
         }
@@ -324,9 +324,9 @@ class Module extends AbstractModule
         $translator = $services->get('MvcTranslator');
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
 
-        $levelProperty = (bool) $settings->get('accessresource_property_level');
-        $embargoStartProperty = (bool) $settings->get('accessresource_property_embargo_start');
-        $embargoEndProperty = (bool) $settings->get('accessresource_property_embargo_end');
+        $levelProperty = (bool) $settings->get('access_property_level');
+        $embargoStartProperty = (bool) $settings->get('access_property_embargo_start');
+        $embargoEndProperty = (bool) $settings->get('access_property_embargo_end');
         if (!$levelProperty || !$embargoStartProperty || !$embargoEndProperty) {
             $message = new \Omeka\Stdlib\Message(
                 $translator->translate('When properties are used, three properties should be defined for "level", "embargo start" and "embargo end".'), // @translate
@@ -584,7 +584,7 @@ class Module extends AbstractModule
 
         if ($accessRecursive) {
             $settings = $services->get('Omeka\Settings');
-            $accessViaProperty = (bool) $settings->get('accessresource_property');
+            $accessViaProperty = (bool) $settings->get('access_property');
             if ($accessViaProperty) {
                 $accessStatusValues = [
                     'o-access:level' => ['value' => $level, 'type' => null],
@@ -679,7 +679,7 @@ class Module extends AbstractModule
 
         $accessRecursive = !empty($resourceData['access_recursive']);
 
-        $accessViaProperty = (bool) $settings->get('accessresource_property');
+        $accessViaProperty = (bool) $settings->get('access_property');
         if ($accessViaProperty) {
             // Always update access resource, whatever property is new or not,
             // so don't use submitted resourceData, but the json because here,
@@ -690,16 +690,16 @@ class Module extends AbstractModule
              */
             $adapter = $services->get('Omeka\ApiAdapterManager')->get($resource->getResourceName());
             $representation = $adapter->getRepresentation($resource);
-            $levelProperty = $accessViaProperty ? $settings->get('accessresource_property_level') : null;
+            $levelProperty = $accessViaProperty ? $settings->get('access_property_level') : null;
             if ($levelProperty) {
                 $levelIsSet = true;
-                $levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('accessresource_property_levels', [])), AccessStatusRepresentation::LEVELS);
+                $levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('access_property_levels', [])), AccessStatusRepresentation::LEVELS);
                 $levelValue = $representation->value($levelProperty);
                 $levelVal = $levelValue ? array_search((string) $levelValue->value(), $levelPropertyLevels) : null;
                 $level = $levelVal ?: AccessStatus::FREE;
                 $levelType = $levelValue ? $levelValue->type() : null;
             }
-            $embargoStartProperty = $accessViaProperty ? $settings->get('accessresource_property_embargo_start') : null;
+            $embargoStartProperty = $accessViaProperty ? $settings->get('access_property_embargo_start') : null;
             if ($embargoStartProperty) {
                 $embargoStartIsSet = true;
                 $embargoStartValue = $representation->value($embargoStartProperty);
@@ -707,7 +707,7 @@ class Module extends AbstractModule
                 $embargoStart = $embargoStartVal ?: null;
                 $embargoStartType = $embargoStartValue ? $embargoStartValue->type() : null;
             }
-            $embargoEndProperty = $accessViaProperty ? $settings->get('accessresource_property_embargo_end') : null;
+            $embargoEndProperty = $accessViaProperty ? $settings->get('access_property_embargo_end') : null;
             if ($embargoEndProperty) {
                 $embargoEndIsSet = true;
                 $embargoEndValue = $representation->value($embargoEndProperty);
@@ -837,7 +837,7 @@ class Module extends AbstractModule
         $accessStatus = $accessStatusForResource($resource, true);
 
         $formOptions = [
-            'full_access' => (bool) $settings->get('accessresource_full'),
+            'full_access' => (bool) $settings->get('access_full'),
             'resource_id' => $resource->id(),
             'resource_type' => $resource->resourceName(),
             'request_status' => AccessRequest::STATUS_ACCEPTED,
@@ -950,8 +950,8 @@ HTML;
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $accessViaProperty = (bool) $settings->get('accessresource_property');
-        $showInAdvancedTab = !$accessViaProperty || $settings->get('accessresource_property_show_in_advanced_tab');
+        $accessViaProperty = (bool) $settings->get('access_property');
+        $showInAdvancedTab = !$accessViaProperty || $settings->get('access_property_show_in_advanced_tab');
 
         $view = $event->getTarget();
         $plugins = $services->get('ControllerPluginManager');
@@ -982,7 +982,7 @@ HTML;
         ];
         // There is no difference between reserved and protected when only the
         // file is protected.
-        $fullAccess = (bool) $settings->get('accessresource_full');
+        $fullAccess = (bool) $settings->get('access_full');
         if (!$fullAccess) {
             unset($valueOptions[AccessStatus::PROTECTED]);
             if ($level === AccessStatus::PROTECTED) {
@@ -1039,13 +1039,13 @@ HTML;
             ]);
 
         if ($accessViaProperty) {
-            $levelProperty = $settings->get('accessresource_property_level');
+            $levelProperty = $settings->get('access_property_level');
             $levelElement
                 ->setLabel(sprintf('Access level (managed via property %s)', $levelProperty)); // @translate
-            $embargoStartProperty = $settings->get('accessresource_property_embargo_start');
+            $embargoStartProperty = $settings->get('access_property_embargo_start');
             $embargoStartElementDate
                 ->setLabel(sprintf('Embargo start (managed via property %s)', $embargoStartProperty)); // @translate
-            $embargoEndProperty = $settings->get('accessresource_property_embargo_end');
+            $embargoEndProperty = $settings->get('access_property_embargo_end');
             $embargoEndElementDate
                 ->setLabel(sprintf('Embargo end (managed via property %s)', $embargoEndProperty)); // @translate
         }
@@ -1095,7 +1095,7 @@ HTML;
         $plugins = $services->get('ControllerPluginManager');
         $settings = $services->get('Omeka\Settings');
 
-        $accessViaProperty = (bool) $settings->get('accessresource_property');
+        $accessViaProperty = (bool) $settings->get('access_property');
         if ($accessViaProperty) {
             return;
         }
@@ -1192,9 +1192,9 @@ HTML;
         $formElementManager = $services->get('FormElementManager');
 
         $fieldset = $formElementManager->get(BatchEditFieldset::class, [
-            'full_access' => (bool) $settings->get('accessresource_full'),
+            'full_access' => (bool) $settings->get('access_full'),
             'resource_type' => $event->getTarget()->getOption('resource_type'),
-            'access_via_property' => (bool) $settings->get('accessresource_property'),
+            'access_via_property' => (bool) $settings->get('access_property'),
         ]);
 
         $form->add($fieldset);
@@ -1208,7 +1208,7 @@ HTML;
     public function formAddInputFiltersResourceBatchUpdateForm(Event $event): void
     {
         /** @var \Laminas\InputFilter\InputFilterInterface $inputFilter */
-        $accessViaProperty = (bool) $this->getServiceLocator()->get('Omeka\Settings')->get('accessresource_property');
+        $accessViaProperty = (bool) $this->getServiceLocator()->get('Omeka\Settings')->get('access_property');
         if ($accessViaProperty) {
             return;
         }
@@ -1277,7 +1277,7 @@ HTML;
     protected function storeSingleAccess(Event $event)
     {
         $settings = $this->getServiceLocator()->get('Omeka\Settings');
-        $modes = $settings->get('accessresource_access_modes');
+        $modes = $settings->get('access_access_modes');
         // Mode "user" is managed directly via authentication.
         $singleModes = array_intersect(['email', 'token'], $modes);
         if (!count($singleModes)) {
@@ -1346,7 +1346,7 @@ HTML;
         $settings = $services->get('Omeka\Settings');
         $messenger = $plugins->get('messenger');
 
-        $ipItemSets = $settings->get('accessresource_ip_item_sets') ?: [];
+        $ipItemSets = $settings->get('access_ip_item_sets') ?: [];
 
         $reservedIps = [];
         $hasError = false;
@@ -1403,7 +1403,7 @@ HTML;
             }
         }
 
-        $settings->set('accessresource_ip_reserved', $reservedIps);
+        $settings->set('access_ip_reserved', $reservedIps);
 
         return true;
     }

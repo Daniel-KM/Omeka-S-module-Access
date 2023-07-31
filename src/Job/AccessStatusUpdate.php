@@ -156,7 +156,7 @@ class AccessStatusUpdate extends AbstractJob
             return;
         }
 
-        $this->accessViaProperty = (bool) $settings->get('accessresource_property');
+        $this->accessViaProperty = (bool) $settings->get('access_property');
         if (!$this->accessViaProperty && $this->syncMode !== 'skip') {
             $this->logger->warn(new Message(
                 'Synchronization of property values and index is set, but the config for access mode does not use properties.' // @translate

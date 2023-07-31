@@ -13,7 +13,7 @@ class ConfigForm extends Form
     {
         $this
             ->add([
-                'name' => 'accessresource_full',
+                'name' => 'access_full',
                 'type' => Element\Radio::class,
                 'options' => [
                     'label' => 'Protection', // @translate
@@ -26,14 +26,14 @@ class ConfigForm extends Form
                     ],
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_full',
+                    'id' => 'access_full',
                     'disabled' => 'disabled',
                     'style' => 'display: inline-block;',
                 ],
             ])
 
             ->add([
-                'name' => 'accessresource_access_modes',
+                'name' => 'access_access_modes',
                 'type' => Element\MultiCheckbox::class,
                 'options' => [
                     'label' => 'Access modes', // @translate
@@ -50,14 +50,14 @@ class ConfigForm extends Form
                     ],
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_access_modes',
+                    'id' => 'access_access_modes',
                     'required' => false,
                     'style' => 'display: inline-block;',
                 ],
             ])
 
             ->add([
-                'name' => 'accessresource_ip_item_sets',
+                'name' => 'access_ip_item_sets',
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
                     'label' => 'List of ips with open access, eventually limited to selected item sets', // @translate
@@ -65,7 +65,7 @@ class ConfigForm extends Form
                     'as_key_value' => true,
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_ip_item_sets',
+                    'id' => 'access_ip_item_sets',
                     'rows' => 12,
                     'placeholder' => '12.34.56.78
 124.8.16.32 = 1 2 5
@@ -74,20 +74,20 @@ class ConfigForm extends Form
             ])
 
             ->add([
-                'name' => 'accessresource_property',
+                'name' => 'access_property',
                 'type' => Element\Checkbox::class,
                 'options' => [
                     'label' => 'Set access level and embargo via property', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_property',
+                    'id' => 'access_property',
                     'required' => false,
                 ],
             ])
 
             /* // TODO Only mode "level" (three/four values) is supported for now.
             ->add([
-                'name' => 'accessresource_property_level_mode',
+                'name' => 'access_property_level_mode',
                 'type' => Element\Radio::class,
                 'options' => [
                     'label' => 'Set access via property', // @translate
@@ -101,7 +101,7 @@ class ConfigForm extends Form
                     ],
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_property_level_mode',
+                    'id' => 'access_property_level_mode',
                     'class' => 'accessresource-property',
                     'required' => false,
                     'style' => 'display: inline-block;',
@@ -110,7 +110,7 @@ class ConfigForm extends Form
             */
 
             ->add([
-                'name' => 'accessresource_property_level',
+                'name' => 'access_property_level',
                 'type' => OmekaElement\PropertySelect::class,
                 'options' => [
                     'label' => 'Set property when access uses property', // @translate
@@ -118,21 +118,21 @@ class ConfigForm extends Form
                     'empty_option' => '',
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_property_level',
+                    'id' => 'access_property_level',
                     'class' => 'chosen-select accessresource-property',
                     'multiple' => false,
                     'data-placeholder' => 'Select property…', // @translate
                 ],
             ])
             ->add([
-                'name' => 'accessresource_property_levels',
+                'name' => 'access_property_levels',
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
                     'label' => 'Labels for the four levels for mode property/level', // @translate
                     'as_key_value' => true,
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_property_levels',
+                    'id' => 'access_property_levels',
                     'class' => 'accessresource-property',
                     'rows' => 4,
                     'placeholder' => 'free = free
@@ -143,21 +143,21 @@ forbidden = forbidden
                 ],
             ])
             ->add([
-                'name' => 'accessresource_property_level_datatype',
+                'name' => 'access_property_level_datatype',
                 'type' => Element\Text::class,
                 'options' => [
                     'label' => 'Data type to use for the level', // @translate
                     'info' => 'A data type like "literal" (default) or "customvocab:X" (recommended), where X is the custom vocab id to set. This value is used for batch processes.', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_property_level_datatype',
+                    'id' => 'access_property_level_datatype',
                     'class' => 'accessresource-property',
                     'placeholder' => 'customvocab:2',
                 ],
             ])
 
             ->add([
-                'name' => 'accessresource_property_embargo_start',
+                'name' => 'access_property_embargo_start',
                 'type' => OmekaElement\PropertySelect::class,
                 'options' => [
                     'label' => 'Set property to use for embargo start', // @translate
@@ -165,14 +165,14 @@ forbidden = forbidden
                     'empty_option' => '',
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_property_embargo_start',
+                    'id' => 'access_property_embargo_start',
                     'class' => 'chosen-select accessresource-property',
                     'multiple' => false,
                     'data-placeholder' => 'Select property…', // @translate
                 ],
             ])
             ->add([
-                'name' => 'accessresource_property_embargo_end',
+                'name' => 'access_property_embargo_end',
                 'type' => OmekaElement\PropertySelect::class,
                 'options' => [
                     'label' => 'Set property to use for embargo end', // @translate
@@ -180,7 +180,7 @@ forbidden = forbidden
                     'empty_option' => '',
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_property_embargo_end',
+                    'id' => 'access_property_embargo_end',
                     'class' => 'chosen-select accessresource-property',
                     'multiple' => false,
                     'data-placeholder' => 'Select property…', // @translate
@@ -188,25 +188,25 @@ forbidden = forbidden
             ])
 
             ->add([
-                'name' => 'accessresource_property_show_in_advanced_tab',
+                'name' => 'access_property_show_in_advanced_tab',
                 'type' => Element\Checkbox::class,
                 'options' => [
                     'label' => 'Show the access status in advanced tab of resource form when properties are used', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_property_show_in_advanced_tab',
+                    'id' => 'access_property_show_in_advanced_tab',
                     'class' => 'accessresource-property'
                 ],
             ])
 
             ->add([
-                'name' => 'accessresource_embargo_bypass',
+                'name' => 'access_embargo_bypass',
                 'type' => Element\Checkbox::class,
                 'options' => [
                     'label' => 'Bypass embargo dates for reserved resources', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'accessresource_embargo_bypass',
+                    'id' => 'access_embargo_bypass',
                 ],
             ])
         ;
@@ -288,27 +288,27 @@ forbidden = forbidden
 
         $this->getInputFilter()
             ->add([
-                'name' => 'accessresource_full',
+                'name' => 'access_full',
                 'required' => false,
             ])
             ->add([
-                'name' => 'accessresource_access_modes',
+                'name' => 'access_access_modes',
                 'required' => false,
             ])
             ->add([
-                'name' => 'accessresource_property',
+                'name' => 'access_property',
                 'required' => false,
             ])
             ->add([
-                'name' => 'accessresource_property_level',
+                'name' => 'access_property_level',
                 'required' => false,
             ])
             ->add([
-                'name' => 'accessresource_property_embargo_start',
+                'name' => 'access_property_embargo_start',
                 'required' => false,
             ])
             ->add([
-                'name' => 'accessresource_property_embargo_end',
+                'name' => 'access_property_embargo_end',
                 'required' => false,
             ])
             ->get('fieldset_index')

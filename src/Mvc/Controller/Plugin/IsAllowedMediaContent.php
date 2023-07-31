@@ -134,7 +134,7 @@ class IsAllowedMediaContent extends AbstractPlugin
 
         // Here, the mode is restricted or protected, so check media content.
 
-        $modes = $this->settings->get('accessresource_access_modes');
+        $modes = $this->settings->get('access_access_modes');
         if (empty($modes)) {
             return true;
         }
@@ -166,7 +166,7 @@ class IsAllowedMediaContent extends AbstractPlugin
 
     protected function isUnderEmbargo(AccessStatus $accessStatus): bool
     {
-        $bypassEmbargo = (bool) $this->settings->get('accessresource_embargo_bypass');
+        $bypassEmbargo = (bool) $this->settings->get('access_embargo_bypass');
         if ($bypassEmbargo) {
             return false;
         }
@@ -220,7 +220,7 @@ class IsAllowedMediaContent extends AbstractPlugin
             return null;
         }
 
-        $reservedIps = $this->settings->get('accessresource_ip_reserved', []);
+        $reservedIps = $this->settings->get('access_ip_reserved', []);
         if (empty($reservedIps)) {
             return null;
         }

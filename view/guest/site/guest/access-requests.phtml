@@ -6,7 +6,7 @@
 
 echo $this->partial('access-resource/site/request/browse', [
     'accessRequests' => $accessRequests,
-    'modes' => $this->setting('accessresource_access_modes'),
+    'modes' => $this->setting('access_access_modes'),
     'access' => null,
     'user' => $this->identity(),
 ]);

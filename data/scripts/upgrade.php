@@ -50,8 +50,8 @@ SQL;
 }
 
 if (version_compare((string) $oldVersion, '3.3.0.7', '<')) {
-    $settings->set('accessresource_ip_sites', []);
-    $settings->set('accessresource_ip_reserved', ['sites' => [], 'ranges' => []]);
+    $settings->set('access_ip_sites', []);
+    $settings->set('access_ip_reserved', ['sites' => [], 'ranges' => []]);
 }
 
 if (version_compare((string) $oldVersion, '3.3.0.11', '<')) {
@@ -59,15 +59,15 @@ if (version_compare((string) $oldVersion, '3.3.0.11', '<')) {
 }
 
 if (version_compare((string) $oldVersion, '3.3.0.12', '<')) {
-    $settings->set('accessresource_ip_item_sets', $settings->get('accessresource_ip_sites', []) ?: []);
-    $settings->delete('accessresource_ip_sites', []);
+    $settings->set('access_ip_item_sets', $settings->get('access_ip_sites', []) ?: []);
+    $settings->delete('access_ip_sites', []);
 
-    $reservedIps = $settings->get('accessresource_ip_reserved') ?: [];
+    $reservedIps = $settings->get('access_ip_reserved') ?: [];
     foreach (array_keys($reservedIps) as $ip) {
         unset($reservedIps[$ip]['site'], $reservedIps[$ip]['ranges']);
         $reservedIps[$ip]['reserved'] = [];
     }
-    $settings->set('accessresource_ip_reserved', $reservedIps);
+    $settings->set('access_ip_reserved', $reservedIps);
 
     $message = new Message(
         'The reserved access by ip by site has been replaced by a reserved acces by ip by item set. You should check and resave your config if needed and eventually create item sets.' // @translate
@@ -354,30 +354,30 @@ SQL;
         }
     }
 
-    $settings->set('accessresource_full', false);
+    $settings->set('access_full', false);
 
-    $settings->set('accessresource_access_modes', [empty($config['accessresource']['access_mode']) ? 'guest' : $config['accessresource']['access_mode']]);
-    $settings->delete('accessresource_access_mode');
+    $settings->set('access_access_modes', [empty($config['accessresource']['access_mode']) ? 'guest' : $config['accessresource']['access_mode']]);
+    $settings->delete('access_access_mode');
 
     // For the upgrade, status is set to false in all cases. The admin should rerun the
-    $oldViaProperty = $settings->get('accessresource_level_via_property', false);
-    $settings->set('accessresource_property', false);
-    $settings->set('accessresource_property_level', 'curation:access');
-    $settings->set('accessresource_property_levels', $settings->get('accessresource_access_via_property_statuses', [
+    $oldViaProperty = $settings->get('access_level_via_property', false);
+    $settings->set('access_property', false);
+    $settings->set('access_property_level', 'curation:access');
+    $settings->set('access_property_levels', $settings->get('access_access_via_property_statuses', [
         'free' => 'free',
         'reserved' => 'reserved',
         'protected' => 'protected',
         'forbidden' => 'forbidden',
     ]));
-    $settings->delete('accessresource_access_via_property_statuses');
+    $settings->delete('access_access_via_property_statuses');
 
-    $settings->set('accessresource_property_embargo_start', 'curation:start');
-    $settings->set('accessresource_property_embargo_end', 'curation:end');
+    $settings->set('access_property_embargo_start', 'curation:start');
+    $settings->set('access_property_embargo_end', 'curation:end');
 
-    $settings->delete('accessresource_access_apply');
-    $settings->delete('accessresource_embargo_auto_update');
+    $settings->delete('access_access_apply');
+    $settings->delete('access_embargo_auto_update');
 
-    $settings->set('accessresource_message_access_text', $config['accessresource_message_access_text']);
+    $settings->set('access_message_access_text', $config['access_message_access_text']);
 
     $message = new Message(
         'The structure of the module has been rewritten to make status easier to manage and quicker to check.' // @translate

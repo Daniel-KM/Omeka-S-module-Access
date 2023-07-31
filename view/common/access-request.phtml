@@ -20,7 +20,7 @@ $translate = $plugins->get('translate');
 $hasGuest = $plugins->has('guestWidget');
 
 $user = $this->identity();
-$accessModes = $setting('accessresource_access_modes');
+$accessModes = $setting('access_access_modes');
 $allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $accessModes);
 $allowGlobalRequests = (bool) array_intersect(['ip', 'guest', 'external'], $accessModes);
 
@@ -68,7 +68,7 @@ if ($user) {
 
                 <?php if (in_array('message', $parts)): ?>
                     <div>
-                        <?= $setting('accessresource_message_access_text') ?>
+                        <?= $setting('access_message_access_text') ?>
                     </div>
                 <?php endif; ?>
 

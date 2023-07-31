@@ -86,13 +86,13 @@ trait AccessPropertiesTrait
         $this->hasNumericDataTypes = $module
             && $module->getState() === \Omeka\Module\Manager::STATE_ACTIVE;
 
-        $this->accessViaProperty = (bool) $settings->get('accessresource_property');
+        $this->accessViaProperty = (bool) $settings->get('access_property');
 
-        $this->propertyLevel = $settings->get('accessresource_property_level');
-        $this->propertyEmbargoStart = $settings->get('accessresource_property_embargo_start');
-        $this->propertyEmbargoEnd = $settings->get('accessresource_property_embargo_end');
-        $this->statusLevels = $settings->get('accessresource_property_levels', []);
-        $this->levelDataType = $settings->get('accessresource_property_level_datatype');
+        $this->propertyLevel = $settings->get('access_property_level');
+        $this->propertyEmbargoStart = $settings->get('access_property_embargo_start');
+        $this->propertyEmbargoEnd = $settings->get('access_property_embargo_end');
+        $this->statusLevels = $settings->get('access_property_levels', []);
+        $this->levelDataType = $settings->get('access_property_level_datatype');
 
         $hasError = false;
 

@@ -128,7 +128,7 @@ class RequestController extends AbstractActionController
 
         /** @var \Access\Form\Admin\AccessRequestForm $form */
         $formOptions = [
-            'full_access' => (bool) $this->settings()->get('accessresource_full'),
+            'full_access' => (bool) $this->settings()->get('access_full'),
             // 'resource_id' => null,
             // 'resource_type' => null,
             // 'request_status' => AccessRequest::STATUS_ACCEPTED,

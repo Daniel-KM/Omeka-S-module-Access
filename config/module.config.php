@@ -280,9 +280,9 @@ return [
     'accessresource' => [
         'config' => [
             // True means that recods are protected, not only media contents (files).
-            'accessresource_full' => false,
+            'access_full' => false,
 
-            'accessresource_access_modes' => [
+            'access_access_modes' => [
                 // 'ip',
                 'guest',
                 // 'external',
@@ -291,31 +291,31 @@ return [
                 // 'token',
             ],
 
-            'accessresource_ip_item_sets' => [],
+            'access_ip_item_sets' => [],
 
-            'accessresource_property' => false,
+            'access_property' => false,
 
-            'accessresource_property_level' => 'curation:access',
-            'accessresource_property_levels' => [
+            'access_property_level' => 'curation:access',
+            'access_property_levels' => [
                 AccessStatus::FREE => 'free',
                 AccessStatus::RESERVED => 'reserved',
                 AccessStatus::PROTECTED => 'protected',
                 AccessStatus::FORBIDDEN => 'forbidden',
             ],
-            'accessresource_property_level_datatype' => null,
+            'access_property_level_datatype' => null,
 
-            'accessresource_property_embargo_start' => 'curation:start',
-            'accessresource_property_embargo_end' => 'curation:end',
+            'access_property_embargo_start' => 'curation:start',
+            'access_property_embargo_end' => 'curation:end',
 
-            'accessresource_property_show_in_advanced_tab' => false,
+            'access_property_show_in_advanced_tab' => false,
 
-            'accessresource_embargo_bypass' => false,
+            'access_embargo_bypass' => false,
 
             // Hidden settings automatically filled after saving config.
-            // It contains the same data than "accessresource_ip_item_sets", but
+            // It contains the same data than "access_ip_item_sets", but
             // with numberized ip ranges (cidr) in order to do a quicker control
             // of rights.
-            'accessresource_ip_reserved' => [
+            'access_ip_reserved' => [
                 /*
                 '123.45.67.89' => [
                     'low' => 2066563929,
@@ -331,14 +331,14 @@ return [
             ],
         ],
         'settings' => [
-            'accessresource_message_send' => true,
-            'accessresource_message_admin_subject' => 'New request status!', //@translate
-            'accessresource_message_admin_request_created' => 'A user or visitor requested to access a resource. Please, check request dashboard.', //@translate
-            'accessresource_message_admin_request_updated' => 'A user or visitor updated the request to access a resource. Please, check request dashboard.', //@translate
-            'accessresource_message_user_subject' => 'New request status!', //@translate
-            'accessresource_message_user_request_created' => 'Your request to access resource is sent to administrator. You will be inform when your request will change.', //@translate
-            'accessresource_message_user_request_updated' => 'Your request to resource access is updated. You can check guest user requests dashboard.', //@translate
-            'accessresource_message_access_text' => 'This resource is not available for now. Contact the webmaster.', //@translate
+            'access_message_send' => true,
+            'access_message_admin_subject' => 'New request status!', //@translate
+            'access_message_admin_request_created' => 'A user or visitor requested to access a resource. Please, check request dashboard.', //@translate
+            'access_message_admin_request_updated' => 'A user or visitor updated the request to access a resource. Please, check request dashboard.', //@translate
+            'access_message_user_subject' => 'New request status!', //@translate
+            'access_message_user_request_created' => 'Your request to access resource is sent to administrator. You will be inform when your request will change.', //@translate
+            'access_message_user_request_updated' => 'Your request to resource access is updated. You can check guest user requests dashboard.', //@translate
+            'access_message_access_text' => 'This resource is not available for now. Contact the webmaster.', //@translate
         ],
     ],
 ];

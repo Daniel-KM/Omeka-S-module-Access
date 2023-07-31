@@ -17,7 +17,7 @@ class RequestController extends AbstractActionController
     {
         // For user mode, it is recommended to use the module Guest.
 
-        $modes = $this->settings()->get('accessresource_access_modes');
+        $modes = $this->settings()->get('access_access_modes');
         $individualModes = array_intersect(['user', 'email', 'token'], $modes);
         if (!count($individualModes)) {
             return $this->redirect()->toRoute('top');
@@ -87,7 +87,7 @@ class RequestController extends AbstractActionController
             ]);
         }
 
-        $modes = $this->settings()->get('accessresource_access_modes');
+        $modes = $this->settings()->get('access_access_modes');
         $individualModes = array_intersect(['user', 'email', 'token'], $modes);
         if (!count($individualModes)) {
             $this->getResponse()->setStatusCode(405);
@@ -148,7 +148,7 @@ class RequestController extends AbstractActionController
 
         /** @var \Access\Form\Site\AccessRequestForm $form */
         $formOptions = [
-            'full_access' => (bool) $this->settings()->get('accessresource_full'),
+            'full_access' => (bool) $this->settings()->get('access_full'),
             'resources' => [],
             'user' => $user,
         ];
