@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Mvc\Controller\Plugin;
+namespace Access\Mvc\Controller\Plugin;
 
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;

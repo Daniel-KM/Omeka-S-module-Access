@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Site\ResourcePageBlockLayout;
+namespace Access\Site\ResourcePageBlockLayout;
 
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
@@ -24,7 +24,7 @@ class AccessRequestText implements ResourcePageBlockLayoutInterface
 
     public function render(PhpRenderer $view, AbstractResourceEntityRepresentation $resource) : string
     {
-        /** @see \AccessResource\View\Helper\IsAccessRequestable */
+        /** @see \Access\View\Helper\IsAccessRequestable */
         $isAccessRequestable = $view->isAccessRequestable($resource);
 
         return $view->partial('common/resource-page-block-layout/access-request-text', [

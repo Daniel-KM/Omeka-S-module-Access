@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Form\Element;
+namespace Access\Form\Element;
 
 trait TraitOptionalElement
 {

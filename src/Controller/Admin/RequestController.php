@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Controller\Admin;
+namespace Access\Controller\Admin;
 
-use AccessResource\Controller\AccessTrait;
-use AccessResource\Entity\AccessRequest;
-use AccessResource\Form\Admin\AccessRequestForm;
+use Access\Controller\AccessTrait;
+use Access\Entity\AccessRequest;
+use Access\Form\Admin\AccessRequestForm;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\JsonModel;
@@ -112,11 +112,11 @@ class RequestController extends AbstractActionController
 
     public function editAction()
     {
-        /** @see \AccessResource\Module::addAccessListAndForm() */
+        /** @see \Access\Module::addAccessListAndForm() */
 
         $id = $this->params('id');
 
-        /** @var \AccessResource\Api\Representation\AccessRequestRepresentation $accessRequest */
+        /** @var \Access\Api\Representation\AccessRequestRepresentation $accessRequest */
         $accessRequest = $id
             ? $this->api()->searchOne('access_requests', ['id' => $id])->getContent()
             : null;
@@ -126,7 +126,7 @@ class RequestController extends AbstractActionController
             return $this->redirect()->toRoute('admin/access-request');
         }
 
-        /** @var \AccessResource\Form\Admin\AccessRequestForm $form */
+        /** @var \Access\Form\Admin\AccessRequestForm $form */
         $formOptions = [
             'full_access' => (bool) $this->settings()->get('accessresource_full'),
             // 'resource_id' => null,

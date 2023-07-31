@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Job;
+namespace Access\Job;
 
 use Omeka\Job\AbstractJob;
 use Omeka\Stdlib\Message;
@@ -37,7 +37,7 @@ class AccessStatusRecursive extends AbstractJob
     protected $api;
 
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus
+     * @var \Access\Mvc\Controller\Plugin\AccessStatus
      */
     protected $accessStatusForResource;
 
@@ -137,7 +137,7 @@ class AccessStatusRecursive extends AbstractJob
             return null;
         }
 
-        /** @var \AccessResource\Entity\AccessStatus $accessStatus */
+        /** @var \Access\Entity\AccessStatus $accessStatus */
         $accessStatus = $this->accessStatusForResource->__invoke($resource);
         if (!$accessStatus) {
             $this->logger->warn(new Message(

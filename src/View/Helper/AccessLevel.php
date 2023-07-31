@@ -1,14 +1,14 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\View\Helper;
+namespace Access\View\Helper;
 
-use AccessResource\Mvc\Controller\Plugin\AccessLevel as AccessLevelPlugin;
+use Access\Mvc\Controller\Plugin\AccessLevel as AccessLevelPlugin;
 use Laminas\View\Helper\AbstractHelper;
 
 class AccessLevel extends AbstractHelper
 {
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\AccessLevel
+     * @var \Access\Mvc\Controller\Plugin\AccessLevel
      */
     protected $accessLevelPlugin;
 
@@ -20,7 +20,7 @@ class AccessLevel extends AbstractHelper
     /**
      * Get access level of a resource (free, reserved, protected or forbidden).
      *
-     * @uses \AccessResource\Mvc\Controller\Plugin\AccessLevel
+     * @uses \Access\Mvc\Controller\Plugin\AccessLevel
      */
     public function __invoke($resource): string
     {

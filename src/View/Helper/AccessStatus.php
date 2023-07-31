@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\View\Helper;
+namespace Access\View\Helper;
 
-use AccessResource\Api\Representation\AccessStatusRepresentation;
-use AccessResource\Mvc\Controller\Plugin\AccessStatus as AccessStatusPlugin;
+use Access\Api\Representation\AccessStatusRepresentation;
+use Access\Mvc\Controller\Plugin\AccessStatus as AccessStatusPlugin;
 use Laminas\View\Helper\AbstractHelper;
 
 class AccessStatus extends AbstractHelper
 {
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus
+     * @var \Access\Mvc\Controller\Plugin\AccessStatus
      */
     protected $accessStatusPlugin;
 
@@ -21,9 +21,9 @@ class AccessStatus extends AbstractHelper
     /**
      * Get access status representation of a resource.
      *
-     * @uses \AccessResource\Mvc\Controller\Plugin\AccessStatus
+     * @uses \Access\Mvc\Controller\Plugin\AccessStatus
      *
-     * @return \AccessResource\Entity\AccessStatus|\AccessResource\Api\Representation\AccessStatusRepresentation|null
+     * @return \Access\Entity\AccessStatus|\Access\Api\Representation\AccessStatusRepresentation|null
      */
     public function __invoke($resource): ?AccessStatusRepresentation
     {

@@ -1,8 +1,8 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \AccessResource\Api\Representation\AccessRequestRepresentation $resource
- * @var \AccessResource\Api\Representation\AccessRequestRepresentation $accessRequest
+ * @var \Access\Api\Representation\AccessRequestRepresentation $resource
+ * @var \Access\Api\Representation\AccessRequestRepresentation $accessRequest
  */
 
 $plugins = $this->getHelperPluginManager();
@@ -14,9 +14,9 @@ $translate = $plugins->get('translate');
 $allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $this->setting('accessresource_access_modes'));
 
 $this->headLink()
-    ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
+    ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
 $this->headScript()
-    ->appendFile($assetUrl('js/access-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+    ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
 
 $this->htmlElement('body')->appendAttribute('class', 'access-requests show');
 ?>

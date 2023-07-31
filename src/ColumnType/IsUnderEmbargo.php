@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\ColumnType;
+namespace Access\ColumnType;
 
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\AbstractEntityRepresentation;

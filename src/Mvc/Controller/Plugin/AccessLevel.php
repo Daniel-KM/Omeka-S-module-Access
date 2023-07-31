@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Mvc\Controller\Plugin;
+namespace Access\Mvc\Controller\Plugin;
 
-use AccessResource\Entity\AccessStatus;
+use Access\Entity\AccessStatus;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 
@@ -39,7 +39,7 @@ class AccessLevel extends AbstractPlugin
         } else {
             return AccessStatus::FREE;
         }
-        /** @var \AccessResource\Entity\AccessStatus $accessStatus */
+        /** @var \Access\Entity\AccessStatus $accessStatus */
         $accessStatus = $this->entityManager->find(AccessStatus::class, $resourceId);
         return $accessStatus
             ? $accessStatus->getLevel()

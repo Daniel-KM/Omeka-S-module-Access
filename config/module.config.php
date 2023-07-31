@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource;
+namespace Access;
 
-use AccessResource\Entity\AccessStatus;
+use Access\Entity\AccessStatus;
 
 return [
     'api_adapters' => [
@@ -96,7 +96,7 @@ return [
                         'filename' => '.+',
                     ],
                     'defaults' => [
-                        '__NAMESPACE__' => 'AccessResource\Controller',
+                        '__NAMESPACE__' => 'Access\Controller',
                         'controller' => Controller\AccessFileController::class,
                         'action' => 'file',
                     ],
@@ -109,7 +109,7 @@ return [
                         'options' => [
                             'route' => '/access-request',
                             'defaults' => [
-                                '__NAMESPACE__' => 'AccessResource\Controller\Site',
+                                '__NAMESPACE__' => 'Access\Controller\Site',
                                 'controller' => Controller\Site\RequestController::class,
                                 'action' => 'browse',
                             ],
@@ -145,7 +145,7 @@ return [
                                 'options' => [
                                     'route' => '/access-request',
                                     'defaults' => [
-                                        '__NAMESPACE__' => 'AccessResource\Controller\Site',
+                                        '__NAMESPACE__' => 'Access\Controller\Site',
                                         'controller' => Controller\Site\GuestBoardController::class,
                                         'action' => 'browse',
                                     ],
@@ -162,7 +162,7 @@ return [
                         'options' => [
                             'route' => '/access-request',
                             'defaults' => [
-                                '__NAMESPACE__' => 'AccessResource\Controller\Admin',
+                                '__NAMESPACE__' => 'Access\Controller\Admin',
                                 'controller' => Controller\Admin\RequestController::class,
                                 'action' => 'browse',
                             ],
@@ -201,7 +201,7 @@ return [
                         'options' => [
                             'route' => '/access-log',
                             'defaults' => [
-                                '__NAMESPACE__' => 'AccessResource\Controller\Admin',
+                                '__NAMESPACE__' => 'Access\Controller\Admin',
                                 'controller' => Controller\Admin\LogController::class,
                                 'action' => 'browse',
                             ],

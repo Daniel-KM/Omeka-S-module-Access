@@ -3,8 +3,8 @@
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var \Omeka\Api\Representation\AbstractResourceRepresentation $resource
- * @var \AccessResource\Api\Representation\AccessStatusRepresentation $accessStatus
- * @var \AccessResource\Api\Representation\AccessRequestRepresentation[] $accessRequests
+ * @var \Access\Api\Representation\AccessStatusRepresentation $accessStatus
+ * @var \Access\Api\Representation\AccessRequestRepresentation[] $accessRequests
  *
  * @see view/access-resource/admin/request/browse.phtml
  */
@@ -18,9 +18,9 @@ $translate = $plugins->get('translate');
 $allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $this->setting('accessresource_access_modes'));
 
 $this->headLink()
-    ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
+    ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
 $this->headScript()
-    ->appendFile($assetUrl('js/access-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+    ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
 ?>
 
 <?php // Manage user requests. ?>
@@ -39,7 +39,7 @@ $this->headScript()
     <?php
     // TODO Add a button to clean all access to public resources (and mutiple toggle/deletion anyway).
 
-    $allowUpdate = $this->userIsAllowed(\AccessResource\Entity\AccessRequest::class, 'update');
+    $allowUpdate = $this->userIsAllowed(\Access\Entity\AccessRequest::class, 'update');
     ?>
     <ul>
     <?php foreach ($accessRequests as $accessRequest): ?>

@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Form\Site;
+namespace Access\Form\Site;
 
 use Laminas\Form\Element;
 use Laminas\Form\Form;

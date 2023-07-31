@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Service\ControllerPlugin;
+namespace Access\Service\ControllerPlugin;
 
-use AccessResource\Mvc\Controller\Plugin\IsAllowedMediaContent;
+use Access\Mvc\Controller\Plugin\IsAllowedMediaContent;
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 

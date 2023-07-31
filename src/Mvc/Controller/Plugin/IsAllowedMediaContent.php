@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Mvc\Controller\Plugin;
+namespace Access\Mvc\Controller\Plugin;
 
-use AccessResource\Entity\AccessRequest;
-use AccessResource\Entity\AccessStatus;
-use AccessResource\Mvc\Controller\Plugin\AccessStatus as AccessStatusPlugin;
+use Access\Entity\AccessRequest;
+use Access\Entity\AccessStatus;
+use Access\Mvc\Controller\Plugin\AccessStatus as AccessStatusPlugin;
 // use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 // use Doctrine\ORM\Query\Parameter;
@@ -30,12 +30,12 @@ class IsAllowedMediaContent extends AbstractPlugin
     protected $userIsAllowed;
 
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus
+     * @var \Access\Mvc\Controller\Plugin\AccessStatus
      */
     protected $accessStatus;
 
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\IsExternalUser
+     * @var \Access\Mvc\Controller\Plugin\IsExternalUser
      */
     protected $isExternalUser;
 
@@ -112,7 +112,7 @@ class IsAllowedMediaContent extends AbstractPlugin
             return true;
         }
 
-        /** @var \AccessResource\Entity\AccessStatus $accessStatus */
+        /** @var \Access\Entity\AccessStatus $accessStatus */
         $accessStatus = $this->accessStatus->__invoke($media);
         if (!$accessStatus) {
             return true;
@@ -324,11 +324,11 @@ class IsAllowedMediaContent extends AbstractPlugin
             $types['item_set_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
         }
 
-        /** @var \AccessResource\Entity\AccessRequest $accessRequest */
+        /** @var \Access\Entity\AccessRequest $accessRequest */
         // TODO How to query on resources with entity manager?
         /*
         $accessRequest = $this->entityManager
-            ->getRepository(\AccessResource\Entity\AccessRequest::class)
+            ->getRepository(\Access\Entity\AccessRequest::class)
             ->findOneBy([
                 'resources' => $media->id(),
                 'enabled' => true,
@@ -385,7 +385,7 @@ SQL;
 
         // Most of the time, there is only one access request by user.
         foreach ($accessRequestIds as $accessRequestId) {
-            $accessRequest = $this->entityManager->find(\AccessResource\Entity\AccessRequest::class, $accessRequestId);
+            $accessRequest = $this->entityManager->find(\Access\Entity\AccessRequest::class, $accessRequestId);
             if ($this->checkAccessTemporal($accessRequest)) {
                 return true;
             }

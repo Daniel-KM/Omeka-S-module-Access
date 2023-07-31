@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Mvc\Controller\Plugin;
+namespace Access\Mvc\Controller\Plugin;
 
-use AccessResource\Api\Representation\AccessStatusRepresentation;
-use AccessResource\Entity\AccessStatus as EntityAccessStatus;
+use Access\Api\Representation\AccessStatusRepresentation;
+use Access\Entity\AccessStatus as EntityAccessStatus;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Laminas\ServiceManager\ServiceLocatorInterface;
@@ -29,7 +29,7 @@ class AccessStatus extends AbstractPlugin
     /**
      * Get access status entity or representation of a resource.
      *
-     * @return \AccessResource\Entity\AccessStatus|\AccessResource\Api\Representation\AccessStatusRepresentation|null
+     * @return \Access\Entity\AccessStatus|\Access\Api\Representation\AccessStatusRepresentation|null
      */
     public function __invoke($resource, bool $asRepresentation = false)
     {

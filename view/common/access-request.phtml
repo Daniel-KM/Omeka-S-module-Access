@@ -4,7 +4,7 @@
  * @var \Omeka\Entity\User|null $user
  * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[] $resources
  * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[] $requestables
- * @var \AccessResource\Form\Site\AccessRequestForm $form
+ * @var \Access\Form\Site\AccessRequestForm $form
  * @var string $requestType
  */
 
@@ -25,9 +25,9 @@ $allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $a
 $allowGlobalRequests = (bool) array_intersect(['ip', 'guest', 'external'], $accessModes);
 
 $this->headLink()
-    ->appendStylesheet($assetUrl('css/access-request.css', 'AccessResource'));
+    ->appendStylesheet($assetUrl('css/access-request.css', 'Access'));
 $this->headScript()
-    ->appendFile($assetUrl('js/access-request.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+    ->appendFile($assetUrl('js/access-request.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
 
 $formSubmitUrl = $url('site/access-request/default', ['action' => 'submit'], true);
 

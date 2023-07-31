@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\View\Helper;
+namespace Access\View\Helper;
 
-use AccessResource\Form\Site\AccessRequestForm;
+use Access\Form\Site\AccessRequestForm;
 use Laminas\Form\FormElementManager;
 use Laminas\View\Helper\AbstractHelper;
 
@@ -14,7 +14,7 @@ class AccessRequest extends AbstractHelper
     const PARTIAL_NAME = 'common/access-request';
 
     /**
-     * @var \AccessResource\View\Helper\IsAccessRequestable
+     * @var \Access\View\Helper\IsAccessRequestable
      */
     protected $isAccessRequestable;
 
@@ -153,13 +153,13 @@ class AccessRequest extends AbstractHelper
 
     public function form(): AccessRequestForm
     {
-        /** @var \AccessResource\Form\Site\AccessRequestForm $form */
+        /** @var \Access\Form\Site\AccessRequestForm $form */
         $formOptions = [
             'full_access' => (bool) $this->view->setting('accessresource_full'),
             'resources' => $this->getRequestableResources(),
             'user' => $this->view->identity(),
         ];
-        /** @var \AccessResource\Form\Site\AccessRequestForm $form */
+        /** @var \Access\Form\Site\AccessRequestForm $form */
         $form = $this->formElementManager->get(AccessRequestForm::class, $formOptions);
         $form->setOptions($formOptions);
         return $form;

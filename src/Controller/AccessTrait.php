@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Controller;
+namespace Access\Controller;
 
-use AccessResource\Api\Representation\AccessRequestRepresentation;
+use Access\Api\Representation\AccessRequestRepresentation;
 use Omeka\Stdlib\Message;
 
 trait AccessTrait

@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Api\Adapter;
+namespace Access\Api\Adapter;
 
-use AccessResource\Entity\AccessRequest;
+use Access\Entity\AccessRequest;
 use DateTime;
 use Doctrine\ORM\QueryBuilder;
 use Omeka\Api\Adapter\AbstractEntityAdapter;
@@ -57,12 +57,12 @@ class AccessRequestAdapter extends AbstractEntityAdapter
 
     public function getRepresentationClass()
     {
-        return \AccessResource\Api\Representation\AccessRequestRepresentation::class;
+        return \Access\Api\Representation\AccessRequestRepresentation::class;
     }
 
     public function getEntityClass()
     {
-        return \AccessResource\Entity\AccessRequest::class;
+        return \Access\Entity\AccessRequest::class;
     }
 
     public function buildQuery(QueryBuilder $qb, array $query): void
@@ -260,7 +260,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
 
     public function hydrate(Request $request, EntityInterface $entity, ErrorStore $errorStore): void
     {
-        /** @var \AccessResource\Entity\AccessRequest $entity */
+        /** @var \Access\Entity\AccessRequest $entity */
         $data = $request->getContent();
 
         // Only admins can update requests and manage specific params of the
@@ -404,7 +404,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
 
     public function validateEntity(EntityInterface $entity, ErrorStore $errorStore)
     {
-        /** @var \AccessResource\Entity\AccessRequest $entity */
+        /** @var \Access\Entity\AccessRequest $entity */
         $resources = $entity->getResources();
         if (!$resources->count()) {
             $errorStore->addError('o:resource', 'At least one resource must be requested.'); // @translate

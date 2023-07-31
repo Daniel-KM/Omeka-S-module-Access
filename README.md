@@ -1,15 +1,14 @@
-Access Resource (module for Omeka S)
-====================================
+Access (module for Omeka S)
+===========================
 
 > __New versions of this module and support for Omeka S version 3.0 and above
 > are available on [GitLab], which seems to respect users and privacy better
 > than the previous repository.__
 
-[Access Resource] is a module for [Omeka S] that allows to protect files to be
-accessed from the anonymous visitors, but nevertheless available globally or on
-requests by guests users, restricted to a list of ips, or available by an email
-or a token. Start and end dates of an embargo can be used too, separately or
-not.
+[Access] is a module for [Omeka S] that allows to protect files to be accessed
+from the anonymous visitors, but nevertheless available globally or on requests
+by guests users, restricted to a list of ips, or available by an email or a
+token. Start and end dates of an embargo can be used too, separately or not.
 
 Furthermore, you can set the right to see a resource at the media level, so the
 item and media metadata are visible and the visitors know that a media exist.
@@ -371,7 +370,7 @@ Copyright
 * Copyright Saki (image [Locked file], see [Saki])
 
 
-[Access Resource]: https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource
+[Access]: https://gitlab.com/Daniel-KM/Omeka-S-module-AccessResource
 [Omeka S]: https://omeka.org/s
 [Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
 [Guest]: https://gitlab.com/Daniel-KM/Omeka-S-module-Guest

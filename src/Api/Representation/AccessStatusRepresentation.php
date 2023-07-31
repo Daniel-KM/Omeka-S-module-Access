@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Api\Representation;
+namespace Access\Api\Representation;
 
-use AccessResource\Entity\AccessStatus;
+use Access\Entity\AccessStatus;
 use DateTime;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Omeka\Api\Representation\AbstractEntityRepresentation;

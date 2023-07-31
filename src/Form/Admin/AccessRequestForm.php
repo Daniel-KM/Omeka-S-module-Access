@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Form\Admin;
+namespace Access\Form\Admin;
 
-use AccessResource\Entity\AccessRequest;
-use AccessResource\Form\Element as AccessElement;
+use Access\Entity\AccessRequest;
+use Access\Form\Element as AccessElement;
 use Laminas\Form\Element;
 use Laminas\Form\Form;
 use Omeka\Form\Element as OmekaElement;

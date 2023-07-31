@@ -3,8 +3,8 @@
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var \Omeka\Api\Representation\AbstractResourceRepresentation $resource
- * @var \AccessResource\Api\Representation\AccessStatusRepresentation|null $accessStatus
- * @var \AccessResource\Form\Admin\AccessRequestForm $requestForm
+ * @var \Access\Api\Representation\AccessStatusRepresentation|null $accessStatus
+ * @var \Access\Form\Admin\AccessRequestForm $requestForm
  */
 
 $plugins = $this->getHelperPluginManager();
@@ -17,9 +17,9 @@ $allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $t
 
 if ($level !== 'forbidden')  {
     $this->headLink()
-        ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
+        ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
     $this->headScript()
-        ->appendFile($assetUrl('js/access-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+        ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
 }
 ?>
 

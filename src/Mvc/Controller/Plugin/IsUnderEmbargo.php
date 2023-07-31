@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Mvc\Controller\Plugin;
+namespace Access\Mvc\Controller\Plugin;
 
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
@@ -8,7 +8,7 @@ use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 class IsUnderEmbargo extends AbstractPlugin
 {
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus
+     * @var \Access\Mvc\Controller\Plugin\AccessStatus
      */
     protected $accessStatus;
 
@@ -30,7 +30,7 @@ class IsUnderEmbargo extends AbstractPlugin
             return null;
         }
 
-        /** @var \AccessResource\Entity\AccessStatus $accessStatus */
+        /** @var \Access\Entity\AccessStatus $accessStatus */
         $accessStatus = $this->accessStatus->__invoke($resource);
         return $accessStatus
             ? $accessStatus->isUnderEmbargo()

@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Job;
+namespace Access\Job;
 
-use AccessResource\Api\Representation\AccessStatusRepresentation;
+use Access\Api\Representation\AccessStatusRepresentation;
 use Omeka\Stdlib\Message;
 
 trait AccessPropertiesTrait

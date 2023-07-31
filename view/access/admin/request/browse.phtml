@@ -1,7 +1,7 @@
 <?php
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
- * @var \AccessResource\Api\Representation\AccessRequestRepresentation[] $accessRequests
+ * @var \Access\Api\Representation\AccessRequestRepresentation[] $accessRequests
  *
  * @see view/common/access-request-list.phtml
  */
@@ -16,9 +16,9 @@ $hyperlink = $plugins->get('hyperlink');
 $allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $this->setting('accessresource_access_modes'));
 
 $this->headLink()
-    ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
+    ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
 $this->headScript()
-    ->appendFile($assetUrl('js/access-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+    ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
 
 $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
 ?>
@@ -31,7 +31,7 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
 </div>
 
 <div id="page-actions">
-    <?php if ($allowIndividualRequests && $this->userIsAllowed(\AccessResource\Entity\AccessRequest::class, 'create')): ?>
+    <?php if ($allowIndividualRequests && $this->userIsAllowed(\Access\Entity\AccessRequest::class, 'create')): ?>
         <?= $hyperlink($translate('Add new request'), $url('admin/access-request/default', ['action' => 'add']), ['class' => 'button']) ?>
     <?php endif; ?>
 </div>
@@ -60,7 +60,7 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
         <tr>
             <td>
                 <?php /*
-                <?php if ($this->userIsAllowed(\AccessResource\Api\Adapter\AccessRequestAdapter::class, 'batch_update') && ($accessRequest->userIsAllowed('update') || $accessRequest->userIsAllowed('delete'))): ?>
+                <?php if ($this->userIsAllowed(\Access\Api\Adapter\AccessRequestAdapter::class, 'batch_update') && ($accessRequest->userIsAllowed('update') || $accessRequest->userIsAllowed('delete'))): ?>
                 <input type="checkbox" name="resource_ids[]" value="<?= $accessRequest->id() ?>" aria-label="<?= $translate('Select access request') ?>">
                 <?php endif; ?>
                 */ ?>

@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\ColumnType;
+namespace Access\ColumnType;
 
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Api\Representation\AbstractEntityRepresentation;
@@ -47,7 +47,7 @@ class EmbargoDate implements ColumnTypeInterface
 
     public function renderContent(PhpRenderer $view, AbstractEntityRepresentation $resource, array $data) : ?string
     {
-        /** @var \AccessResource\Api\Representation\AccessStatusRepresentation $accessStatus */
+        /** @var \Access\Api\Representation\AccessStatusRepresentation $accessStatus */
         $accessStatus = $view->accessStatus($resource, true);
         return $accessStatus
             ? $accessStatus->displayEmbargo()

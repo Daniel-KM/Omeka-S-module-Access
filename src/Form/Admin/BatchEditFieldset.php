@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Form\Admin;
+namespace Access\Form\Admin;
 
-use AccessResource\Entity\AccessStatus;
-use AccessResource\Form\Element as AccessResourceElement;
+use Access\Entity\AccessStatus;
+use Access\Form\Element as AccessResourceElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 

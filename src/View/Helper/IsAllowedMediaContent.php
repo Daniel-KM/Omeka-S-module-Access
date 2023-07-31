@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\View\Helper;
+namespace Access\View\Helper;
 
-use AccessResource\Mvc\Controller\Plugin\IsAllowedMediaContent as IsAllowedMediaContentPlugin;
+use Access\Mvc\Controller\Plugin\IsAllowedMediaContent as IsAllowedMediaContentPlugin;
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Api\Representation\MediaRepresentation;
 
 class IsAllowedMediaContent extends AbstractHelper
 {
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\IsAllowedMediaContent
+     * @var \Access\Mvc\Controller\Plugin\IsAllowedMediaContent
      */
     protected $isAllowedMediaContentPlugin;
 
@@ -41,7 +41,7 @@ class IsAllowedMediaContent extends AbstractHelper
      *
      * The embargo is checked first.
      *
-     *@uses \AccessResource\Mvc\Controller\Plugin\IsAllowedMediaContent
+     *@uses \Access\Mvc\Controller\Plugin\IsAllowedMediaContent
      */
     public function __invoke(?MediaRepresentation $media): bool
     {

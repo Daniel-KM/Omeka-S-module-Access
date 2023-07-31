@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Controller\Admin;
+namespace Access\Controller\Admin;
 
-use AccessResource\Entity\AccessLog;
+use Access\Entity\AccessLog;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;

@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Mvc\Controller\Plugin;
+namespace Access\Mvc\Controller\Plugin;
 
 use CAS\Mvc\Controller\Plugin\IsCasUser;
 use Ldap\Mvc\Controller\Plugin\IsLdapUser;

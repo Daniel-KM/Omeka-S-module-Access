@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource;
+namespace Access;
 
 use Omeka\Module\Exception\ModuleCannotInstallException;
 use Omeka\Stdlib\Message;

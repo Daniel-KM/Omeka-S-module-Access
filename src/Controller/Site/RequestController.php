@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Controller\Site;
+namespace Access\Controller\Site;
 
-use AccessResource\Controller\AccessTrait;
-use AccessResource\Entity\AccessRequest;
-use AccessResource\Form\Site\AccessRequestForm;
+use Access\Controller\AccessTrait;
+use Access\Entity\AccessRequest;
+use Access\Form\Site\AccessRequestForm;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\JsonModel;
 use Laminas\View\Model\ViewModel;
@@ -63,7 +63,7 @@ class RequestController extends AbstractActionController
         $response = $this->api()->search('access_requests', $query);
         $this->paginator($response->getTotalResults());
 
-        /** @var \AccessResource\Api\Representation\AccessRequestRepresentation[] $accessRequests */
+        /** @var \Access\Api\Representation\AccessRequestRepresentation[] $accessRequests */
         $accessRequests = $response->getContent();
         return new ViewModel([
             'accessRequests' => $accessRequests,
@@ -146,13 +146,13 @@ class RequestController extends AbstractActionController
 
         // TODO Find a way to load the list of resources in RequestController.
 
-        /** @var \AccessResource\Form\Site\AccessRequestForm $form */
+        /** @var \Access\Form\Site\AccessRequestForm $form */
         $formOptions = [
             'full_access' => (bool) $this->settings()->get('accessresource_full'),
             'resources' => [],
             'user' => $user,
         ];
-        /** @var \AccessResource\Form\Site\AccessRequestForm $form */
+        /** @var \Access\Form\Site\AccessRequestForm $form */
         $form = $this->getForm(AccessRequestForm::class, $formOptions);
         $form->setOptions($formOptions);
         $form->setData($post);

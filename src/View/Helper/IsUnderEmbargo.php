@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\View\Helper;
+namespace Access\View\Helper;
 
-use AccessResource\Mvc\Controller\Plugin\IsUnderEmbargo as IsUnderEmbargoPlugin;
+use Access\Mvc\Controller\Plugin\IsUnderEmbargo as IsUnderEmbargoPlugin;
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 
 class IsUnderEmbargo extends AbstractHelper
 {
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\IsUnderEmbargo
+     * @var \Access\Mvc\Controller\Plugin\IsUnderEmbargo
      */
     protected $isUnderEmbargoPlugin;
 
@@ -24,7 +24,7 @@ class IsUnderEmbargo extends AbstractHelper
      * @return bool|null Null if the embargo dates are not set or invalid, true
      * if resource is under embargo, else false.
      *
-     * @uses \AccessResource\Mvc\Controller\Plugin\IsUnderEmbargo
+     * @uses \Access\Mvc\Controller\Plugin\IsUnderEmbargo
      */
     public function __invoke(?AbstractResourceEntityRepresentation $resource): ?bool
     {

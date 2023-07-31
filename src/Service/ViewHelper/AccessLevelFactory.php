@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Service\ViewHelper;
+namespace Access\Service\ViewHelper;
 
-use AccessResource\View\Helper\AccessLevel;
+use Access\View\Helper\AccessLevel;
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 

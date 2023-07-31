@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource;
+namespace Access;
 
 if (!class_exists(\Generic\AbstractModule::class)) {
     require file_exists(dirname(__DIR__) . '/Generic/AbstractModule.php')
@@ -8,10 +8,10 @@ if (!class_exists(\Generic\AbstractModule::class)) {
         : __DIR__ . '/src/Generic/AbstractModule.php';
 }
 
-use AccessResource\Api\Representation\AccessStatusRepresentation;
-use AccessResource\Entity\AccessRequest;
-use AccessResource\Entity\AccessStatus;
-use AccessResource\Form\Admin\BatchEditFieldset;
+use Access\Api\Representation\AccessStatusRepresentation;
+use Access\Entity\AccessRequest;
+use Access\Entity\AccessStatus;
+use Access\Form\Admin\BatchEditFieldset;
 use DateTime;
 use Generic\AbstractModule;
 use Laminas\EventManager\Event;
@@ -78,41 +78,41 @@ class Module extends AbstractModule
         $acl
             ->allow(
                 null,
-                [\AccessResource\Controller\AccessFileController::class]
+                [\Access\Controller\AccessFileController::class]
             )
             ->allow(
                 null,
-                [\AccessResource\Controller\Site\RequestController::class],
+                [\Access\Controller\Site\RequestController::class],
                 ['browse', 'submit']
             )
             ->allow(
                 $rolesAdmins,
-                [\AccessResource\Controller\Site\RequestController::class]
+                [\Access\Controller\Site\RequestController::class]
             )
             ->allow(
                 $roles,
-                [\AccessResource\Controller\Site\GuestBoardController::class]
+                [\Access\Controller\Site\GuestBoardController::class]
             )
             ->allow(
                 null,
-                [\AccessResource\Api\Adapter\AccessRequestAdapter::class],
+                [\Access\Api\Adapter\AccessRequestAdapter::class],
                 ['search', 'create', 'update', 'read']
             )
             ->allow(
                 null,
-                [\AccessResource\Entity\AccessRequest::class],
+                [\Access\Entity\AccessRequest::class],
                 ['create', 'update', 'read']
             )
             // Rights on access status are useless for now because they are
             // managed only via sql/orm.
             ->allow(
                 null,
-                [\AccessResource\Entity\AccessStatus::class],
+                [\Access\Entity\AccessStatus::class],
                 ['search', 'read']
             )
             ->allow(
                 $rolesExceptGuest,
-                [\AccessResource\Entity\AccessStatus::class],
+                [\Access\Entity\AccessStatus::class],
                 ['search', 'read', 'create', 'update']
             )
         ;
@@ -293,7 +293,7 @@ class Module extends AbstractModule
         $this->warnConfig();
 
         $renderer->headScript()
-            ->appendFile($renderer->assetUrl('js/access-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+            ->appendFile($renderer->assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
         return '<style>fieldset[name=fieldset_index] .inputs label {display: block;}</style>'
             . parent::getConfigForm($renderer);
     }
@@ -367,7 +367,7 @@ class Module extends AbstractModule
     {
         $resource = $event->getTarget();
 
-        /** @var \AccessResource\Api\Representation\AccessStatusRepresentation $accessStatus */
+        /** @var \Access\Api\Representation\AccessStatusRepresentation $accessStatus */
         $plugins = $this->getServiceLocator()->get('ControllerPluginManager');
         $accessStatusForResource = $plugins->get('accessStatus');
         $accessStatus = $accessStatusForResource($resource, true);
@@ -606,7 +606,7 @@ class Module extends AbstractModule
                 'values' => $accessStatusValues,
             ];
            $services->get(\Omeka\Job\Dispatcher::class)
-                ->dispatch(\AccessResource\Job\AccessStatusRecursive::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
+                ->dispatch(\Access\Job\AccessStatusRecursive::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
         }
     }
 
@@ -801,7 +801,7 @@ class Module extends AbstractModule
                 'values' => $accessStatusValues,
             ];
             $services->get(\Omeka\Job\Dispatcher::class)
-                ->dispatch(\AccessResource\Job\AccessStatusRecursive::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
+                ->dispatch(\Access\Job\AccessStatusRecursive::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
         }
     }
 
@@ -822,7 +822,7 @@ class Module extends AbstractModule
     {
         /**
          * @var \Omeka\Api\Request $request
-         * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus $accessStatusForResource
+         * @var \Access\Mvc\Controller\Plugin\AccessStatus $accessStatusForResource
          * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
          */
         $view = $event->getTarget();
@@ -842,13 +842,13 @@ class Module extends AbstractModule
             'resource_type' => $resource->resourceName(),
             'request_status' => AccessRequest::STATUS_ACCEPTED,
         ];
-        /** @var \AccessResource\Form\Admin\AccessRequestForm $form */
+        /** @var \Access\Form\Admin\AccessRequestForm $form */
         $form = $services->get('FormElementManager')
-            ->get(\AccessResource\Form\Admin\AccessRequestForm::class, $formOptions)
+            ->get(\Access\Form\Admin\AccessRequestForm::class, $formOptions)
             ->setOptions($formOptions);
 
         /**
-         * @see \AccessResource\Controller\Admin\RequestController::editAction()
+         * @see \Access\Controller\Admin\RequestController::editAction()
          * @var \Laminas\Mvc\MvcEvent $mvcEvent
          * @var \Laminas\Http\PhpEnvironment\Request $httpRequest
          */
@@ -906,7 +906,7 @@ class Module extends AbstractModule
                     }
                     // Reinit the form for a new request.
                     $form = $services->get('FormElementManager')
-                        ->get(\AccessResource\Form\Admin\AccessRequestForm::class, $formOptions)
+                        ->get(\Access\Form\Admin\AccessRequestForm::class, $formOptions)
                         ->setOptions($formOptions);
                 }
             } else {
@@ -944,8 +944,8 @@ HTML;
          * @var \Omeka\Settings\Settings $settings
          * @var \Laminas\View\Renderer\PhpRenderer $view
          * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
-         * @var \AccessResource\Entity\AccessStatus $accessStatus
-         * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus $accessStatusForResource
+         * @var \Access\Entity\AccessStatus $accessStatus
+         * @var \Access\Mvc\Controller\Plugin\AccessStatus $accessStatusForResource
          */
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
@@ -959,7 +959,7 @@ HTML;
 
         $assetUrl = $view->plugin('assetUrl');
         $view->headLink()
-            ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
+            ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
 
         // Get current access if any.
         $resource = $view->vars()->offsetGet('resource');
@@ -990,7 +990,7 @@ HTML;
             }
         }
 
-        $levelElement = new \AccessResource\Form\Element\OptionalRadio('o-access:level');
+        $levelElement = new \Access\Form\Element\OptionalRadio('o-access:level');
         $levelElement
             ->setLabel('Access level') // @translate
             ->setValueOptions($valueOptions)
@@ -1088,8 +1088,8 @@ HTML;
          * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
          * @var \Omeka\Settings\Settings $settings
          * @var \Omeka\View\Helper\I18n $i18n
-         * @var \AccessResource\Entity\AccessStatus $accessStatus
-         * @var \AccessResource\Mvc\Controller\Plugin\AccessStatus $accessStatusForResource
+         * @var \Access\Entity\AccessStatus $accessStatus
+         * @var \Access\Mvc\Controller\Plugin\AccessStatus $accessStatusForResource
          */
         $services = $this->getServiceLocator();
         $plugins = $services->get('ControllerPluginManager');
@@ -1173,9 +1173,9 @@ HTML;
         $view = $event->getTarget();
         $assetUrl = $view->plugin('assetUrl');
         $view->headLink()
-            ->appendStylesheet($assetUrl('css/access-admin.css', 'AccessResource'));
+            ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
         $view->headScript()
-            ->appendFile($assetUrl('js/access-admin.js', 'AccessResource'), 'text/javascript', ['defer' => 'defer']);
+            ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
     }
 
     public function formAddElementsResourceBatchUpdateForm(Event $event): void
@@ -1183,7 +1183,7 @@ HTML;
         /**
          * @var \Omeka\Settings\Settings $settings
          * @var \Omeka\Form\ResourceBatchUpdateForm $form
-         * @var \AccessResource\Form\Admin\BatchEditFieldset $fieldset
+         * @var \Access\Form\Admin\BatchEditFieldset $fieldset
          */
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
@@ -1313,7 +1313,7 @@ HTML;
         ];
 
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
-        $job = $dispatcher->dispatch(\AccessResource\Job\AccessStatusUpdate::class, $vars);
+        $job = $dispatcher->dispatch(\Access\Job\AccessStatusUpdate::class, $vars);
         $message = new Message(
             'A job was launched in background to update access statuses according to parameters: (%1$sjob #%2$d%3$s, %4$slogs%3$s).', // @translate
             sprintf('<a href="%s">',

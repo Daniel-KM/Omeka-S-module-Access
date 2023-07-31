@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Controller;
+namespace Access\Controller;
 
-use AccessResource\Entity\AccessLog;
+use Access\Entity\AccessLog;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Omeka\Api\Adapter\MediaAdapter;
@@ -149,7 +149,7 @@ class AccessFileController extends AbstractActionController
      * This is the 'file' action that is invoked when a user wants to download
      * the given file.
      *
-     * @see \AccessResource\Controller\AccessFileController::sendFile()
+     * @see \Access\Controller\AccessFileController::sendFile()
      * @see \DerivativeMedia\Controller\IndexController::sendFile()
      * @see \Statistics\Controller\DownloadController::sendFile()
      * and
@@ -262,7 +262,7 @@ class AccessFileController extends AbstractActionController
         // Manage custom asset file from the theme.
         $viewHelpers = $this->viewHelpers();
         $assetUrl = $viewHelpers->get('assetUrl');
-        $filepath = $assetUrl($file, 'AccessResource', true, false);
+        $filepath = $assetUrl($file, 'Access', true, false);
         $serverBasePath = $viewHelpers->get('BasePath')();
         if ($serverBasePath && $serverBasePath !== '/') {
             $filepath = mb_substr($filepath, mb_strlen($serverBasePath));

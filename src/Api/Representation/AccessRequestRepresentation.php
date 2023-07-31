@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Api\Representation;
+namespace Access\Api\Representation;
 
-use AccessResource\Entity\AccessRequest;
+use Access\Entity\AccessRequest;
 use DateTime;
 use Omeka\Api\Representation\AbstractEntityRepresentation;
 
@@ -20,7 +20,7 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
 
     public function getControllerName()
     {
-        return \AccessResource\Controller\Admin\RequestController::class;
+        return \Access\Controller\Admin\RequestController::class;
     }
 
     public function getJsonLdType()

@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\View\Helper;
+namespace Access\View\Helper;
 
-use AccessResource\Entity\AccessStatus;
-use AccessResource\Mvc\Controller\Plugin\IsAllowedMediaContent;
-use AccessResource\Mvc\Controller\Plugin\AccessLevel;
+use Access\Entity\AccessStatus;
+use Access\Mvc\Controller\Plugin\IsAllowedMediaContent;
+use Access\Mvc\Controller\Plugin\AccessLevel;
 use Doctrine\ORM\EntityManager;
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
@@ -23,12 +23,12 @@ class IsAccessRequestable extends AbstractHelper
     protected $userCanViewAll;
 
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\AccessLevel
+     * @var \Access\Mvc\Controller\Plugin\AccessLevel
      */
     protected $accessLevel;
 
     /**
-     * @var \AccessResource\Mvc\Controller\Plugin\IsAllowedMediaContent
+     * @var \Access\Mvc\Controller\Plugin\IsAllowedMediaContent
      */
     protected $isAllowedMediaContent;
 

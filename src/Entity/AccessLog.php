@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Entity;
+namespace Access\Entity;
 
 use DateTime;
 use Omeka\Entity\AbstractEntity;

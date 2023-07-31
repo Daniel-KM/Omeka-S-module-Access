@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace AccessResource\Service\Controller;
+namespace Access\Service\Controller;
 
-use AccessResource\Controller\Admin\RequestController;
+use Access\Controller\Admin\RequestController;
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
