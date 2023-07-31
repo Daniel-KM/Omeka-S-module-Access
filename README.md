@@ -7,8 +7,8 @@ Access (module for Omeka S)
 
 [Access] is a module for [Omeka S] that allows to protect files to be accessed
 from the anonymous visitors, but nevertheless available globally or on requests
-by guests users, restricted to a list of ips, or available by an email or a
-token. Start and end dates of an embargo can be used too, separately or not.
+by guests users, reserved to a list of ips, or available by an email or a token.
+Start and end dates of an embargo can be used too, separately or not.
 
 Furthermore, you can set the right to see a resource at the media level, so the
 item and media metadata are visible and the visitors know that a media exist.
@@ -23,7 +23,7 @@ Installation
 
 ### Associated modules
 
-To allow access to restricted resources for user with role "Guest", the module
+To allow access to reserved resources for user with role "Guest", the module
 will need to identify users, generally with the module [Guest] or [Guest Role].
 
 The public part can be managed easily via the module [Blocks Disposition], but
@@ -133,8 +133,8 @@ The module is compatible with the module [Statistics].
 
 Because Omeka doesn't protect files by default, **it is important to redirect the urls of the original files**
 to the routes of the module Access. If you keep the redirection with `download`,
-the check for restricted access won't be done, so **a private file will become public**,
-even if a user as a no restricted access to it. For example:
+the check for reserved access won't be done, so **a private file will become public**,
+even if a user as a no reserved access to it. For example:
 
 ```apache
 # Redirect direct access to files to the module Access.
@@ -159,23 +159,21 @@ Usage
 
 Omeka has two modes of visibility: public or private. This module adds a second
 check for anonymous or specific users: the right to access to a resource. This
-rights has four levels: free, restricted, protected or forbidden. These access
+rights has four levels: free, reserved, protected or forbidden. These access
 levels applies on record or media files, but the current version supports only
 protection of media contents.
 
 So an anonymous visitor can see a public media, but can view the file only if
 the level is set to free. The user should have a permission when the level is
-restricted or protected, and cannot see it in any case when the level is
+reserved or protected, and cannot see it in any case when the level is
 forbidden, even if the media is public.
 
-There is no difference between restricted or protected when the type of
-protection is limited to files, that is the only type in the current version of
-the module.
+There is no difference between reserved or protected when the type of protection
+is limited to files, that is the only type in the current version of the module.
 
-The permission to see a restricted content can be done via many ways: Users can
-be checked via the role guest, the authentication via an external identity
-provider (module [CAS], [LDAP] and [Single Sign On]), by ip, by email or by a
-token.
+The permission to see a reserved content can be done via many ways: Users can be
+checked via the role guest, the authentication via an external identity provider
+(module [CAS], [LDAP] and [Single Sign On]), by ip, by email or by a token.
 
 One important thing to understand is to choose to define the access for each
 type of resource: item sets, items and media and to choose if the access is done
@@ -201,14 +199,14 @@ can be under embargo currently.
 
 ### Access mode
 
-The rights to see the files are controlled on the fly. The restricted visibility
+The rights to see the files are controlled on the fly. The reserved visibility
 can be managed in multiple ways:
 
 - Global modes
   - `ip`: all visitors with a specific ip, for example the ip of the physical
-    library or the one of a researcher, can have access to all the restricted
+    library or the one of a researcher, can have access to all the reserved
     files. Ip can be configured to access specific item sets.
-  - `guest`: all guest users have access to all the restricted files.
+  - `guest`: all guest users have access to all the reserved files.
   - `external`: all users authenticated via an external identity provider
     (currently via module CAS, later for module Ldap and SingleSignOn) have access
     to media contents.
@@ -222,20 +220,20 @@ can be managed in multiple ways:
 
 Individual modes require that an admin allow each right for each resource.
 
-### Identification of the restricted resources
+### Identification of the reserved resources
 
 After the configuration, you should identify all resources that you want to make
-available via a restricted access. By default, private resources remain private,
+available via a reserved access. By default, private resources remain private,
 so you need to allow visitors to know that they exist. That is to say you can
 keep some private resources private, and some other ones available on request,
 or globally.
 
-There are two ways to indicate which resources are restricted.
+There are two ways to indicate which resources are reserved.
 
 - By default, it is a specific setting available as a radio button in the
   advanced tab of the resource form.
 - The second way is to set a value to a specified property, for example `curation:access`.
-  The value can be "free", "restricted", "protected" or "forbidden". The
+  The value can be "free", "reserved", "protected" or "forbidden". The
   property and the names can be translated or modified in the config. It is
   recommended to create a custom vocab and to use it via the resource templates
   to avoid errors in the values.
@@ -250,9 +248,9 @@ specified for the item too to simplify management.
 ### Embargo
 
 By construction, the embargo works only on the media files: metadata are always
-visible for public and restricted resources.
+visible for public and reserved resources.
 
-An option in the config can be used to use it with or without the restricted
+An option in the config can be used to use it with or without the reserved
 access.
 
 To create an embargo on a file, simply set the dates in the advanced tab or use
@@ -264,7 +262,7 @@ use the datatype "numeric timestamp" from the module [Numeric Datatypes], but a
 literal is fine. The date must be an iso one (`2022-03-14`). A time can be set
 too (`2022-03-14T12:34:56`).
 
-A check is automatically done when an anonymous visitor or a restricted user is
+A check is automatically done when an anonymous visitor or a reserved user is
 accessing a file.
 
 ### Management of requests

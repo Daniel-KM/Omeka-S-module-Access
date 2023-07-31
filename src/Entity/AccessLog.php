@@ -6,7 +6,7 @@ use DateTime;
 use Omeka\Entity\AbstractEntity;
 
 /**
- * Store access to restricted resources for individual users.
+ * Store access to reserved resources for individual users.
  *
  * @todo Store email or token too.
  * @todo Remove this whole feature?
@@ -18,8 +18,8 @@ class AccessLog extends AbstractEntity
     /**#@+
      * Access type.
      *
-     * TYPE_ACCESS: A user or anonymous acceded a restricted resource.
-     * TYPE_REQUEST: A user or anonymous request access to a restricted resource.
+     * TYPE_ACCESS: A user or anonymous acceded a reserved resource.
+     * TYPE_REQUEST: A user or anonymous request access to a reserved resource.
      */
     const TYPE_ACCESS = 'access'; // @translate
     const TYPE_REQUEST = 'request'; // @translate

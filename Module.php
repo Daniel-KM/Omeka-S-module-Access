@@ -1019,7 +1019,7 @@ HTML;
 
         $valueOptions = [
             AccessStatus::FREE => 'Free', // @translate'
-            AccessStatus::RESERVED => 'Restricted', // @translate
+            AccessStatus::RESERVED => 'Reserved', // @translate
             AccessStatus::PROTECTED => 'Protected', // @translate
             AccessStatus::FORBIDDEN => 'Forbidden', // @translate
         ];

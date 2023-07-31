@@ -78,12 +78,12 @@ class IsAllowedMediaContent extends AbstractPlugin
      * The check is done on level and embargo.
      *
      * Accessibility and visibility are decorrelated, so, for example, a visitor
-     * cannot see a private media or a public media with restricted content.
+     * cannot see a private media or a public media with reserved content.
      *
      * Here, the media is readable by the user or visitor: it should be loaded
      * via api to check the visibility first.
      *
-     * Can access to public resources that are restricted or protected:
+     * Can access to public resources that are reserved or protected:
      * - global modes
      *   - IP: anonymous with IP.
      *   - External: authenticated externally (cas for now, ldap or sso later).
@@ -132,7 +132,7 @@ class IsAllowedMediaContent extends AbstractPlugin
             return true;
         }
 
-        // Here, the mode is restricted or protected, so check media content.
+        // Here, the mode is reserved or protected, so check media content.
 
         $modes = $this->settings->get('access_access_modes');
         if (empty($modes)) {

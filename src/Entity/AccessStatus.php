@@ -31,8 +31,8 @@ class AccessStatus extends AbstractEntity
      * A resource can have four statuses from the most open to the most close.
      *
      * FREE: Free access to resource.
-     * RESERVED: Restricted access to media content only, not to the record.
-     * PROTECTED: Restricted access to record and content (file).
+     * RESERVED: Reserved access to media content only, not to the record.
+     * PROTECTED: Reserved access to record and content (file).
      * FORBIDDEN: Not available.
      */
     const FREE = 'free';
