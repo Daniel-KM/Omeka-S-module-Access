@@ -43,6 +43,9 @@ class Module extends AbstractModule
             return;
         }
 
+        $plugins = $services->get('ControllerPluginManager');
+        $messenger = $plugins->get('messenger');
+
         // Check upgrade from old module AccessResource if any.
         $moduleManager = $services->get('Omeka\ModuleManager');
         $module = $moduleManager->getModule('AccessResource');
@@ -53,8 +56,20 @@ class Module extends AbstractModule
             );
         }
 
-        $plugins = $services->get('ControllerPluginManager');
-        $messenger = $plugins->get('messenger');
+        if ($version && $module && $module->getState() === \Omeka\Module\Manager::STATE_NEEDS_UPGRADE) {
+            $filepath = dirname($this->modulePath()) . '/AccessResource/data/scripts/upgrade.php';
+            if (file_exists($filepath) && filesize($filepath) && is_readable($filepath)) {
+                $serviceLocator = $services;
+                $this->setServiceLocator($serviceLocator);
+                /**
+                 * @var string $oldVersion
+                 * @var string $newVersion
+                 */
+                $oldVersion = $module->getDb('version');
+                $newVersion = $version;
+                require_once $filepath;
+            }
+        }
 
         if (!$version || ($module && in_array($module->getState(), [
             \Omeka\Module\Manager::STATE_ACTIVE,
@@ -70,6 +85,7 @@ class Module extends AbstractModule
                     'AccessResource'
                 );
                 $messenger->addError($message);
+                throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
             }
         }
     }
