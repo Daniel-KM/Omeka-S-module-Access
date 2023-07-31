@@ -294,20 +294,10 @@ Guest users have a specific board too: `/s/my-site/guest/access-request`.
 TODO
 ----
 
-- [x] Add a feature to uncouple visibility and access (manage them separetely). Make this the default mode?
-- [x] Make metadata or resource hidden, not only files (so a more restricted type of access).
-- [x] Make resources available by token in global mode.
-- [x] Make resources available by token only, not login (like module Contribute).
-- [x] Make non-exclusive mode "ip" and "user".
 - [ ] Fix ip check for ipv6.
 - [ ] Use Omeka Store instead of local file system.
-- [x] Manage ip by item set or by user instead of sites?
-- [x] Store openess in a specific table for performance and to manage embargo easier.
-- [x] Manage the case where the embargo dates are private.
-- [x] Add a mode to check for a specific value in the reserved access property instead of exist/not exist.
-- [x] Reindexation (trigger event) when embargo is updated automatically.
-- [x] Recheck all new features with modes "individual".
-- [x] Manage embargo dates separately from the property values.
+- [ ] Update temporal to avoid to check embargo each time via php.
+- [ ] Reindexation (trigger event?) when embargo is updated automatically.
 
 
 Warning
