@@ -1,0 +1,24 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var array $query
+ * @var string $resourceType
+ */
+
+use \Access\Api\Representation\AccessStatusRepresentation;
+use Access\Form\Element\OptionalRadio;
+
+$plugins = $this->getHelperPluginManager();
+$setting = $plugins->get('setting');
+
+$accessLevels = $setting('access_property_levels', AccessStatusRepresentation::LEVELS);
+$valueOptions = $accessLevels + ['' => 'All'];
+unset($valueOptions['protected']);
+
+$accessElement = (new OptionalRadio('access'))
+    ->setLabel('Access')
+    ->setValueOptions($valueOptions)
+    ->setValue($query['access'] ?? null);
+?>
+
+<?= $this->formRow($accessElement) ?>

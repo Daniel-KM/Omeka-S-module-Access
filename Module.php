@@ -282,6 +282,36 @@ class Module extends AbstractModule
                 'view.show.after',
                 [$this, 'addAccessListAndForm']
             );
+
+            // Manage search.
+            $sharedEventManager->attach(
+                $adapter,
+                'api.search.query',
+                [$this, 'handleApiSearchQuery']
+            );
+        }
+
+        $controllers = [
+            'Omeka\Controller\Admin\Item',
+            'Omeka\Controller\Admin\ItemSet',
+            'Omeka\Controller\Admin\Media',
+            'Omeka\Controller\Site\Item',
+            'Omeka\Controller\Site\ItemSet',
+            'Omeka\Controller\Site\Media',
+        ];
+        foreach ($controllers as $controller) {
+            // Add the search field to the advanced search pages.
+            $sharedEventManager->attach(
+                $controller,
+                'view.advanced_search',
+                [$this, 'handleViewAdvancedSearch']
+            );
+            // Display the search filters for the search result.
+            $sharedEventManager->attach(
+                $controller,
+                'view.search.filters',
+                [$this, 'filterSearchFilters']
+            );
         }
 
         // Extend the batch edit form via js.
@@ -1217,6 +1247,87 @@ HTML;
         $resources = [$view->itemSet];
         // $this->storeSingleAccess($event);
         echo $view->accessRequest($resources);
+    }
+
+    /**
+     * Helper to build search queries.
+     *
+     * @param Event $event
+     */
+    public function handleApiSearchQuery(Event $event): void
+    {
+        /**
+         * @var \Doctrine\ORM\QueryBuilder $qb
+         * @var \Omeka\Api\Adapter\AbstractResourceEntityAdapter $adapter
+         * @var \Omeka\Api\Request $request
+         * @var array $query
+         */
+        $request = $event->getParam('request');
+        $query = $request->getContent();
+
+        if (!empty($query['access'])) {
+            $adapter = $event->getTarget();
+            $qb = $event->getParam('queryBuilder');
+            $expr = $qb->expr();
+
+            // No array.
+            if (is_array($query['access'])) {
+                $query['access'] = reset($query['access']);
+            }
+
+            if (in_array($query['access'], AccessStatusRepresentation::LEVELS)) {
+                $accessStatusAlias = $adapter->createAlias();
+                $qb
+                    ->innerJoin(
+                        AccessStatus::class,
+                        $accessStatusAlias,
+                        \Doctrine\ORM\Query\Expr\Join::WITH,
+                        "$accessStatusAlias.id = omeka_root.id"
+                    )
+                    ->andWhere($expr->eq(
+                        "$accessStatusAlias.level",
+                        $adapter->createNamedParameter($qb, $query['access'])
+                    ));
+            } else {
+                $qb
+                    ->andWhere('"no" = "access"');
+            }
+        }
+    }
+
+    public function handleViewAdvancedSearch(Event $event)
+    {
+        $partials = $event->getParam('partials');
+        $partials[] = 'common/access-advanced-search';
+        $event->setParam('partials', $partials);
+    }
+
+    /**
+     * Complete the list of search filters for the browse page.
+     */
+    public function filterSearchFilters(Event $event): void
+    {
+        $filters = $event->getParam('filters');
+        $query = $event->getParam('query', []);
+
+        if (isset($query['access']) && $query['access'] !== '') {
+            $services = $this->getServiceLocator();
+            $translator = $services->get('MvcTranslator');
+            $settings = $services->get('Omeka\Settings');
+            $value = $query['access'];
+            if ($value) {
+                $filterLabel = $translator->translate('Access'); // @translate
+                $accessViaProperty = (bool) $settings->get('access_property');
+                if ($accessViaProperty) {
+                    $accessLevels = $settings->get('access_property_levels', AccessStatusRepresentation::LEVELS);
+                    $filters[$filterLabel][] = $accessLevels[$value] ?? $value;
+                } else {
+                    $filters[$filterLabel][] = $translator->translate($value); // @translate
+                }
+            }
+        }
+
+        $event->setParam('filters', $filters);
     }
 
     public function handleGuestWidgets(Event $event): void
