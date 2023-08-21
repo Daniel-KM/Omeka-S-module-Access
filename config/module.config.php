@@ -282,7 +282,7 @@ return [
             // True means that recods are protected, not only media contents (files).
             'access_full' => false,
 
-            'access_access_modes' => [
+            'access_modes' => [
                 // 'ip',
                 'guest',
                 // 'external',

@@ -11,7 +11,7 @@ $escape = $plugins->get('escapeHtml');
 $assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
 
-$allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $this->setting('access_access_modes'));
+$allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $this->setting('access_modes', []));
 
 $this->headLink()
     ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));

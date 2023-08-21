@@ -33,7 +33,7 @@ class ConfigForm extends Form
             ])
 
             ->add([
-                'name' => 'access_access_modes',
+                'name' => 'access_modes',
                 'type' => Element\MultiCheckbox::class,
                 'options' => [
                     'label' => 'Access modes', // @translate
@@ -50,7 +50,7 @@ class ConfigForm extends Form
                     ],
                 ],
                 'attributes' => [
-                    'id' => 'access_access_modes',
+                    'id' => 'access_modes',
                     'required' => false,
                     'style' => 'display: inline-block;',
                 ],
@@ -292,7 +292,7 @@ forbidden = forbidden
                 'required' => false,
             ])
             ->add([
-                'name' => 'access_access_modes',
+                'name' => 'access_modes',
                 'required' => false,
             ])
             ->add([

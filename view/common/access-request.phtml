@@ -20,7 +20,7 @@ $translate = $plugins->get('translate');
 $hasGuest = $plugins->has('guestWidget');
 
 $user = $this->identity();
-$accessModes = $setting('access_access_modes');
+$accessModes = $setting('access_modes', []);
 $allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $accessModes);
 $allowGlobalRequests = (bool) array_intersect(['ip', 'guest', 'external'], $accessModes);
 

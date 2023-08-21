@@ -135,7 +135,7 @@ class IsAllowedMediaContent extends AbstractPlugin
 
         // Here, the mode is reserved or protected, so check media content.
 
-        $modes = $this->settings->get('access_access_modes');
+        $modes = $this->settings->get('access_modes');
         if (empty($modes)) {
             return true;
         }

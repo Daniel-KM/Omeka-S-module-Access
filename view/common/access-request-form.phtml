@@ -13,7 +13,7 @@ $translate = $plugins->get('translate');
 
 $level = $accessStatus ? $accessStatus->level() : 'free';
 $resourceName = $resource->resourceName();
-$allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $this->setting('access_access_modes'));
+$allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $this->setting('access_modes', []));
 
 if ($level !== 'forbidden')  {
     $this->headLink()

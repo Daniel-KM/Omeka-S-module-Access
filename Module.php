@@ -1454,7 +1454,7 @@ HTML;
     protected function storeSingleAccess(Event $event)
     {
         $settings = $this->getServiceLocator()->get('Omeka\Settings');
-        $modes = $settings->get('access_access_modes');
+        $modes = $settings->get('access_modes');
         // Mode "user" is managed directly via authentication.
         $singleModes = array_intersect(['email', 'token'], $modes);
         if (!count($singleModes)) {
