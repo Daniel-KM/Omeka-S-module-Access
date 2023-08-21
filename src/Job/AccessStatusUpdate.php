@@ -225,7 +225,7 @@ class AccessStatusUpdate extends AbstractJob
     protected function copyIndexIntoPropertyValues(): self
     {
         $quotedList = [];
-        foreach ($this->statusLevels as $key => $value) {
+        foreach ($this->accessLevels as $key => $value) {
             $quotedList[$key] = $this->connection->quote($value);
         }
 
@@ -380,7 +380,7 @@ SQL;
     protected function updateLevelAndEmbargoViaProperty(): self
     {
         $quotedList = [];
-        foreach ($this->statusLevels as $key => $value) {
+        foreach ($this->accessLevels as $key => $value) {
             $quotedList[$key] = $this->connection->quote($value);
         }
         $quotedListString = implode(', ', $quotedList);

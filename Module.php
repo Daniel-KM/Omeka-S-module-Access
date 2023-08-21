@@ -374,6 +374,13 @@ class Module extends AbstractModule
 
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
+
+        // Complete the access levels in all cases, so they can be used anywhere
+        // in particular in form, even if the default values are commonly used.
+        $accessLevels = $settings->get('access_property_levels', AccessStatusRepresentation::LEVELS);
+        $accessLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $accessLevels), AccessStatusRepresentation::LEVELS);
+        $settings->set('access_property_levels', $accessLevels);
+
         $accessViaProperty = (bool) $settings->get('access_property');
         if (!$accessViaProperty) {
             return true;
@@ -752,9 +759,9 @@ class Module extends AbstractModule
             $levelProperty = $accessViaProperty ? $settings->get('access_property_level') : null;
             if ($levelProperty) {
                 $levelIsSet = true;
-                $levelPropertyLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('access_property_levels', [])), AccessStatusRepresentation::LEVELS);
+                $accessLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('access_property_levels', [])), AccessStatusRepresentation::LEVELS);
                 $levelValue = $representation->value($levelProperty);
-                $levelVal = $levelValue ? array_search((string) $levelValue->value(), $levelPropertyLevels) : null;
+                $levelVal = $levelValue ? array_search((string) $levelValue->value(), $accessLevels) : null;
                 $level = $levelVal ?: AccessStatus::FREE;
                 $levelType = $levelValue ? $levelValue->type() : null;
             }

@@ -62,7 +62,7 @@ trait AccessPropertiesTrait
      *
      * @var array
      */
-    protected $statusLevels;
+    protected $accessLevels;
 
     /**
      * @var string
@@ -91,7 +91,7 @@ trait AccessPropertiesTrait
         $this->propertyLevel = $settings->get('access_property_level');
         $this->propertyEmbargoStart = $settings->get('access_property_embargo_start');
         $this->propertyEmbargoEnd = $settings->get('access_property_embargo_end');
-        $this->statusLevels = $settings->get('access_property_levels', []);
+        $this->accessLevels = $settings->get('access_property_levels', []);
         $this->levelDataType = $settings->get('access_property_level_datatype');
 
         $hasError = false;
@@ -158,15 +158,15 @@ trait AccessPropertiesTrait
 
         // This is not an error since default levels may be used, but this is an
         // sensitive job because it modifies values, so stop it.
-        if (count(array_intersect_key($this->statusLevels, AccessStatusRepresentation::LEVELS)) !== 4) {
+        if (count(array_intersect_key($this->accessLevels, AccessStatusRepresentation::LEVELS)) !== 4) {
             $hasError = true;
             $message = new Message(
                 'List of property levels is incomplete, missing "%s".', // @translate
-                implode('", "', array_diff_key(AccessStatusRepresentation::LEVELS, $this->statusLevels))
+                implode('", "', array_diff_key(AccessStatusRepresentation::LEVELS, $this->accessLevels))
             );
             $useLogger ? $this->logger->err($message) : $messenger->addError($message);
         } else {
-            $this->statusLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $this->statusLevels), AccessStatusRepresentation::LEVELS);
+            $this->accessLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $this->accessLevels), AccessStatusRepresentation::LEVELS);
         }
 
         if (!$this->levelDataType) {

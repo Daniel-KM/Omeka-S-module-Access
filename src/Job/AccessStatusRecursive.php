@@ -175,7 +175,7 @@ class AccessStatusRecursive extends AbstractJob
         }
 
         // Level values.
-        $levelVal = $this->statusLevels[$level] ?? $level;
+        $levelVal = $this->accessLevels[$level] ?? $level;
         $levelType = empty($accessStatusValues['o-access:level']['type']) ? $this->levelDataType : $accessStatusValues['o-access:level']['type'];
 
         $bind += [
