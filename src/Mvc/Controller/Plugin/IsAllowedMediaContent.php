@@ -2,6 +2,7 @@
 
 namespace Access\Mvc\Controller\Plugin;
 
+use Access\Api\Representation\AccessStatusRepresentation;
 use Access\Entity\AccessRequest;
 use Access\Entity\AccessStatus;
 use Access\Mvc\Controller\Plugin\AccessStatus as AccessStatusPlugin;
@@ -119,7 +120,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         }
 
         $level = $accessStatus->getLevel();
-        if ($level === AccessStatus::FORBIDDEN) {
+        if ($level === AccessStatus::FORBIDDEN || !in_array($level, AccessStatusRepresentation::LEVELS)) {
             return false;
         }
 
@@ -296,7 +297,9 @@ class IsAllowedMediaContent extends AbstractPlugin
                     $session = new \Laminas\Session\Container('Access');
                     $token = $session->offsetGet('access');
                 }
-                if (!$token || strpos($token, '@')) {
+                // The check of levels avoids mixing search/browse and show,
+                // that have the same argument name in request.
+                if (!$token || strpos($token, '@') || in_array($token, AccessStatusRepresentation::LEVELS)) {
                     continue 2;
                 }
                 $bind['token'] = $token;
