@@ -415,7 +415,7 @@ JOIN `value`
     AND `value`.`property_id` = $this->propertyLevelId
     AND `value`.`value` IN ($quotedListString)
 ON DUPLICATE KEY UPDATE
-    `value` = (CASE `value`.`value`
+    `level` = (CASE `value`.`value`
         WHEN {$quotedList['free']} THEN "free"
         WHEN {$quotedList['reserved']} THEN "reserved"
         WHEN {$quotedList['protected']} THEN "protected"
