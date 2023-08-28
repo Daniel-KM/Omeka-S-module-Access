@@ -1475,7 +1475,7 @@ HTML;
     }
     */
 
-    protected function processUpdateStatus(array $vars): void
+    protected function processUpdateStatus(array $args, bool $useForeground = false): void
     {
         $services = $this->getServiceLocator();
 
@@ -1483,14 +1483,17 @@ HTML;
         $url = $plugins->get('url');
         $messenger = $plugins->get('messenger');
 
-        $vars += [
+        $args += [
             'recursive' => [],
             'sync' => 'skip',
             'missing' => 'skip',
         ];
 
+        /** @var \Omeka\Job\Dispatcher $dispatcher */
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
-        $job = $dispatcher->dispatch(\Access\Job\AccessStatusUpdate::class, $vars);
+        $job = $useForeground
+            ? $dispatcher->dispatch(\Access\Job\AccessStatusUpdate::class, $args, $services->get(\Omeka\Job\DispatchStrategy\Synchronous::class))
+            : $dispatcher->dispatch(\Access\Job\AccessStatusUpdate::class, $args);
         $message = new Message(
             'A job was launched in background to update access statuses according to parameters: (%1$sjob #%2$d%3$s, %4$slogs%3$s).', // @translate
             sprintf('<a href="%s">',
