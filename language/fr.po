@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-31 00:00+0000\n"
-"PO-Revision-Date: 2023-07-31 00:00+0000\n"
+"POT-Creation-Date: 2023-08-28 00:00+0000\n"
+"PO-Revision-Date: 2023-08-28 00:00+0000\n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 2.4.2\n"
 
-#: Module.php:85
+#: Module.php:101
 msgid ""
 "It is recommenced to run the job in config form to initialize all access "
 "statuses."
@@ -25,7 +25,7 @@ msgstr ""
 "Il est recommandé de lancer la tâche dans la configuration pour initialiser "
 "tous les statuts d’accès."
 
-#: Module.php:375
+#: Module.php:428
 msgid ""
 "When properties are used, three properties should be defined for \"level\", "
 "\"embargo start\" and \"embargo end\"."
@@ -34,11 +34,15 @@ msgstr ""
 "définies pour le « niveau », le « début de l’embargo » et la « fin de "
 "l’embargo »."
 
-#: Module.php:390
+#: Module.php:443
 msgid "Job is not launched: no option was set."
 msgstr "La tâche n’est pas lancée : aucune option n’a été définie."
 
-#: Module.php:1207 view/access/admin/request/browse.phtml:26
+#: Module.php:1319
+msgid "Access"
+msgstr "Accès"
+
+#: Module.php:1341 view/access/admin/request/browse.phtml:26
 #: view/access/admin/request/edit.phtml:29
 #: view/access/admin/request/edit.phtml:31
 #: view/access/admin/request/show.phtml:24
@@ -46,7 +50,7 @@ msgstr "La tâche n’est pas lancée : aucune option n’a été définie."
 msgid "Access requests"
 msgstr "Demandes d’accès"
 
-#: Module.php:1303
+#: Module.php:1437
 #, php-format
 msgid ""
 "To control access to files, you must add a rule in file .htaccess at the "
@@ -377,7 +381,15 @@ msgstr "Ce module requiert le module %1$s version %2$s or greater."
 msgid "The vocabulary \"%s\" was updated successfully."
 msgstr "Le vocabulaire « %s » a déjà été installé et a été conservé."
 
-#: Module.php:52
+#: data/scripts/upgrade.php:106
+msgid ""
+"The key \"accessresource\" in the file config/local.config.php at the root "
+"of Omeka can be removed."
+msgstr ""
+"L’index « accessresource » dans le fichier config/local.config.php à la "
+"racine d’Omeka peut être supprimée."
+
+#: Module.php:55
 msgid ""
 "To be automatically upgraded and replaced by this module, the module "
 "\"Access Resource\" should be updated first to version 3.4.17, else "
@@ -388,7 +400,7 @@ msgstr ""
 "est aussi possible de le désinstaller, mais vous perdrez les statuts d’accès "
 "et les demandes."
 
-#: Module.php:69
+#: Module.php:84
 #, php-format
 msgid ""
 "An error occurred during migration of module \"%s\". Check the config and "
@@ -397,7 +409,7 @@ msgstr ""
 "Une erreur est survenue pendant la migration du module « %s ». Vérifier la "
 "config et désinstaller le manuellement."
 
-#: Module.php:514
+#: Module.php:567
 #, php-format
 msgid ""
 "Cleaned params used for Access:\n"
@@ -406,69 +418,63 @@ msgstr ""
 "Paramètres utilisés pour le module Access :\n"
 "%s"
 
-#: Module.php:857 src/Form/SettingsFieldset.php:11
-#: src/Form/SettingsFieldset.php:14 src/Form/Admin/BatchEditFieldset.php:34
-#: config/module.config.php:275
-msgid "Access"
-msgstr "Accès"
-
-#: Module.php:923 src/Controller/Admin/RequestController.php:182
+#: Module.php:976 src/Controller/Admin/RequestController.php:182
 msgid "You should set either a user or an email or check box for token."
 msgstr "Vous devez définir un utilisateur, un courriel ou un jeton."
 
-#: Module.php:946 src/Controller/Admin/RequestController.php:208
+#: Module.php:999 src/Controller/Admin/RequestController.php:208
 msgid "Access request successfully created."
 msgstr "Demande d’accès créée avec succès."
 
-#: Module.php:1021 src/Form/Admin/BatchEditFieldset.php:48
+#: Module.php:1074 src/Form/Admin/BatchEditFieldset.php:48
 msgid "Free"
 msgstr "Libre"
 
-#: Module.php:1022 src/Form/Admin/BatchEditFieldset.php:49
+#: Module.php:1075 src/Form/Admin/BatchEditFieldset.php:49
 msgid "Reserved"
 msgstr "Réservé"
 
-#: Module.php:1023 src/Form/Admin/BatchEditFieldset.php:50
+#: Module.php:1076 src/Form/Admin/BatchEditFieldset.php:50
 msgid "Protected"
 msgstr "Protégé"
 
-#: Module.php:1038 src/ColumnType/AccessLevel.php:13
+#: Module.php:1091 src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr "Niveau d’accès"
 
-#: Module.php:1052 src/Form/Admin/BatchEditFieldset.php:87
+#: Module.php:1105 src/Form/Admin/BatchEditFieldset.php:87
 msgid "Embargo start"
 msgstr "Début de l’embargo"
 
-#: Module.php:1069 Module.php:1077 src/Form/Admin/BatchEditFieldset.php:132
+#: Module.php:1122 Module.php:1130 src/Form/Admin/BatchEditFieldset.php:132
 msgid "Embargo end"
 msgstr "Fin de l’embargo"
 
-#: Module.php:1087
+#: Module.php:1140
 #, php-format
 msgid "Access level (managed via property %s)"
 msgstr "Niveau d’accès (géré par la propriété %s)"
 
-#: Module.php:1090
+#: Module.php:1143
 #, php-format
 msgid "Embargo start (managed via property %s)"
 msgstr "Début de l’embargo (géré par la propriété %s)"
 
-#: Module.php:1093
+#: Module.php:1146
 #, php-format
 msgid "Embargo end (managed via property %s)"
 msgstr "Fin de l’embargo (géré par la propriété %s)"
 
-#: Module.php:1104 src/Form/Admin/BatchEditFieldset.php:186
+#: Module.php:1157 src/Form/Admin/BatchEditFieldset.php:186
 msgid "Apply access level and embargo to items and medias"
 msgstr ""
 "Appliquer des niveaux d’accès et des embargos aux contenus et aux médias"
 
-#: Module.php:1105 src/Form/Admin/BatchEditFieldset.php:187
+#: Module.php:1158 src/Form/Admin/BatchEditFieldset.php:187
 msgid "Apply access level and embargo to medias"
 msgstr "Appliquer un niveau d’accès et un embargo aux médias"
 
-#: Module.php:1361
+#: Module.php:1498
 #, php-format
 msgid ""
 "A job was launched in background to update access statuses according to "
@@ -477,12 +483,12 @@ msgstr ""
 "Une tâche a été lancée en arrière-plan pour mettre à jour les statuts "
 "d’accès selon les paramètres : (%1$stâche #%2$d%3$s, %4$sjournaux%3$s)."
 
-#: Module.php:1403
+#: Module.php:1540
 #, php-format
 msgid "The ip \"%s\" is empty or invalid."
 msgstr "L’ip « %s » est vide ou incorrecte."
 
-#: Module.php:1413
+#: Module.php:1550
 #, php-format
 msgid ""
 "The item sets list \"%1$s\" for ip \"%2$s\" is invalid: they should be "
@@ -491,7 +497,7 @@ msgstr ""
 "La liste des collections « %1$s » pour l’ip « %2$s » est incorrecte : ce "
 "doit être des numéros."
 
-#: Module.php:1423
+#: Module.php:1560
 #, php-format
 msgid ""
 "The item sets list \"%1$s\" for ip \"%2$s\" contains unknown item sets "
@@ -536,7 +542,7 @@ msgid "Starting indexation of access statuses of all resources."
 msgstr ""
 "Lancement de l’indexation des statuts d’accès de toutes les ressources."
 
-#: src/Job/AccessStatusUpdate.php:221
+#: src/Job/AccessStatusUpdate.php:213
 msgid "End of indexation."
 msgstr "Fin de l’indexation."
 
@@ -812,7 +818,8 @@ msgstr "Définir un niveau d’accès libre pour toutes les ressources sans stat
 
 #: src/Form/ConfigForm.php:264
 msgid "Set access level reserved for all resources without status"
-msgstr "Définir le niveau d’accès réservé à toutes les ressources sans statut"
+msgstr ""
+"Définir le niveau d’accès réservé pour toutes les ressources sans statut"
 
 #: src/Form/ConfigForm.php:265
 msgid "Set access level protected for all resources without status"
@@ -833,14 +840,14 @@ msgstr ""
 #: src/Form/ConfigForm.php:268
 msgid "Set access level free when public and protected when private"
 msgstr ""
-"Définir le niveau d’accès libre lorsqu’il s’agit d’un accès public et "
-"protégé lorsqu’il s’agit d’un accès privé"
+"Définir le niveau d’accès libre quand la ressource est publique et protégé "
+"lorsqu’elle est privée"
 
 #: src/Form/ConfigForm.php:269
 msgid "Set access level free when public and forbidden when private"
 msgstr ""
-"Définir le niveau d’accès libre lorsqu’il s’agit d’un accès public et "
-"interdit lorsqu’il s’agit d’un accès privé"
+"Définir le niveau d’accès libre quand la ressource est publique et interdit "
+"lorsqu’elle est privée"
 
 #: src/Form/ConfigForm.php:280
 msgid "Process reindexation"
@@ -946,11 +953,11 @@ msgid "The requested resources cannot be empty."
 msgstr "Il convient de demander au moins une ressource."
 
 #: src/Api/Adapter/AccessRequestAdapter.php:257
-#: src/Api/Adapter/AccessRequestAdapter.php:414
+#: src/Api/Adapter/AccessRequestAdapter.php:415
 msgid "The status must be one of the list of statuses."
 msgstr "Le statut doit faire partie de la liste des statuts."
 
-#: src/Api/Adapter/AccessRequestAdapter.php:410
+#: src/Api/Adapter/AccessRequestAdapter.php:411
 msgid "At least one resource must be requested."
 msgstr "Au moins une ressource doit être demandée."
 
@@ -1043,13 +1050,13 @@ msgstr ""
 #: src/Generic/InstallResources.php:339
 #, php-format
 msgid ""
-"An error occured when adding the prefix \"%s\" and the associated "
-"properties: %s"
+"An error occured when adding the prefix \"%1$s\" and the associated "
+"properties: %2$s"
 msgstr ""
-"Une erreur est survenue en ajoutant le préfixe « %1$s » et les propriétés "
+"Une erreur est survenue en ajoutant le préfixe « %1$s » et les propriétés "
 "associées : %2$s"
 
-#: src/Generic/InstallResources.php:419 src/Generic/InstallResources.php:429
+#: src/Generic/InstallResources.php:419
 #, php-format
 msgid ""
 "An error occured when updating vocabulary \"%s\" and the associated "
@@ -1057,6 +1064,15 @@ msgid ""
 msgstr ""
 "Une erreur est survenue lors de la mise à jour du vocabulaire « %1$s » et "
 "des propriétés associées : %2$s"
+
+#: src/Generic/InstallResources.php:429
+#, php-format
+msgid ""
+"An error occured when updating vocabulary \"%1$s\" and the associated "
+"properties: %2$s"
+msgstr ""
+"Une erreur est survenue lors de la mise à jour du vocabulaire « %1s$ » et "
+"les propriétés associées : %2$s"
 
 #: src/Generic/InstallResources.php:523
 #, php-format

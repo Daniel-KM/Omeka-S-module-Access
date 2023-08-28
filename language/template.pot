@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-31 00:00+0000\n"
+"POT-Creation-Date: 2023-08-28 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,23 +17,27 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: Module.php:85
+#: Module.php:101
 msgid ""
 "It is recommenced to run the job in config form to initialize all access "
 "statuses."
 msgstr ""
 
-#: Module.php:375
+#: Module.php:428
 msgid ""
 "When properties are used, three properties should be defined for \"level\", "
 "\"embargo start\" and \"embargo end\"."
 msgstr ""
 
-#: Module.php:390
+#: Module.php:443
 msgid "Job is not launched: no option was set."
 msgstr ""
 
-#: Module.php:1207 view/access/admin/request/browse.phtml:26
+#: Module.php:1319
+msgid "Access"
+msgstr ""
+
+#: Module.php:1341 view/access/admin/request/browse.phtml:26
 #: view/access/admin/request/edit.phtml:29
 #: view/access/admin/request/edit.phtml:31
 #: view/access/admin/request/show.phtml:24
@@ -41,7 +45,7 @@ msgstr ""
 msgid "Access requests"
 msgstr ""
 
-#: Module.php:1303
+#: Module.php:1437
 #, php-format
 msgid ""
 "To control access to files, you must add a rule in file .htaccess at the "
@@ -350,108 +354,108 @@ msgstr ""
 msgid "The vocabulary \"%s\" was updated successfully."
 msgstr ""
 
-#: Module.php:52
+#: data/scripts/upgrade.php:106
+msgid ""
+"The key \"accessresource\" in the file config/local.config.php at the root "
+"of Omeka can be removed."
+msgstr ""
+
+#: Module.php:55
 msgid ""
 "To be automatically upgraded and replaced by this module, the module "
 "\"Access Resource\" should be updated first to version 3.4.17, else "
 "uninstall it first, but you will lose access statuses and requests."
 msgstr ""
 
-#: Module.php:69
+#: Module.php:84
 #, php-format
 msgid ""
 "An error occurred during migration of module \"%s\". Check the config and "
 "uninstall it manually."
 msgstr ""
 
-#: Module.php:514
+#: Module.php:567
 #, php-format
 msgid ""
 "Cleaned params used for Access:\n"
 "%s"
 msgstr ""
 
-#: Module.php:857 src/Form/SettingsFieldset.php:11
-#: src/Form/SettingsFieldset.php:14 src/Form/Admin/BatchEditFieldset.php:34
-#: config/module.config.php:275
-msgid "Access"
-msgstr ""
-
-#: Module.php:923 src/Controller/Admin/RequestController.php:182
+#: Module.php:976 src/Controller/Admin/RequestController.php:182
 msgid "You should set either a user or an email or check box for token."
 msgstr ""
 
-#: Module.php:946 src/Controller/Admin/RequestController.php:208
+#: Module.php:999 src/Controller/Admin/RequestController.php:208
 msgid "Access request successfully created."
 msgstr ""
 
-#: Module.php:1021 src/Form/Admin/BatchEditFieldset.php:48
+#: Module.php:1074 src/Form/Admin/BatchEditFieldset.php:48
 msgid "Free"
 msgstr ""
 
-#: Module.php:1022 src/Form/Admin/BatchEditFieldset.php:49
+#: Module.php:1075 src/Form/Admin/BatchEditFieldset.php:49
 msgid "Reserved"
 msgstr ""
 
-#: Module.php:1023 src/Form/Admin/BatchEditFieldset.php:50
+#: Module.php:1076 src/Form/Admin/BatchEditFieldset.php:50
 msgid "Protected"
 msgstr ""
 
-#: Module.php:1038 src/ColumnType/AccessLevel.php:13
+#: Module.php:1091 src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr ""
 
-#: Module.php:1052 src/Form/Admin/BatchEditFieldset.php:87
+#: Module.php:1105 src/Form/Admin/BatchEditFieldset.php:87
 msgid "Embargo start"
 msgstr ""
 
-#: Module.php:1069 Module.php:1077 src/Form/Admin/BatchEditFieldset.php:132
+#: Module.php:1122 Module.php:1130 src/Form/Admin/BatchEditFieldset.php:132
 msgid "Embargo end"
 msgstr ""
 
-#: Module.php:1087
+#: Module.php:1140
 #, php-format
 msgid "Access level (managed via property %s)"
 msgstr ""
 
-#: Module.php:1090
+#: Module.php:1143
 #, php-format
 msgid "Embargo start (managed via property %s)"
 msgstr ""
 
-#: Module.php:1093
+#: Module.php:1146
 #, php-format
 msgid "Embargo end (managed via property %s)"
 msgstr ""
 
-#: Module.php:1104 src/Form/Admin/BatchEditFieldset.php:186
+#: Module.php:1157 src/Form/Admin/BatchEditFieldset.php:186
 msgid "Apply access level and embargo to items and medias"
 msgstr ""
 
-#: Module.php:1105 src/Form/Admin/BatchEditFieldset.php:187
+#: Module.php:1158 src/Form/Admin/BatchEditFieldset.php:187
 msgid "Apply access level and embargo to medias"
 msgstr ""
 
-#: Module.php:1361
+#: Module.php:1498
 #, php-format
 msgid ""
 "A job was launched in background to update access statuses according to "
 "parameters: (%1$sjob #%2$d%3$s, %4$slogs%3$s)."
 msgstr ""
 
-#: Module.php:1403
+#: Module.php:1540
 #, php-format
 msgid "The ip \"%s\" is empty or invalid."
 msgstr ""
 
-#: Module.php:1413
+#: Module.php:1550
 #, php-format
 msgid ""
 "The item sets list \"%1$s\" for ip \"%2$s\" is invalid: they should be "
 "numeric ids."
 msgstr ""
 
-#: Module.php:1423
+#: Module.php:1560
 #, php-format
 msgid ""
 "The item sets list \"%1$s\" for ip \"%2$s\" contains unknown item sets "
@@ -489,7 +493,7 @@ msgstr ""
 msgid "Starting indexation of access statuses of all resources."
 msgstr ""
 
-#: src/Job/AccessStatusUpdate.php:221
+#: src/Job/AccessStatusUpdate.php:213
 msgid "End of indexation."
 msgstr ""
 
@@ -859,11 +863,11 @@ msgid "The requested resources cannot be empty."
 msgstr ""
 
 #: src/Api/Adapter/AccessRequestAdapter.php:257
-#: src/Api/Adapter/AccessRequestAdapter.php:414
+#: src/Api/Adapter/AccessRequestAdapter.php:415
 msgid "The status must be one of the list of statuses."
 msgstr ""
 
-#: src/Api/Adapter/AccessRequestAdapter.php:410
+#: src/Api/Adapter/AccessRequestAdapter.php:411
 msgid "At least one resource must be requested."
 msgstr ""
 
@@ -945,15 +949,22 @@ msgstr ""
 #: src/Generic/InstallResources.php:339
 #, php-format
 msgid ""
-"An error occured when adding the prefix \"%s\" and the associated "
-"properties: %s"
+"An error occured when adding the prefix \"%1$s\" and the associated "
+"properties: %2$s"
 msgstr ""
 
-#: src/Generic/InstallResources.php:419 src/Generic/InstallResources.php:429
+#: src/Generic/InstallResources.php:419
 #, php-format
 msgid ""
 "An error occured when updating vocabulary \"%s\" and the associated "
 "properties: %s"
+msgstr ""
+
+#: src/Generic/InstallResources.php:429
+#, php-format
+msgid ""
+"An error occured when updating vocabulary \"%1$s\" and the associated "
+"properties: %2$s"
 msgstr ""
 
 #: src/Generic/InstallResources.php:523

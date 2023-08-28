@@ -1322,7 +1322,7 @@ HTML;
                     $accessLevels = $settings->get('access_property_levels', AccessStatusRepresentation::LEVELS);
                     $filters[$filterLabel][] = $accessLevels[$value] ?? $value;
                 } else {
-                    $filters[$filterLabel][] = $translator->translate($value); // @translate
+                    $filters[$filterLabel][] = $translator->translate($value);
                 }
             }
         }
