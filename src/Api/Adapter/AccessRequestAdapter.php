@@ -261,6 +261,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
     public function hydrate(Request $request, EntityInterface $entity, ErrorStore $errorStore): void
     {
         /** @var \Access\Entity\AccessRequest $entity */
+
         $data = $request->getContent();
 
         // Only admins can update requests and manage specific params of the

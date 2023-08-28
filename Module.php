@@ -1435,7 +1435,7 @@ HTML;
         $translator = $services->get('MvcTranslator');
         $message = new \Omeka\Stdlib\Message(
             $translator->translate('To control access to files, you must add a rule in file .htaccess at the root of Omeka. See %1$sreadme%2$s.'), // @translate
-            '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-Access" target=" blank" rel="noopener">', '</a>'
+            '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-Access" target="_blank" rel="noopener">', '</a>'
         );
         $message->setEscapeHtml(false);
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
