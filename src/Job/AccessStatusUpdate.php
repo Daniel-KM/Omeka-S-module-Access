@@ -200,20 +200,18 @@ class AccessStatusUpdate extends AbstractJob
         }
 
         if ($this->syncMode === 'from_properties_to_index') {
-            // In fact, sync and missing modes are the same process when the
-            // mode is "access via property", so this is skipped below.
             $this->updateLevelAndEmbargoViaProperty();
         } elseif ($this->syncMode === 'from_index_to_properties') {
+            // This job can be skipped if the missing mode is not skip, but it
+            // is simpler to understand. It's just a quick sql anyway.
             $this->copyIndexIntoPropertyValues();
         }
 
         if ($this->missingMode !== 'skip') {
+            $this->addMissingLevelViaVisibility();
+            // Update properties when the config use them.
             if ($this->accessViaProperty) {
-                if ($this->syncMode !== 'from_properties_to_index') {
-                    $this->updateLevelAndEmbargoViaProperty();
-                }
-            } else {
-                $this->updateLevelViaVisibility();
+                $this->copyIndexIntoPropertyValues();
             }
         }
 
@@ -338,7 +336,7 @@ SQL;
         return $this;
     }
 
-    protected function updateLevelViaVisibility(): self
+    protected function addMissingLevelViaVisibility(): self
     {
         if (in_array($this->missingMode, AccessStatusRepresentation::LEVELS)) {
             $sql = <<<SQL
