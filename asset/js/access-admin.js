@@ -144,7 +144,7 @@
         // Config form.
 
         const modeIp = function() {
-            const element = $('input[name="access_access_modes[]"][value=ip]');
+            const element = $('input[name="access_modes[]"][value=ip]');
             if (element.prop('checked')) {
                 $('#access_ip_item_sets').closest('.field').show(300);
             } else {
@@ -161,7 +161,7 @@
             }
         }
 
-        $('input[name="access_access_modes[]"][value=ip]').on('click', modeIp);
+        $('input[name="access_modes[]"][value=ip]').on('click', modeIp);
         $('input[name=access_property]').on('click', accessViaProperty);
 
         modeIp();
