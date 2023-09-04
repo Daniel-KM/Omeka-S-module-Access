@@ -205,7 +205,8 @@ can be managed in multiple ways:
 - Global modes
   - `ip`: all visitors with a specific ip, for example the ip of the physical
     library or the one of a researcher, can have access to all the reserved
-    files. Ip can be configured to access specific item sets.
+    files. Ip can be configured to access specific item sets, for example
+    `123.45.67.89 = 51, 54`
   - `guest`: all guest users have access to all the reserved files.
   - `external`: all users authenticated via an external identity provider
     (currently via module CAS, later for module Ldap and SingleSignOn) have access
