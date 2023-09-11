@@ -32,9 +32,14 @@ it is recommended to use resource page blocks if the theme supports them.
 The module is compatible with the module [Statistics]. It is important to
 redirect download urls to the module (see below config of ".htaccess").
 
+The module is compatible with the module [Derivative Media] that allows to use
+specific derivative files instead original (for example a standard mp4 instead
+of a proprietary and unreadable Microsoft wmf). Note the paths should be added
+to the Apache config (htaccess).
+
 ### Incompatibility
 
-Since version 3.4.17, the module is compatible with module [Group].
+Until version 3.4.16, the module was not compatible with module [Group].
 
 ### Installation of the module
 
@@ -77,6 +82,8 @@ a fake file is displayed.
 The small derivatives files (medium and square thumbnails), can be protected too,
 but it is generally useless. Anyway, it depends on the original images.
 
+Don't forget to add derivative paths if you use module [Derivative Media].
+
 ##### When Omeka S is installed at the root of a domain or a sub-domain
 
 Insert the following lines at line 4 of [.htaccess], just after `RewriteEngine On`,
@@ -84,7 +91,7 @@ eventually adding `|medium|square` to the list of thumbnails:
 
 ```apache
 # Set rule for original and selected derivative files (usually at least large thumbnails).
-RewriteRule "^files/(original|large)/(.*)$" "/access/files/$1)/$2" [P]
+RewriteRule "^files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
 ```
 
 An alternative with flag [L]:
@@ -365,6 +372,7 @@ Copyright
 [Guest]: https://gitlab.com/Daniel-KM/Omeka-S-module-Guest
 [Guest Role]: https://github.com/biblibre/omeka-s-module-GuestRole
 [Blocks Disposition]: https://gitlab.com/Daniel-KM/Omeka-S-module-BlocksDisposition
+[Derivative Media]: https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia
 [Group]: https://gitlab.com/Daniel-KM/Omeka-S-module-Group/-/releases
 [Contact Us]: https://gitlab.com/Daniel-KM/Omeka-S-module-ContactUs
 [CAS]: https://github.com/biblibre/Omeka-S-module-CAS

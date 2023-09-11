@@ -88,6 +88,7 @@ return [
                 'type' => \Laminas\Router\Http\Segment::class,
                 'options' => [
                     // See module Statistics too.
+                    // Should manage module Derivative Media too.
                     // Manage module Archive repertory, that can use real names and subdirectories.
                     // For any filename, either use `:filename{?}`, or add a constraint `'filename' => '.+'`.
                     'route' => '/access/files/:type/:filename{?}',
