@@ -766,7 +766,10 @@ class Module extends AbstractModule
         $accessStatus = $resourceId ? $entityManager->find(AccessStatus::class, $resourceId) : null;
         if (!$accessStatus) {
             $accessStatus = new AccessStatus();
-            $accessStatus->setId($resource);
+            // A level is required.
+            $accessStatus
+                ->setId($resource)
+                ->setLevel(AccessStatus::FREE);
         }
 
         // TODO Make the access status editable via api (already possible via the key "o-access:level" anyway).
