@@ -50,6 +50,12 @@ class Module extends AbstractModule
         $moduleManager = $services->get('Omeka\ModuleManager');
         $module = $moduleManager->getModule('AccessResource');
         $version = $module ? $module->getIni('version') : null;
+
+        if (!$module || !$version) {
+            parent::install($services);
+            return;
+        }
+
         if ($version && version_compare($version, '3.4.17', '<')) {
             throw new \Omeka\Module\Exception\ModuleCannotInstallException(
                 'To be automatically upgraded and replaced by this module, the module "Access Resource" should be updated first to version 3.4.17, else uninstall it first, but you will lose access statuses and requests.' // @translate
