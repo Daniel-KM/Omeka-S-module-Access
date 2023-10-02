@@ -96,7 +96,7 @@ if ($user) {
                         else:
                             echo sprintf(
                                 $translate('To request access please %1$slogin%2$s or contact the publisher!'),
-                                sprintf('<a href="%s">' , $url('site/guest/anonymous', ['action' => 'login'], true)),
+                                sprintf('<a href="%s">' , $url('login', [], true)),
                                 '</a>'
                             );
                         endif; ?>
