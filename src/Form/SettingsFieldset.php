@@ -92,15 +92,27 @@ class SettingsFieldset extends Fieldset
                 ],
             ])
             ->add([
-                'name' => 'access_message_user_request_updated',
+                'name' => 'access_message_user_request_accepted',
                 'type' => OmekaElement\CkeditorInline::class,
                 'options' => [
                     'element_group' => 'access',
-                    'label' => 'Message to user for updated request', // @translate
+                    'label' => 'Message to user for request accepted', // @translate
                     'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'access_message_user_request_updated',
+                    'id' => 'access_message_user_request_accepted',
+                ],
+            ])
+            ->add([
+                'name' => 'access_message_user_request_rejected',
+                'type' => OmekaElement\CkeditorInline::class,
+                'options' => [
+                    'element_group' => 'access',
+                    'label' => 'Message to user for request rejected', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources} and specific fields wrapped with "{}".', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_message_user_request_rejected',
                 ],
             ])
 
@@ -128,15 +140,27 @@ class SettingsFieldset extends Fieldset
                 ],
             ])
             ->add([
-                'name' => 'access_message_visitor_request_updated',
+                'name' => 'access_message_visitor_request_accepted',
                 'type' => OmekaElement\CkeditorInline::class,
                 'options' => [
                     'element_group' => 'access',
-                    'label' => 'Message to visitor for updated request', // @translate
+                    'label' => 'Message to visitor for request accepted', // @translate
                     'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources}, {session_url} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'access_message_visitor_request_updated',
+                    'id' => 'access_message_visitor_request_accepted',
+                ],
+            ])
+            ->add([
+                'name' => 'access_message_visitor_request_rejected',
+                'type' => OmekaElement\CkeditorInline::class,
+                'options' => [
+                    'element_group' => 'access',
+                    'label' => 'Message to visitor for request rejected', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources}, {session_url} and specific fields wrapped with "{}".', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_message_visitor_request_rejected',
                 ],
             ])
 

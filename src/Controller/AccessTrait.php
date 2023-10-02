@@ -40,8 +40,9 @@ trait AccessTrait
             $post['o:name'] = $user->name();
         }
         $isVisitor = $this->isVisitor($accessRequest, $post);
+        $isRejected = $accessRequest->status() === \Access\Entity\AccessRequest::STATUS_REJECTED;
         // $this->sendMailToAdmin('updated', $post);
-        $result = $this->sendMailToUser('updated', $post, $isVisitor);
+        $result = $this->sendMailToUser('updated', $post, $isVisitor, $isRejected);
         return $result;
     }
 
@@ -106,7 +107,7 @@ trait AccessTrait
      *
      * @param string $action "created" or "updated".
      */
-    protected function sendMailToUser(?string $action, array $post, bool $isVisitor): bool
+    protected function sendMailToUser(?string $action, array $post, bool $isVisitor, ?bool $isRejected = null): bool
     {
         if (!in_array($action, ['created', 'updated'])) {
             return false;
@@ -133,7 +134,8 @@ trait AccessTrait
             $mail['body'] = $settings->get("access_message_{$userVisitor}_request_created", $this->translate($moduleConfig['access']['settings']["access_message_{$userVisitor}_request_created"]));
         } elseif ($action === 'updated') {
             $mail['subject'] = $settings->get("access_message_{$userVisitor}_subject", $this->translate($moduleConfig['access']['settings']["access_message_{$userVisitor}_subject"]));
-            $mail['body'] = $settings->get("access_message_{$userVisitor}_request_updated", $this->translate($moduleConfig['access']['settings']["access_message_{$userVisitor}_request_updated"]));
+            $acceptedRejected = $isRejected ? 'rejected' : 'accepted';
+            $mail['body'] = $settings->get("access_message_{$userVisitor}_request_{$acceptedRejected}", $this->translate($moduleConfig['access']['settings']["access_message_{$userVisitor}_request_{$acceptedRejected}"]));
         }
 
         $mail['body'] = $this->replaceText($mail['body'], $post);
