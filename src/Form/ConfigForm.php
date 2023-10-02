@@ -77,7 +77,7 @@ class ConfigForm extends Form
                 'name' => 'access_property',
                 'type' => Element\Checkbox::class,
                 'options' => [
-                    'label' => 'Set access level and embargo via property', // @translate
+                    'label' => 'Set access level and embargo via a property', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_property',
