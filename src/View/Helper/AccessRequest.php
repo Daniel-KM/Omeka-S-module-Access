@@ -110,7 +110,7 @@ class AccessRequest extends AbstractHelper
      */
     public function getResources(): array
     {
-        return $this->resources;
+        return $this->resources ?: [];
     }
 
     public function hasRequestableResources(): bool
