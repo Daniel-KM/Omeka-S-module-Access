@@ -84,6 +84,7 @@ return [
             'isAllowedMediaContent' => Service\ControllerPlugin\IsAllowedMediaContentFactory::class,
             'isExternalUser' => Service\ControllerPlugin\IsExternalUserFactory::class,
             'isUnderEmbargo' => Service\ControllerPlugin\IsUnderEmbargoFactory::class,
+            'mailerHtml' => Service\ControllerPlugin\MailerHtmlFactory::class,
         ],
     ],
     'router' => [

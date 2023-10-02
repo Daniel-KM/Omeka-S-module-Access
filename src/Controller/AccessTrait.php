@@ -91,25 +91,8 @@ trait AccessTrait
 
         $mail['body'] = $this->replaceText($mail['body'], $post);
 
-        /** @var \Omeka\Stdlib\Mailer $mailer */
-        $mailer = $this->mailer();
-        $message = $mailer->createMessage();
-        $message
-            // ->setFrom($mail['from'], $mail['fromName'])
-            ->setTo($mail['to'], $mail['toName'])
-            ->setSubject($mail['subject'])
-            ->setBody($mail['body']);
-        try {
-            $mailer->send($message);
-            return true;
-        } catch (\Exception $e) {
-            $msg = new Message(
-                "Unable to send message to admin. Message:\n%s",  // @translate
-                $mail['subject'] . "\n" . $mail['body']
-            );
-            $this->logger()->err((string) $msg);
-            return false;
-        }
+        /** @uses \Access\Mvc\Controller\Plugin\MailerHtml */
+        return $this->mailerHtml($mail['to'], $mail['subject'], $mail['body'], $mail['toName']);
     }
 
     /**
@@ -150,25 +133,8 @@ trait AccessTrait
 
         $mail['body'] = $this->replaceText($mail['body'], $post);
 
-        /** @var \Omeka\Stdlib\Mailer $mailer */
-        $mailer = $this->mailer();
-        $message = $mailer->createMessage();
-        $message
-            // ->setFrom($mail['from'], $mail['fromName'])
-            ->setTo($mail['to'], $mail['toName'])
-            ->setSubject($mail['subject'])
-            ->setBody($mail['body']);
-        try {
-            $mailer->send($message);
-            return true;
-        } catch (\Exception $e) {
-            $msg = new Message(
-                'Unable to send message from %1\$s to admin. Message:\n%2\$s',  // @translate
-                sprintf('%1$s (%2$s)', $mail['toName'], $mail['to']), $mail['subject'] . "\n" . $mail['body']
-            );
-            $this->logger()->err((string) $msg);
-            return false;
-        }
+        /** @uses \Access\Mvc\Controller\Plugin\MailerHtml */
+        return $this->mailerHtml($mail['to'], $mail['subject'], $mail['body'], $mail['toName']);
     }
 
     protected function replaceText(string $string, array $post): string
