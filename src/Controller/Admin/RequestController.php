@@ -357,7 +357,18 @@ class RequestController extends AbstractActionController
                 ? AccessRequest::STATUS_REJECTED
                 : AccessRequest::STATUS_ACCEPTED;
 
-            $api->update('access_requests', $id, ['o:status' => $status]);
+            $accessRequest = $api->update('access_requests', $id, ['o:status' => $status])->getContent();
+
+            if ($accessRequest->user() || $accessRequest->email()) {
+                $post['request_from'] = 'admin';
+                $result = $this->sendRequestEmailUpdate($accessRequest, $post);
+                if (!$result) {
+                    $message = new Message(
+                        $this->translate('The request was sent, but an issue occurred when sending the confirmation email.') // @translate
+                    );
+                    $this->messenger()->addWarning($message);
+                }
+            }
 
             return new JsonModel([
                 'status' => 'success',
