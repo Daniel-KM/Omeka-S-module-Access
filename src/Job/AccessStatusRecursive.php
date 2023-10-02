@@ -108,7 +108,7 @@ class AccessStatusRecursive extends AbstractJob
             $resourceName = $resource->getResourceName();
             $resourceName === 'items'
                 ? $this->processUpdateItem($bind, $types)
-                :  $this->processUpdateItemSet($bind, $types);
+                : $this->processUpdateItemSet($bind, $types);
         }
 
         $this->logger->info(new Message(
@@ -195,7 +195,7 @@ class AccessStatusRecursive extends AbstractJob
 
         // Embargo start values.
         $embargoStartVal = empty($accessStatusValues['o-access:embargo_start']['value'])
-            ? ($embargoStartStatus && substr($embargoStartStatus, -8) === '00:00:00' ? substr($embargoStartStatus, 0,10) : $embargoStartStatus)
+            ? ($embargoStartStatus && substr($embargoStartStatus, -8) === '00:00:00' ? substr($embargoStartStatus, 0, 10) : $embargoStartStatus)
             : $accessStatusValues['o-access:embargo_start']['value'];
         if ($embargoStartVal) {
             $embargoStartType = empty($accessStatusValues['o-access:embargo_start']['type'])
@@ -217,7 +217,7 @@ class AccessStatusRecursive extends AbstractJob
 
         // Embargo end values.
         $embargoEndVal = empty($accessStatusValues['o-access:embargo_end']['value'])
-            ? ($embargoEndStatus && substr($embargoEndStatus, -8) === '00:00:00' ? substr($embargoEndStatus, 0,10) : $embargoEndStatus)
+            ? ($embargoEndStatus && substr($embargoEndStatus, -8) === '00:00:00' ? substr($embargoEndStatus, 0, 10) : $embargoEndStatus)
             : $accessStatusValues['o-access:embargo_end']['value'];
         if ($embargoEndVal) {
             $embargoEndType = empty($accessStatusValues['o-access:embargo_end']['type'])
@@ -414,7 +414,7 @@ SQL;
 
         // To check rights via sql, the item ids are passed to the query.
         $countItems = $this->api
-            ->search('items', ['item_set_id' => $bind['resource_id']], ['initialize' => false, 'finalize' =>  false])->getTotalResults();
+            ->search('items', ['item_set_id' => $bind['resource_id']], ['initialize' => false, 'finalize' => false])->getTotalResults();
         if (!$countItems) {
             return;
         }
@@ -638,7 +638,7 @@ WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, 
 SQL;
         }
 
-            $sql .= "\n" . <<<SQL
+        $sql .= "\n" . <<<SQL
 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
 SELECT `item_item_set`.`item_id`, :property_level, :level_type, :level_value, 1
 FROM `item_item_set`

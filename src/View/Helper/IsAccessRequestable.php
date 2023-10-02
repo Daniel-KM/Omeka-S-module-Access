@@ -3,8 +3,8 @@
 namespace Access\View\Helper;
 
 use Access\Entity\AccessStatus;
-use Access\Mvc\Controller\Plugin\IsAllowedMediaContent;
 use Access\Mvc\Controller\Plugin\AccessLevel;
+use Access\Mvc\Controller\Plugin\IsAllowedMediaContent;
 use Doctrine\ORM\EntityManager;
 use Laminas\View\Helper\AbstractHelper;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;

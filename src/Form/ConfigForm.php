@@ -195,7 +195,7 @@ forbidden = forbidden
                 ],
                 'attributes' => [
                     'id' => 'access_property_show_in_advanced_tab',
-                    'class' => 'access-property'
+                    'class' => 'access-property',
                 ],
             ])
 

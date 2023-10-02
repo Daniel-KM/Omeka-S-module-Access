@@ -12,7 +12,6 @@ use Doctrine\ORM\EntityManager;
 use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Laminas\Mvc\Controller\Plugin\Params;
-use Laminas\Session\Container;
 use Omeka\Api\Representation\MediaRepresentation;
 use Omeka\Entity\User;
 use Omeka\Mvc\Controller\Plugin\UserIsAllowed;

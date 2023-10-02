@@ -176,7 +176,7 @@ class AccessStatusUpdate extends AbstractJob
 
         // Warning: this is not a full sync: only existing properties and indexes are updated.
 
-        if (in_array('from_item_sets_to_items_and_media',  $this->recursiveProcesses)) {
+        if (in_array('from_item_sets_to_items_and_media', $this->recursiveProcesses)) {
             $ids = $this->api->search('item_sets', [], ['returnScalar' => 'id'])->getContent();
             if ($ids) {
                 $args = $this->job->getArgs();
@@ -188,7 +188,7 @@ class AccessStatusUpdate extends AbstractJob
         }
 
         // There may be items without item sets.
-        if (in_array('from_items_to_media',  $this->recursiveProcesses)) {
+        if (in_array('from_items_to_media', $this->recursiveProcesses)) {
             $ids = $this->api->search('items', [], ['returnScalar' => 'id'])->getContent();
             if ($ids) {
                 $args = $this->job->getArgs();

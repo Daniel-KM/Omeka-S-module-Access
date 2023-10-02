@@ -124,7 +124,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
                     'omeka_root.user',
                     $userAlias
                 );
-                $qb->andWhere($expr->isNull($userAlias . '.id',));
+                $qb->andWhere($expr->isNull($userAlias . '.id', ));
             } else {
                 $qb->innerJoin(
                     'omeka_root.user',
@@ -235,7 +235,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         }
     }
 
-    public function validateRequest(Request $request, ErrorStore $errorStore)
+    public function validateRequest(Request $request, ErrorStore $errorStore): void
     {
         $operation = $request->getOperation();
         $data = $request->getContent();
@@ -349,7 +349,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         }
 
         // Only admin can modify status and set something else than "new".
-       // TODO Check status earlier and add Acl.
+        // TODO Check status earlier and add Acl.
         if (isset($data['o:status']) && $data['o:status'] !== '' && is_string($data['o:status']) && isset($this->statuses[$data['o:status']]) && $isAdminOrCreate) {
             if (!$isAdmin && !in_array($data['o:status'], [AccessRequest::STATUS_NEW, AccessRequest::STATUS_RENEW])) {
                 $data['o:status'] = AccessRequest::STATUS_NEW;
@@ -419,7 +419,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         $this->updateTimestamps($request, $entity);
     }
 
-    public function validateEntity(EntityInterface $entity, ErrorStore $errorStore)
+    public function validateEntity(EntityInterface $entity, ErrorStore $errorStore): void
     {
         /** @var \Access\Entity\AccessRequest $entity */
         $resources = $entity->getResources();

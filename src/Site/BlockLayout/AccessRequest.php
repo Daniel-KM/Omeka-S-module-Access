@@ -86,7 +86,7 @@ class AccessRequest extends AbstractBlockLayout
         return $html;
     }
 
-    public function prepareRender(PhpRenderer $view)
+    public function prepareRender(PhpRenderer $view): void
     {
         $assetUrl = $view->plugin('assetUrl');
         $view->headLink()

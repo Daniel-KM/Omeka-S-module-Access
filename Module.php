@@ -546,7 +546,7 @@ class Module extends AbstractModule
             $embargoStart = $rawData['embargo_start_date'] ?? null;
             $embargoStart = trim((string) $embargoStart) ?: null;
             if ($embargoStart) {
-                $embargoStart .= 'T' . (empty($rawData['embargo_start_time']) ? '00:00:00' : $rawData['embargo_start_time']  . ':00');
+                $embargoStart .= 'T' . (empty($rawData['embargo_start_time']) ? '00:00:00' : $rawData['embargo_start_time'] . ':00');
             }
             $newData['o-access:embargo_start'] = $embargoStart;
         }
@@ -560,7 +560,7 @@ class Module extends AbstractModule
             $embargoEnd = $rawData['embargo_end_date'] ?? null;
             $embargoEnd = trim((string) $embargoEnd) ?: null;
             if ($embargoEnd) {
-                $embargoEnd .= 'T' . (empty($rawData['embargo_end_time']) ? '00:00:00' : $rawData['embargo_end_time']  . ':00');
+                $embargoEnd .= 'T' . (empty($rawData['embargo_end_time']) ? '00:00:00' : $rawData['embargo_end_time'] . ':00');
             }
             $newData['o-access:embargo_end'] = $embargoEnd;
         }
@@ -696,8 +696,8 @@ class Module extends AbstractModule
             if ($accessViaProperty) {
                 $accessStatusValues = [
                     'o-access:level' => ['value' => $level, 'type' => null],
-                    'o-access:embargo_start' => ['value' => $embargoStart && substr($embargoStart, -8) === '00:00:00' ? substr($embargoStart, 0,10) : $embargoStart, 'type' => null],
-                    'o-access:embargo_end' => ['value' => $embargoEnd && substr($embargoEnd, -8) === '00:00:00' ? substr($embargoEnd, 0,10) : $embargoEnd, 'type' => null],
+                    'o-access:embargo_start' => ['value' => $embargoStart && substr($embargoStart, -8) === '00:00:00' ? substr($embargoStart, 0, 10) : $embargoStart, 'type' => null],
+                    'o-access:embargo_end' => ['value' => $embargoEnd && substr($embargoEnd, -8) === '00:00:00' ? substr($embargoEnd, 0, 10) : $embargoEnd, 'type' => null],
                 ];
             } else {
                 $accessStatusValues = [];
@@ -713,8 +713,8 @@ class Module extends AbstractModule
                 'resource_ids' => $ids,
                 'values' => $accessStatusValues,
             ];
-           $services->get(\Omeka\Job\Dispatcher::class)
-                ->dispatch(\Access\Job\AccessStatusRecursive::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
+            $services->get(\Omeka\Job\Dispatcher::class)
+                 ->dispatch(\Access\Job\AccessStatusRecursive::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
         }
     }
 
@@ -845,7 +845,7 @@ class Module extends AbstractModule
                 $embargoStart = $resourceData['embargo_start_date'] ?? null;
                 $embargoStart = trim((string) $embargoStart) ?: null;
                 if ($embargoStart) {
-                    $embargoStart .= 'T' . (empty($resourceData['embargo_start_time']) ? '00:00:00' : $resourceData['embargo_start_time']  . ':00');
+                    $embargoStart .= 'T' . (empty($resourceData['embargo_start_time']) ? '00:00:00' : $resourceData['embargo_start_time'] . ':00');
                 }
             }
             $embargoEndIsSet = array_key_exists('o-access:embargo_end', $resourceData);
@@ -855,7 +855,7 @@ class Module extends AbstractModule
                 $embargoEnd = $resourceData['embargo_end_date'] ?? null;
                 $embargoEnd = trim((string) $embargoEnd) ?: null;
                 if ($embargoEnd) {
-                    $embargoEnd .= 'T' . (empty($resourceData['embargo_end_time']) ? '00:00:00' : $resourceData['embargo_end_time']  . ':00');
+                    $embargoEnd .= 'T' . (empty($resourceData['embargo_end_time']) ? '00:00:00' : $resourceData['embargo_end_time'] . ':00');
                 }
             }
             $accessStatusValues = [];
@@ -938,7 +938,7 @@ class Module extends AbstractModule
          */
         $view = $event->getTarget();
         $services = $this->getServiceLocator();
-        $plugins =  $services->get('ControllerPluginManager');
+        $plugins = $services->get('ControllerPluginManager');
         $api = $plugins->get('api');
         $settings = $services->get('Omeka\Settings');
         $messenger = $plugins->get('messenger');
@@ -977,13 +977,13 @@ class Module extends AbstractModule
                 $date = $data['o-access:start-date'] ?? null;
                 $date = trim((string) $date) ?: null;
                 if ($date) {
-                    $date .= 'T' . (empty($data['o-access:start-time']) ? '00:00:00' : $data['o-access:start-time']  . ':00');
+                    $date .= 'T' . (empty($data['o-access:start-time']) ? '00:00:00' : $data['o-access:start-time'] . ':00');
                 }
                 $data['o-access:start'] = $date;
                 $date = $data['o-access:end-date'] ?? null;
                 $date = trim((string) $date) ?: null;
                 if ($date) {
-                    $date .= 'T' . (empty($data['o-access:end-time']) ? '00:00:00' : $data['o-access:end-time']  . ':00');
+                    $date .= 'T' . (empty($data['o-access:end-time']) ? '00:00:00' : $data['o-access:end-time'] . ':00');
                 }
                 $data['o-access:end'] = $date;
                 if (!$data['o:user'] && !$data['o:email'] && !$data['o-access:token']) {
@@ -1310,7 +1310,7 @@ HTML;
         }
     }
 
-    public function handleViewAdvancedSearch(Event $event)
+    public function handleViewAdvancedSearch(Event $event): void
     {
         $partials = $event->getParam('partials');
         $partials[] = 'common/access-advanced-search';

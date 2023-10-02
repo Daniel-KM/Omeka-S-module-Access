@@ -3,11 +3,11 @@
 namespace Access\Mvc\Controller\Plugin;
 
 use CAS\Mvc\Controller\Plugin\IsCasUser;
-use Ldap\Mvc\Controller\Plugin\IsLdapUser;
+use Laminas\Authentication\AuthenticationService;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
+use Ldap\Mvc\Controller\Plugin\IsLdapUser;
 use Omeka\Entity\User;
 use SingleSignOn\Mvc\Controller\Plugin\IsSsoUser;
-use Laminas\Authentication\AuthenticationService;
 
 class IsExternalUser extends AbstractPlugin
 {
@@ -66,5 +66,5 @@ class IsExternalUser extends AbstractPlugin
         }
 
         return false;
-     }
+    }
 }
