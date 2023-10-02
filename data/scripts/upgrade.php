@@ -101,6 +101,41 @@ SQL;
     $settings->delete('access_access_modes');
 }
 
+if (version_compare((string) $oldVersion, '3.4.21', '<')) {
+    $sql = <<<'SQL'
+ALTER TABLE `access_request`
+    ADD `name` VARCHAR(190) DEFAULT NULL AFTER `end`,
+    ADD `message` LONGTEXT DEFAULT NULL AFTER `name`,
+    ADD `fields` LONGTEXT DEFAULT NULL COMMENT '(DC2Type:json_array)' AFTER `message`
+;
+SQL;
+    $connection->executeStatement($sql);
+
+    $messageUserUpdated = $settings->get('access_message_user_request_updated') ?: $config['access']['settings']['access_message_user_request_accepted'];
+    $settings->delete('access_message_user_request_updated');
+    $settings->set('access_message_user_request_accepted', $messageUserUpdated);
+    $settings->set('access_message_user_request_rejected', $config['access']['settings']['access_message_user_request_rejected']);
+    $settings->set('access_message_visitor_subject', $config['access']['settings']['access_message_visitor_subject']);
+    $settings->set('access_message_visitor_request_created', $config['access']['settings']['access_message_visitor_request_created']);
+    $settings->set('access_message_visitor_request_accepted', $config['access']['settings']['access_message_visitor_request_accepted']);
+    $settings->set('access_message_visitor_request_rejected', $config['access']['settings']['access_message_visitor_request_rejected']);
+
+    $message = new Message(
+        'It is now possible to add a page block to request an access.' // @translate
+    );
+    $messenger->addSuccess($message);
+
+    $message = new Message(
+        'New messages were added to make a distinction between user/visitor and accepted/rejected. Check main settings to adapt them.' // @translate
+    );
+    $messenger->addWarning($message);
+
+    $message = new Message(
+        'New messages were added to make a distinction between user/visitor and accepted/rejected. Check main settings to adapt them.' // @translate
+    );
+    $messenger->addWarning($message);
+}
+
 if (!empty($config['accessresource'])) {
     $message = new Message(
         'The key "accessresource" in the file config/local.config.php at the root of Omeka can be removed.' // @translate
