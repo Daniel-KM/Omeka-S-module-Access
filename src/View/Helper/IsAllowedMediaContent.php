@@ -13,7 +13,7 @@ class IsAllowedMediaContent extends AbstractHelper
      */
     protected $isAllowedMediaContentPlugin;
 
-    protected function __construct(IsAllowedMediaContentPlugin $isAllowedMediaContent)
+    public function __construct(IsAllowedMediaContentPlugin $isAllowedMediaContent)
     {
         $this->isAllowedMediaContentPlugin = $isAllowedMediaContent;
     }

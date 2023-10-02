@@ -13,7 +13,7 @@ class IsUnderEmbargo extends AbstractHelper
      */
     protected $isUnderEmbargoPlugin;
 
-    protected function __construct(IsUnderEmbargoPlugin $isUnderEmbargo)
+    public function __construct(IsUnderEmbargoPlugin $isUnderEmbargo)
     {
         $this->isUnderEmbargoPlugin = $isUnderEmbargo;
     }
