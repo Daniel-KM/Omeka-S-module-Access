@@ -2,8 +2,6 @@
 
 namespace Access;
 
-use Access\Entity\AccessStatus;
-
 return [
     'api_adapters' => [
         'invokables' => [
@@ -304,10 +302,11 @@ return [
 
             'access_property_level' => 'curation:access',
             'access_property_levels' => [
-                AccessStatus::FREE => 'free',
-                AccessStatus::RESERVED => 'reserved',
-                AccessStatus::PROTECTED => 'protected',
-                AccessStatus::FORBIDDEN => 'forbidden',
+                // \Access\Entity\AccessStatus is not available during install/update, so use strings as key.
+                'free' => 'free',
+                'reserved' => 'reserved',
+                'protected' => 'protected',
+                'forbidden' => 'forbidden',
             ],
             'access_property_level_datatype' => null,
 

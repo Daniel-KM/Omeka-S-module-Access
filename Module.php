@@ -39,7 +39,7 @@ class Module extends AbstractModule
         try {
             $connection->executeQuery('SELECT id FROM access_log LIMIT 1')->fetchOne();
         } catch (\Exception $e) {
-            parent::checkAllResourcesToInstall($services);
+            parent::install($services);
             return;
         }
 
@@ -50,8 +50,14 @@ class Module extends AbstractModule
         $moduleManager = $services->get('Omeka\ModuleManager');
         $module = $moduleManager->getModule('AccessResource');
         $version = $module ? $module->getIni('version') : null;
+        $status = $module ? $module->getState() : \Omeka\Module\Manager::STATE_NOT_FOUND;
 
-        if (!$module || !$version) {
+        if (!$module || !$version || in_array($status, [
+            \Omeka\Module\Manager::STATE_NOT_INSTALLED,
+            \Omeka\Module\Manager::STATE_NOT_FOUND,
+            \Omeka\Module\Manager::STATE_INVALID_MODULE,
+            \Omeka\Module\Manager::STATE_INVALID_INI,
+        ])) {
             parent::install($services);
             return;
         }
