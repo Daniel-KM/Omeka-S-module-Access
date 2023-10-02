@@ -74,6 +74,8 @@ trait AccessTrait
             $mail['body'] = $settings->get('access_message_admin_request_updated', $this->translate($moduleConfig['access']['settings']['access_message_admin_request_updated']));
         }
 
+        $mail['body'] = $this->replaceText($mail['body'], $post);
+
         /** @var \Omeka\Stdlib\Mailer $mailer */
         $mailer = $this->mailer();
         $message = $mailer->createMessage();
@@ -125,6 +127,8 @@ trait AccessTrait
             $mail['body'] = $settings->get('access_message_user_request_updated', $this->translate($moduleConfig['access']['settings']['access_message_user_request_updated']));
         }
 
+        $mail['body'] = $this->replaceText($mail['body'], $post);
+
         /** @var \Omeka\Stdlib\Mailer $mailer */
         $mailer = $this->mailer();
         $message = $mailer->createMessage();
@@ -144,5 +148,39 @@ trait AccessTrait
             $this->logger()->err((string) $msg);
             return false;
         }
+    }
+
+    protected function replaceText(string $string, array $post): string
+    {
+        $plugins = $this->getPluginManager();
+        $url = $plugins->get('url');
+        $helpers = $this->viewHelpers();
+        $escape = $helpers->get('escapeHtml');
+
+        try {
+            $site = $plugins->get('currentSite')();
+        } catch (\Exception $e) {
+            $site = null;
+        }
+
+        $replace = [
+            '{main_title}' => $this->mailer()->getInstallationTitle(),
+            '{main_url}' => $url->fromRoute('top', [], ['force_canonical' => true]),
+            '{site_title}' => $site ? $site->title() : null,
+            '{site_url}' => $site ? $site->siteUrl() : null,
+            '{email}' => $post['o:email'] ?? null,
+            '{name}' => $post['o:name'] ?? null,
+            '{message}' => $post['o:message'] ?? null,
+            '{resources}' => empty($post['o:resource']) ? '' : implode(', ', array_map('intval', $post['o:resource'])),
+        ];
+
+        // Post is already checked, except fields, so they are escaped.
+        foreach ($post['fields'] ?? [] as $key => $value) {
+            if (!isset($replace[$key])) {
+                $replace['{' . $key . '}'] = $escape($value);
+            }
+        }
+
+        return str_replace(array_keys($replace), array_values($replace), $string);
     }
 }

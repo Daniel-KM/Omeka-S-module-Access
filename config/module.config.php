@@ -340,17 +340,17 @@ return [
         'settings' => [
             'access_message_send' => true,
             'access_message_admin_subject' => 'New request status!', //@translate
-            'access_message_admin_request_created' => 'A user or visitor requested to access a resource. Please, check request dashboard.', //@translate
-            'access_message_admin_request_updated' => 'A user or visitor updated the request to access a resource. Please, check request dashboard.', //@translate
+            'access_message_admin_request_created' => 'A user or visitor requested to access resource {resources}. Please, check request dashboard.', //@translate
+            'access_message_admin_request_updated' => 'A user or visitor updated the request to access a resource {resources}. Please, check request dashboard.', //@translate
             'access_message_user_subject' => 'New request status!', //@translate
-            'access_message_user_request_created' => 'Your request to access resource is sent to administrator. You will be inform when your request will change.', //@translate
-            'access_message_user_request_updated' => 'Your request to access resource is updated. You can check guest user requests dashboard.', //@translate
+            'access_message_user_request_created' => 'Your request to access resource {resources} is sent to administrator. You will be inform when your request will change.', //@translate
+            'access_message_user_request_updated' => 'Your request to access resource {resources} is updated. You can check guest user requests dashboard.', //@translate
             'access_message_access_text' => 'This resource is not available for now. Contact the webmaster.', //@translate
         ],
         'block_settings' => [
             'accessRequest' => [
                 'heading' => null,
-                'consent_label' => 'I allow the site owner to store my name and my email to answer to this message.', // @translate
+                'consent_label' => 'By submitting this form, I accept the policy for processing my personal data.', // @translate
                 'fields' => [],
                 'template' => '',
             ],

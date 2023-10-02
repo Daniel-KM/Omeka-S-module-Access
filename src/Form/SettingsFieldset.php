@@ -49,6 +49,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to admin for new request', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_admin_request_created',
@@ -60,6 +61,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to admin for updated request', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_admin_request_updated',
@@ -83,6 +85,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to user for new request', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_user_request_created',
@@ -94,6 +97,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to user for updated request', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_user_request_updated',
