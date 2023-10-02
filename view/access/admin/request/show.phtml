@@ -53,6 +53,24 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests show');
         <dd class="value"><?= $temporal ?></dd>
     </div>
     <?php endif; ?>
+    <?php if ($name = $accessRequest->name()): ?>
+    <div class="property">
+        <dt><?= $translate('Name') ?></dt>
+        <dd class="value"><?= $escape($name) ?></dd>
+    </div>
+    <?php endif; ?>
+    <?php if ($message = $accessRequest->message()): ?>
+    <div class="property">
+        <dt><?= $translate('Message') ?></dt>
+        <dd class="value"><?= $escape($message) ?></dd>
+    </div>
+    <?php endif; ?>
+    <?php if ($fields = $accessRequest->fields()): ?>
+    <div class="property">
+        <dt><?= $translate('Fields') ?></dt>
+        <dd class="value"><?= json_encode($fields, 448) ?></dd>
+    </div>
+    <?php endif; ?>
     <div class="property">
         <dt><?= $translate('Created') ?></dt>
         <dd class="value"><?=  $i18n->dateFormat($accessRequest->created()) ?></dd>

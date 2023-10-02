@@ -75,13 +75,20 @@ class RequestController extends AbstractActionController
 
     public function submitAction()
     {
+        $requestUri = $this->params()->fromPost('request_uri');
+
         if (!$this->getRequest()->isPost()) {
+            $msg = $this->translate('Method should be post.'); // @translate
+            if ($requestUri) {
+                $this->messenger()->addError($msg);
+                return $this->redirect()->toUrl($requestUri);
+            }
             $this->getResponse()->setStatusCode(405);
             return new JsonModel([
                 'status' => 'fail',
                 'data' => [
                     'access_request' => [
-                        'o:id' => $this->translate('Method should be post.'), // @translate
+                        'o:id' => $msg,
                     ],
                 ],
             ]);
@@ -90,12 +97,17 @@ class RequestController extends AbstractActionController
         $modes = $this->settings()->get('access_modes');
         $individualModes = array_intersect(['user', 'email', 'token'], $modes);
         if (!count($individualModes)) {
+            $msg = $this->translate('Individual access requests are not allowed.'); // @translate
+            if ($requestUri) {
+                $this->messenger()->addError($msg);
+                return $this->redirect()->toUrl($requestUri);
+            }
             $this->getResponse()->setStatusCode(405);
             return new JsonModel([
                 'status' => 'fail',
                 'data' => [
                     'access_request' => [
-                        'o:resource' => $this->translate('Individual access requests are not allowed.'), // @translate
+                        'o:resource' => $msg,
                     ],
                 ],
             ]);
@@ -105,12 +117,17 @@ class RequestController extends AbstractActionController
         $post = $this->params()->fromPost();
         $resources = $post['o:resource'] ?? null;
         if (!$resources) {
+            $msg = $this->translate('No resources were requested.'); // @translate
+            if ($requestUri) {
+                $this->messenger()->addError($msg);
+                return $this->redirect()->toUrl($requestUri);
+            }
             $this->getResponse()->setStatusCode(405);
             return new JsonModel([
                 'status' => 'fail',
                 'data' => [
                     'access_request' => [
-                        'o:resource' => $this->translate('No resources were requested.'), // @translate
+                        'o:resource' => $msg,
                     ],
                 ],
             ]);
@@ -120,12 +137,17 @@ class RequestController extends AbstractActionController
         $user = $this->identity();
         $email = $this->params()->fromPost('o:email');
         if (!$user && !$email) {
+            $msg = $this->translate('An email is required.'); // @translate
+            if ($requestUri) {
+                $this->messenger()->addError($msg);
+                return $this->redirect()->toUrl($requestUri);
+            }
             $this->getResponse()->setStatusCode(405);
             return new JsonModel([
                 'status' => 'fail',
                 'data' => [
                     'access_request' => [
-                        'o:email' => $this->translate('An email is required.'), // @translate
+                        'o:email' => $msg,
                     ],
                 ],
             ]);
@@ -133,12 +155,17 @@ class RequestController extends AbstractActionController
             $post['email'] = null;
         } elseif (!$user && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             // Early check: normally checked below.
+            $msg = $this->translate('A valid email is required.'); // @translate
+            if ($requestUri) {
+                $this->messenger()->addError($msg);
+                return $this->redirect()->toUrl($requestUri);
+            }
             $this->getResponse()->setStatusCode(405);
             return new JsonModel([
                 'status' => 'fail',
                 'data' => [
                     'access_request' => [
-                        'o:email' => $this->translate('A valid email is required.'), // @translate
+                        'o:email' => $msg,
                     ],
                 ],
             ]);
@@ -154,9 +181,14 @@ class RequestController extends AbstractActionController
         ];
         /** @var \Access\Form\Site\AccessRequestForm $form */
         $form = $this->getForm(AccessRequestForm::class, $formOptions);
-        $form->setOptions($formOptions);
-        $form->setData($post);
+        $form
+            ->setOptions($formOptions)
+            ->setData($post);
         if (!$form->isValid()) {
+            if ($requestUri) {
+                $this->messenger()->addFormErrors($form);
+                return $this->redirect()->toUrl($requestUri);
+            }
             $this->getResponse()->setStatusCode(405);
             return new JsonModel([
                 'status' => 'fail',
@@ -166,6 +198,9 @@ class RequestController extends AbstractActionController
             ]);
         }
 
+        $data = $form->getData();
+        $fields = $post['fields'];
+
         /* TODO Check for existing requests.
         $accessRequests = $api->search('access_requests', [
             $user ? 'user_id' : 'email' => $user ? $user->getId() : $email,
@@ -173,18 +208,42 @@ class RequestController extends AbstractActionController
         ])->getContent();
         */
 
-        $accessRequest = $api->create('access_requests', [
+        $response = $api->create('access_requests', [
             $user ? 'o:user' : 'o:email' => $user ?: $email,
             'o:resource' => $resources,
             'o:status' => AccessRequest::STATUS_NEW,
             // To simplify end user experience, always set request recursive.
             'o-access:recursive' => true,
-        ])->getContent();
+            'o:name' => empty($data['o:name']) ? null : $data['o:name'],
+            'o:message' => empty($data['o:message']) ? null : $data['o:message'],
+            'o-access:fields' => $fields,
+        ]);
+        if (!$response) {
+            $msg = $this->translate('An error occurred when saving message.'); // @translate
+            if ($requestUri) {
+                $this->messenger()->addError($msg);
+                return $this->redirect()->toUrl($requestUri);
+            }
+            $this->getResponse()->setStatusCode(500);
+            return new JsonModel([
+                // TODO This is error.
+                'status' => 'fail',
+                'data' => [
+                    'access_request' => $form->getMessages(),
+                ],
+            ]);
+        }
+        $accessRequest = $response->getContent();
 
         $post['request_from'] = 'somebody';
         $result = $this->sendRequestEmailCreate($accessRequest, $post);
 
         if ($result) {
+            if ($requestUri) {
+                $msg = $this->translate('The request was submitted successfully.'); // @translate
+                $this->messenger()->addSuccess($msg);
+                return $this->redirect()->toUrl($requestUri);
+            }
             return new JsonModel([
                 'status' => 'success',
                 'data' => [
@@ -194,6 +253,11 @@ class RequestController extends AbstractActionController
                 ],
             ]);
         } else {
+            $msg = $this->translate('The request was sent, but an issue occurred when sending the confirmation email.'); // @translate
+            if ($requestUri) {
+                $this->messenger()->addWarning($msg);
+                return $this->redirect()->toUrl($requestUri);
+            }
             return new JsonModel([
                 'status' => 'success',
                 'data' => [
@@ -201,7 +265,7 @@ class RequestController extends AbstractActionController
                         'o:id' => $accessRequest->id(),
                     ],
                 ],
-                'message' => $this->translate('The request was sent, but an issue occurred when sending the confirmation email.'), // @translate
+                'message' => $msg,
             ]);
         }
 

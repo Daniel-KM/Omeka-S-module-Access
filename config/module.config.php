@@ -42,6 +42,11 @@ return [
             'isUnderEmbargo' => Service\ViewHelper\IsUnderEmbargoFactory::class,
         ],
     ],
+    'block_layouts' => [
+        'invokables' => [
+            'accessRequest' => Site\BlockLayout\AccessRequest::class,
+        ],
+    ],
     'resource_page_block_layouts' => [
         'invokables' => [
             'accessRequest' => Site\ResourcePageBlockLayout\AccessRequest::class,
@@ -52,6 +57,7 @@ return [
     'form_elements' => [
         'invokables' => [
             Form\Element\OptionalRadio::class => Form\Element\OptionalRadio::class,
+            Form\AccessRequestFieldset::class => Form\AccessRequestFieldset::class,
             Form\ConfigForm::class => Form\ConfigForm::class,
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,
         ],
@@ -340,6 +346,14 @@ return [
             'access_message_user_request_created' => 'Your request to access resource is sent to administrator. You will be inform when your request will change.', //@translate
             'access_message_user_request_updated' => 'Your request to access resource is updated. You can check guest user requests dashboard.', //@translate
             'access_message_access_text' => 'This resource is not available for now. Contact the webmaster.', //@translate
+        ],
+        'block_settings' => [
+            'accessRequest' => [
+                'heading' => null,
+                'consent_label' => 'I allow the site owner to store my name and my email to answer to this message.', // @translate
+                'fields' => [],
+                'template' => '',
+            ],
         ],
     ],
 ];

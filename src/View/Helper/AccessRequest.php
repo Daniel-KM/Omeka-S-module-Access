@@ -63,6 +63,8 @@ class AccessRequest extends AbstractHelper
      * - request_type (string): The level to check for requestable resource
      *   (items , media, item sets). This param is currently not managed because
      *   full access is not managed: only media content is checked.
+     * - fields
+     * - consent_label
      */
     public function __invoke($resources = null, ?array $options = null): self
     {
@@ -158,6 +160,8 @@ class AccessRequest extends AbstractHelper
             'full_access' => (bool) $this->view->setting('access_full'),
             'resources' => $this->getRequestableResources(),
             'user' => $this->view->identity(),
+            'fields' => $this->options['fields'] ?? [],
+            'consent_label' => $this->options['consent_label'] ?? '',
         ];
         /** @var \Access\Form\Site\AccessRequestForm $form */
         $form = $this->formElementManager->get(AccessRequestForm::class, $formOptions);

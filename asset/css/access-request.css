@@ -55,4 +55,41 @@
         margin-right: 12px;
         vertical-align: unset;
     }
+
+    /* Copied from _screen.scss */
+    .list-messages .messages {
+        padding: 0;
+        margin: 0 0 12px;
+        clear: both;
+    }
+    .list-messages .messages li {
+        margin: 0 0 6px;
+        background-color: rgba(255,255,255,.5);
+        border-radius: 3px;
+        padding: 6px 10px;
+        margin-top: 6px;
+        display: block;
+        width: 100%;
+    }
+    .list-messages .messages .error {
+        background-color: #f4b4b4;
+    }
+    .list-messages .messages .success {
+        background-color: #cdffcd;
+    }
+    .list-messages .messages .warning {
+        background-color: #fff6e6;
+    }
+    .list-messages .messages .error,
+    .list-messages .messages .error a {
+        color: #A91919;
+    }
+    .list-messages .messages .success,
+    .list-messages .messages .success a {
+        color: green;
+    }
+    .list-messages .messages .warning,
+    .list-messages .messages .warning a {
+        color: orange;
+    }
 }

@@ -1,0 +1,98 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var \Omeka\Entity\User|null $user
+ * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[] $resources
+ * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation[] $requestables
+ * @var \Access\Form\Site\AccessRequestForm $form
+ * @var string $requestType
+ */
+
+// Don't display the form if there is nothing to request.
+if (!count($requestables)): ?>
+    <p><?= $this->translate('You already have access to the resource. Go back to the previous page to see it.') ?></p>
+    <?php return;
+endif;
+
+$plugins = $this->getHelperPluginManager();
+$url = $plugins->get('url');
+$setting = $plugins->get('setting');
+$assetUrl = $plugins->get('assetUrl');
+$translate = $plugins->get('translate');
+
+$hasGuest = $plugins->has('guestWidget');
+
+$user = $this->identity();
+$accessModes = $setting('access_modes', []);
+$allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $accessModes);
+$allowGlobalRequests = (bool) array_intersect(['ip', 'guest', 'external'], $accessModes);
+
+$this->headLink()
+    ->appendStylesheet($assetUrl('css/access-request.css', 'Access'));
+$this->headScript()
+    ->appendFile($assetUrl('js/access-request.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
+
+$parts = [];
+if ($user) {
+    if ($allowIndividualRequests) {
+        $parts['form'] = 'form';
+    } else {
+        $parts['message'] = 'message';
+    }
+} else {
+    if ($allowIndividualRequests) {
+        if (in_array('email', $accessModes) || in_array('token', $accessModes)) {
+            $parts['form'] = 'form';
+        }
+        if (in_array('user', $accessModes)) {
+            $parts['login'] = 'login';
+        }
+    }
+    if ($allowGlobalRequests) {
+        $parts['login'] = 'login';
+    }
+}
+?>
+
+<?php if ($messages = $this->messages()): ?>
+<div class="list-messages">
+    <?= $messages ?>
+</div>
+<?php endif; ?>
+
+<?php if (in_array('message', $parts)): ?>
+    <div>
+        <?= $setting('access_message_access_text') ?>
+    </div>
+<?php endif; ?>
+
+<?php if (in_array('form', $parts)): ?>
+    <?= $this->form($form) ?>
+<?php endif?>
+
+<?php if (in_array('login', $parts)): ?>
+    <div>
+        <?php if ($hasGuest):
+            if ($setting('guest_open') === 'close'):
+                echo sprintf(
+                    $translate('To request access please %1$slogin%2$s or contact the publisher!'),
+                    sprintf('<a href="%s">' , $url('site/guest/anonymous', ['action' => 'login'], true)),
+                    '</a>'
+                );
+            else:
+                echo sprintf(
+                    $translate('To request access please %1$slogin%3$s or %2$sregister%3$s!'),
+                    sprintf('<a href="%s">' , $url('site/guest/anonymous', ['action' => 'login'], true)),
+                    sprintf('<a href="%s">' , $url('site/guest/anonymous', ['action' => 'register'], true)),
+                    '</a>'
+                );
+            endif;
+        else:
+            echo sprintf(
+                $translate('To request access please %1$slogin%2$s or contact the publisher!'),
+                sprintf('<a href="%s">' , $url('login', [], true)),
+                '</a>'
+            );
+        endif; ?>
+    </div>
+<?php endif?>

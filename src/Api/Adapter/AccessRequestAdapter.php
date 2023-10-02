@@ -46,6 +46,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         'temporal' => 'temporal',
         'start' => 'start',
         'end' => 'end',
+        'fields' => 'fields',
         'created' => 'created',
         'modified' => 'modified',
     ];
@@ -399,6 +400,21 @@ class AccessRequestAdapter extends AbstractEntityAdapter
         }
         */
         $entity->setTemporal($entity->getStart() || $entity->getEnd());
+
+        $name = $data['o:name'] ?? null;
+        if (!$entity->getUser() && $name) {
+            $entity->setName($name);
+        }
+
+        $message = $data['o:message'] ?? null;
+        if ($message = trim(strip_tags((string) $message))) {
+            $entity->setMessage($message);
+        }
+
+        $fields = $data['o-access:fields'] ?? null;
+        if ($fields && is_array($fields)) {
+            $entity->setFields($fields);
+        }
 
         $this->updateTimestamps($request, $entity);
     }

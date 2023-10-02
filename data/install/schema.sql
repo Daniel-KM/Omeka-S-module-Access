@@ -9,11 +9,22 @@ CREATE TABLE `access_request` (
     `temporal` TINYINT(1) DEFAULT '0' NOT NULL,
     `start` DATETIME DEFAULT NULL,
     `end` DATETIME DEFAULT NULL,
+    `name` VARCHAR(190) DEFAULT NULL,
+    `message` LONGTEXT DEFAULT NULL,
+    `fields` LONGTEXT DEFAULT NULL COMMENT '(DC2Type:json_array)',
     `created` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     `modified` DATETIME DEFAULT NULL,
     INDEX IDX_F3B2558AA76ED395 (`user_id`),
     INDEX IDX_F3B2558A5F37A13B (`token`),
     PRIMARY KEY(`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
+
+CREATE TABLE `access_resource` (
+    `access_request_id` INT NOT NULL,
+    `resource_id` INT NOT NULL,
+    INDEX IDX_D184352768402024 (`access_request_id`),
+    INDEX IDX_D184352789329D25 (`resource_id`),
+    PRIMARY KEY(access_request_id, resource_id)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
 
 CREATE TABLE `access_log` (
@@ -24,14 +35,6 @@ CREATE TABLE `access_log` (
     `action` VARCHAR(31) NOT NULL,
     `date` DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY KEY(`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
-
-CREATE TABLE `access_resource` (
-    `access_request_id` INT NOT NULL,
-    `resource_id` INT NOT NULL,
-    INDEX IDX_D184352768402024 (`access_request_id`),
-    INDEX IDX_D184352789329D25 (`resource_id`),
-    PRIMARY KEY(`access_request_id`, `resource_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
 
 CREATE TABLE `access_status` (

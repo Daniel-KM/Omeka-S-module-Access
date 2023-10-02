@@ -164,6 +164,37 @@ class AccessRequest extends AbstractEntity
     protected $end;
 
     /**
+     * @var string
+     *
+     * @Column(
+     *     type="string",
+     *     length=190,
+     *     nullable=true
+     * )
+     */
+    protected $name;
+
+    /**
+     * @var string
+     *
+     * @Column(
+     *     type="text",
+     *     nullable=true
+     * )
+     */
+    protected $message;
+
+    /**
+     * @var array
+     *
+     * @Column(
+     *     type="json_array",
+     *     nullable=true
+     * )
+     */
+    protected $fields;
+
+    /**
      * @var \DateTime
      *
      * @Column(
@@ -311,6 +342,39 @@ class AccessRequest extends AbstractEntity
     public function getEnd(): ?DateTime
     {
         return $this->end;
+    }
+
+    public function setName(?string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setMessage(?string $message): self
+    {
+        $this->message = $message;
+        return $this;
+    }
+
+    public function getMessage(): ?string
+    {
+        return $this->message;
+    }
+
+    public function setFields(?array $fields): self
+    {
+        $this->fields = $fields;
+        return $this;
+    }
+
+    public function getFields(): ?array
+    {
+        return $this->fields;
     }
 
     public function setCreated(DateTime $dateTime): self

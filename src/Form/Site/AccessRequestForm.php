@@ -22,9 +22,20 @@ class AccessRequestForm extends Form
      */
     protected $user = null;
 
+    /**
+     * @var array
+     */
+    protected $fields = [];
+
+    /**
+     * @var string
+     */
+    protected $consentLabel = '';
+
     public function __construct($name = null, array $options = [])
     {
-        parent::__construct($name, $options ?? []);
+        parent::__construct($name, $options);
+
         if (isset($options['full_access'])) {
             $this->fullAccess = (bool) $options['full_access'];
         }
@@ -34,12 +45,19 @@ class AccessRequestForm extends Form
         if (isset($options['user'])) {
             $this->user = $options['user'];
         }
+        if (isset($options['fields'])) {
+            $this->fields = $options['fields'];
+        }
+        if (isset($options['consent_label'])) {
+            $this->consentLabel = $options['consent_label'];
+        }
     }
 
     public function init(): void
     {
         $this
-            ->setAttribute('id', 'form-access-request');
+            ->setAttribute('id', 'form-access-request')
+            ->setName('form-access-request');
 
         if (!$this->user) {
             $this
@@ -65,18 +83,67 @@ class AccessRequestForm extends Form
                         'required' => true,
                     ],
                 ])
-                ->add([
-                    'name' => 'o:message',
-                    'type' => Element\Textarea::class,
-                    'options' => [
-                        'label' => 'Message', // @translate
-                    ],
-                    'attributes' => [
-                        'id' => 'o-message',
-                        'required' => true,
-                    ],
-                ])
             ;
+        }
+
+        $this
+            ->add([
+                'name' => 'o:message',
+                'type' => Element\Textarea::class,
+                'options' => [
+                    'label' => 'Message', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'o-message',
+                    'required' => true,
+                ],
+            ])
+        ;
+
+        foreach ($this->fields ?? [] as $name => $data) {
+            if ($name === 'id') {
+                $name = 'id[]';
+            }
+            if (!is_array($data)) {
+                $data = ['label' => $data, 'type' => Element\Text::class];
+            }
+            $isMultiple = substr($name, -2) === '[]';
+            if ($isMultiple) {
+                $fieldType = $data['type'] ?? Element\Select::class;
+                $fieldValue = isset($data['value']) ? (is_array($data['value']) ? $data['value'] : [$data['value']]) : [];
+                if ($fieldType === 'hidden' || $fieldType === Element\Hidden::class) {
+                    $fieldValue = json_encode($fieldValue);
+                }
+                $this
+                    ->add([
+                        'name' => 'fields[' . substr($name, 0, -2) . '][]',
+                        'type' => $fieldType,
+                        'options' => [
+                            'label' => $data['label'] ?? '',
+                            'value_options' => $data['value_options'] ?? [],
+                        ],
+                        'attributes' => [
+                            'id' => 'fields-' . substr($name, 0, -2),
+                            'class' => $data['class'] ?? '',
+                            'multiple' => 'multiple',
+                            'value' => $fieldValue,
+                        ],
+                    ]);
+            } else {
+                $this
+                    ->add([
+                        'name' => 'fields[' . $name . ']',
+                        'type' => $data['type'] ?? Element\Text::class,
+                        'options' => [
+                            'label' => $data['label'] ?? '',
+                        ],
+                        'attributes' => [
+                            'id' => 'fields-' . $name,
+                            'class' => $data['class'] ?? '',
+                            'value' => $data['value'] ?? '',
+                        ],
+                    ]);
+            }
         }
 
         $valueOptions = [];
@@ -104,6 +171,37 @@ class AccessRequestForm extends Form
                         : [],
                 ],
             ])
+        ;
+
+        if ($this->user || !$this->consentLabel) {
+            $this
+                ->add([
+                    'name' => 'consent',
+                    'type' => Element\Hidden::class,
+                    'attributes' => [
+                        'id' => 'consent',
+                        'value' => true,
+                    ],
+                ]);
+        } else {
+            $this
+                ->add([
+                    'name' => 'consent',
+                    'type' => Element\Checkbox::class,
+                    'options' => [
+                        'label' => $this->consentLabel,
+                        'label_attributes' => [
+                            'class' => 'required',
+                        ],
+                    ],
+                    'attributes' => [
+                        'id' => 'consent',
+                        'required' => true,
+                    ],
+                ]);
+        }
+
+        $this
             ->add([
                 'type' => Element\Submit::class,
                 'name' => 'submit',

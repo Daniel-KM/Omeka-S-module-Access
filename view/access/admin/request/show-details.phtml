@@ -50,6 +50,27 @@ $accessRequest = $resource;
     </div>
     <?php endif; ?>
 
+    <?php if ($name = $accessRequest->name()): ?>
+    <div class="meta-group">
+        <h4><?= $escape($translate('Name')) ?></h4>
+        <div class="value"><?= $escape($name) ?></div>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($message = $accessRequest->message()): ?>
+    <div class="meta-group">
+        <h4><?= $escape($translate('Message')) ?></h4>
+        <div class="value"><?= $escape($message) ?></div>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($fields = $accessRequest->fields()): ?>
+    <div class="meta-group">
+        <h4><?= $escape($translate('Fields')) ?></h4>
+        <div class="value"><?= json_encode($fields, 448) ?></div>
+    </div>
+    <?php endif; ?>
+
     <div class="meta-group">
         <h4><?= $escape($translate('Created')) ?></h4>
         <div class="value"><?=  $i18n->dateFormat($accessRequest->created()) ?></div>

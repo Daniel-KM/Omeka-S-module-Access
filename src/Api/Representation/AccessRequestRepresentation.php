@@ -78,6 +78,9 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
             'o-access:temporal' => $this->temporal(),
             'o-access:start' => $start,
             'o-access:end' => $end,
+            'o:name' => $this->name(),
+            'o:message' => $this->message(),
+            'o-access:fields' => $this->fields(),
             'o:created' => $created,
             'o:modified' => $modified,
         ];
@@ -143,6 +146,21 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
     public function end(): ?DateTime
     {
         return $this->resource->getEnd();
+    }
+
+    public function name(): ?string
+    {
+        return $this->resource->getName();
+    }
+
+    public function message(): ?string
+    {
+        return $this->resource->getMessage();
+    }
+
+    public function fields(): ?array
+    {
+        return $this->resource->getFields();
     }
 
     public function created(): DateTime

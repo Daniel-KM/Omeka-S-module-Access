@@ -67,10 +67,10 @@ class AccessRequest extends \Access\Entity\AccessRequest implements \Doctrine\OR
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'recursive', 'enabled', 'temporal', 'start', 'end', 'created', 'modified', 'resources'];
+            return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'recursive', 'enabled', 'temporal', 'start', 'end', 'name', 'body', 'fields', 'created', 'modified', 'resources'];
         }
 
-        return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'recursive', 'enabled', 'temporal', 'start', 'end', 'created', 'modified', 'resources'];
+        return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'recursive', 'enabled', 'temporal', 'start', 'end', 'name', 'body', 'fields', 'created', 'modified', 'resources'];
     }
 
     /**
@@ -399,6 +399,72 @@ class AccessRequest extends \Access\Entity\AccessRequest implements \Doctrine\OR
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getEnd', []);
 
         return parent::getEnd();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setName(?string $name): \Access\Entity\AccessRequest
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setName', [$name]);
+
+        return parent::setName($name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getName(): ?string
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getName', []);
+
+        return parent::getName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setBody(?string $body): \Access\Entity\AccessRequest
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setBody', [$body]);
+
+        return parent::setBody($body);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getBody(): ?string
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getBody', []);
+
+        return parent::getBody();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setFields(?array $fields): \Access\Entity\AccessRequest
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setFields', [$fields]);
+
+        return parent::setFields($fields);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getFields(): ?array
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getFields', []);
+
+        return parent::getFields();
     }
 
     /**
