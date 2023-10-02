@@ -342,8 +342,11 @@ return [
             'access_message_admin_request_created' => 'A user or visitor requested to access resource {resources}. Please, check request dashboard.', //@translate
             'access_message_admin_request_updated' => 'A user or visitor updated the request to access a resource {resources}. Please, check request dashboard.', //@translate
             'access_message_user_subject' => 'New request status!', //@translate
-            'access_message_user_request_created' => 'Your request to access resource {resources} is sent to administrator. You will be inform when your request will change.', //@translate
-            'access_message_user_request_updated' => 'Your request to access resource {resources} is updated. You can check guest user requests dashboard.', //@translate
+            'access_message_user_request_created' => 'Your request to access resource {resources} is sent to administrator. You will be informed soon about it.', //@translate
+            'access_message_user_request_updated' => 'Your request to access resource {resources} was updated.', //@translate
+            'access_message_visitor_subject' => 'New request status!', //@translate
+            'access_message_visitor_request_created' => 'Your request to access resource {resources} is sent to administrator. You will be inform when your request will change.', //@translate
+            'access_message_visitor_request_updated' => 'Your request to access resource {resources} was updated.', //@translate
             'access_message_access_text' => 'This resource is not available for now. Contact the webmaster.', //@translate
         ],
         'block_settings' => [

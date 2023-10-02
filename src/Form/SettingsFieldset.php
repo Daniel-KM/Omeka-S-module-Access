@@ -4,7 +4,7 @@ namespace Access\Form;
 
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
-use Omeka\Form\Element\CkeditorInline;
+use Omeka\Form\Element as OmekaElement;
 
 class SettingsFieldset extends Fieldset
 {
@@ -25,7 +25,7 @@ class SettingsFieldset extends Fieldset
                 'type' => Element\Checkbox::class,
                 'options' => [
                     'element_group' => 'access',
-                    'label' => 'Send email to admin and user on access request or update', // @translate
+                    'label' => 'Send email to admin and user or visitor on access request or update', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_send',
@@ -45,7 +45,7 @@ class SettingsFieldset extends Fieldset
             ])
             ->add([
                 'name' => 'access_message_admin_request_created',
-                'type' => CkeditorInline::class,
+                'type' => OmekaElement\CkeditorInline::class,
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to admin for new request', // @translate
@@ -57,7 +57,7 @@ class SettingsFieldset extends Fieldset
             ])
             ->add([
                 'name' => 'access_message_admin_request_updated',
-                'type' => CkeditorInline::class,
+                'type' => OmekaElement\CkeditorInline::class,
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to admin for updated request', // @translate
@@ -81,7 +81,7 @@ class SettingsFieldset extends Fieldset
             ])
             ->add([
                 'name' => 'access_message_user_request_created',
-                'type' => CkeditorInline::class,
+                'type' => OmekaElement\CkeditorInline::class,
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to user for new request', // @translate
@@ -93,7 +93,7 @@ class SettingsFieldset extends Fieldset
             ])
             ->add([
                 'name' => 'access_message_user_request_updated',
-                'type' => CkeditorInline::class,
+                'type' => OmekaElement\CkeditorInline::class,
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to user for updated request', // @translate
@@ -105,8 +105,44 @@ class SettingsFieldset extends Fieldset
             ])
 
             ->add([
+                'name' => 'access_message_visitor_subject',
+                'type' => Element\Text::class,
+                'options' => [
+                    'element_group' => 'access',
+                    'label' => 'Visitor email subject', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_message_visitor_subject',
+                ],
+            ])
+            ->add([
+                'name' => 'access_message_visitor_request_created',
+                'type' => OmekaElement\CkeditorInline::class,
+                'options' => [
+                    'element_group' => 'access',
+                    'label' => 'Message to visitor for new request', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources}, {session_url} and specific fields wrapped with "{}".', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_message_visitor_request_created',
+                ],
+            ])
+            ->add([
+                'name' => 'access_message_visitor_request_updated',
+                'type' => OmekaElement\CkeditorInline::class,
+                'options' => [
+                    'element_group' => 'access',
+                    'label' => 'Message to visitor for updated request', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources}, {session_url} and specific fields wrapped with "{}".', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_message_visitor_request_updated',
+                ],
+            ])
+
+            ->add([
                 'name' => 'access_message_access_text',
-                'type' => CkeditorInline::class,
+                'type' => OmekaElement\CkeditorInline::class,
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message for the block "Access request text" when a resource is not available', // @translate
