@@ -339,16 +339,16 @@ return [
         'settings' => [
             'access_message_send' => true,
             'access_message_admin_subject' => 'New request status!', //@translate
-            'access_message_admin_request_created' => 'A user or visitor requested to access resource {resources}. Please, check request dashboard.', //@translate
-            'access_message_admin_request_updated' => 'A user or visitor updated the request to access a resource {resources}. Please, check request dashboard.', //@translate
+            'access_message_admin_request_created' => 'A user or visitor requested to access resource {resource}. Please, check request dashboard.', //@translate
+            'access_message_admin_request_updated' => 'A user or visitor updated the request to access a resource {resource}. Please, check request dashboard.', //@translate
             'access_message_user_subject' => 'New request status!', //@translate
-            'access_message_user_request_created' => 'Your request to access resource {resources} is sent to administrator. You will be informed soon about it.', //@translate
-            'access_message_user_request_accepted' => 'Your request to access resource {resources} was accepted.', //@translate
-            'access_message_user_request_rejected' => 'Your request to access resource {resources} was rejected.', //@translate
+            'access_message_user_request_created' => 'Your request to access resource {resource} is sent to administrator. You will be informed soon about it.', //@translate
+            'access_message_user_request_accepted' => 'Your request to access resource {resource} was accepted.', //@translate
+            'access_message_user_request_rejected' => 'Your request to access resource {resource} was rejected.', //@translate
             'access_message_visitor_subject' => 'New request status!', //@translate
-            'access_message_visitor_request_created' => 'Your request to access resource {resources} is sent to administrator. You will be inform when your request will change.', //@translate
-            'access_message_visitor_request_accepted' => 'Your request to access resource {resources} was accepted. You will be able to access it after clicking {session_url}.', //@translate
-            'access_message_visitor_request_rejected' => 'Your request to access resource {resources} was rejected.', //@translate
+            'access_message_visitor_request_created' => 'Your request to access resource {resource} is sent to administrator. You will be inform when your request will change.', //@translate
+            'access_message_visitor_request_accepted' => 'Your request to access resource {resource} was accepted. You will be able to access it after clicking {session_url}.', //@translate
+            'access_message_visitor_request_rejected' => 'Your request to access resource {resource} was rejected.', //@translate
             'access_message_access_text' => 'This resource is not available for now. Contact the webmaster.', //@translate
         ],
         'block_settings' => [

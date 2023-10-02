@@ -20,6 +20,11 @@ trait AccessTrait
             $post['o:email'] = $user->email();
             $post['o:name'] = $user->name();
         }
+        // Simplify process (for placeholders).
+        $post['access_request'] = $accessRequest;
+        if (!is_array($post['o:resource'])) {
+            $post['o:resource'] = empty($post['o:resource']) ? [] : [$post['o:resource']];
+        }
         $isVisitor = $this->isVisitor($accessRequest, $post);
         $result1 = $this->sendMailToAdmin('created', $post);
         $result2 = $this->sendMailToUser('created', $post, $isVisitor);
@@ -38,6 +43,11 @@ trait AccessTrait
         if ($user = $accessRequest->user()) {
             $post['o:email'] = $user->email();
             $post['o:name'] = $user->name();
+        }
+        // Simplify process (for placeholders).
+        $post['access_request'] = $accessRequest;
+        if (!is_array($post['o:resource'])) {
+            $post['o:resource'] = empty($post['o:resource']) ? [] : [$post['o:resource']];
         }
         $isVisitor = $this->isVisitor($accessRequest, $post);
         $isRejected = $accessRequest->status() === \Access\Entity\AccessRequest::STATUS_REJECTED;
@@ -184,7 +194,27 @@ trait AccessTrait
             '{message}' => $post['o:message'] ?? null,
             '{resources}' => empty($post['o:resource']) ? '' : implode(', ', array_map('intval', $post['o:resource'])),
             '{resource}' => empty($post['o:resource']) ? '' : (int) reset($post['o:resource']),
+            '{session_url}' => '',
         ];
+
+        // The session url is the resource url with an argument.
+        if (strpos($string, '{session_url}') !== false && !empty($post['o:resource'])) {
+            $siteSlug = $this->defaultSiteSlug();
+            $accessRequest = $post['access_request'];
+            // TODO Use a hash of the email with some data (created, etc.) for security.
+            $tokenOrEmail = $accessRequest->token() ?: $accessRequest->email();
+            $replace['{session_url}'] = $this->url()->fromRoute('site/access-request', ['site-slug' => $siteSlug], ['query' => ['access' => $tokenOrEmail], 'force_canonical' => true]);
+            /* // TODO Use an event to manage direct access (store the session before processing).
+             $resourceId = (int) reset($post['o:resource']);
+            /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource * /
+            $resource = $this->api()->searchOne('resources', ['id' => $resourceId])->getContent();
+            if ($resource) {
+                $accessRequest = $post['access_request'];
+                $tokenOrEmail = $accessRequest->token() ?: $accessRequest->email();
+                $replace['{session_url}'] = $resource->siteUrl($siteSlug, true) . '?access=' . $tokenOrEmail;
+            }
+            */
+        }
 
         // Post is already checked, except fields, so they are escaped.
         foreach ($post['fields'] ?? [] as $key => $value) {
@@ -210,5 +240,27 @@ trait AccessTrait
         }
         $user = $accessRequest->user();
         return $user === null;
+    }
+
+    /**
+     * Get the default site slug.
+     *
+     * @todo Store the source site in the access request.
+     */
+    protected function defaultSiteSlug(): string
+    {
+        $api = $this->api();
+        $mainSite = (int) $this->settings()->get('default_site');
+        if ($mainSite) {
+            return $api->read('sites', ['id' => $mainSite])->getContent()->slug();
+        }
+        // Search first public site first.
+        $slugs = $api->search('sites', ['is_public' => true, 'limit' => 1], ['initialize' => false, 'returnScalar' => 'slug'])->getContent();
+        if ($slugs) {
+            return reset($slugs);
+        }
+        // Else first site.
+        $slugs = $api->search('sites', ['limit' => 1], ['initialize' => false, 'returnScalar' => 'slug'])->getContent();
+        return $slugs ? reset($slugs) : '';
     }
 }

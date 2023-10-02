@@ -49,7 +49,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to admin for new request', // @translate
-                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources} and specific fields wrapped with "{}".', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource} , {resources} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_admin_request_created',
@@ -61,7 +61,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to admin for updated request', // @translate
-                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources} and specific fields wrapped with "{}".', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource} , {resources} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_admin_request_updated',
@@ -85,7 +85,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to user for new request', // @translate
-                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources} and specific fields wrapped with "{}".', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource}, {resources} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_user_request_created',
@@ -97,7 +97,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to user for request accepted', // @translate
-                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources} and specific fields wrapped with "{}".', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource}, {resources} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_user_request_accepted',
@@ -109,7 +109,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to user for request rejected', // @translate
-                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources} and specific fields wrapped with "{}".', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource}, {resources} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_user_request_rejected',
@@ -133,7 +133,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to visitor for new request', // @translate
-                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources}, {session_url} and specific fields wrapped with "{}".', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource}, {resources}, {session_url} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_visitor_request_created',
@@ -145,7 +145,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to visitor for request accepted', // @translate
-                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources}, {session_url} and specific fields wrapped with "{}".', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource}, {resources}, {session_url} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_visitor_request_accepted',
@@ -157,7 +157,7 @@ class SettingsFieldset extends Fieldset
                 'options' => [
                     'element_group' => 'access',
                     'label' => 'Message to visitor for request rejected', // @translate
-                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resources}, {session_url} and specific fields wrapped with "{}".', // @translate
+                    'info' => '{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource}, {resources}, {session_url} and specific fields wrapped with "{}".', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_message_visitor_request_rejected',
