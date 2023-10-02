@@ -168,18 +168,18 @@ class RequestController extends AbstractActionController
                 $date = $data['o-access:start-date'] ?? null;
                 $date = trim((string) $date) ?: null;
                 if ($date) {
-                    $date .= 'T' . (empty($data['o-access:start-time']) ? '00:00:00' : $data['o-access:start-time']  . ':00');
+                    $date .= 'T' . (empty($data['o-access:start-time']) ? '00:00:00' : $data['o-access:start-time'] . ':00');
                 }
                 $data['o-access:start'] = $date;
                 $date = $data['o-access:end-date'] ?? null;
                 $date = trim((string) $date) ?: null;
                 if ($date) {
-                    $date .= 'T' . (empty($data['o-access:end-time']) ? '00:00:00' : $data['o-access:end-time']  . ':00');
+                    $date .= 'T' . (empty($data['o-access:end-time']) ? '00:00:00' : $data['o-access:end-time'] . ':00');
                 }
                 $data['o-access:end'] = $date;
                 if (!$data['o:user'] && !$data['o:email'] && !$data['o-access:token']) {
                     $message = new Message(
-                        'You should set either a user or an email or check box for token.', // @translate
+                        'You should set either a user or an email or check box for token.' // @translate
                     );
                     $this->messenger()->addError($message);
                 } else {
@@ -225,7 +225,7 @@ class RequestController extends AbstractActionController
                         $response = $this->api($form)->update('access_requests', $id, $data);
                         if ($response) {
                             $message = new Message(
-                                'Access request successfully updated.', // @translate
+                                'Access request successfully updated.' // @translate
                             );
                             $this->messenger()->addSuccess($message);
                             $accessRequest = $response->getContent();
@@ -298,8 +298,8 @@ class RequestController extends AbstractActionController
         if ($this->getRequest()->isPost()) {
             $api = $this->api();
             $id = $this->params('id');
-            $request = $api->searchOne('access_requests', ['id' => $id])->getContent();
-            if ($id && !$request) {
+            $accessRequest = $api->searchOne('access_requests', ['id' => $id])->getContent();
+            if ($id && !$accessRequest) {
                 $this->getResponse()->setStatusCode(404);
                 return new JsonModel([
                     'status' => 'fail',
@@ -340,8 +340,8 @@ class RequestController extends AbstractActionController
         if ($this->getRequest()->isPost()) {
             $api = $this->api();
             $id = $this->params('id');
-            $request = $api->searchOne('access_requests', ['id' => $id])->getContent();
-            if ($id && !$request) {
+            $accessRequest = $api->searchOne('access_requests', ['id' => $id])->getContent();
+            if ($id && !$accessRequest) {
                 $this->getResponse()->setStatusCode(404);
                 return new JsonModel([
                     'status' => 'fail',
@@ -353,7 +353,7 @@ class RequestController extends AbstractActionController
                 ]);
             }
 
-            $status = $request->status() === AccessRequest::STATUS_ACCEPTED
+            $status = $accessRequest->status() === AccessRequest::STATUS_ACCEPTED
                 ? AccessRequest::STATUS_REJECTED
                 : AccessRequest::STATUS_ACCEPTED;
 
