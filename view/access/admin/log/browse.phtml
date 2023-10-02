@@ -42,7 +42,7 @@ $this->htmlElement('body')->appendAttribute('class', 'sites browse');
                 if ($userId = $accessLog->getUserId()):
                     try {
                         $user = $api->read('users', $userId)->getContent();
-                        $userText = $hyperlink($user->getName(), $url('admin/id', ['controller' => 'user', 'action' => 'show', 'id' => $user->getId()]));
+                        $userText = $hyperlink($user->name(), $url('admin/id', ['controller' => 'user', 'action' => 'show', 'id' => $user->id()]));
                     } catch (Exception $e) {
                         $userText = $translate('[no user]');
                     }
