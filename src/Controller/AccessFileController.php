@@ -284,7 +284,7 @@ class AccessFileController extends AbstractActionController
      */
     protected function sendFakeFile(?MediaRepresentation $media, ?string $filename = null)
     {
-        $mediaType = $media ? $media->mediaType() : 'image/png';
+        $mediaType = $media ? (string) $media->mediaType() : 'image/png';
         $mediaTypeMain = strtok($mediaType, '/');
         switch ($mediaType) {
             case $mediaTypeMain === 'image':
