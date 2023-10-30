@@ -25,7 +25,7 @@ $connection = $services->get('Omeka\Connection');
 $messenger = $plugins->get('messenger');
 
 $config = $services->get('Config');
-$configLocal = require dirname(__DIR__, 2) . '/config/module.config.php';
+$configLocal = require_once dirname(__DIR__, 2) . '/config/module.config.php';
 
 if (version_compare((string) $oldVersion, '3.4.19', '<')) {
     // Update vocabulary via sql.
@@ -134,6 +134,21 @@ SQL;
         'New messages were added to make a distinction between user/visitor and accepted/rejected. Check main settings to adapt them.' // @translate
     );
     $messenger->addWarning($message);
+}
+
+if (version_compare((string) $oldVersion, '3.4.22', '<')) {
+    // Fix for upgrade of 3.4.21.
+    $settings->set('access_message_user_request_accepted', $settings->get('access_message_user_request_accepted') ?: $configLocal['access']['settings']['access_message_user_request_accepted']);
+    $settings->set('access_message_user_request_rejected', $settings->get('access_message_user_request_rejected') ?: $configLocal['access']['settings']['access_message_user_request_rejected']);
+    $settings->set('access_message_visitor_subject', $settings->get('access_message_visitor_subject') ?: $configLocal['access']['settings']['access_message_visitor_subject']);
+    $settings->set('access_message_visitor_request_created', $settings->get('access_message_visitor_request_created') ?: $configLocal['access']['settings']['access_message_visitor_request_created']);
+    $settings->set('access_message_visitor_request_accepted', $settings->get('access_message_visitor_request_accepted') ?: $configLocal['access']['settings']['access_message_visitor_request_accepted']);
+    $settings->set('access_message_visitor_request_rejected', $settings->get('access_message_visitor_request_rejected') ?: $configLocal['access']['settings']['access_message_visitor_request_rejected']);
+
+    $message = new Message(
+        'The module manages now http requests "Content Range" that allow to read files faster.' // @translate
+    );
+    $messenger->addSuccess($message);
 }
 
 if (!empty($config['accessresource'])) {
