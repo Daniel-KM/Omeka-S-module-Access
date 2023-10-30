@@ -61,18 +61,6 @@ class AccessFileController extends AbstractActionController
 
     public function fileAction()
     {
-        // Log the statistic for the url even if the file is missing or protected.
-        // Admin requests are automatically skipped.
-        $hasStatistics = $this->getPluginManager()->has('logCurrentUrl');
-        if ($hasStatistics) {
-            // Log file access only for the first request.
-            $hasRange = !empty($_SERVER['HTTP_RANGE'])
-                && $_SERVER['HTTP_RANGE'] !== 'bytes=0-';
-            if (!$hasRange) {
-                $this->logCurrentUrl();
-            }
-        }
-
         $params = $this->params()->fromRoute();
         $storageType = $params['type'] ?? '';
         $filename = $params['filename'] ?? '';
