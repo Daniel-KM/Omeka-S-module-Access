@@ -65,7 +65,12 @@ class AccessFileController extends AbstractActionController
         // Admin requests are automatically skipped.
         $hasStatistics = $this->getPluginManager()->has('logCurrentUrl');
         if ($hasStatistics) {
-            $this->logCurrentUrl();
+            // Log file access only for the first request.
+            $hasRange = !empty($_SERVER['HTTP_RANGE'])
+                && $_SERVER['HTTP_RANGE'] !== 'bytes=0-';
+            if (!$hasRange) {
+                $this->logCurrentUrl();
+            }
         }
 
         $params = $this->params()->fromRoute();
@@ -175,10 +180,10 @@ class AccessFileController extends AbstractActionController
 
         // Write headers.
         $headers = $response->getHeaders()
-            ->addHeaderLine(sprintf('Content-Type: %s', $mediaType))
+            ->addHeaderLine('Content-Type: ' . $mediaType)
             ->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', 'inline', $filename))
-            ->addHeaderLine(sprintf('Content-Length: %s', $filesize))
             ->addHeaderLine('Content-Transfer-Encoding: binary');
+        // $header = new Header\ContentLength();
         if ($cache) {
             // Use this to open files directly.
             // Cache for 30 days.
@@ -187,18 +192,11 @@ class AccessFileController extends AbstractActionController
                 ->addHeaderLine(sprintf('Expires: %s', gmdate('D, d M Y H:i:s', time() + 2592000) . ' GMT'));
         }
 
-        // Fix deprecated warning in \Laminas\Http\PhpEnvironment\Response::sendHeaders() (l. 113).
-        $errorReporting = error_reporting();
-        error_reporting($errorReporting & ~E_DEPRECATED);
-
-        // Send headers separately to handle large files.
-        $response->sendHeaders();
-
-        error_reporting($errorReporting);
-
         // Normally, these formats are not used, so check quality.
         // TODO Why xml content is managed separately when sending file?
         if ($mediaType === 'text/xml' || $mediaType === 'application/xml') {
+            $headers
+                ->addHeaderLine('Content-Length: ' . $filesize);
             $xmlContent = file_get_contents($filepath);
             libxml_use_internal_errors(true);
             $dom = new \DOMDocument('1.1', 'UTF-8');
@@ -213,14 +211,77 @@ class AccessFileController extends AbstractActionController
             return $response;
         }
 
-        // TODO Use Laminas stream response.
+        // TODO Check for Apache XSendFile or Nginx: https://stackoverflow.com/questions/4022260/how-to-detect-x-accel-redirect-nginx-x-sendfile-apache-support-in-php
+        // TODO Use Laminas stream response?
+        // $response = new \Laminas\Http\Response\Stream();
+
+        $headers
+            ->addHeaderLine('Accept-Ranges: bytes');
+
+        // Adapted from https://stackoverflow.com/questions/15797762/reading-mp4-files-with-php.
+        $hasRange = !empty($_SERVER['HTTP_RANGE']);
+        if ($hasRange) {
+            // Start/End are pointers that are 0-based.
+            $start = 0;
+            $end = $filesize - 1;
+            $matches = [];
+            $result = preg_match('/bytes=\h*(?<start>\d+)-(?<end>\d*)[\D.*]?/i', $_SERVER['HTTP_RANGE'], $matches);
+            if ($result) {
+                $start = (int) $matches['start'];
+                if (!empty($matches['end'])) {
+                    $end = (int) $matches['end'];
+                }
+            }
+            // Check valid range to avoid hack.
+            $hasRange = ($start < $filesize && $end < $filesize && $start < $end)
+                && ($start > 0 || $end < ($filesize - 1));
+        }
+
+        if ($hasRange) {
+            // Set partial content.
+            $response
+                ->setStatusCode($response::STATUS_CODE_206);
+            $headers
+                ->addHeaderLine('Content-Length: ' . ($end - $start + 1))
+                ->addHeaderLine("Content-Range: bytes $start-$end/$filesize");
+        } else {
+            $headers
+               ->addHeaderLine('Content-Length: ' . $filesize);
+        }
+
+        // Fix deprecated warning in \Laminas\Http\PhpEnvironment\Response::sendHeaders() (l. 113).
+        $errorReporting = error_reporting();
+        error_reporting($errorReporting & ~E_DEPRECATED);
+
+        // Send headers separately to handle large files.
+        $response->sendHeaders();
+
+        error_reporting($errorReporting);
 
         // Clears all active output buffers to avoid memory overflow.
         $response->setContent('');
         while (ob_get_level()) {
             ob_end_clean();
         }
-        readfile($filepath);
+
+        if ($hasRange) {
+            $fp = @fopen($filepath, 'rb');
+            $buffer = 1024 * 8;
+            $pointer = $start;
+            fseek($fp, $start, SEEK_SET);
+            while (!feof($fp)
+                && $pointer <= $end
+                && connection_status() === CONNECTION_NORMAL
+            ) {
+                set_time_limit(0);
+                echo fread($fp, min($buffer, $end - $pointer + 1));
+                flush();
+                $pointer += $buffer;
+            }
+            fclose($fp);
+        } else {
+            readfile($filepath);
+        }
 
         // TODO Fix issue with session. See readme of module XmlViewer.
         ini_set('display_errors', '0');
