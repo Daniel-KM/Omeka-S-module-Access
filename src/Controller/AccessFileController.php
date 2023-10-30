@@ -199,12 +199,12 @@ class AccessFileController extends AbstractActionController
             return $response;
         }
 
+        $headers
+            ->addHeaderLine('Accept-Ranges: bytes');
+
         // TODO Check for Apache XSendFile or Nginx: https://stackoverflow.com/questions/4022260/how-to-detect-x-accel-redirect-nginx-x-sendfile-apache-support-in-php
         // TODO Use Laminas stream response?
         // $response = new \Laminas\Http\Response\Stream();
-
-        $headers
-            ->addHeaderLine('Accept-Ranges: bytes');
 
         // Adapted from https://stackoverflow.com/questions/15797762/reading-mp4-files-with-php.
         $hasRange = !empty($_SERVER['HTTP_RANGE']);
