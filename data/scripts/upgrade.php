@@ -20,12 +20,12 @@ use Omeka\Stdlib\Message;
  */
 $plugins = $services->get('ControllerPluginManager');
 $api = $plugins->get('api');
-// $config = require dirname(__DIR__, 2) . '/config/module.config.php';
 $settings = $services->get('Omeka\Settings');
 $connection = $services->get('Omeka\Connection');
 $messenger = $plugins->get('messenger');
 
 $config = $services->get('Config');
+$configLocal = require dirname(__DIR__, 2) . '/config/module.config.php';
 
 if (version_compare((string) $oldVersion, '3.4.19', '<')) {
     // Update vocabulary via sql.
@@ -111,14 +111,14 @@ ALTER TABLE `access_request`
 SQL;
     $connection->executeStatement($sql);
 
-    $messageUserUpdated = $settings->get('access_message_user_request_updated') ?: $config['access']['settings']['access_message_user_request_accepted'];
+    $messageUserUpdated = $settings->get('access_message_user_request_updated') ?: $configLocal['access']['settings']['access_message_user_request_accepted'];
     $settings->delete('access_message_user_request_updated');
     $settings->set('access_message_user_request_accepted', $messageUserUpdated);
-    $settings->set('access_message_user_request_rejected', $config['access']['settings']['access_message_user_request_rejected']);
-    $settings->set('access_message_visitor_subject', $config['access']['settings']['access_message_visitor_subject']);
-    $settings->set('access_message_visitor_request_created', $config['access']['settings']['access_message_visitor_request_created']);
-    $settings->set('access_message_visitor_request_accepted', $config['access']['settings']['access_message_visitor_request_accepted']);
-    $settings->set('access_message_visitor_request_rejected', $config['access']['settings']['access_message_visitor_request_rejected']);
+    $settings->set('access_message_user_request_rejected', $configLocal['access']['settings']['access_message_user_request_rejected']);
+    $settings->set('access_message_visitor_subject', $configLocal['access']['settings']['access_message_visitor_subject']);
+    $settings->set('access_message_visitor_request_created', $configLocal['access']['settings']['access_message_visitor_request_created']);
+    $settings->set('access_message_visitor_request_accepted', $configLocal['access']['settings']['access_message_visitor_request_accepted']);
+    $settings->set('access_message_visitor_request_rejected', $configLocal['access']['settings']['access_message_visitor_request_rejected']);
 
     $message = new Message(
         'It is now possible to add a page block to request an access.' // @translate
