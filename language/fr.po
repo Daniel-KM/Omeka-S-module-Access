@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-02 00:00+0000\n"
-"PO-Revision-Date: 2023-10-02 00:00+0000\n"
+"POT-Creation-Date: 2023-10-30 00:00+0000\n"
+"PO-Revision-Date: 2023-10-30 00:00+0000\n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -423,7 +423,7 @@ msgstr "Le vocabulaire « %s » a déjà été installé et a été conserv�
 msgid "It is now possible to add a page block to request an access."
 msgstr "Il est désormais possible d’ajouter un bloc pour demander un accès."
 
-#: data/scripts/upgrade.php:129
+#: data/scripts/upgrade.php:129 data/scripts/upgrade.php:134
 msgid ""
 "New messages were added to make a distinction between user/visitor and "
 "accepted/rejected. Check main settings to adapt them."
@@ -431,7 +431,19 @@ msgstr ""
 "De nouveaux messages ont été ajoutés pour distinguer utilisateur/visiteur et "
 "accepté/rejeté. Vérifiez-les dans les paramètres généraux."
 
-#: data/scripts/upgrade.php:136
+#: data/scripts/upgrade.php:149
+#, fuzzy
+#| msgid ""
+#| "The module manages now content range http requests that allow to read "
+#| "files faster."
+msgid ""
+"The module manages now http requests \"Content Range\" that allow to read "
+"files faster."
+msgstr ""
+"Le module prend désormais en compte les requêtes http « Content Range » qui "
+"permettent de lire les fichiers plus rapidement."
+
+#: data/scripts/upgrade.php:156
 msgid ""
 "The key \"accessresource\" in the file config/local.config.php at the root "
 "of Omeka can be removed."
