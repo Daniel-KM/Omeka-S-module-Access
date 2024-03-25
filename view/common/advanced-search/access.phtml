@@ -12,13 +12,14 @@ $plugins = $this->getHelperPluginManager();
 $setting = $plugins->get('setting');
 
 $accessLevels = $setting('access_property_levels', AccessStatusRepresentation::LEVELS);
-$valueOptions = $accessLevels + ['' => 'All'];
+$valueOptions = ['' => 'All'] + $accessLevels;
 unset($valueOptions['protected']);
 
 $accessElement = (new OptionalRadio('access'))
     ->setLabel('Access')
+    ->setLabelAttributes(['class' => 'type-radio'])
     ->setValueOptions($valueOptions)
-    ->setValue($query['access'] ?? null);
+    ->setValue($query['access'] ?? '');
 ?>
 
 <?= $this->formRow($accessElement) ?>
