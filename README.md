@@ -381,7 +381,7 @@ Copyright
 [Numeric Datatypes]: https://github.com/omeka-s-modules/NumericDatatypes
 [Easy Admin]: https://gitlab.com/Daniel-KM/Omeka-S-module-EasyAdmin
 [Statistics]: https://gitlab.com/Daniel-KM/Omeka-S-module-Statistics
-[Installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
+[installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [Access.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/releases
 [Protect original files]: #protect-original-files
 [.htaccess]: https://github.com/omeka/omeka-s/blob/develop/.htaccess.dist#L4
