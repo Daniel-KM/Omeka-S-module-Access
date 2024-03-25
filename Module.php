@@ -34,6 +34,8 @@ class Module extends AbstractModule
         $skipMessage = true;
         require_once __DIR__ . '/data/scripts/upgrade_vocabulary.php';
 
+        // Check if module AccessResource is installed.
+
         /** @var \Doctrine\DBAL\Connection $connection */
         $connection = $services->get('Omeka\Connection');
         try {
@@ -52,54 +54,46 @@ class Module extends AbstractModule
         $version = $module ? $module->getIni('version') : null;
         $status = $module ? $module->getState() : \Omeka\Module\Manager::STATE_NOT_FOUND;
 
-        if (!$module || !$version || in_array($status, [
-            \Omeka\Module\Manager::STATE_NOT_INSTALLED,
-            \Omeka\Module\Manager::STATE_NOT_FOUND,
-            \Omeka\Module\Manager::STATE_INVALID_MODULE,
-            \Omeka\Module\Manager::STATE_INVALID_INI,
+        if (!$module || !$version || !in_array($status, [
+            \Omeka\Module\Manager::STATE_ACTIVE,
+            \Omeka\Module\Manager::STATE_NOT_ACTIVE,
+            \Omeka\Module\Manager::STATE_NEEDS_UPGRADE,
         ])) {
             parent::install($services);
             return;
         }
 
-        if ($version && version_compare($version, '3.4.17', '<')) {
+        if (version_compare($version, '3.4.17.1', '<')) {
             throw new \Omeka\Module\Exception\ModuleCannotInstallException(
-                'To be automatically upgraded and replaced by this module, the module "Access Resource" should be updated first to version 3.4.17, else uninstall it first, but you will lose access statuses and requests.' // @translate
+                'To be automatically upgraded and replaced by this module, the module "Access Resource" should be upgraded first to version 3.4.17.1. Else uninstall it first, but you will lose access statuses and requests.' // @translate
             );
         }
 
-        if ($version && $module && $module->getState() === \Omeka\Module\Manager::STATE_NEEDS_UPGRADE) {
-            $filepath = dirname($this->modulePath()) . '/AccessResource/data/scripts/upgrade.php';
-            if (file_exists($filepath) && filesize($filepath) && is_readable($filepath)) {
-                $serviceLocator = $services;
-                $this->setServiceLocator($serviceLocator);
-                /**
-                 * @var string $oldVersion
-                 * @var string $newVersion
-                 */
-                $oldVersion = $module->getDb('version');
-                $newVersion = $version;
-                require_once $filepath;
-            }
+        if (version_compare($version, '3.4.17.1', '>')) {
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException(
+                'To be automatically upgraded and replaced by this module, the module "Access Resource" should be downgraded first to version 3.4.17.1. Else uninstall it first, but you will lose access statuses and requests.' // @translate
+            );
         }
 
-        if (!$version || ($module && in_array($module->getState(), [
-            \Omeka\Module\Manager::STATE_ACTIVE,
-            \Omeka\Module\Manager::STATE_NOT_ACTIVE,
-            \Omeka\Module\Manager::STATE_NEEDS_UPGRADE,
-        ]))) {
-            try {
-                $filepath = $this->modulePath() . '/data/scripts/upgrade_from_accessresource.php';
-                require_once $filepath;
-            } catch (\Exception $e) {
-                $message = new Message(
-                    'An error occurred during migration of module "%s". Check the config and uninstall it manually.', // @translate
-                    'AccessResource'
-                );
-                $messenger->addError($message);
-                throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
-            }
+        try {
+            $filepath = $this->modulePath() . '/data/scripts/upgrade_from_accessresource.php';
+            require_once $filepath;
+        } catch (\Exception $e) {
+            $message = new Message(
+                'An error occurred during migration of module "%s". Check the config and uninstall it manually.', // @translate
+                'AccessResource'
+            );
+            $messenger->addError($message);
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
         }
+
+        // Upgrade the database with new features.
+        $oldVersion = $version;
+        $newVersion = '999';
+        $filepath = __DIR__ . '/data/scripts/upgrade.php';
+        $serviceLocator = $services;
+        $this->setServiceLocator($serviceLocator);
+        require_once $filepath;
     }
 
     protected function postInstall(): void
