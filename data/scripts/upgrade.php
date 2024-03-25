@@ -25,7 +25,7 @@ $connection = $services->get('Omeka\Connection');
 $messenger = $plugins->get('messenger');
 
 $config = $services->get('Config');
-$configLocal = require_once dirname(__DIR__, 2) . '/config/module.config.php';
+$configLocal = require dirname(__DIR__, 2) . '/config/module.config.php';
 
 if (version_compare((string) $oldVersion, '3.4.19', '<')) {
     // Update vocabulary via sql.
@@ -124,11 +124,6 @@ SQL;
         'It is now possible to add a page block to request an access.' // @translate
     );
     $messenger->addSuccess($message);
-
-    $message = new Message(
-        'New messages were added to make a distinction between user/visitor and accepted/rejected. Check main settings to adapt them.' // @translate
-    );
-    $messenger->addWarning($message);
 
     $message = new Message(
         'New messages were added to make a distinction between user/visitor and accepted/rejected. Check main settings to adapt them.' // @translate
