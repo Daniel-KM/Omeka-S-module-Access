@@ -301,6 +301,7 @@ class Module extends AbstractModule
             'Omeka\Controller\Admin\Item',
             'Omeka\Controller\Admin\ItemSet',
             'Omeka\Controller\Admin\Media',
+            'Omeka\Controller\Admin\Query',
             'Omeka\Controller\Site\Item',
             'Omeka\Controller\Site\ItemSet',
             'Omeka\Controller\Site\Media',
@@ -864,6 +865,7 @@ class Module extends AbstractModule
             if (!in_array($level, AccessStatusRepresentation::LEVELS)) {
                 $level = AccessStatus::FREE;
             }
+            // FIXME An issue occurred when storing text content in a property of pdf media in module ExtractOcr not in front-end job: the media does not exist yet, so cannot be updated.
             $accessStatus->setLevel($level);
         }
 
