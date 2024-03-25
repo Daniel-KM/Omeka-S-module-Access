@@ -1307,7 +1307,7 @@ HTML;
     public function handleViewAdvancedSearch(Event $event): void
     {
         $partials = $event->getParam('partials');
-        $partials[] = 'common/access-advanced-search';
+        $partials[] = 'common/advanced-search/access';
         $event->setParam('partials', $partials);
     }
 
