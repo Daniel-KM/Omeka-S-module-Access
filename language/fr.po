@@ -7,8 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-30 00:00+0000\n"
-"PO-Revision-Date: 2023-10-30 00:00+0000\n"
+"POT-Creation-Date: 2024-03-25 00:00+0000"
+"MI+ZONE\n"
+"PO-Revision-Date: \n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.2.2\n"
 
-#: Module.php:113
+#: Module.php:107
 msgid ""
 "It is recommenced to run the job in config form to initialize all access "
 "statuses."
@@ -25,7 +26,7 @@ msgstr ""
 "Il est recommandé de lancer la tâche dans la configuration pour initialiser "
 "tous les statuts d’accès."
 
-#: Module.php:440
+#: Module.php:435
 msgid ""
 "When properties are used, three properties should be defined for \"level\", "
 "\"embargo start\" and \"embargo end\"."
@@ -34,15 +35,15 @@ msgstr ""
 "définies pour le « niveau », le « début de l’embargo » et la « fin de "
 "l’embargo »."
 
-#: Module.php:455
+#: Module.php:450
 msgid "Job is not launched: no option was set."
 msgstr "La tâche n’est pas lancée : aucune option n’a été définie."
 
-#: Module.php:1334
+#: Module.php:1330
 msgid "Access"
 msgstr "Accès"
 
-#: Module.php:1356 view/access/admin/request/browse.phtml:26
+#: Module.php:1352 view/access/admin/request/browse.phtml:26
 #: view/access/admin/request/edit.phtml:29
 #: view/access/admin/request/edit.phtml:31
 #: view/access/admin/request/show.phtml:24
@@ -50,7 +51,7 @@ msgstr "Accès"
 msgid "Access requests"
 msgstr "Demandes d’accès"
 
-#: Module.php:1452
+#: Module.php:1448
 #, php-format
 msgid ""
 "To control access to files, you must add a rule in file .htaccess at the "
@@ -148,22 +149,22 @@ msgstr "Il y a eu une erreur lors de l’enregistrement du message."
 msgid "The request was submitted successfully."
 msgstr "La demande a été envoyée avec succès."
 
-#: src/Generic/AbstractModule.php:80 src/Generic/AbstractModule.php:88
-#: src/Generic/AbstractModule.php:890
+#: src/Generic/AbstractModule.php:67 src/Generic/AbstractModule.php:75
+#: src/Generic/AbstractModule.php:857
 #, php-format
 msgid "This module requires the module \"%s\"."
 msgstr "Ce module requiert le module « %s »."
 
-#: src/Generic/AbstractModule.php:93
+#: src/Generic/AbstractModule.php:80
 #, php-format
 msgid "This module requires modules \"%s\"."
 msgstr "Ce module requiert les modules \"%s\"."
 
-#: src/Generic/AbstractModule.php:101
+#: src/Generic/AbstractModule.php:88
 msgid "This module has resources that cannot be installed."
 msgstr "Ce module a des ressources qui ne peuvent pas être installées."
 
-#: src/Generic/AbstractModule.php:108
+#: src/Generic/AbstractModule.php:95
 msgid ""
 "This module cannot install its tables, because they exist already. Try to "
 "remove them first."
@@ -171,18 +172,18 @@ msgstr ""
 "Ce module ne peut pas installer ses tables car elles existent déjà. Essayez "
 "de les supprimer manuellement."
 
-#: src/Generic/AbstractModule.php:398
+#: src/Generic/AbstractModule.php:365
 #, php-format
 msgid "The module removed tables \"%s\" from a previous broken install."
 msgstr ""
 "Le module a supprimé les tables « %s » depuis une installation échouée."
 
-#: src/Generic/AbstractModule.php:885
+#: src/Generic/AbstractModule.php:852
 #, php-format
 msgid "This module requires the module \"%1$s\", version %2$s or above."
 msgstr "Ce module requiert le module « %1$s », version %2$s ou supérieure."
 
-#: src/Generic/AbstractModule.php:982
+#: src/Generic/AbstractModule.php:949
 #, php-format
 msgid ""
 "The module \"%s\" was automatically deactivated because the dependencies are "
@@ -423,7 +424,7 @@ msgstr "Le vocabulaire « %s » a déjà été installé et a été conserv�
 msgid "It is now possible to add a page block to request an access."
 msgstr "Il est désormais possible d’ajouter un bloc pour demander un accès."
 
-#: data/scripts/upgrade.php:129 data/scripts/upgrade.php:134
+#: data/scripts/upgrade.php:129
 msgid ""
 "New messages were added to make a distinction between user/visitor and "
 "accepted/rejected. Check main settings to adapt them."
@@ -431,38 +432,45 @@ msgstr ""
 "De nouveaux messages ont été ajoutés pour distinguer utilisateur/visiteur et "
 "accepté/rejeté. Vérifiez-les dans les paramètres généraux."
 
-#: data/scripts/upgrade.php:149
-#, fuzzy
-#| msgid ""
-#| "The module manages now content range http requests that allow to read "
-#| "files faster."
+#: data/scripts/upgrade.php:144
 msgid ""
 "The module manages now http requests \"Content Range\" that allow to read "
 "files faster."
 msgstr ""
-"Le module prend désormais en compte les requêtes http « Content Range » qui "
+"Le module gère désormais les requêtes http de type « Content Range » qui "
 "permettent de lire les fichiers plus rapidement."
 
-#: data/scripts/upgrade.php:156
+#: data/scripts/upgrade.php:151
 msgid ""
 "The key \"accessresource\" in the file config/local.config.php at the root "
 "of Omeka can be removed."
 msgstr ""
 "L’index « accessresource » dans le fichier config/local.config.php à la "
-"racine d’Omeka peut être supprimée."
+"racine d’Omeka peut être supprimé."
 
-#: Module.php:67
+#: Module.php:68
 msgid ""
 "To be automatically upgraded and replaced by this module, the module "
-"\"Access Resource\" should be updated first to version 3.4.17, else "
+"\"Access Resource\" should be upgraded first to version 3.4.17.1. Else "
 "uninstall it first, but you will lose access statuses and requests."
 msgstr ""
 "Pour être automatiquement mis à niveau et remplacé par ce module, le module "
-"« Access Resource » doit d’abord être mis à niveau à la version 3.4.17. Il "
+"« Access Resource » doit d’abord être mis à niveau à la version 3.4.17.1. Il "
 "est aussi possible de le désinstaller, mais vous perdrez les statuts d’accès "
 "et les demandes."
 
-#: Module.php:96
+#: Module.php:74
+msgid ""
+"To be automatically upgraded and replaced by this module, the module "
+"\"Access Resource\" should be downgraded first to version 3.4.17.1. Else "
+"uninstall it first, but you will lose access statuses and requests."
+msgstr ""
+"Pour être automatiquement mis à niveau et remplacé par ce module, le module "
+"« Access Resource » doit d’abord être rétrogradé à la version 3.4.17.1. Il "
+"est aussi possible de le désinstaller, mais vous perdrez les statuts d’accès "
+"et les demandes."
+
+#: Module.php:83
 #, php-format
 msgid ""
 "An error occurred during migration of module \"%s\". Check the config and "
@@ -471,7 +479,7 @@ msgstr ""
 "Une erreur est survenue pendant la migration du module « %s ». Vérifier la "
 "config et désinstaller le manuellement."
 
-#: Module.php:579
+#: Module.php:574
 #, php-format
 msgid ""
 "Cleaned params used for Access:\n"
@@ -480,63 +488,63 @@ msgstr ""
 "Paramètres utilisés pour le module Access :\n"
 "%s"
 
-#: Module.php:991 src/Controller/Admin/RequestController.php:182
+#: Module.php:987 src/Controller/Admin/RequestController.php:182
 msgid "You should set either a user or an email or check box for token."
 msgstr "Vous devez définir un utilisateur, un courriel ou un jeton."
 
-#: Module.php:1014 src/Controller/Admin/RequestController.php:208
+#: Module.php:1010 src/Controller/Admin/RequestController.php:208
 msgid "Access request successfully created."
 msgstr "Demande d’accès créée avec succès."
 
-#: Module.php:1089 src/Form/Admin/BatchEditFieldset.php:48
+#: Module.php:1085 src/Form/Admin/BatchEditFieldset.php:48
 msgid "Free"
 msgstr "Libre"
 
-#: Module.php:1090 src/Form/Admin/BatchEditFieldset.php:49
+#: Module.php:1086 src/Form/Admin/BatchEditFieldset.php:49
 msgid "Reserved"
 msgstr "Réservé"
 
-#: Module.php:1091 src/Form/Admin/BatchEditFieldset.php:50
+#: Module.php:1087 src/Form/Admin/BatchEditFieldset.php:50
 msgid "Protected"
 msgstr "Protégé"
 
-#: Module.php:1106 src/ColumnType/AccessLevel.php:13
+#: Module.php:1102 src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr "Niveau d’accès"
 
-#: Module.php:1120 src/Form/Admin/BatchEditFieldset.php:87
+#: Module.php:1116 src/Form/Admin/BatchEditFieldset.php:87
 msgid "Embargo start"
 msgstr "Début de l’embargo"
 
-#: Module.php:1137 Module.php:1145 src/Form/Admin/BatchEditFieldset.php:132
+#: Module.php:1133 Module.php:1141 src/Form/Admin/BatchEditFieldset.php:132
 msgid "Embargo end"
 msgstr "Fin de l’embargo"
 
-#: Module.php:1155
+#: Module.php:1151
 #, php-format
 msgid "Access level (managed via property %s)"
 msgstr "Niveau d’accès (géré par la propriété %s)"
 
-#: Module.php:1158
+#: Module.php:1154
 #, php-format
 msgid "Embargo start (managed via property %s)"
 msgstr "Début de l’embargo (géré par la propriété %s)"
 
-#: Module.php:1161
+#: Module.php:1157
 #, php-format
 msgid "Embargo end (managed via property %s)"
 msgstr "Fin de l’embargo (géré par la propriété %s)"
 
-#: Module.php:1172 src/Form/Admin/BatchEditFieldset.php:186
+#: Module.php:1168 src/Form/Admin/BatchEditFieldset.php:186
 msgid "Apply access level and embargo to items and medias"
 msgstr ""
 "Appliquer des niveaux d’accès et des embargos aux contenus et aux médias"
 
-#: Module.php:1173 src/Form/Admin/BatchEditFieldset.php:187
+#: Module.php:1169 src/Form/Admin/BatchEditFieldset.php:187
 msgid "Apply access level and embargo to medias"
 msgstr "Appliquer un niveau d’accès et un embargo aux médias"
 
-#: Module.php:1513
+#: Module.php:1509
 #, php-format
 msgid ""
 "A job was launched in background to update access statuses according to "
@@ -545,12 +553,12 @@ msgstr ""
 "Une tâche a été lancée en arrière-plan pour mettre à jour les statuts "
 "d’accès selon les paramètres : (%1$stâche #%2$d%3$s, %4$sjournaux%3$s)."
 
-#: Module.php:1555
+#: Module.php:1551
 #, php-format
 msgid "The ip \"%s\" is empty or invalid."
 msgstr "L’ip « %s » est vide ou incorrecte."
 
-#: Module.php:1565
+#: Module.php:1561
 #, php-format
 msgid ""
 "The item sets list \"%1$s\" for ip \"%2$s\" is invalid: they should be "
@@ -559,7 +567,7 @@ msgstr ""
 "La liste des collections « %1$s » pour l’ip « %2$s » est incorrecte : ce "
 "doit être des numéros."
 
-#: Module.php:1575
+#: Module.php:1571
 #, php-format
 msgid ""
 "The item sets list \"%1$s\" for ip \"%2$s\" contains unknown item sets "
