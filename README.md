@@ -45,6 +45,8 @@ Until version 3.4.16, the module was not compatible with module [Group].
 
 See general end user documentation for [installing a module].
 
+This module requires the module [Common], that should be installed first.
+
 * From the zip
 
 Download the last release [Access.zip] from the list of releases, and uncompress
@@ -180,7 +182,7 @@ is limited to files, that is the only type in the current version of the module.
 
 The permission to see a reserved content can be done via many ways: Users can be
 checked via the role guest, the authentication via an external identity provider
-(module [CAS], [LDAP] and [Single Sign On]), by ip, by email or by a token.
+(module [CAS], [LDAP] and [Single Sign-On]), by ip, by email or by a token.
 
 One important thing to understand is to choose to define the access for each
 type of resource: item sets, items and media and to choose if the access is done
@@ -377,11 +379,12 @@ Copyright
 [Contact Us]: https://gitlab.com/Daniel-KM/Omeka-S-module-ContactUs
 [CAS]: https://github.com/biblibre/Omeka-S-module-CAS
 [LDAP]: https://gitlab.com/Daniel-KM/Omeka-S-module-Ldap
-[Single Sign On]: https://gitlab.com/Daniel-KM/Omeka-S-module-SingleSignOn
+[Single Sign-On]: https://gitlab.com/Daniel-KM/Omeka-S-module-SingleSignOn
 [Numeric Datatypes]: https://github.com/omeka-s-modules/NumericDatatypes
 [Easy Admin]: https://gitlab.com/Daniel-KM/Omeka-S-module-EasyAdmin
 [Statistics]: https://gitlab.com/Daniel-KM/Omeka-S-module-Statistics
 [installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
+[Common]: https://gitlab.com/Daniel-KM/Omeka-S-module-Common
 [Access.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/releases
 [Protect original files]: #protect-original-files
 [.htaccess]: https://github.com/omeka/omeka-s/blob/develop/.htaccess.dist#L4
