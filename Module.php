@@ -2,34 +2,50 @@
 
 namespace Access;
 
-if (!class_exists(\Generic\AbstractModule::class)) {
-    require file_exists(dirname(__DIR__) . '/Generic/AbstractModule.php')
-        ? dirname(__DIR__) . '/Generic/AbstractModule.php'
-        : __DIR__ . '/src/Generic/AbstractModule.php';
+if (!class_exists(\Common\TraitModule::class)) {
+    require_once dirname(__DIR__) . '/Common/TraitModule.php';
 }
 
 use Access\Api\Representation\AccessStatusRepresentation;
 use Access\Entity\AccessRequest;
 use Access\Entity\AccessStatus;
 use Access\Form\Admin\BatchEditFieldset;
+use Common\Stdlib\PsrMessage;
+use Common\TraitModule;
 use DateTime;
-use Generic\AbstractModule;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
-use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Entity\Resource;
-use Omeka\Stdlib\Message;
+use Omeka\Module\AbstractModule;
 
+/**
+ * Access
+ *
+ * @copyright Daniel Berthereau, 2019-2024
+ * @license http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.txt
+ */
 class Module extends AbstractModule
 {
+    use TraitModule;
+
     const NAMESPACE = __NAMESPACE__;
 
-    public function install(ServiceLocatorInterface $services): void
+    protected function preInstall(): void
     {
-        $this->setServiceLocator($services);
+        $services = $this->getServiceLocator();
+        $translate = $services->get('ControllerPluginManager')->get('translate');
+
+        if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.54')) {
+            $message = new \Omeka\Stdlib\Message(
+                $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+                'Common', '3.4.54'
+            );
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+        }
+
         /** @var bool $skipMessage */
         $skipMessage = true;
         require_once __DIR__ . '/data/scripts/upgrade_vocabulary.php';
@@ -41,7 +57,7 @@ class Module extends AbstractModule
         try {
             $connection->executeQuery('SELECT id FROM access_log LIMIT 1')->fetchOne();
         } catch (\Exception $e) {
-            parent::install($services);
+            // Continue standard install.
             return;
         }
 
@@ -59,19 +75,19 @@ class Module extends AbstractModule
             \Omeka\Module\Manager::STATE_NOT_ACTIVE,
             \Omeka\Module\Manager::STATE_NEEDS_UPGRADE,
         ])) {
-            parent::install($services);
+            // Continue standard install.
             return;
         }
 
         if (version_compare($version, '3.4.17.1', '<')) {
             throw new \Omeka\Module\Exception\ModuleCannotInstallException(
-                'To be automatically upgraded and replaced by this module, the module "Access Resource" should be upgraded first to version 3.4.17.1. Else uninstall it first, but you will lose access statuses and requests.' // @translate
+                $translate('To be automatically upgraded and replaced by this module, the module "Access Resource" should be upgraded first to version 3.4.17.1. Else uninstall it first, but you will lose access statuses and requests.') // @translate
             );
         }
 
         if (version_compare($version, '3.4.17.1', '>')) {
             throw new \Omeka\Module\Exception\ModuleCannotInstallException(
-                'To be automatically upgraded and replaced by this module, the module "Access Resource" should be downgraded first to version 3.4.17.1. Else uninstall it first, but you will lose access statuses and requests.' // @translate
+                $translate('To be automatically upgraded and replaced by this module, the module "Access Resource" should be downgraded first to version 3.4.17.1. Else uninstall it first, but you will lose access statuses and requests.') // @translate
             );
         }
 
@@ -79,32 +95,34 @@ class Module extends AbstractModule
             $filepath = $this->modulePath() . '/data/scripts/upgrade_from_accessresource.php';
             require_once $filepath;
         } catch (\Exception $e) {
-            $message = new Message(
-                'An error occurred during migration of module "%s". Check the config and uninstall it manually.', // @translate
-                'AccessResource'
+            $message = new PsrMessage(
+                'An error occurred during migration of module "{module}". Check the config and uninstall it manually.', // @translate
+                ['module' => 'AccessResource']
             );
             $messenger->addError($message);
             throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
         }
 
         // Upgrade the database with new features.
+
+        /**
+         * @var string $oldVersion
+         * @var string $newVersion
+         */
         $oldVersion = $version;
         $newVersion = '999';
         $filepath = __DIR__ . '/data/scripts/upgrade.php';
-        $serviceLocator = $services;
-        $this->setServiceLocator($serviceLocator);
         require_once $filepath;
     }
 
     protected function postInstall(): void
     {
         $services = $this->getServiceLocator();
-        $translator = $services->get('MvcTranslator');
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
 
         // Don't add the job to update initial status: use config form.
-        $message = new \Omeka\Stdlib\Message(
-            $translator->translate('It is recommenced to run the job in config form to initialize all access statuses.') // @translate
+        $message = new PsrMessage(
+            'It is recommenced to run the job in config form to initialize all access statuses.' // @translate
         );
         $messenger->addWarning($message);
 
@@ -391,14 +409,14 @@ class Module extends AbstractModule
         $renderer->headScript()
             ->appendFile($renderer->assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
         return '<style>fieldset[name=fieldset_index] .inputs label {display: block;}</style>'
-            . parent::getConfigForm($renderer);
+            . $this->getConfigFormAuto($renderer);
     }
 
     public function handleConfigForm(AbstractController $controller)
     {
         $this->warnConfig();
 
-        $result = parent::handleConfigForm($controller);
+        $result = $this->handleConfigFormAuto($controller);
         if (!$result) {
             return false;
         }
@@ -570,9 +588,11 @@ class Module extends AbstractModule
             || array_key_exists('access_recursive', $newData);
 
         if ($needProcess) {
-            $this->getServiceLocator()->get('Omeka\Logger')->info(new Message(
-                "Cleaned params used for Access:\n%s", // @translate
-                json_encode($newData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_LINE_TERMINATORS)
+            $this->getServiceLocator()->get('Omeka\Logger')->info(new PsrMessage(
+                "Cleaned params used for Access:\n{json}", // @translate
+                [
+                    'json' => json_encode($newData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_LINE_TERMINATORS),
+                ]
             ));
             $newData = [
                 'is_batch_process' => true,
@@ -983,7 +1003,7 @@ class Module extends AbstractModule
                 }
                 $data['o-access:end'] = $date;
                 if (!$data['o:user'] && !$data['o:email'] && !$data['o-access:token']) {
-                    $message = new Message(
+                    $message = new PsrMessage(
                         'You should set either a user or an email or check box for token.', // @translate
                     );
                     $messenger->addError($message);
@@ -1006,7 +1026,7 @@ class Module extends AbstractModule
                     }
                     $response = $api($form)->create('access_requests', $data);
                     if ($response) {
-                        $message = new Message(
+                        $message = new PsrMessage(
                             'Access request successfully created.', // @translate
                         );
                         $messenger->addSuccess($message);
@@ -1097,7 +1117,7 @@ HTML;
             }
         }
 
-        $levelElement = new \Access\Form\Element\OptionalRadio('o-access:level');
+        $levelElement = new \Common\Form\Element\OptionalRadio('o-access:level');
         $levelElement
             ->setLabel('Access level') // @translate
             ->setValueOptions($valueOptions)
@@ -1443,10 +1463,12 @@ HTML;
         }
 
         $services = $this->getServiceLocator();
-        $translator = $services->get('MvcTranslator');
-        $message = new \Omeka\Stdlib\Message(
-            $translator->translate('To control access to files, you must add a rule in file .htaccess at the root of Omeka. See %1$sreadme%2$s.'), // @translate
-            '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-Access" target="_blank" rel="noopener">', '</a>'
+        $message = new PsrMessage(
+            'To control access to files, you must add a rule in file .htaccess at the root of Omeka. See {link}readme{link_end}.', // @translate
+            [
+                'link' => '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-Access" target="_blank" rel="noopener">',
+                'link_end' => '</a>',
+            ]
         );
         $message->setEscapeHtml(false);
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
@@ -1491,7 +1513,7 @@ HTML;
         $services = $this->getServiceLocator();
 
         $plugins = $services->get('ControllerPluginManager');
-        $url = $plugins->get('url');
+        $urlPlugin = $plugins->get('url');
         $messenger = $plugins->get('messenger');
 
         $args += [
@@ -1505,16 +1527,18 @@ HTML;
         $job = $useForeground
             ? $dispatcher->dispatch(\Access\Job\AccessStatusUpdate::class, $args, $services->get(\Omeka\Job\DispatchStrategy\Synchronous::class))
             : $dispatcher->dispatch(\Access\Job\AccessStatusUpdate::class, $args);
-        $message = new Message(
-            'A job was launched in background to update access statuses according to parameters: (%1$sjob #%2$d%3$s, %4$slogs%3$s).', // @translate
-            sprintf('<a href="%s">',
-                htmlspecialchars($url->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
-            ),
-            $job->getId(),
-            '</a>',
-            sprintf('<a href="%1$s">', $this->isModuleActive('Log')
-                ? $url->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])
-                : $url->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))
+        $message = new PsrMessage(
+            'A job was launched in background to update access statuses according to parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+            [
+                'link_job' => sprintf('<a href="%s">',
+                    htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
+                ),
+                'job_id' => $job->getId(),
+                'link_end' => '</a>',
+                'link_log' => sprintf('<a href="%1$s">', $this->isModuleActive('Log')
+                    ? $urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])
+                    : $urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
+            ]
         );
         $message->setEscapeHtml(false);
         $messenger->addSuccess($message);
@@ -1547,9 +1571,9 @@ HTML;
                 continue;
             }
             if (!$ip || !filter_var(strtok($ip, '/'), FILTER_VALIDATE_IP)) {
-                $message = new Message(
-                    'The ip "%s" is empty or invalid.', // @translate
-                    $ip
+                $message = new PsrMessage(
+                    'The ip "{ip}" is empty or invalid.', // @translate
+                    ['ip' => $ip]
                 );
                 $messenger->addError($message);
                 $hasError = true;
@@ -1557,9 +1581,9 @@ HTML;
             } elseif ($itemSetIds) {
                 $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace('/\D/', ' ', $itemSetIds))));
                 if (!$itemSetIdsArray) {
-                    $message = new Message(
-                        'The item sets list "%1$s" for ip "%2$s" is invalid: they should be numeric ids.', // @translate
-                        $itemSetIds, $ip
+                    $message = new PsrMessage(
+                        'The item sets list "{name}" for ip {ip} is invalid: they should be numeric ids.', // @translate
+                        ['name' => $itemSetIds, 'ip' => $ip]
                     );
                     $messenger->addError($message);
                     $hasError = true;
@@ -1567,9 +1591,9 @@ HTML;
                 }
                 $itemSets = $api->search('item_sets', ['id' => $itemSetIdsArray], ['returnScalar' => 'id'])->getContent();
                 if (count($itemSets) !== count($itemSetIdsArray)) {
-                    $message = new Message(
-                        'The item sets list "%1$s" for ip "%2$s" contains unknown item sets (%3$s).', // @translate
-                        $itemSetIds, $ip, implode(', ', array_diff($itemSetIdsArray, $itemSets))
+                    $message = new PsrMessage(
+                        'The item sets list "{name}" for ip {ip} contains unknown item sets ({list}).', // @translate
+                        ['name' => $itemSetIds, 'ip' => $ip, 'list' => implode(', ', array_diff($itemSetIdsArray, $itemSets))]
                     );
                     $messenger->addError($message);
                     $hasError = true;

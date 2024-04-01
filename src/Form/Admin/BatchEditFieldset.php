@@ -3,7 +3,7 @@
 namespace Access\Form\Admin;
 
 use Access\Entity\AccessStatus;
-use Access\Form\Element as AccessElement;
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 
@@ -65,7 +65,7 @@ class BatchEditFieldset extends Fieldset
         $this
             ->add([
                 'name' => 'o-access:level',
-                'type' => AccessElement\OptionalRadio::class,
+                'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'New level', // @translate
                     'value_options' => [
@@ -82,7 +82,7 @@ class BatchEditFieldset extends Fieldset
 
             ->add([
                 'name' => 'embargo_start_update',
-                'type' => AccessElement\OptionalRadio::class,
+                'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'Embargo start', // @translate
                     'value_options' => [
@@ -127,7 +127,7 @@ class BatchEditFieldset extends Fieldset
             ])
             ->add([
                 'name' => 'embargo_end_update',
-                'type' => AccessElement\OptionalRadio::class,
+                'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'Embargo end', // @translate
                     'value_options' => [

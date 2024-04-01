@@ -3,7 +3,7 @@
 namespace Access\Form\Admin;
 
 use Access\Entity\AccessRequest;
-use Access\Form\Element as AccessElement;
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Form;
 use Omeka\Form\Element as OmekaElement;
@@ -171,7 +171,7 @@ class AccessRequestForm extends Form
             $this
                 ->add([
                     'name' => 'o:status',
-                    'type' => AccessElement\OptionalRadio::class,
+                    'type' => CommonElement\OptionalRadio::class,
                     'options' => [
                         'label' => 'Status', // @translate
                         'value_options' => $statusLabels,
