@@ -17,11 +17,6 @@ class IsExternalUser extends AbstractPlugin
     protected $authenticationService;
 
     /**
-     * @var \SingleSignOn\Mvc\Controller\Plugin\IsSsoUser
-     */
-    protected $isSsoUser;
-
-    /**
      * @var \CAS\Mvc\Controller\Plugin\IsCasUser
      */
     protected $isCasUser;
@@ -31,16 +26,21 @@ class IsExternalUser extends AbstractPlugin
      */
     protected $isLdapUser;
 
+    /**
+     * @var \SingleSignOn\Mvc\Controller\Plugin\IsSsoUser
+     */
+    protected $isSsoUser;
+
     public function __construct(
         AuthenticationService $authenticationService,
-        ?IsSsoUser $isSsoUser,
         ?IsCasUser $isCasUser,
-        ?IsLdapUser $isLdapUser
+        ?IsLdapUser $isLdapUser,
+        ?IsSsoUser $isSsoUser
     ) {
         $this->authenticationService = $authenticationService;
-        $this->isSsoUser = $isSsoUser;
         $this->isCasUser = $isCasUser;
         $this->isLdapUser = $isLdapUser;
+        $this->isSsoUser = $isSsoUser;
     }
 
     /**

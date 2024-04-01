@@ -6,16 +6,19 @@ use Access\Api\Representation\AccessStatusRepresentation;
 use Access\Entity\AccessRequest;
 use Access\Entity\AccessStatus;
 use Access\Mvc\Controller\Plugin\AccessStatus as AccessStatusPlugin;
+use CAS\Mvc\Controller\Plugin\IsCasUser;
 // use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 // use Doctrine\ORM\Query\Parameter;
 use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Laminas\Mvc\Controller\Plugin\Params;
+use Ldap\Mvc\Controller\Plugin\IsLdapUser;
 use Omeka\Api\Representation\MediaRepresentation;
 use Omeka\Entity\User;
 use Omeka\Mvc\Controller\Plugin\UserIsAllowed;
 use Omeka\Settings\Settings;
+use SingleSignOn\Mvc\Controller\Plugin\IsSsoUser;
 
 class IsAllowedMediaContent extends AbstractPlugin
 {
@@ -35,9 +38,24 @@ class IsAllowedMediaContent extends AbstractPlugin
     protected $accessStatus;
 
     /**
+     * @var \CAS\Mvc\Controller\Plugin\IsCasUser
+     */
+    protected $isCasUser;
+
+        /**
      * @var \Access\Mvc\Controller\Plugin\IsExternalUser
      */
     protected $isExternalUser;
+
+    /**
+     * @var \Ldap\Mvc\Controller\Plugin\IsLdapUser
+     */
+    protected $isLdapUser;
+
+    /**
+     * @var \SingleSignOn\Mvc\Controller\Plugin\IsSsoUser
+     */
+    protected $isSsoUser;
 
     /**
      * @var \Omeka\Entity\User;
@@ -55,21 +73,27 @@ class IsAllowedMediaContent extends AbstractPlugin
     protected $params;
 
     public function __construct(
-        EntityManager $entityManager,
-        UserIsAllowed $userIsAllowed,
         AccessStatusPlugin $accessStatus,
+        EntityManager $entityManager,
+        ?IsCasUser $isCasUser,
         IsExternalUser $isExternalUser,
-        ?User $user,
+        ?IsLdapUser $isLdapUser,
+        ?IsSsoUser $isSsoUser,
+        Params $params,
         Settings $settings,
-        Params $params
+        ?User $user,
+        UserIsAllowed $userIsAllowed
     ) {
-        $this->entityManager = $entityManager;
-        $this->userIsAllowed = $userIsAllowed;
         $this->accessStatus = $accessStatus;
+        $this->entityManager = $entityManager;
+        $this->isCasUser = $isCasUser;
         $this->isExternalUser = $isExternalUser;
-        $this->user = $user;
-        $this->settings = $settings;
+        $this->isLdapUser = $isLdapUser;
+        $this->isSsoUser = $isSsoUser;
         $this->params = $params;
+        $this->settings = $settings;
+        $this->user = $user;
+        $this->userIsAllowed = $userIsAllowed;
     }
 
     /**
@@ -144,14 +168,31 @@ class IsAllowedMediaContent extends AbstractPlugin
             return true;
         }
 
-        $modeGuest = in_array('guest', $modes);
-        if ($modeGuest && $this->user && $this->user->getRole() === 'guest') {
-            return true;
-        }
+        if ($this->user) {
+            $modeGuest = in_array('guest', $modes);
+            if ($modeGuest && $this->user->getRole() === 'guest') {
+                return true;
+            }
 
-        $modeExternal = in_array('external', $modes);
-        if ($modeExternal && $this->user && $this->isExternalUser->__invoke($this->user)) {
-            return true;
+            $modeExternal = in_array('external', $modes);
+            if ($modeExternal && $this->isExternalUser->__invoke($this->user)) {
+                return true;
+            }
+
+            $modeCas = in_array('cas', $modes);
+            if ($modeCas && $this->isCasUser && $this->isCasUser->__invoke($this->user)) {
+                return true;
+            }
+
+            $modeLdap = in_array('ldap', $modes);
+            if ($modeLdap && $this->isLdapUser && $this->isLdapUser->__invoke($this->user)) {
+                return true;
+            }
+
+            $modeSso = in_array('sso', $modes);
+            if ($modeSso && $this->isSsoUser && $this->isSsoUser->__invoke($this->user)) {
+                return true;
+            }
         }
 
         // Use a single process for all single accesses to avoid multiple

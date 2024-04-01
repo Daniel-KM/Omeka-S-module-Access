@@ -13,9 +13,9 @@ class IsExternalUserFactory implements FactoryInterface
         $plugins = $services->get('ControllerPluginManager');
         return new IsExternalUser(
             $services->get('Omeka\AuthenticationService'),
-            $plugins->has('isSsoUser') ? $plugins->get('isSsoUser') : null,
             $plugins->has('isCasUser') ? $plugins->get('isCasUser') : null,
-            $plugins->has('isLdapUser') ? $plugins->get('isLdapUser') : null
+            $plugins->has('isLdapUser') ? $plugins->get('isLdapUser') : null,
+            $plugins->has('isSsoUser') ? $plugins->get('isSsoUser') : null
         );
     }
 }
