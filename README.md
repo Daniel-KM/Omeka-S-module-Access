@@ -217,9 +217,17 @@ can be managed in multiple ways:
     files. Ip can be configured to access specific item sets, for example
     `123.45.67.89 = 51, 54`
   - `guest`: all guest users have access to all the reserved files.
-  - `external`: all users authenticated via an external identity provider
-    (currently via module CAS, later for module Ldap and SingleSignOn) have access
+  - `auth_external`: all users authenticated via an external identity provider
+    (currently via module CAS and SingleSignOn, later for Ldap) have access
     to media contents.
+  - `auth_cas`: all users authenticated via CAS (module CAS) have access to all
+    reserved files.
+  - `auth_ldap`: all users authenticated via Ldap (module Ldap) have access to
+    all reserved files (currently unsupported).
+  - `auth_sso`: all users authenticated via SAML/Shibboleth (module SingleSignOn)
+    have access to all reserved files.
+  - `email_regex`: all authenticated users with an email matching a regex
+    pattern have access to all reserved files.
 - Individual modes
   - `user`: each file should be made accessible by a specific user one by
     one. So the module has some forms to manage individual requests and accesses.
