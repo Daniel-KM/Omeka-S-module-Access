@@ -174,22 +174,22 @@ class IsAllowedMediaContent extends AbstractPlugin
                 return true;
             }
 
-            $modeExternal = in_array('external', $modes);
+            $modeExternal = in_array('auth_external', $modes);
             if ($modeExternal && $this->isExternalUser->__invoke($this->user)) {
                 return true;
             }
 
-            $modeCas = in_array('cas', $modes);
+            $modeCas = in_array('auth_cas', $modes);
             if ($modeCas && $this->isCasUser && $this->isCasUser->__invoke($this->user)) {
                 return true;
             }
 
-            $modeLdap = in_array('ldap', $modes);
+            $modeLdap = in_array('auth_ldap', $modes);
             if ($modeLdap && $this->isLdapUser && $this->isLdapUser->__invoke($this->user)) {
                 return true;
             }
 
-            $modeSso = in_array('sso', $modes);
+            $modeSso = in_array('auth_sso', $modes);
             if ($modeSso && $this->isSsoUser && $this->isSsoUser->__invoke($this->user)) {
                 return true;
             }

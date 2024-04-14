@@ -25,7 +25,7 @@ $hasGuest = $plugins->has('guestWidget');
 $user = $this->identity();
 $accessModes = $setting('access_modes', []);
 $allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $accessModes);
-$allowGlobalRequests = (bool) array_intersect(['ip', 'guest', 'external', 'cas', 'ldap', 'sso'], $accessModes);
+$allowGlobalRequests = (bool) array_intersect(['ip', 'guest', 'auth_external', 'auth_cas', 'auth_ldap', 'auth_sso'], $accessModes);
 
 $this->headLink()
     ->appendStylesheet($assetUrl('css/access-request.css', 'Access'));
