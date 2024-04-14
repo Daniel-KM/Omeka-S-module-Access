@@ -154,6 +154,28 @@ if (version_compare((string) $oldVersion, '3.4.22', '<')) {
     $messenger->addSuccess($message);
 }
 
+if (version_compare((string) $oldVersion, '3.4.25', '<')) {
+    $accessModes = $settings->get('access_modes') ?: [];
+    $newAccessModes = [
+        'external' => 'auth_external',
+        'cas' => 'auth_cas',
+        'ldap' => 'auth_ldap',
+        'sso' => 'auth_sso',
+    ];
+    foreach ($accessModes as &$accessMode) {
+        if (isset($newAccessModes[$accessMode])) {
+            $accessMode = $newAccessModes[$accessMode];
+        }
+    }
+    unset($accessMode);
+    $settings->set('access_modes', $accessModes);
+
+    $message = new Message(
+        'A new access mode allows to limit access to medias to users with a specific email via regex.' // @translate
+    );
+    $messenger->addSuccess($message);
+}
+
 if (!empty($config['accessresource'])) {
     $message = new Message(
         'The key "accessresource" in the file config/local.config.php at the root of Omeka can be removed.' // @translate
