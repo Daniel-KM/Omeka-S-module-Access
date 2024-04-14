@@ -44,6 +44,7 @@ class ConfigForm extends Form
                         'auth_cas' => 'CAS: users authenticated by cas have access to all reserved medias', // @translate
                         'auth_ldap' => 'LDAP: users authenticated by ldap have access to all reserved medias', // @translate
                         'auth_sso' => 'SSO: users authenticated by sso have access to all reserved medias', // @translate
+                        'email_regex' => 'Users authenticated with a specific email have access to all reserved medias', // @translate
                         'user' => 'User: authenticated users should request access to specific reserved medias', // @translate
                         'email' => 'Email: A visitor identified by email should request access to specific reserved medias', // @translate
                         'token' => 'Token: A user or visitor with a token have access to specific reserved medias', // @translate
@@ -73,6 +74,18 @@ class ConfigForm extends Form
                     'placeholder' => '12.34.56.78
 124.8.16.32 = 1 2 5
 65.43.21.0/24 = 1 7',
+                ],
+            ])
+
+            ->add([
+                'name' => 'access_email_regex',
+                'type' => Element\Text::class,
+                'options' => [
+                    'element_group' => 'contribution',
+                    'label' => 'Regex on email of users allowed to access reserved medias (option above)', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_email_regex',
                 ],
             ])
 

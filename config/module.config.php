@@ -294,12 +294,15 @@ return [
                 // 'auth_cas',
                 // 'auth_ldap',
                 // 'auth_sso',
+                // 'email_regex',
                 // 'user',
                 // 'email',
                 // 'token',
             ],
 
             'access_ip_item_sets' => [],
+
+            'access_email_regex' => '',
 
             'access_property' => false,
 

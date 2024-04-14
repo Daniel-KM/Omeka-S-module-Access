@@ -193,6 +193,11 @@ class IsAllowedMediaContent extends AbstractPlugin
             if ($modeSso && $this->isSsoUser && $this->isSsoUser->__invoke($this->user)) {
                 return true;
             }
+
+            $modeEmailRegex = in_array('email_regex', $modes);
+            if ($modeEmailRegex && $this->checkEmailRegex($user)) {
+                return true;
+            }
         }
 
         // Use a single process for all single accesses to avoid multiple
@@ -301,6 +306,12 @@ class IsAllowedMediaContent extends AbstractPlugin
             ->setUseProxy(true)
             ->setTrustedProxies([$_SERVER['SERVER_ADDR']]);
         return $remoteAddress->getIpAddress() ?: '::';
+    }
+
+    protected function checkEmailRegex(User $user): bool
+    {
+        $pattern = (string) $this->settings->get('access_email_regex');
+        return $pattern && preg_match($pattern, $user->getEmail());
     }
 
     protected function checkIndividualAccesses(MediaRepresentation $media, array $individualModes, ?User $user = null): bool
