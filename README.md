@@ -86,6 +86,19 @@ but it is generally useless. Anyway, it depends on the original images.
 
 Don't forget to add derivative paths if you use module [Derivative Media].
 
+If you choose the flag [L], Apache will use the module ModRewrite, that is
+already installed for Omeka. For the flag [P], you should enable the module
+Proxy and restart Apache:
+
+```sh
+# Depending on your config, either:
+sudo a2enmod proxy
+# Or something similar:
+sudo a2enmod proxy_fcgi
+# Then:
+sudo systemctl restart apache2
+```
+
 ##### When Omeka S is installed at the root of a domain or a sub-domain
 
 Insert the following lines at line 4 of [.htaccess], just after `RewriteEngine On`,
@@ -102,6 +115,9 @@ An alternative with flag [L]:
 # Set rule for original and selected derivative files (usually at least large thumbnails).
 RewriteRule "^files/(original|large)/(.*)$" "%{REQUEST_SCHEME}://%{HTTP_HOST}/access/files/$1/$2" [L]
 ```
+
+The request scheme (http or https) is needed when you set the domain, but you can
+write it directly without the constant `%{REQUEST_SCHEME}`.
 
 ##### When Omeka S is installed in a sub-path (https://example.org/digital-library/)
 
