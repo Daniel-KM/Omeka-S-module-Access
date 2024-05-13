@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-15 00:00+0000\n"
+"POT-Creation-Date: 2024-05-13 00:00+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
@@ -17,15 +17,34 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.2.2\n"
 
-#: Module.php:107
-msgid ""
-"It is recommenced to run the job in config form to initialize all access "
-"statuses."
-msgstr ""
-"Il est recommandé de lancer la tâche dans la configuration pour initialiser "
-"tous les statuts d’accès."
+#: Module.php:43
+#, php-format
+msgid "The module %1$s should be upgraded to version %2$s or later."
+msgstr "Le module %1$s doit être mis à niveau à la version %2$s ou supérieure."
 
-#: Module.php:435
+#: Module.php:84
+msgid ""
+"To be automatically upgraded and replaced by this module, the module "
+"\"Access Resource\" should be upgraded first to version 3.4.17.1. Else "
+"uninstall it first, but you will lose access statuses and requests."
+msgstr ""
+"Pour être automatiquement mis à niveau et remplacé par ce module, le module "
+"« Access Resource » doit d’abord être mis à niveau à la version 3.4.17.1. Il "
+"est aussi possible de le désinstaller, mais vous perdrez les statuts d’accès "
+"et les demandes."
+
+#: Module.php:90
+msgid ""
+"To be automatically upgraded and replaced by this module, the module "
+"\"Access Resource\" should be downgraded first to version 3.4.17.1. Else "
+"uninstall it first, but you will lose access statuses and requests."
+msgstr ""
+"Pour être automatiquement mis à niveau et remplacé par ce module, le module "
+"« Access Resource » doit d’abord être rétrogradé à la version 3.4.17.1. Il "
+"est aussi possible de le désinstaller, mais vous perdrez les statuts d’accès "
+"et les demandes."
+
+#: Module.php:453
 msgid ""
 "When properties are used, three properties should be defined for \"level\", "
 "\"embargo start\" and \"embargo end\"."
@@ -34,30 +53,21 @@ msgstr ""
 "définies pour le « niveau », le « début de l’embargo » et la « fin de "
 "l’embargo »."
 
-#: Module.php:450
+#: Module.php:468
 msgid "Job is not launched: no option was set."
 msgstr "La tâche n’est pas lancée : aucune option n’a été définie."
 
-#: Module.php:1330
+#: Module.php:1350
 msgid "Access"
 msgstr "Accès"
 
-#: Module.php:1352 view/access/admin/request/browse.phtml:26
+#: Module.php:1372 view/access/admin/request/browse.phtml:30
 #: view/access/admin/request/edit.phtml:29
 #: view/access/admin/request/edit.phtml:31
 #: view/access/admin/request/show.phtml:24
 #: view/access/site/request/browse.phtml:23
 msgid "Access requests"
 msgstr "Demandes d’accès"
-
-#: Module.php:1448
-#, php-format
-msgid ""
-"To control access to files, you must add a rule in file .htaccess at the "
-"root of Omeka. See %1$sreadme%2$s."
-msgstr ""
-"Pour contrôler l’accès aux fichiers, vous devez ajouter une règle dans le "
-"fichier .htaccess à la racine d’Omeka. Voir le %1$slisez-moi%2$s."
 
 #: src/Api/Representation/AccessRequestRepresentation.php:191
 #, php-format
@@ -148,49 +158,6 @@ msgstr "Il y a eu une erreur lors de l’enregistrement du message."
 msgid "The request was submitted successfully."
 msgstr "La demande a été envoyée avec succès."
 
-#: src/Generic/AbstractModule.php:67 src/Generic/AbstractModule.php:75
-#: src/Generic/AbstractModule.php:857
-#, php-format
-msgid "This module requires the module \"%s\"."
-msgstr "Ce module requiert le module « %s »."
-
-#: src/Generic/AbstractModule.php:80
-#, php-format
-msgid "This module requires modules \"%s\"."
-msgstr "Ce module requiert les modules \"%s\"."
-
-#: src/Generic/AbstractModule.php:88
-msgid "This module has resources that cannot be installed."
-msgstr "Ce module a des ressources qui ne peuvent pas être installées."
-
-#: src/Generic/AbstractModule.php:95
-msgid ""
-"This module cannot install its tables, because they exist already. Try to "
-"remove them first."
-msgstr ""
-"Ce module ne peut pas installer ses tables car elles existent déjà. Essayez "
-"de les supprimer manuellement."
-
-#: src/Generic/AbstractModule.php:365
-#, php-format
-msgid "The module removed tables \"%s\" from a previous broken install."
-msgstr ""
-"Le module a supprimé les tables « %s » depuis une installation échouée."
-
-#: src/Generic/AbstractModule.php:852
-#, php-format
-msgid "This module requires the module \"%1$s\", version %2$s or above."
-msgstr "Ce module requiert le module « %1$s », version %2$s ou supérieure."
-
-#: src/Generic/AbstractModule.php:949
-#, php-format
-msgid ""
-"The module \"%s\" was automatically deactivated because the dependencies are "
-"unavailable."
-msgstr ""
-"Le module « %s » a été automatiquement désactivé car ses dépendances ne sont "
-"plus disponibles."
-
 #: src/Service/ViewHelper/IsAccessRequestableFactory.php:16
 msgid "Full access is not supported currently"
 msgstr "L’accès complet n’est pas possible actuellement"
@@ -228,51 +195,51 @@ msgstr "Aucun enregistrement d’accès."
 msgid "Refresh page"
 msgstr "Rafraîchir la page"
 
-#: view/access/admin/request/browse.phtml:35
+#: view/access/admin/request/browse.phtml:39
 msgid "Add new request"
 msgstr "Ajouter une nouvelle demande"
 
-#: view/access/admin/request/browse.phtml:49
+#: view/access/admin/request/browse.phtml:53
 msgid "Id"
 msgstr "Id"
 
-#: view/access/admin/request/browse.phtml:51
+#: view/access/admin/request/browse.phtml:55
 #: view/access/admin/request/show-details.phtml:27
 #: view/access/admin/request/show.phtml:35
 msgid "Requester"
 msgstr "Demandeur"
 
-#: view/access/admin/request/browse.phtml:53
+#: view/access/admin/request/browse.phtml:57
 #: view/access/admin/request/show-details.phtml:37
 #: view/access/admin/request/show.phtml:43
 #: view/access/site/request/browse.phtml:37
 msgid "Recursive"
 msgstr "Récursif"
 
-#: view/access/admin/request/browse.phtml:55
+#: view/access/admin/request/browse.phtml:59
 #: view/access/admin/request/show-details.phtml:48
 #: view/access/admin/request/show.phtml:52
 #: view/access/site/request/browse.phtml:39
 msgid "Dates"
 msgstr "Dates"
 
-#: view/access/admin/request/browse.phtml:67
+#: view/access/admin/request/browse.phtml:71
 #, php-format
 msgid "#%s"
 msgstr "#%s"
 
-#: view/access/admin/request/browse.phtml:119
-#: view/access/admin/request/browse.phtml:137
+#: view/access/admin/request/browse.phtml:123
+#: view/access/admin/request/browse.phtml:141
 msgid "Delete access requests"
 msgstr "Supprimer les demandes d’accès"
 
-#: view/access/admin/request/browse.phtml:120
+#: view/access/admin/request/browse.phtml:124
 msgid "Are you sure you would like to delete the selected access requests?"
 msgstr ""
 "Êtes-vous sûr de vouloir supprimer les demandes d’accès sélectionnées ?"
 
-#: view/access/admin/request/browse.phtml:122
-#: view/access/admin/request/browse.phtml:140
+#: view/access/admin/request/browse.phtml:126
+#: view/access/admin/request/browse.phtml:144
 #, php-format
 msgid ""
 "%1$s: this action will permanently delete %2$s access requests and cannot be "
@@ -281,7 +248,7 @@ msgstr ""
 "%1$s : cette action supprimera définitivement %2$s demandes d’accès et ne "
 "peut pas être annulée."
 
-#: view/access/admin/request/browse.phtml:138
+#: view/access/admin/request/browse.phtml:142
 msgid ""
 "Are you sure you would like to delete all access requests on all pages of "
 "this result?"
@@ -289,7 +256,7 @@ msgstr ""
 "Êtes-vous sûr de vouloir supprimer toutes les demandes d’accès sur toutes "
 "les pages de ce résultat ?"
 
-#: view/access/admin/request/browse.phtml:178
+#: view/access/admin/request/browse.phtml:182
 msgid "No access requests."
 msgstr "Aucune demande d’accès."
 
@@ -419,11 +386,11 @@ msgstr "Ce module requiert le module %1$s version %2$s or greater."
 msgid "The vocabulary \"%s\" was updated successfully."
 msgstr "Le vocabulaire « %s » a déjà été installé et a été conservé."
 
-#: data/scripts/upgrade.php:124
+#: data/scripts/upgrade.php:132
 msgid "It is now possible to add a page block to request an access."
 msgstr "Il est désormais possible d’ajouter un bloc pour demander un accès."
 
-#: data/scripts/upgrade.php:129
+#: data/scripts/upgrade.php:137
 msgid ""
 "New messages were added to make a distinction between user/visitor and "
 "accepted/rejected. Check main settings to adapt them."
@@ -431,7 +398,7 @@ msgstr ""
 "De nouveaux messages ont été ajoutés pour distinguer utilisateur/visiteur et "
 "accepté/rejeté. Vérifiez-les dans les paramètres généraux."
 
-#: data/scripts/upgrade.php:144
+#: data/scripts/upgrade.php:152
 msgid ""
 "The module manages now http requests \"Content Range\" that allow to read "
 "files faster."
@@ -439,7 +406,15 @@ msgstr ""
 "Le module gère désormais les requêtes http de type « Content Range » qui "
 "permettent de lire les fichiers plus rapidement."
 
-#: data/scripts/upgrade.php:151
+#: data/scripts/upgrade.php:174
+msgid ""
+"A new access mode allows to limit access to medias to users with a specific "
+"email via regex."
+msgstr ""
+"Un nouveau mode d’accès permet de limiter l’accès aux utilisateurs avec une "
+"adresse mail spécifique, via regex."
+
+#: data/scripts/upgrade.php:181
 msgid ""
 "The key \"accessresource\" in the file config/local.config.php at the root "
 "of Omeka can be removed."
@@ -447,133 +422,122 @@ msgstr ""
 "L’index « accessresource » dans le fichier config/local.config.php à la "
 "racine d’Omeka peut être supprimé."
 
-#: Module.php:68
+#: Module.php:99
 msgid ""
-"To be automatically upgraded and replaced by this module, the module "
-"\"Access Resource\" should be upgraded first to version 3.4.17.1. Else "
-"uninstall it first, but you will lose access statuses and requests."
+"An error occurred during migration of module \"{module}\". Check the config "
+"and uninstall it manually."
 msgstr ""
-"Pour être automatiquement mis à niveau et remplacé par ce module, le module "
-"« Access Resource » doit d’abord être mis à niveau à la version 3.4.17.1. Il "
-"est aussi possible de le désinstaller, mais vous perdrez les statuts d’accès "
-"et les demandes."
+"Une erreur est survenue pendant la migration du module « {module} ». "
+"Vérifier la config et désinstaller le manuellement."
 
-#: Module.php:74
+#: Module.php:125
 msgid ""
-"To be automatically upgraded and replaced by this module, the module "
-"\"Access Resource\" should be downgraded first to version 3.4.17.1. Else "
-"uninstall it first, but you will lose access statuses and requests."
+"It is recommenced to run the job in config form to initialize all access "
+"statuses."
 msgstr ""
-"Pour être automatiquement mis à niveau et remplacé par ce module, le module "
-"« Access Resource » doit d’abord être rétrogradé à la version 3.4.17.1. Il "
-"est aussi possible de le désinstaller, mais vous perdrez les statuts d’accès "
-"et les demandes."
+"Il est recommandé de lancer la tâche dans la configuration pour initialiser "
+"tous les statuts d’accès."
 
-#: Module.php:83
-#, php-format
-msgid ""
-"An error occurred during migration of module \"%s\". Check the config and "
-"uninstall it manually."
-msgstr ""
-"Une erreur est survenue pendant la migration du module « %s ». Vérifier la "
-"config et désinstaller le manuellement."
-
-#: Module.php:574
-#, php-format
+#: Module.php:592
 msgid ""
 "Cleaned params used for Access:\n"
-"%s"
+"{json}"
 msgstr ""
 "Paramètres utilisés pour le module Access :\n"
-"%s"
+"{json}"
 
-#: Module.php:987 src/Controller/Admin/RequestController.php:182
+#: Module.php:1007 src/Controller/Admin/RequestController.php:182
 msgid "You should set either a user or an email or check box for token."
 msgstr "Vous devez définir un utilisateur, un courriel ou un jeton."
 
-#: Module.php:1010 src/Controller/Admin/RequestController.php:208
+#: Module.php:1030 src/Controller/Admin/RequestController.php:208
 msgid "Access request successfully created."
 msgstr "Demande d’accès créée avec succès."
 
-#: Module.php:1085 src/Form/Admin/BatchEditFieldset.php:48
+#: Module.php:1105 src/Form/Admin/BatchEditFieldset.php:48
 msgid "Free"
 msgstr "Libre"
 
-#: Module.php:1086 src/Form/Admin/BatchEditFieldset.php:49
+#: Module.php:1106 src/Form/Admin/BatchEditFieldset.php:49
 msgid "Reserved"
 msgstr "Réservé"
 
-#: Module.php:1087 src/Form/Admin/BatchEditFieldset.php:50
+#: Module.php:1107 src/Form/Admin/BatchEditFieldset.php:50
 msgid "Protected"
 msgstr "Protégé"
 
-#: Module.php:1102 src/ColumnType/AccessLevel.php:13
+#: Module.php:1122 src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr "Niveau d’accès"
 
-#: Module.php:1116 src/Form/Admin/BatchEditFieldset.php:87
+#: Module.php:1136 src/Form/Admin/BatchEditFieldset.php:87
 msgid "Embargo start"
 msgstr "Début de l’embargo"
 
-#: Module.php:1133 Module.php:1141 src/Form/Admin/BatchEditFieldset.php:132
+#: Module.php:1153 Module.php:1161 src/Form/Admin/BatchEditFieldset.php:132
 msgid "Embargo end"
 msgstr "Fin de l’embargo"
 
-#: Module.php:1151
+#: Module.php:1171
 #, php-format
 msgid "Access level (managed via property %s)"
 msgstr "Niveau d’accès (géré par la propriété %s)"
 
-#: Module.php:1154
+#: Module.php:1174
 #, php-format
 msgid "Embargo start (managed via property %s)"
 msgstr "Début de l’embargo (géré par la propriété %s)"
 
-#: Module.php:1157
+#: Module.php:1177
 #, php-format
 msgid "Embargo end (managed via property %s)"
 msgstr "Fin de l’embargo (géré par la propriété %s)"
 
-#: Module.php:1168 src/Form/Admin/BatchEditFieldset.php:186
+#: Module.php:1188 src/Form/Admin/BatchEditFieldset.php:186
 msgid "Apply access level and embargo to items and medias"
 msgstr ""
 "Appliquer des niveaux d’accès et des embargos aux contenus et aux médias"
 
-#: Module.php:1169 src/Form/Admin/BatchEditFieldset.php:187
+#: Module.php:1189 src/Form/Admin/BatchEditFieldset.php:187
 msgid "Apply access level and embargo to medias"
 msgstr "Appliquer un niveau d’accès et un embargo aux médias"
 
-#: Module.php:1509
-#, php-format
+#: Module.php:1467
+msgid ""
+"To control access to files, you must add a rule in file .htaccess at the "
+"root of Omeka. See {link}readme{link_end}."
+msgstr ""
+"Pour contrôler l’accès aux fichiers, vous devez ajouter une règle dans le "
+"fichier .htaccess à la racine d’Omeka. Voir le {link}lisez-moi{link_end}."
+
+#: Module.php:1531
 msgid ""
 "A job was launched in background to update access statuses according to "
-"parameters: (%1$sjob #%2$d%3$s, %4$slogs%3$s)."
+"parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end})."
 msgstr ""
 "Une tâche a été lancée en arrière-plan pour mettre à jour les statuts "
-"d’accès selon les paramètres : (%1$stâche #%2$d%3$s, %4$sjournaux%3$s)."
+"d’accès selon les paramètres : ({link_job}tâche #{job_id}{link_end}, "
+"{link_log}journaux{link_end})."
 
-#: Module.php:1551
-#, php-format
-msgid "The ip \"%s\" is empty or invalid."
-msgstr "L’ip « %s » est vide ou incorrecte."
+#: Module.php:1575
+msgid "The ip \"{ip}\" is empty or invalid."
+msgstr "L’ip « {ip} » est vide ou incorrecte."
 
-#: Module.php:1561
-#, php-format
+#: Module.php:1585
 msgid ""
-"The item sets list \"%1$s\" for ip \"%2$s\" is invalid: they should be "
-"numeric ids."
+"The item sets list \"{name}\" for ip {ip} is invalid: they should be numeric "
+"ids."
 msgstr ""
-"La liste des collections « %1$s » pour l’ip « %2$s » est incorrecte : ce "
+"La liste des collections « {name} » pour l’ip « {ip} » est incorrecte : ce "
 "doit être des numéros."
 
-#: Module.php:1571
-#, php-format
+#: Module.php:1595
 msgid ""
-"The item sets list \"%1$s\" for ip \"%2$s\" contains unknown item sets "
-"(%3$s)."
+"The item sets list \"{name}\" for ip {ip} contains unknown item sets "
+"({list})."
 msgstr ""
-"La liste des collections « %1$s » pour l’ip « %2$s » contient des "
-"collections inconnues (%3$s)."
+"La liste des collections « {name} » pour l’ip « {ip} » contient des "
+"collections inconnues ({list})."
 
 #: src/Mvc/Controller/Plugin/MailerHtml.php:50
 msgid "Email not sent: the subject is missing."
@@ -820,20 +784,45 @@ msgstr ""
 
 #: src/Form/ConfigForm.php:43
 msgid ""
-"External: users externally authenticated (cas) have access to all reserved "
-"medias"
+"External: users externally authenticated (cas, ldap, sso) have access to all "
+"reserved medias"
 msgstr ""
-"Externe : les utilisateurs authentifiés par un système tiers (cas) ont accès "
-"à tous les médias réservés"
+"Externe : les utilisateurs authentifiés par un système tiers (cas, ldap, "
+"sso) ont accès à tous les médias réservés"
 
 #: src/Form/ConfigForm.php:44
-msgid ""
-"user: authenticated users should request access to specific reserved medias"
+msgid "CAS: users authenticated by cas have access to all reserved medias"
 msgstr ""
-"utilisateur : les utilisateurs authentifiés doivent demander un accès pour "
-"chaque média réservé"
+"CAS : les utilisateurs authentifiés par cas ont accès à tous les médias "
+"réservés"
 
 #: src/Form/ConfigForm.php:45
+msgid "LDAP: users authenticated by ldap have access to all reserved medias"
+msgstr ""
+"LDAP : les utilisateurs authentifiés par ldap ont accès à tous les médias "
+"réservés"
+
+#: src/Form/ConfigForm.php:46
+msgid "SSO: users authenticated by sso have access to all reserved medias"
+msgstr ""
+"SSO : les utilisateurs authentifiés par sso ont accès à tous les médias "
+"réservés"
+
+#: src/Form/ConfigForm.php:47
+msgid ""
+"Users authenticated with a specific email have access to all reserved medias"
+msgstr ""
+"Les utilisateurs authentifiés avec une adresse mail spécifique ont accès à "
+"tous les médias en accès réservés"
+
+#: src/Form/ConfigForm.php:48
+msgid ""
+"User: authenticated users should request access to specific reserved medias"
+msgstr ""
+"Utilisateur : les utilisateurs authentifiés doivent demander un accès pour "
+"chaque média réservé"
+
+#: src/Form/ConfigForm.php:49
 msgid ""
 "Email: A visitor identified by email should request access to specific "
 "reserved medias"
@@ -841,20 +830,20 @@ msgstr ""
 "Mail : les visiteurs identifiés par une adresse mail doivent demander un "
 "accès pour chaque média réservé"
 
-#: src/Form/ConfigForm.php:46
+#: src/Form/ConfigForm.php:50
 msgid ""
 "Token: A user or visitor with a token have access to specific reserved medias"
 msgstr ""
 "Jeton : un utilisateur ou un visiteur avec un jeton a accès à des médias "
 "réservés"
 
-#: src/Form/ConfigForm.php:63
+#: src/Form/ConfigForm.php:67
 msgid "List of ips with open access, eventually limited to selected item sets"
 msgstr ""
 "Liste des ips autorisant un libre accès, éventuellement limité à des "
 "collections"
 
-#: src/Form/ConfigForm.php:64
+#: src/Form/ConfigForm.php:68
 msgid ""
 "These ips will have unrestricted access to all resources or only resources "
 "of the specified item sets. List them separated by a \"=\", one by line. "
@@ -864,27 +853,38 @@ msgstr ""
 "ressources appartenant aux collections associées. Listez-les séparés par un "
 "« = », une par ligne. Les plages d’ip sont autorisées (formatées en cidr)."
 
-#: src/Form/ConfigForm.php:80
+#: src/Form/ConfigForm.php:84
+msgid "Check forwarded ip first (in proxy environment)"
+msgstr "Vérifier d’abord l’ip renvoyée (dans un environnement avec proxy)"
+
+#: src/Form/ConfigForm.php:97
+msgid ""
+"Regex on email of users allowed to access reserved medias (option above)"
+msgstr ""
+"Regex sur l’adresse mail des utilisateurs autorisés à accéder aux médias "
+"réservés (option ci-dessus)"
+
+#: src/Form/ConfigForm.php:108
 msgid "Set access level and embargo via a property"
 msgstr "Définir le niveau d’accès et l’embargo via une propriété"
 
-#: src/Form/ConfigForm.php:84
+#: src/Form/ConfigForm.php:112
 msgid "required"
 msgstr "requis"
 
-#: src/Form/ConfigForm.php:116
+#: src/Form/ConfigForm.php:144
 msgid "Set property when access uses property"
 msgstr "Définir la propriété lorsque l’accès utilise la propriété"
 
-#: src/Form/ConfigForm.php:131
+#: src/Form/ConfigForm.php:159
 msgid "Labels for the four levels for mode property/level"
 msgstr "Libellés des quatre niveaux pour le mode propriété/niveau"
 
-#: src/Form/ConfigForm.php:149
+#: src/Form/ConfigForm.php:177
 msgid "Data type to use for the level"
 msgstr "Type de données à utiliser pour le niveau"
 
-#: src/Form/ConfigForm.php:150
+#: src/Form/ConfigForm.php:178
 msgid ""
 "A data type like \"literal\" (default) or \"customvocab:X\" (recommended), "
 "where X is the custom vocab id to set. This value is used for batch "
@@ -894,15 +894,15 @@ msgstr ""
 "X » (recommandé), où X est l’id du vocabulaire personnalisé à définir. Cette "
 "valeur est utilisée pour les traitements en lot."
 
-#: src/Form/ConfigForm.php:163
+#: src/Form/ConfigForm.php:191
 msgid "Set property to use for embargo start"
 msgstr "Propriété pour le début de l’embargo"
 
-#: src/Form/ConfigForm.php:178
+#: src/Form/ConfigForm.php:206
 msgid "Set property to use for embargo end"
 msgstr "Propriété pour la fin de l’embargo"
 
-#: src/Form/ConfigForm.php:194
+#: src/Form/ConfigForm.php:222
 msgid ""
 "Show the access status in advanced tab of resource form when properties are "
 "used"
@@ -910,88 +910,88 @@ msgstr ""
 "Afficher le statut d’accès dans l’onglet avancé du formulaire des ressources "
 "lorsque des propriétés sont utilisées"
 
-#: src/Form/ConfigForm.php:206
+#: src/Form/ConfigForm.php:234
 msgid "Bypass embargo dates for reserved resources"
 msgstr "Ne pas tenir compte de l’embargo pour les ressources à accès réservé"
 
-#: src/Form/ConfigForm.php:220
+#: src/Form/ConfigForm.php:248
 msgid "Create missing access status of all resources"
 msgstr "Créer les statuts d’accès manquants pour toutes les ressources"
 
-#: src/Form/ConfigForm.php:230
+#: src/Form/ConfigForm.php:258
 msgid "Copy level and embargo"
 msgstr "Copier le niveau et l’embargo"
 
-#: src/Form/ConfigForm.php:232
+#: src/Form/ConfigForm.php:260
 msgid "From item sets to items and medias"
 msgstr "Des collections aux contenus et aux médias"
 
-#: src/Form/ConfigForm.php:233
+#: src/Form/ConfigForm.php:261
 msgid "From items to medias"
 msgstr "Des contenus aux médias"
 
-#: src/Form/ConfigForm.php:245
+#: src/Form/ConfigForm.php:273
 msgid "Copy access level and embargo"
 msgstr "Copier le niveau d’accès et l’embargo"
 
-#: src/Form/ConfigForm.php:247 src/Form/ConfigForm.php:262
+#: src/Form/ConfigForm.php:275 src/Form/ConfigForm.php:290
 msgid "Skip"
 msgstr "Ignorer"
 
-#: src/Form/ConfigForm.php:248
+#: src/Form/ConfigForm.php:276
 msgid "Copy data from property values into indexes"
 msgstr "Copier les données des valeurs des propriétés dans les index"
 
-#: src/Form/ConfigForm.php:249
+#: src/Form/ConfigForm.php:277
 msgid "Copy data from indexes into property values"
 msgstr "Copier les données des index dans les valeurs des propriétés"
 
-#: src/Form/ConfigForm.php:260
+#: src/Form/ConfigForm.php:288
 msgid "Fill missing statuses"
 msgstr "Remplir les statuts manquants"
 
-#: src/Form/ConfigForm.php:263
+#: src/Form/ConfigForm.php:291
 msgid "Set access level free for all resources without status"
 msgstr "Définir un niveau d’accès libre pour toutes les ressources sans statut"
 
-#: src/Form/ConfigForm.php:264
+#: src/Form/ConfigForm.php:292
 msgid "Set access level reserved for all resources without status"
 msgstr ""
 "Définir le niveau d’accès réservé pour toutes les ressources sans statut"
 
-#: src/Form/ConfigForm.php:265
+#: src/Form/ConfigForm.php:293
 msgid "Set access level protected for all resources without status"
 msgstr ""
 "Définir le niveau d’accès protégé pour toutes les ressources sans statut"
 
-#: src/Form/ConfigForm.php:266
+#: src/Form/ConfigForm.php:294
 msgid "Set access level forbidden for all resources without status"
 msgstr ""
 "Définir le niveau d’accès interdit pour toutes les ressources sans statut"
 
-#: src/Form/ConfigForm.php:267
+#: src/Form/ConfigForm.php:295
 msgid "Set access level free when public and reserved when private"
 msgstr ""
 "Définir le niveau d’accès libre quand la ressource est publique et réservé "
 "lorsqu’elle est privée"
 
-#: src/Form/ConfigForm.php:268
+#: src/Form/ConfigForm.php:296
 msgid "Set access level free when public and protected when private"
 msgstr ""
 "Définir le niveau d’accès libre quand la ressource est publique et protégé "
 "lorsqu’elle est privée"
 
-#: src/Form/ConfigForm.php:269
+#: src/Form/ConfigForm.php:297
 msgid "Set access level free when public and forbidden when private"
 msgstr ""
 "Définir le niveau d’accès libre quand la ressource est publique et interdit "
 "lorsqu’elle est privée"
 
-#: src/Form/ConfigForm.php:280
+#: src/Form/ConfigForm.php:308
 msgid "Process reindexation"
 msgstr "Réindexation du processus"
 
-#: src/Form/ConfigForm.php:284
+#: src/Form/ConfigForm.php:312
 msgid "Process"
 msgstr "Traitement"
 
@@ -1167,126 +1167,6 @@ msgstr "Est sous embargo"
 msgid "Embargo date"
 msgstr "Date de l’embargo"
 
-#: src/Generic/InstallResources.php:84
-#, php-format
-msgid ""
-"An error occured when loading vocabulary \"%s\": file has no json content."
-msgstr ""
-"Une erreur est survenue en chargeant le vocabulaire « %s » : le fichier n’a "
-"pas de contenu json."
-
-#: src/Generic/InstallResources.php:91
-#, php-format
-msgid ""
-"An error occured when adding the prefix \"%s\": another vocabulary exists. "
-"Resolve the conflict before installing this module."
-msgstr ""
-"Une erreur est survenue en ajoutant le préfixe « %s » : un autre vocabulaire "
-"existe. Merci de résoudre le conflit avant d’installer ce module."
-
-#: src/Generic/InstallResources.php:103
-#, php-format
-msgid ""
-"A custom vocab exists for \"%s\". Remove it or rename it before installing "
-"this module."
-msgstr ""
-"Un vocabulaire personnalisé existe pour « %s » : renommez-le ou supprimez-le "
-"avant d’installer ce module."
-
-#: src/Generic/InstallResources.php:114
-#, php-format
-msgid ""
-"A resource template exists for %s. Rename it or remove it before installing "
-"this module."
-msgstr ""
-"Un modèle de ressource nommé « %s » existe : merci de le renommer ou de le "
-"supprimer avant d’installer ce module."
-
-#: src/Generic/InstallResources.php:318
-#, php-format
-msgid "The vocabulary \"%s\" was already installed and was kept."
-msgstr "Le vocabulaire « %s » a déjà été installé et a été conservé."
-
-#: src/Generic/InstallResources.php:327
-#, php-format
-msgid ""
-"An error occured when adding the prefix \"%s\": another vocabulary exists "
-"with the same prefix. Resolve the conflict before installing this module."
-msgstr ""
-"Une erreur est survenue lors de l’ajout du préfixe « %s » : un autre "
-"vocabulaire existe avec le même préfixe. Merci de résoudre le conflit avant "
-"d’installer ce module."
-
-#: src/Generic/InstallResources.php:339
-#, php-format
-msgid ""
-"An error occured when adding the prefix \"%1$s\" and the associated "
-"properties: %2$s"
-msgstr ""
-"Une erreur est survenue en ajoutant le préfixe « %1$s » et les propriétés "
-"associées : %2$s"
-
-#: src/Generic/InstallResources.php:419
-#, php-format
-msgid ""
-"An error occured when updating vocabulary \"%s\" and the associated "
-"properties: %s"
-msgstr ""
-"Une erreur est survenue lors de la mise à jour du vocabulaire « %1$s » et "
-"des propriétés associées : %2$s"
-
-#: src/Generic/InstallResources.php:429
-#, php-format
-msgid ""
-"An error occured when updating vocabulary \"%1$s\" and the associated "
-"properties: %2$s"
-msgstr ""
-"Une erreur est survenue lors de la mise à jour du vocabulaire « %1$s » et "
-"les propriétés associées : %2$s"
-
-#: src/Generic/InstallResources.php:523
-#, php-format
-msgid "The following \"%1$s\" of the vocabulary \"%2$s\" were replaced: %3$s"
-msgstr ""
-"Les « %1$s » suivantes du vocabulaire « %2$s » ont été remplacées : %3$s"
-
-#: src/Generic/InstallResources.php:532
-msgid ""
-"Resources, values and templates were updated, but you may check settings "
-"where the old ones were used."
-msgstr ""
-"Les ressources, valeurs et modèles ont été mis à jour, mais vous pouvez "
-"vérifier les paramètres où les anciennes valeurs étaient utilisées."
-
-#: src/Generic/InstallResources.php:558
-#, php-format
-msgid "The resource template named \"%s\" is already available and is skipped."
-msgstr ""
-"Le modèle de ressource nommé « %s » est déjà disponible et a été conservé."
-
-#: src/Generic/InstallResources.php:830
-#, php-format
-msgid "The custom vocab named \"%s\" is not available."
-msgstr "Le vocabulaire personnalisé nommé « %s » n’est pas disponible."
-
-#: src/Generic/InstallResources.php:1039
-msgid "No file or url set for the vocabulary."
-msgstr "Pas de fichier ou d’url pour le vocabulaire."
-
-#: src/Generic/InstallResources.php:1049
-#, php-format
-msgid "The file \"%s\" cannot be read. Check the url."
-msgstr "Le fichier « %s » ne peut pas être lu. Merci de vérifier l’url."
-
-#: src/Generic/InstallResources.php:1059
-#, php-format
-msgid "The file \"%s\" cannot be read. Check the file."
-msgstr "Le fichier « %s » ne peut pas être lu. Merci de vérifier le fichier."
-
-#: src/Generic/InstallResources.php:1080
-msgid "A vocabulary must have a namespace uri and a prefix."
-msgstr "Un vocabulaire doit avoir une uri pour l’espace de nom et un préfixe."
-
 #: src/Controller/Admin/RequestController.php:125
 #, php-format
 msgid "Access request record with id #%s does not exist"
@@ -1324,24 +1204,24 @@ msgstr ""
 "Pour ajouter des champs, chaque ligne doit contenir un nom et un libellé "
 "séparés par un « = »."
 
-#: config/module.config.php:223
+#: config/module.config.php:222
 msgid "Accesses"
 msgstr "Accès"
 
-#: config/module.config.php:242
+#: config/module.config.php:241
 msgid "Logs"
 msgstr "Journaux"
 
-#: config/module.config.php:282
+#: config/module.config.php:281
 msgid "The resource or the access doesn’t exist."
 msgstr "La ressource ou l’accès n’existe pas."
 
-#: config/module.config.php:342 config/module.config.php:345
-#: config/module.config.php:349
+#: config/module.config.php:348 config/module.config.php:351
+#: config/module.config.php:355
 msgid "New request status!"
 msgstr "Nouveau statut de demande !"
 
-#: config/module.config.php:343
+#: config/module.config.php:349
 msgid ""
 "A user or visitor requested to access resource {resource}. Please, check "
 "request dashboard."
@@ -1350,7 +1230,7 @@ msgstr ""
 "Merci de vérifier le tableau de bord."
 
 # "consulter la liste des demandes."
-#: config/module.config.php:344
+#: config/module.config.php:350
 msgid ""
 "A user or visitor updated the request to access a resource {resource}. "
 "Please, check request dashboard."
@@ -1358,7 +1238,7 @@ msgstr ""
 "Un utilisateur ou un visiteur a mis à jour la demande d’accès à une "
 "ressource {resource}. Merci de consulter la liste des demandes."
 
-#: config/module.config.php:346
+#: config/module.config.php:352
 msgid ""
 "Your request to access resource {resource} is sent to administrator. You "
 "will be informed soon about it."
@@ -1366,15 +1246,15 @@ msgstr ""
 "Votre demande pour accéder à la ressource {resource} a été envoyée à "
 "l’administrateur. Nous vous répondrons très bientôt."
 
-#: config/module.config.php:347
+#: config/module.config.php:353
 msgid "Your request to access resource {resource} was accepted."
 msgstr "Votre demande d’accès à la ressource {resource} a été acceptée."
 
-#: config/module.config.php:348 config/module.config.php:352
+#: config/module.config.php:354 config/module.config.php:358
 msgid "Your request to access resource {resource} was rejected."
 msgstr "Votre demande d’accès à la ressource {resource} a été rejetée."
 
-#: config/module.config.php:350
+#: config/module.config.php:356
 msgid ""
 "Your request to access resource {resource} is sent to administrator. You "
 "will be inform when your request will change."
@@ -1382,7 +1262,7 @@ msgstr ""
 "Votre demande pour accéder à la ressource {resource} a été envoyée à "
 "l’administrateur. Vous serez informé quand elle sera prise en compte."
 
-#: config/module.config.php:351
+#: config/module.config.php:357
 msgid ""
 "Your request to access resource {resource} was accepted. You will be able to "
 "access it after clicking {session_url}."
@@ -1390,17 +1270,160 @@ msgstr ""
 "Votre demande d’accès à la ressource {resource} a été acceptée. Vous pouvez "
 "y accéder via l’url {session_url}."
 
-#: config/module.config.php:353
+#: config/module.config.php:359
 msgid "This resource is not available for now. Contact the webmaster."
 msgstr ""
 "Cette ressource n’est pas disponible pour le moment. Contacter le webmaster."
 
-#: config/module.config.php:358
+#: config/module.config.php:364
 msgid ""
 "By submitting this form, I accept the policy for processing my personal data."
 msgstr ""
 "En soumettant ce formulaire, j’accepte la politique de traitement de mes "
 "données personnelles."
+
+#, php-format
+#~ msgid "This module requires the module \"%s\"."
+#~ msgstr "Ce module requiert le module « %s »."
+
+#, php-format
+#~ msgid "This module requires modules \"%s\"."
+#~ msgstr "Ce module requiert les modules \"%s\"."
+
+#~ msgid "This module has resources that cannot be installed."
+#~ msgstr "Ce module a des ressources qui ne peuvent pas être installées."
+
+#~ msgid ""
+#~ "This module cannot install its tables, because they exist already. Try to "
+#~ "remove them first."
+#~ msgstr ""
+#~ "Ce module ne peut pas installer ses tables car elles existent déjà. "
+#~ "Essayez de les supprimer manuellement."
+
+#, php-format
+#~ msgid "The module removed tables \"%s\" from a previous broken install."
+#~ msgstr ""
+#~ "Le module a supprimé les tables « %s » depuis une installation échouée."
+
+#, php-format
+#~ msgid "This module requires the module \"%1$s\", version %2$s or above."
+#~ msgstr "Ce module requiert le module « %1$s », version %2$s ou supérieure."
+
+#, php-format
+#~ msgid ""
+#~ "The module \"%s\" was automatically deactivated because the dependencies "
+#~ "are unavailable."
+#~ msgstr ""
+#~ "Le module « %s » a été automatiquement désactivé car ses dépendances ne "
+#~ "sont plus disponibles."
+
+#, php-format
+#~ msgid ""
+#~ "An error occured when loading vocabulary \"%s\": file has no json content."
+#~ msgstr ""
+#~ "Une erreur est survenue en chargeant le vocabulaire « %s » : le fichier "
+#~ "n’a pas de contenu json."
+
+#, php-format
+#~ msgid ""
+#~ "An error occured when adding the prefix \"%s\": another vocabulary "
+#~ "exists. Resolve the conflict before installing this module."
+#~ msgstr ""
+#~ "Une erreur est survenue en ajoutant le préfixe « %s » : un autre "
+#~ "vocabulaire existe. Merci de résoudre le conflit avant d’installer ce "
+#~ "module."
+
+#, php-format
+#~ msgid ""
+#~ "A custom vocab exists for \"%s\". Remove it or rename it before "
+#~ "installing this module."
+#~ msgstr ""
+#~ "Un vocabulaire personnalisé existe pour « %s » : renommez-le ou supprimez-"
+#~ "le avant d’installer ce module."
+
+#, php-format
+#~ msgid ""
+#~ "A resource template exists for %s. Rename it or remove it before "
+#~ "installing this module."
+#~ msgstr ""
+#~ "Un modèle de ressource nommé « %s » existe : merci de le renommer ou de "
+#~ "le supprimer avant d’installer ce module."
+
+#, php-format
+#~ msgid "The vocabulary \"%s\" was already installed and was kept."
+#~ msgstr "Le vocabulaire « %s » a déjà été installé et a été conservé."
+
+#, php-format
+#~ msgid ""
+#~ "An error occured when adding the prefix \"%s\": another vocabulary exists "
+#~ "with the same prefix. Resolve the conflict before installing this module."
+#~ msgstr ""
+#~ "Une erreur est survenue lors de l’ajout du préfixe « %s » : un autre "
+#~ "vocabulaire existe avec le même préfixe. Merci de résoudre le conflit "
+#~ "avant d’installer ce module."
+
+#, php-format
+#~ msgid ""
+#~ "An error occured when adding the prefix \"%1$s\" and the associated "
+#~ "properties: %2$s"
+#~ msgstr ""
+#~ "Une erreur est survenue en ajoutant le préfixe « %1$s » et les propriétés "
+#~ "associées : %2$s"
+
+#, php-format
+#~ msgid ""
+#~ "An error occured when updating vocabulary \"%s\" and the associated "
+#~ "properties: %s"
+#~ msgstr ""
+#~ "Une erreur est survenue lors de la mise à jour du vocabulaire « %1$s » et "
+#~ "des propriétés associées : %2$s"
+
+#, php-format
+#~ msgid ""
+#~ "An error occured when updating vocabulary \"%1$s\" and the associated "
+#~ "properties: %2$s"
+#~ msgstr ""
+#~ "Une erreur est survenue lors de la mise à jour du vocabulaire « %1$s » et "
+#~ "les propriétés associées : %2$s"
+
+#, php-format
+#~ msgid ""
+#~ "The following \"%1$s\" of the vocabulary \"%2$s\" were replaced: %3$s"
+#~ msgstr ""
+#~ "Les « %1$s » suivantes du vocabulaire « %2$s » ont été remplacées : %3$s"
+
+#~ msgid ""
+#~ "Resources, values and templates were updated, but you may check settings "
+#~ "where the old ones were used."
+#~ msgstr ""
+#~ "Les ressources, valeurs et modèles ont été mis à jour, mais vous pouvez "
+#~ "vérifier les paramètres où les anciennes valeurs étaient utilisées."
+
+#, php-format
+#~ msgid ""
+#~ "The resource template named \"%s\" is already available and is skipped."
+#~ msgstr ""
+#~ "Le modèle de ressource nommé « %s » est déjà disponible et a été conservé."
+
+#, php-format
+#~ msgid "The custom vocab named \"%s\" is not available."
+#~ msgstr "Le vocabulaire personnalisé nommé « %s » n’est pas disponible."
+
+#~ msgid "No file or url set for the vocabulary."
+#~ msgstr "Pas de fichier ou d’url pour le vocabulaire."
+
+#, php-format
+#~ msgid "The file \"%s\" cannot be read. Check the url."
+#~ msgstr "Le fichier « %s » ne peut pas être lu. Merci de vérifier l’url."
+
+#, php-format
+#~ msgid "The file \"%s\" cannot be read. Check the file."
+#~ msgstr ""
+#~ "Le fichier « %s » ne peut pas être lu. Merci de vérifier le fichier."
+
+#~ msgid "A vocabulary must have a namespace uri and a prefix."
+#~ msgstr ""
+#~ "Un vocabulaire doit avoir une uri pour l’espace de nom et un préfixe."
 
 #, php-format
 #~ msgid ""
