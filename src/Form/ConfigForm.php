@@ -78,6 +78,18 @@ class ConfigForm extends Form
             ])
 
             ->add([
+                'name' => 'access_ip_proxy',
+                'type' => Element\Checkbox::class,
+                'options' => [
+                    'label' => 'Check forwarded ip first (in proxy environment)', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_ip_proxy',
+                    'required' => false,
+                ],
+            ])
+
+            ->add([
                 'name' => 'access_email_regex',
                 'type' => Element\Text::class,
                 'options' => [

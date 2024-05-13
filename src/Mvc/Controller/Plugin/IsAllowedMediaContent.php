@@ -259,9 +259,17 @@ class IsAllowedMediaContent extends AbstractPlugin
     protected function reservedItemSetsForClientIp(): ?array
     {
         // This method is called one time for each file, but each file is
-        // called by a difrerent request.
+        // called by a different request.
 
-        $ip = $this->getClientIp();
+        /** @see https://github.com/Daniel-KM/Omeka-S-module-Access/issues/1 */
+        $ipList = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? null;
+        if ($ipList && $this->settings->get('access_ip_proxy')) {
+            $ips = explode(',', str_replace(' ', '', $ipList));
+            $ip = reset($ips);
+        } else {
+            $ip = $this->getClientIp();
+        }
+
         if ($ip === '::') {
             return null;
         }

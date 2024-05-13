@@ -301,6 +301,7 @@ return [
             ],
 
             'access_ip_item_sets' => [],
+            'access_ip_proxy' => false,
 
             'access_email_regex' => '',
 
