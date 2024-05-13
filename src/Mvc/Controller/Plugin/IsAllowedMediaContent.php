@@ -195,7 +195,7 @@ class IsAllowedMediaContent extends AbstractPlugin
             }
 
             $modeEmailRegex = in_array('email_regex', $modes);
-            if ($modeEmailRegex && $this->checkEmailRegex($user)) {
+            if ($modeEmailRegex && $this->checkEmailRegex($this->user)) {
                 return true;
             }
         }
