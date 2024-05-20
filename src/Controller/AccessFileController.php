@@ -3,6 +3,7 @@
 namespace Access\Controller;
 
 use Access\Entity\AccessLog;
+use Common\Stdlib\PsrMessage;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Omeka\Api\Adapter\MediaAdapter;
@@ -73,12 +74,32 @@ class AccessFileController extends AbstractActionController
             || !file_exists($filepath)
             || !is_readable($filepath)
         ) {
-            throw new Exception\NotFoundException;
+            $message = new PsrMessage(
+                'The file {file} (derivative: {derivative}) is invalid or not available.', // @translate
+                ['file' => $filename, 'derivative' => $storageType]
+            );
+            $this->logger()->err($message->getMessage(), $message->getContext());
+            throw new Exception\NotFoundException((string) $message);
         }
 
         $media = $this->mediaFromFilename($filename);
         if (!$media) {
-            throw new Exception\NotFoundException;
+            /** @var \Omeka\Entity\User  $user */
+            $user = $this->identity();
+            if ($user) {
+                $message = new PsrMessage(
+                    'The user #{user_id} ({user_email}) has no rights to get the file {file} or the file is invalid.', // @translate
+                    ['user_id' => $user->getId(), 'user_email' => $user->getEmail(), 'file' => $filename]
+                );
+            } else {
+                $message = new PsrMessage(
+                    'The visitor has no rights to get the file {file} or the file is invalid.', // @translate
+                    ['file' => $filename]
+                );
+            }
+            // Only warn: this is a rights issue, nearly never a file issue.
+            $this->logger()->warn($message->getMessage(), $message->getContext());
+            throw new Exception\NotFoundException((string) $message);
         }
 
         // Here, the media exists and is readable by the user (public/private).
