@@ -17,6 +17,7 @@ use Common\Stdlib\PsrMessage;
  * @var \Omeka\Mvc\Controller\Plugin\Api $api
  * @var \Omeka\Settings\Settings $settings
  * @var \Laminas\I18n\View\Helper\Translate $translate
+ * @var \Doctrine\ORM\EntityManager $entityManager
  * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
  */
 $plugins = $services->get('ControllerPluginManager');
@@ -25,6 +26,7 @@ $settings = $services->get('Omeka\Settings');
 $translate = $plugins->get('translate');
 $connection = $services->get('Omeka\Connection');
 $messenger = $plugins->get('messenger');
+$entityManager = $services->get('Omeka\EntityManager');
 
 $config = $services->get('Config');
 $configLocal = require dirname(__DIR__, 2) . '/config/module.config.php';
@@ -178,6 +180,116 @@ if (version_compare((string) $oldVersion, '3.4.25', '<')) {
     $messenger->addSuccess($message);
 }
 
+if (version_compare($oldVersion, '3.4.27', '<')) {
+    // Check themes that use "$heading" and templates in block.
+    $logger = $services->get('Omeka\Logger');
+    $pageRepository = $entityManager->getRepository(\Omeka\Entity\SitePage::class);
+
+    $viewHelpers = $services->get('ViewHelperManager');
+    $escape = $viewHelpers->get('escapeHtml');
+    $hasBlockPlus = $this->isModuleActive('BlockPlus');
+
+    $pagesUpdated = [];
+    $pagesUpdated2 = [];
+    foreach ($pageRepository->findAll() as $page) {
+        $pageSlug = $page->getSlug();
+        $siteSlug = $page->getSite()->getSlug();
+        $position = 0;
+        foreach ($page->getBlocks() as $block) {
+            $block->setPosition(++$position);
+            $layout = $block->getLayout();
+            if ($layout !== 'accessRequest') {
+                continue;
+            }
+            $data = $block->getData() ?: [];
+
+            $heading = $data['heading'] ?? '';
+            if (strlen($heading)) {
+                $b = new \Omeka\Entity\SitePageBlock();
+                $b->setPage($page);
+                $b->setPosition(++$position);
+                if ($hasBlockPlus) {
+                    $b->setLayout('heading');
+                    $b->setData([
+                        'text' => $heading,
+                        'level' => 2,
+                    ]);
+                } else {
+                    $b->setLayout('html');
+                    $b->setData([
+                        'html' => '<h2>' . $escape($heading) . '</h2>',
+                    ]);
+                }
+                $entityManager->persist($b);
+                $block->setPosition(++$position);
+                $pagesUpdated[$siteSlug][$pageSlug] = $pageSlug;
+            }
+            unset($data['heading']);
+
+            $template = $data['template'] ?? '';
+            $layoutData = $block->getLayoutData() ?? [];
+            $existingTemplateName = $layoutData['template_name'] ?? null;
+            $templateName = pathinfo($template, PATHINFO_FILENAME);
+            $templateCheck = 'sso-login-link';
+            if ($templateName
+                && $templateName !== $templateCheck
+                && (!$existingTemplateName || $existingTemplateName === $templateCheck)
+            ) {
+                $layoutData['template_name'] = $templateName;
+                $pagesUpdated2[$siteSlug][$pageSlug] = $pageSlug;
+            }
+            unset($data['template']);
+
+            $block->setData($data);
+            $block->setLayoutData($layoutData);
+        }
+    }
+
+    $entityManager->flush();
+
+    if ($pagesUpdated) {
+        $result = array_map('array_values', $pagesUpdated);
+        $message = new PsrMessage(
+            'The settings "heading" was removed from block Access request. New blocks "Heading" or "Html" were prepended to all blocks that had a filled heading. You may check pages for styles: {json}', // @translate
+            ['json' => json_encode($result, 448)]
+        );
+        $messenger->addWarning($message);
+        $logger->warn($message->getMessage(), $message->getContext());
+    }
+
+    if ($pagesUpdated2) {
+        $result = array_map('array_values', $pagesUpdated2);
+        $message = new PsrMessage(
+            'The setting "template" was moved to the new block layout settings available since Omeka S v4.1. You may check pages for styles: {json}', // @translate
+            ['json' => json_encode($result, 448)]
+        );
+        $messenger->addWarning($message);
+        $logger->warn($message->getMessage(), $message->getContext());
+
+        $message = new PsrMessage(
+            'The template files for the block Access request should be moved from "view/common/block-layout" to "view/common/block-template" in your themes. You may check your themes for pages: {json}', // @translate
+            ['json' => json_encode($result, 448)]
+        );
+        $messenger->addError($message);
+        $logger->warn($message->getMessage(), $message->getContext());
+    }
+
+    // Update existing ip reserved.
+    $this->prepareIpItemSets();
+    $settings->delete('access_ip_reserved');
+
+    $message = new PsrMessage(
+        'It is now possible to define accesses by sso idps and item sets.' // @translate
+    );
+    $messenger->addSuccess($message);
+
+    $message = new PsrMessage(
+        'It is now possible to define excluded item sets for accesses by ip and sso idp.' // @translate
+    );
+    $messenger->addSuccess($message);
+}
+
+// Check for old module.
 if (!empty($config['accessresource'])) {
     $message = new PsrMessage(
         'The key "accessresource" in the file config/local.config.php at the root of Omeka can be removed.' // @translate
