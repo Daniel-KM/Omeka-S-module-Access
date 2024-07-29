@@ -374,6 +374,7 @@ class IsAllowedMediaContent extends AbstractPlugin
 
         $idpName = $this->userSettings->get('connection_idp');
         return $reservedIdps[$idpName]
+            ?? $reservedIdps['federation']
             ?? null;
     }
 
