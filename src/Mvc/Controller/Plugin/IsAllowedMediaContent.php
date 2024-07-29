@@ -18,31 +18,27 @@ use Omeka\Api\Representation\MediaRepresentation;
 use Omeka\Entity\User;
 use Omeka\Mvc\Controller\Plugin\UserIsAllowed;
 use Omeka\Settings\Settings;
+use Omeka\Settings\UserSettings;
 use SingleSignOn\Mvc\Controller\Plugin\IsSsoUser;
 
 class IsAllowedMediaContent extends AbstractPlugin
 {
-    /**
-     * @var \Doctrine\ORM\EntityManager
-     */
-    protected $entityManager;
-
-    /**
-     * @var \Omeka\Mvc\Controller\Plugin\UserIsAllowed
-     */
-    protected $userIsAllowed;
-
     /**
      * @var \Access\Mvc\Controller\Plugin\AccessStatus
      */
     protected $accessStatus;
 
     /**
+     * @var \Doctrine\ORM\EntityManager
+     */
+    protected $entityManager;
+
+    /**
      * @var \CAS\Mvc\Controller\Plugin\IsCasUser
      */
     protected $isCasUser;
 
-        /**
+    /**
      * @var \Access\Mvc\Controller\Plugin\IsExternalUser
      */
     protected $isExternalUser;
@@ -58,9 +54,9 @@ class IsAllowedMediaContent extends AbstractPlugin
     protected $isSsoUser;
 
     /**
-     * @var \Omeka\Entity\User;
+     * @var \Laminas\Mvc\Controller\Plugin\Params
      */
-    protected $user;
+    protected $params;
 
     /**
      * @var \Omeka\Settings\Settings
@@ -68,9 +64,19 @@ class IsAllowedMediaContent extends AbstractPlugin
     protected $settings;
 
     /**
-     * @var \Laminas\Mvc\Controller\Plugin\Params
+     * @var \Omeka\Entity\User;
      */
-    protected $params;
+    protected $user;
+
+    /**
+     * @var \Omeka\Mvc\Controller\Plugin\UserIsAllowed
+     */
+    protected $userIsAllowed;
+
+    /**
+     * @var \Omeka\Settings\UserSettings
+     */
+    protected $userSettings;
 
     public function __construct(
         AccessStatusPlugin $accessStatus,
@@ -82,7 +88,8 @@ class IsAllowedMediaContent extends AbstractPlugin
         Params $params,
         Settings $settings,
         ?User $user,
-        UserIsAllowed $userIsAllowed
+        UserIsAllowed $userIsAllowed,
+        ?UserSettings $userSettings
     ) {
         $this->accessStatus = $accessStatus;
         $this->entityManager = $entityManager;
@@ -94,6 +101,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         $this->settings = $settings;
         $this->user = $user;
         $this->userIsAllowed = $userIsAllowed;
+        $this->userSettings = $userSettings;
     }
 
     /**
@@ -164,7 +172,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         }
 
         $modeIp = in_array('ip', $modes);
-        if ($modeIp && $this->isMediaInReservedItemSets($media)) {
+        if ($modeIp && $this->isMediaInReservedItemSets($media, 'ip')) {
             return true;
         }
 
@@ -194,6 +202,15 @@ class IsAllowedMediaContent extends AbstractPlugin
                 return true;
             }
 
+            $modeSsoIdp = in_array('auth_sso_idp', $modes);
+            if ($modeSsoIdp
+                && $this->isSsoUser
+                && $this->isSsoUser->__invoke($this->user)
+                && $this->isMediaInReservedItemSets($media, 'auth_sso_idp')
+            ) {
+                return true;
+            }
+
             $modeEmailRegex = in_array('email_regex', $modes);
             if ($modeEmailRegex && $this->checkEmailRegex($this->user)) {
                 return true;
@@ -219,11 +236,17 @@ class IsAllowedMediaContent extends AbstractPlugin
         return (bool) $accessStatus->isUnderEmbargo();
     }
 
-    protected function isMediaInReservedItemSets(MediaRepresentation $media): bool
+    protected function isMediaInReservedItemSets(MediaRepresentation $media, string $reservedKey): bool
     {
-        $reservedItemSetsForClientIp = $this->reservedItemSetsForClientIp();
-        if (is_array($reservedItemSetsForClientIp) && count($reservedItemSetsForClientIp)) {
-            $isMediaInItemSets = $this->isMediaInItemSets($media, $reservedItemSetsForClientIp);
+        if ($reservedKey === 'ip') {
+            $reservedItemSets = $this->reservedItemSetsForClientIp();
+        } elseif ($reservedKey === 'auth_sso_idp') {
+            $reservedItemSets = $this->reservedItemSetsForAuthSsoIdp();
+        } else {
+            return false;
+        }
+        if (is_array($reservedItemSets) && count($reservedItemSets)) {
+            $isMediaInItemSets = $this->isMediaInItemSets($media, $reservedItemSets);
             if ($isMediaInItemSets) {
                 return true;
             }
@@ -274,7 +297,7 @@ class IsAllowedMediaContent extends AbstractPlugin
             return null;
         }
 
-        $reservedIps = $this->settings->get('access_ip_reserved', []);
+        $reservedIps = $this->settings->get('access_ip_item_sets_by_ip', []);
         if (empty($reservedIps)) {
             return null;
         }
@@ -314,6 +337,32 @@ class IsAllowedMediaContent extends AbstractPlugin
             ->setUseProxy(true)
             ->setTrustedProxies([$_SERVER['SERVER_ADDR']]);
         return $remoteAddress->getIpAddress() ?: '::';
+    }
+
+    /**
+     * Check if the idp of the user is reserved and limited to some item sets.
+     *
+     * @return array|null Null if the user is not listed in reserved idps, else
+     *   array of item sets, that may be empty.
+     */
+    protected function reservedItemSetsForAuthSsoIdp(): ?array
+    {
+        // This method is called one time for each file, but each file is
+        // called by a different request.
+
+        $reservedIdps = $this->settings->get('access_auth_sso_idp_item_sets_by_idp', []);
+        if (empty($reservedIdps)) {
+            return null;
+        }
+
+        $authenticator = $this->userSettings->get('connection_authenticator');
+        if ($authenticator !== 'SingleSignOn') {
+            return null;
+        }
+
+        $idpName = $this->userSettings->get('connection_idp');
+        return $reservedIdps[$idpName]
+            ?? null;
     }
 
     protected function checkEmailRegex(User $user): bool

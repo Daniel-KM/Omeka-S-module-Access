@@ -294,6 +294,7 @@ return [
                 // 'auth_cas',
                 // 'auth_ldap',
                 // 'auth_sso',
+                // 'auth_sso_idp',
                 // 'email_regex',
                 // 'user',
                 // 'email',
@@ -302,6 +303,8 @@ return [
 
             'access_ip_item_sets' => [],
             'access_ip_proxy' => false,
+
+            'access_auth_sso_idp_item_sets' => [],
 
             'access_email_regex' => '',
 
@@ -327,8 +330,8 @@ return [
             // Hidden settings automatically filled after saving config.
             // It contains the same data than "access_ip_item_sets", but
             // with numberized ip ranges (cidr) in order to do a quicker control
-            // of rights.
-            'access_ip_reserved' => [
+            // of rights, and exploded item sets.
+            'access_ip_item_sets_by_ip' => [
                 /*
                 '123.45.67.89' => [
                     'low' => 2066563929,
@@ -342,6 +345,7 @@ return [
                 ],
                 */
             ],
+            'access_auth_sso_idp_item_sets_by_idp' => [],
         ],
         'settings' => [
             'access_message_send' => true,

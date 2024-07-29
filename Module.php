@@ -427,6 +427,11 @@ class Module extends AbstractModule
             return false;
         }
 
+        $result = $this->prepareAuthSsoIdpItemSets();
+        if (!$result) {
+            return false;
+        }
+
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
@@ -1618,7 +1623,7 @@ HTML;
             }
         }
 
-        $settings->set('access_ip_reserved', $reservedIps);
+        $settings->set('access_ip_item_sets_by_ip', $reservedIps);
 
         return true;
     }
@@ -1644,6 +1649,83 @@ HTML;
         $range['low'] = (ip2long($cidr[0])) & ((-1 << (32 - (int) $cidr[1])));
         $range['high'] = (ip2long(long2ip($range['low']))) + 2 ** (32 - (int) $cidr[1]) - 1;
         return $range;
+    }
+
+    /**
+     * Check idps and item sets and prepare the quick hidden setting.
+     */
+    protected function prepareAuthSsoIdpItemSets(): bool
+    {
+        $services = $this->getServiceLocator();
+
+        /**
+         * @var \Omeka\\Api\Manager $api
+         * @var \Omeka\Settings\Settings $settings
+         * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
+         */
+        $plugins = $services->get('ControllerPluginManager');
+        $api = $services->get('Omeka\ApiManager');
+        $settings = $services->get('Omeka\Settings');
+        $messenger = $plugins->get('messenger');
+
+        $idps = $settings->get('singlesignon_idps');
+        if (!$idps) {
+            $message = new PsrMessage(
+                'No idp are defined. Check the config of module Single Sign-On first.' // @translate
+            );
+            $messenger->addError($message);
+            return false;
+        }
+
+        $idpItemSets = $settings->get('access_auth_sso_idp_item_sets') ?: [];
+
+        $reservedIdps = [];
+        $hasError = false;
+        foreach ($idpItemSets as $idpName => $itemSetIds) {
+            $itemSets = [];
+            if (!$idpName && !$itemSetIds) {
+                continue;
+            }
+            if (!$idpName || !isset($idps[$idpName])) {
+                $message = new PsrMessage(
+                    'The idp "{idp}" is empty or not defined in module Single Sign-On.', // @translate
+                    ['idp' => $idpName]
+                );
+                $messenger->addError($message);
+                $hasError = true;
+                continue;
+            } elseif ($itemSetIds) {
+                $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace('/\D/', ' ', $itemSetIds))));
+                if (!$itemSetIdsArray) {
+                    $message = new PsrMessage(
+                        'The item sets list "{name}" for idp {idp} is invalid: they should be numeric ids.', // @translate
+                        ['name' => $itemSetIds, 'idp' => $idpName]
+                    );
+                    $messenger->addError($message);
+                    $hasError = true;
+                    continue;
+                }
+                $itemSets = $api->search('item_sets', ['id' => $itemSetIdsArray], ['returnScalar' => 'id'])->getContent();
+                if (count($itemSets) !== count($itemSetIdsArray)) {
+                    $message = new PsrMessage(
+                        'The item sets list "{name}" for idp {idp} contains unknown item sets ({list}).', // @translate
+                        ['name' => $itemSetIds, 'idp' => $idpName, 'list' => implode(', ', array_diff($itemSetIdsArray, $itemSets))]
+                    );
+                    $messenger->addError($message);
+                    $hasError = true;
+                    continue;
+                }
+            }
+            $reservedIdps[$idpName] = $itemSets;
+        }
+
+        if ($hasError) {
+            return false;
+        }
+
+        $settings->set('access_auth_sso_idp_item_sets_by_idp', $reservedIdps);
+
+        return true;
     }
 
     protected function resourceNameFromRoute(): ?string

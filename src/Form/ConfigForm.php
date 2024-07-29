@@ -38,12 +38,13 @@ class ConfigForm extends Form
                 'options' => [
                     'label' => 'Access modes', // @translate
                     'value_options' => [
-                        'ip' => 'IP: visitors with specified ips have access to all reserved medias', // @translate
+                        'ip' => 'IP: visitors with specified ips have access to a list of reserved media by item sets', // @translate
                         'guest' => 'Guest: all users, included guests, have access to all reserved medias', // @translate
                         'auth_external' => 'External: users externally authenticated (cas, ldap, sso) have access to all reserved medias', // @translate
                         'auth_cas' => 'CAS: users authenticated by cas have access to all reserved medias', // @translate
                         'auth_ldap' => 'LDAP: users authenticated by ldap have access to all reserved medias', // @translate
                         'auth_sso' => 'SSO: users authenticated by sso have access to all reserved medias', // @translate
+                        'auth_sso_idp' => 'SSO / IDP: users authenticated by specified identity providers have access to a list of reserved media by item sets', // @translate
                         'email_regex' => 'Users authenticated with a specific email have access to all reserved medias', // @translate
                         'user' => 'User: authenticated users should request access to specific reserved medias', // @translate
                         'email' => 'Email: A visitor identified by email should request access to specific reserved medias', // @translate
@@ -86,6 +87,22 @@ class ConfigForm extends Form
                 'attributes' => [
                     'id' => 'access_ip_proxy',
                     'required' => false,
+                ],
+            ])
+
+            ->add([
+                'name' => 'access_auth_sso_idp_item_sets',
+                'type' => OmekaElement\ArrayTextarea::class,
+                'options' => [
+                    'label' => 'List of sso idp with open access, eventually limited to selected item sets', // @translate
+                    'info' => 'These identity providers will have unrestricted access to all resources or only resources of the specified item sets. List them separated by a "=", one by line. The idp name is the domain name or the value used in the login form.', // @translate
+                    'as_key_value' => true,
+                ],
+                'attributes' => [
+                    'id' => 'access_auth_sso_idp_item_sets',
+                    'rows' => 12,
+                    'placeholder' => 'idp.example.org
+shibboleth.another-example.org = 1 2 5',
                 ],
             ])
 

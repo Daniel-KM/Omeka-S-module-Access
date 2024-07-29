@@ -154,6 +154,15 @@
             }
         }
 
+        const modeAuthSsoIdp = function() {
+            const element = $('input[name="access_modes[]"][value=auth_sso_idp]');
+            if (element.prop('checked')) {
+                $('#access_auth_sso_idp_item_sets').closest('.field').show(300);
+            } else {
+                $('#access_auth_sso_idp_item_sets').closest('.field').hide(300);
+            }
+        }
+
         const modeEmailRegex = function() {
             const element = $('input[name="access_modes[]"][value=email_regex]');
             if (element.prop('checked')) {
@@ -173,10 +182,12 @@
         }
 
         $('input[name="access_modes[]"][value=ip]').on('click', modeIp);
+        $('input[name="access_modes[]"][value=auth_sso_idp]').on('click', modeAuthSsoIdp);
         $('input[name="access_modes[]"][value=email_regex]').on('click', modeEmailRegex);
         $('input[name=access_property]').on('click', accessViaProperty);
 
         modeIp();
+        modeAuthSsoIdp();
         modeEmailRegex();
         accessViaProperty();
 
