@@ -66,15 +66,15 @@ class ConfigForm extends Form
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
                     'label' => 'List of ips with open access, eventually limited to selected item sets', // @translate
-                    'info' => 'These ips will have unrestricted access to all resources or only resources of the specified item sets. List them separated by a "=", one by line. Range ip are allowed (formatted as cidr).', // @translate
+                    'info' => 'These ips will have unrestricted access to all resources or only resources of the specified item sets. List them separated by a "=", one by line. Range ip are allowed (formatted as cidr). An item set prepended with a "-" means an excluded item set, in particular when a global item set is defined to identify all reserved resources.', // @translate
                     'as_key_value' => true,
                 ],
                 'attributes' => [
                     'id' => 'access_ip_item_sets',
                     'rows' => 12,
                     'placeholder' => '12.34.56.78
-124.8.16.32 = 1 2 5
-65.43.21.0/24 = 1 7',
+124.8.16.32 = 1 2 -5
+65.43.21.0/24 = 1 -7',
                 ],
             ])
 
@@ -95,14 +95,14 @@ class ConfigForm extends Form
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
                     'label' => 'List of sso idp with open access, eventually limited to selected item sets', // @translate
-                    'info' => 'These identity providers will have unrestricted access to all resources or only resources of the specified item sets. List them separated by a "=", one by line. The idp name is the domain name or the value used in the login form.', // @translate
+                    'info' => 'These identity providers will have unrestricted access to all resources or only resources of the specified item sets. List them separated by a "=", one by line. The idp name is the domain name or the value used in the login form. An item set prepended with a "-" means an excluded item set, in particular when a global item set is defined to identify all reserved resources.', // @translate
                     'as_key_value' => true,
                 ],
                 'attributes' => [
                     'id' => 'access_auth_sso_idp_item_sets',
                     'rows' => 12,
                     'placeholder' => 'idp.example.org
-shibboleth.another-example.org = 1 2 5',
+shibboleth.another-example.org = 1 2 -5',
                 ],
             ])
 

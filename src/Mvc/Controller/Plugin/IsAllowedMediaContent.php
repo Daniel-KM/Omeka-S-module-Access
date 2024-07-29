@@ -236,25 +236,34 @@ class IsAllowedMediaContent extends AbstractPlugin
         return (bool) $accessStatus->isUnderEmbargo();
     }
 
-    protected function isMediaInReservedItemSets(MediaRepresentation $media, string $reservedKey): bool
+    protected function isMediaInReservedItemSets(MediaRepresentation $media, string $mode): bool
     {
-        if ($reservedKey === 'ip') {
-            $reservedItemSets = $this->reservedItemSetsForClientIp();
-        } elseif ($reservedKey === 'auth_sso_idp') {
-            $reservedItemSets = $this->reservedItemSetsForAuthSsoIdp();
+        if ($mode === 'ip') {
+            $definedItemSets = $this->definedItemSetsForClientIp();
+        } elseif ($mode === 'auth_sso_idp') {
+            $definedItemSets = $this->definedItemSetsForAuthSsoIdp();
         } else {
             return false;
         }
-        if (is_array($reservedItemSets)) {
-            if (!count($reservedItemSets)) {
-                return true;
-            }
-            $isMediaInItemSets = $this->isMediaInItemSets($media, $reservedItemSets);
-            if ($isMediaInItemSets) {
-                return true;
-            }
+
+        // The user is not in the lists.
+        if (!is_array($definedItemSets)) {
+            return false;
         }
-        return false;
+
+        $allow = $definedItemSets['allow'] ?? null;
+        $forbid = $definedItemSets['forbid'] ?? null;
+
+        if (!count($allow) && !count($forbid)) {
+            return true;
+        } elseif (count($allow) && !count($forbid)) {
+            return $this->isMediaInItemSets($media, $allow);
+        } elseif (!count($allow) && count($forbid)) {
+            return !$this->isMediaInItemSets($media, $forbid);
+        } else {
+            return $this->isMediaInItemSets($media, $allow)
+                && !$this->isMediaInItemSets($media, $forbid);
+        }
     }
 
     protected function isMediaInItemSets(?MediaRepresentation $media, ?array $itemSetIds): bool
@@ -282,7 +291,7 @@ class IsAllowedMediaContent extends AbstractPlugin
      * @return array|null Null if the user is not listed in reserved ips, else
      *   array of item sets, that may be empty, that means any.
      */
-    protected function reservedItemSetsForClientIp(): ?array
+    protected function definedItemSetsForClientIp(): ?array
     {
         // This method is called one time for each file, but each file is
         // called by a different request.
@@ -300,22 +309,22 @@ class IsAllowedMediaContent extends AbstractPlugin
             return null;
         }
 
-        $reservedIps = $this->settings->get('access_ip_item_sets_by_ip', []);
-        if (empty($reservedIps)) {
+        $listIps = $this->settings->get('access_ip_item_sets_by_ip', []);
+        if (empty($listIps)) {
             return null;
         }
 
         // Check a single ip.
-        if (isset($reservedIps[$ip])) {
-            return $reservedIps[$ip]['reserved'];
+        if (isset($listIps[$ip])) {
+            return array_intersect_key($ip, ['allow' => null, 'forbid' => null]);
         }
 
         // Check an ip range.
         // FIXME Fix check of ip for ipv6 (ip2long).
         $ipLong = ip2long($ip);
-        foreach ($reservedIps as $range) {
+        foreach ($listIps as $range) {
             if ($ipLong >= $range['low'] && $ipLong <= $range['high']) {
-                return $range['reserved'];
+                return array_intersect_key($range, ['allow' => null, 'forbid' => null]);
             }
         }
 
@@ -348,7 +357,7 @@ class IsAllowedMediaContent extends AbstractPlugin
      * @return array|null Null if the user is not listed in reserved idps, else
      *   array of item sets, that may be empty, that means any.
      */
-    protected function reservedItemSetsForAuthSsoIdp(): ?array
+    protected function definedItemSetsForAuthSsoIdp(): ?array
     {
         // This method is called one time for each file, but each file is
         // called by a different request.

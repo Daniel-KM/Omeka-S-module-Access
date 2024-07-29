@@ -1568,14 +1568,14 @@ HTML;
 
         $ipItemSets = $settings->get('access_ip_item_sets') ?: [];
 
-        $reservedIps = [];
+        $listIps = [];
         $hasError = false;
-        foreach ($ipItemSets as $ip => $itemSetIds) {
-            $itemSets = [];
-            if (!$ip && !$itemSetIds) {
+        foreach ($ipItemSets as $ip => $itemSetIdsString) {
+            $allow = [];
+            $forbid = [];
+            if (!$ip && !$itemSetIdsString) {
                 continue;
-            }
-            if (!$ip || !filter_var(strtok($ip, '/'), FILTER_VALIDATE_IP)) {
+            } elseif (!$ip || !filter_var(strtok($ip, '/'), FILTER_VALIDATE_IP)) {
                 $message = new PsrMessage(
                     'The ip "{ip}" is empty or invalid.', // @translate
                     ['ip' => $ip]
@@ -1583,30 +1583,48 @@ HTML;
                 $messenger->addError($message);
                 $hasError = true;
                 continue;
-            } elseif ($itemSetIds) {
-                $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace('/\D/', ' ', $itemSetIds))));
+            } elseif ($itemSetIdsString) {
+                $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace('/[^\d-]/', ' ', $itemSetIdsString))));
                 if (!$itemSetIdsArray) {
                     $message = new PsrMessage(
-                        'The item sets list "{name}" for ip {ip} is invalid: they should be numeric ids.', // @translate
-                        ['name' => $itemSetIds, 'ip' => $ip]
+                        'The item sets list "{input}" for ip {ip} is invalid: they should be numeric ids, optionaly prepended with a "-".', // @translate
+                        ['input' => $itemSetIdsString, 'ip' => $ip]
                     );
                     $messenger->addError($message);
                     $hasError = true;
                     continue;
                 }
-                $itemSets = $api->search('item_sets', ['id' => $itemSetIdsArray], ['returnScalar' => 'id'])->getContent();
-                if (count($itemSets) !== count($itemSetIdsArray)) {
+                // Check for duplicate absolute item set ids.
+                $absolutes = array_map('abs', $itemSetIdsArray);
+                if (count($absolutes) !== count($itemSetIdsArray)) {
                     $message = new PsrMessage(
-                        'The item sets list "{name}" for ip {ip} contains unknown item sets ({list}).', // @translate
-                        ['name' => $itemSetIds, 'ip' => $ip, 'list' => implode(', ', array_diff($itemSetIdsArray, $itemSets))]
+                        'The item sets list "{input}" for ip {ip} contains duplicate item sets ({list}).', // @translate
+                        ['input' => $itemSetIdsString, 'ip' => $ip, 'list' => implode(', ', array_diff($itemSetIdsArray, $absolutes))]
                     );
                     $messenger->addError($message);
                     $hasError = true;
                     continue;
                 }
+                // Check valid item sets.
+                $itemSetIdsArray = array_combine($absolutes, $itemSetIdsArray);
+                $itemSetIdsChecked = $api->search('item_sets', ['id' => $absolutes], ['returnScalar' => 'id'])->getContent();
+                if (count($itemSetIdsChecked) !== count($itemSetIdsArray)) {
+                    $message = new PsrMessage(
+                        'The item sets list "{input}" for ip {ip} contains unknown item sets ({list}).', // @translate
+                        ['input' => $itemSetIdsString, 'ip' => $ip, 'list' => implode(', ', array_diff_key($itemSetIdsArray, $itemSetIdsChecked))]
+                    );
+                    $messenger->addError($message);
+                    $hasError = true;
+                    continue;
+                }
+                // Prepare an associative array of item set id and
+                // included/excluded item set id.
+                $allow = array_keys(array_filter($itemSetIdsArray, fn ($v) => $v > 0));
+                $forbid = array_keys(array_filter($itemSetIdsArray, fn ($v) => $v < 0));
             }
-            $reservedIps[$ip] = $this->cidrToRange($ip);
-            $reservedIps[$ip]['reserved'] = $itemSets;
+            $listIps[$ip] = $this->cidrToRange($ip);
+            $listIps[$ip]['allow'] = $allow;
+            $listIps[$ip]['forbid'] = $forbid;
         }
 
         if ($hasError) {
@@ -1616,14 +1634,14 @@ HTML;
         // Move the ip 0.0.0.0/0 as last ip, it will be possible to find a more
         // precise rule if any.
         foreach (['0.0.0.0', '0.0.0.0/0', '::'] as $ip) {
-            if (isset($reservedIps[$ip])) {
-                $v = $reservedIps[$ip];
-                unset($reservedIps[$ip]);
-                $reservedIps[$ip] = $v;
+            if (isset($listIps[$ip])) {
+                $v = $listIps[$ip];
+                unset($listIps[$ip]);
+                $listIps[$ip] = $v;
             }
         }
 
-        $settings->set('access_ip_item_sets_by_ip', $reservedIps);
+        $settings->set('access_ip_item_sets_by_ip', $listIps);
 
         return true;
     }
@@ -1668,25 +1686,28 @@ HTML;
         $settings = $services->get('Omeka\Settings');
         $messenger = $plugins->get('messenger');
 
+        $idpItemSets = $settings->get('access_auth_sso_idp_item_sets') ?: [];
+        if (!$idpItemSets) {
+            return true;
+        }
+
         $idps = $settings->get('singlesignon_idps');
         if (!$idps) {
             $message = new PsrMessage(
-                'No idp are defined. Check the config of module Single Sign-On first.' // @translate
+                'No idps are defined. Check the config of module Single Sign-On first.' // @translate
             );
             $messenger->addError($message);
             return false;
         }
 
-        $idpItemSets = $settings->get('access_auth_sso_idp_item_sets') ?: [];
-
-        $reservedIdps = [];
+        $listIdps = [];
         $hasError = false;
-        foreach ($idpItemSets as $idpName => $itemSetIds) {
-            $itemSets = [];
-            if (!$idpName && !$itemSetIds) {
+        foreach ($idpItemSets as $idpName => $itemSetIdsString) {
+            $allow = [];
+            $forbid = [];
+            if (!$idpName && !$itemSetIdsString) {
                 continue;
-            }
-            if (!$idpName || !isset($idps[$idpName])) {
+            } elseif (!$idpName || !isset($idps[$idpName])) {
                 $message = new PsrMessage(
                     'The idp "{idp}" is empty or not defined in module Single Sign-On.', // @translate
                     ['idp' => $idpName]
@@ -1694,36 +1715,55 @@ HTML;
                 $messenger->addError($message);
                 $hasError = true;
                 continue;
-            } elseif ($itemSetIds) {
-                $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace('/\D/', ' ', $itemSetIds))));
+            } elseif ($itemSetIdsString) {
+                $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace('/[^\d-]/', ' ', $itemSetIdsString))));
                 if (!$itemSetIdsArray) {
                     $message = new PsrMessage(
-                        'The item sets list "{name}" for idp {idp} is invalid: they should be numeric ids.', // @translate
-                        ['name' => $itemSetIds, 'idp' => $idpName]
+                        'The item sets list "{input}" for idp {idp} is invalid: they should be numeric ids, optionaly prepended with a "-".', // @translate
+                        ['input' => $itemSetIdsString, 'idp' => $idpName]
                     );
                     $messenger->addError($message);
                     $hasError = true;
                     continue;
                 }
-                $itemSets = $api->search('item_sets', ['id' => $itemSetIdsArray], ['returnScalar' => 'id'])->getContent();
-                if (count($itemSets) !== count($itemSetIdsArray)) {
+                // Check for duplicate absolute item set ids.
+                $absolutes = array_map('abs', $itemSetIdsArray);
+                if (count($absolutes) !== count($itemSetIdsArray)) {
                     $message = new PsrMessage(
-                        'The item sets list "{name}" for idp {idp} contains unknown item sets ({list}).', // @translate
-                        ['name' => $itemSetIds, 'idp' => $idpName, 'list' => implode(', ', array_diff($itemSetIdsArray, $itemSets))]
+                        'The item sets list "{input}" for idp {idp} contains duplicate item sets ({list}).', // @translate
+                        ['input' => $itemSetIdsString, 'idp' => $idpName, 'list' => implode(', ', array_diff($itemSetIdsArray, $absolutes))]
                     );
                     $messenger->addError($message);
                     $hasError = true;
                     continue;
                 }
+                // Check valid item sets.
+                $itemSetIdsArray = array_combine($absolutes, $itemSetIdsArray);
+                $itemSetIdsChecked = $api->search('item_sets', ['id' => $absolutes], ['returnScalar' => 'id'])->getContent();
+                if (count($itemSetIdsChecked) !== count($itemSetIdsArray)) {
+                    $message = new PsrMessage(
+                        'The item sets list "{input}" for idp {idp} contains unknown item sets ({list}).', // @translate
+                        ['input' => $itemSetIdsString, 'idp' => $idpName, 'list' => implode(', ', array_diff($itemSetIdsArray, $itemSetIdsChecked))]
+                    );
+                    $messenger->addError($message);
+                    $hasError = true;
+                    continue;
+                }
+                // Prepare an associative array of item set id and
+                // included/excluded item set id.
+                $allow = array_keys(array_filter($itemSetIdsArray, fn ($v) => $v > 0));
+                $forbid = array_keys(array_filter($itemSetIdsArray, fn ($v) => $v < 0));
             }
-            $reservedIdps[$idpName] = $itemSets;
+            $listIdps[$idpName] = [];
+            $listIdps[$idpName]['allow'] = $allow;
+            $listIdps[$idpName]['forbid'] = $forbid;
         }
 
         if ($hasError) {
             return false;
         }
 
-        $settings->set('access_auth_sso_idp_item_sets_by_idp', $reservedIdps);
+        $settings->set('access_auth_sso_idp_item_sets_by_idp', $listIdps);
 
         return true;
     }
