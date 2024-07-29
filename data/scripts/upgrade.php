@@ -2,7 +2,7 @@
 
 namespace Access;
 
-use Omeka\Stdlib\Message;
+use Common\Stdlib\PsrMessage;
 
 /**
  * @var Module $this
@@ -130,12 +130,12 @@ SQL;
     $settings->set('access_message_visitor_request_accepted', $configLocal['access']['settings']['access_message_visitor_request_accepted']);
     $settings->set('access_message_visitor_request_rejected', $configLocal['access']['settings']['access_message_visitor_request_rejected']);
 
-    $message = new Message(
+    $message = new PsrMessage(
         'It is now possible to add a page block to request an access.' // @translate
     );
     $messenger->addSuccess($message);
 
-    $message = new Message(
+    $message = new PsrMessage(
         'New messages were added to make a distinction between user/visitor and accepted/rejected. Check main settings to adapt them.' // @translate
     );
     $messenger->addWarning($message);
@@ -150,7 +150,7 @@ if (version_compare((string) $oldVersion, '3.4.22', '<')) {
     $settings->set('access_message_visitor_request_accepted', $settings->get('access_message_visitor_request_accepted') ?: $configLocal['access']['settings']['access_message_visitor_request_accepted']);
     $settings->set('access_message_visitor_request_rejected', $settings->get('access_message_visitor_request_rejected') ?: $configLocal['access']['settings']['access_message_visitor_request_rejected']);
 
-    $message = new Message(
+    $message = new PsrMessage(
         'The module manages now http requests "Content Range" that allow to read files faster.' // @translate
     );
     $messenger->addSuccess($message);
@@ -172,14 +172,14 @@ if (version_compare((string) $oldVersion, '3.4.25', '<')) {
     unset($accessMode);
     $settings->set('access_modes', $accessModes);
 
-    $message = new Message(
+    $message = new PsrMessage(
         'A new access mode allows to limit access to medias to users with a specific email via regex.' // @translate
     );
     $messenger->addSuccess($message);
 }
 
 if (!empty($config['accessresource'])) {
-    $message = new Message(
+    $message = new PsrMessage(
         'The key "accessresource" in the file config/local.config.php at the root of Omeka can be removed.' // @translate
     );
     $messenger->addWarning($message);

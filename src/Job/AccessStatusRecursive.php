@@ -78,9 +78,9 @@ class AccessStatusRecursive extends AbstractJob
         $resourceId = (int) $this->getArg('resource_id');
         $resourceIds = array_filter(array_map('intval', $this->getArg('resource_ids', [])));
         if (!$resourceId && !$resourceIds) {
-            $this->logger->warn(new Message(
+            $this->logger->warn(
                 'No resource to process.' // @translate
-            ));
+            );
             return;
         }
 
@@ -111,9 +111,9 @@ class AccessStatusRecursive extends AbstractJob
                 : $this->processUpdateItemSet($bind, $types);
         }
 
-        $this->logger->info(new Message(
+        $this->logger->info(
             'End of indexation of access statuses in properties.' // @translate
-        ));
+        );
     }
 
     protected function prepareBind(int $resourceId, array $accessStatusValues): ?array
@@ -121,10 +121,10 @@ class AccessStatusRecursive extends AbstractJob
         /** @var \Omeka\Entity\Resource $resource */
         $resource = $this->entityManager->find(\Omeka\Entity\Resource::class, $resourceId);
         if (!$resource) {
-            $this->logger->warn(new Message(
-                'No resource "%d" to process.', // @translate
-                $resourceId
-            ));
+            $this->logger->warn(
+                'No resource "{resource_id}" to process.', // @translate
+                ['resource_id' => $resourceId]
+            );
             return null;
         }
 

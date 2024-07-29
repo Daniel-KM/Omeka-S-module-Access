@@ -593,12 +593,10 @@ class Module extends AbstractModule
             || array_key_exists('access_recursive', $newData);
 
         if ($needProcess) {
-            $this->getServiceLocator()->get('Omeka\Logger')->info(new PsrMessage(
+            $this->getServiceLocator()->get('Omeka\Logger')->info(
                 "Cleaned params used for Access:\n{json}", // @translate
-                [
-                    'json' => json_encode($newData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_LINE_TERMINATORS),
-                ]
-            ));
+                ['json' => $newData]
+            );
             $newData = [
                 'is_batch_process' => true,
             ] + $newData;

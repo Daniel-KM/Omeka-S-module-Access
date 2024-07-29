@@ -106,10 +106,10 @@ class AccessStatusUpdate extends AbstractJob
         ];
         $this->syncMode = $this->getArg('sync', 'skip');
         if (!in_array($this->missingMode, $syncModes)) {
-            $this->logger->err(new Message(
-                'Sync mode "%s" is invalid.', // @translate
-                $this->syncMode
-            ));
+            $this->logger->err(
+                'Sync mode {mode} is invalid.', // @translate
+                ['mode' => $this->syncMode]
+            );
             return;
         }
 
@@ -125,10 +125,10 @@ class AccessStatusUpdate extends AbstractJob
         ];
         $this->missingMode = $this->getArg('missing', 'skip');
         if (!in_array($this->missingMode, $missingModes)) {
-            $this->logger->err(new Message(
-                'Missing mode "%s" is invalid.', // @translate
-                $this->missingMode
-            ));
+            $this->logger->err(
+                'Missing mode {mode} is invalid.', // @translate
+                ['mode' => $this->missingMode]
+            );
             return;
         }
 
@@ -138,10 +138,10 @@ class AccessStatusUpdate extends AbstractJob
             'from_items_to_media',
         ];
         if ($this->recursiveProcesses && count($this->recursiveProcesses) !== count(array_intersect($this->recursiveProcesses, $recursives))) {
-            $this->logger->err(new Message(
-                'These recursive processes are unknown: "%s".', // @translate
-                implode('", "', array_diff($this->recursiveProcesses, $recursives))
-            ));
+            $this->logger->err(
+                'These recursive processes are unknown: {names}.', // @translate
+                ['names' => implode(', ', array_diff($this->recursiveProcesses, $recursives))]
+            );
             return;
         }
 
@@ -149,17 +149,17 @@ class AccessStatusUpdate extends AbstractJob
             && $this->missingMode === 'skip'
             && $this->recursiveProcesses === []
         ) {
-            $this->logger->warn(new Message(
+            $this->logger->warn(
                 'Synchronization and missing modes are set as "skip" and no recursive processes are set.' // @translate
-            ));
+            );
             return;
         }
 
         $this->accessViaProperty = (bool) $settings->get('access_property');
         if (!$this->accessViaProperty && $this->syncMode !== 'skip') {
-            $this->logger->warn(new Message(
+            $this->logger->warn(
                 'Synchronization of property values and index is set, but the config for access mode does not use properties.' // @translate
-            ));
+            );
         }
 
         if ($this->accessViaProperty || $this->syncMode !== 'skip') {
@@ -169,9 +169,9 @@ class AccessStatusUpdate extends AbstractJob
             }
         }
 
-        $this->logger->info(new Message(
+        $this->logger->info(
             'Starting indexation of access statuses of all resources.' // @translate
-        ));
+        );
 
         // Warning: this is not a full sync: only existing properties and indexes are updated.
 
@@ -214,9 +214,9 @@ class AccessStatusUpdate extends AbstractJob
             }
         }
 
-        $this->logger->info(new Message(
+        $this->logger->info(
             'End of indexation.' // @translate
-        ));
+        );
     }
 
     protected function copyIndexIntoPropertyValues(): self
