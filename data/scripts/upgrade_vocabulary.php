@@ -2,8 +2,8 @@
 
 namespace Access;
 
+use Common\Stdlib\PsrMessage;
 use Omeka\Module\Exception\ModuleCannotInstallException;
-use Omeka\Stdlib\Message;
 
 /**
  * @var Module $this
@@ -12,27 +12,29 @@ use Omeka\Stdlib\Message;
  */
 $services = $this->getServiceLocator();
 
-if (!method_exists($this, 'getInstallResources')) {
-    throw new ModuleCannotInstallException((string) new Message(
-        'This module requires module %1$s version %2$s or greater.', // @translate
-        'Generic',
-        '3.4.43'
-    ));
+if (!method_exists($this, 'getManageModuleAndResources')) {
+    $plugins = $services->get('ControllerPluginManager');
+    $translate = $plugins->get('translate');
+    $message = new \Omeka\Stdlib\Message(
+        $translate('This module requires module %1$s version %2$s or greater.'), // @translate
+        'Common', '3.4.62'
+    );
+    throw new ModuleCannotInstallException((string) $message);
 }
 
-$installResources = $this->getInstallResources();
+$manageModuleAndResources = $this->getManageModuleAndResources();
 
 $module = __NAMESPACE__;
 $filepath = dirname(__DIR__, 2) . '/data/vocabularies/curation.json';
 $data = file_get_contents($filepath);
 $data = json_decode($data, true);
-$installResources->createOrUpdateVocabulary($data, $module);
+$manageModuleAndResources->createOrUpdateVocabulary($data, $module);
 
 if (!empty($skipMessage)) {
     $messenger = $services->get('ControllerPluginManager')->get('messenger');
-    $message = new Message(
-        'The vocabulary "%s" was updated successfully.', // @translate
-        pathinfo($filepath, PATHINFO_FILENAME)
+    $message = new PsrMessage(
+        'The vocabulary "{vocabulary}" was updated successfully.', // @translate
+        ['vocabulary' => pathinfo($filepath, PATHINFO_FILENAME)]
     );
     $messenger->addSuccess($message);
 }

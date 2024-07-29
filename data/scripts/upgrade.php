@@ -16,21 +16,23 @@ use Omeka\Stdlib\Message;
  * @var array $config
  * @var \Omeka\Mvc\Controller\Plugin\Api $api
  * @var \Omeka\Settings\Settings $settings
+ * @var \Laminas\I18n\View\Helper\Translate $translate
  * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
  */
 $plugins = $services->get('ControllerPluginManager');
 $api = $plugins->get('api');
 $settings = $services->get('Omeka\Settings');
+$translate = $plugins->get('translate');
 $connection = $services->get('Omeka\Connection');
 $messenger = $plugins->get('messenger');
 
 $config = $services->get('Config');
 $configLocal = require dirname(__DIR__, 2) . '/config/module.config.php';
 
-if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.57')) {
-    $message = new Message(
-        'The module %1$s should be upgraded to version %2$s or later.', // @translate
-        'Common', '3.4.57'
+if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.62')) {
+    $message = new \Omeka\Stdlib\Message(
+        $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+        'Common', '3.4.62'
     );
     throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
 }
