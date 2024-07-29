@@ -8,13 +8,14 @@ use Omeka\Api\Representation\SitePageRepresentation;
 use Omeka\Api\Representation\SiteRepresentation;
 use Omeka\Entity\SitePageBlock;
 use Omeka\Site\BlockLayout\AbstractBlockLayout;
+use Omeka\Site\BlockLayout\TemplateableBlockLayoutInterface;
 use Omeka\Stdlib\ErrorStore;
 
 /**
  * @see \Access\Site\BlockLayout\AccessRequest
  * @see \ContactUs\Site\BlockLayout\ContactUs
  */
-class AccessRequest extends AbstractBlockLayout
+class AccessRequest extends AbstractBlockLayout implements TemplateableBlockLayoutInterface
 {
     /**
      * The default partial view script.
@@ -93,7 +94,7 @@ class AccessRequest extends AbstractBlockLayout
             ->appendStylesheet($assetUrl('css/access-request.css', 'Access'));
     }
 
-    public function render(PhpRenderer $view, SitePageBlockRepresentation $block)
+    public function render(PhpRenderer $view, SitePageBlockRepresentation $block, $templateViewScript = self::PARTIAL_NAME)
     {
         $options = $block->data();
         $options['html'] = '';
@@ -114,10 +115,8 @@ class AccessRequest extends AbstractBlockLayout
             }
         }
 
-        $template = $block->dataValue('template', self::PARTIAL_NAME);
-        return $template !== self::PARTIAL_NAME && $view->resolver($template)
-            ? $view->partial($template, $vars)
-            : $view->partial(self::PARTIAL_NAME, $vars);
+        $template = $block->dataValue('template');
+        return $view->partial($template ?? $templateViewScript, $vars);
     }
 
     /**
