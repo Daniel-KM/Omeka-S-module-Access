@@ -245,7 +245,10 @@ class IsAllowedMediaContent extends AbstractPlugin
         } else {
             return false;
         }
-        if (is_array($reservedItemSets) && count($reservedItemSets)) {
+        if (is_array($reservedItemSets)) {
+            if (!count($reservedItemSets)) {
+                return true;
+            }
             $isMediaInItemSets = $this->isMediaInItemSets($media, $reservedItemSets);
             if ($isMediaInItemSets) {
                 return true;
@@ -277,7 +280,7 @@ class IsAllowedMediaContent extends AbstractPlugin
      * Check if the ip of the user is reserved and limited to some item sets.
      *
      * @return array|null Null if the user is not listed in reserved ips, else
-     *   array of item sets, that may be empty.
+     *   array of item sets, that may be empty, that means any.
      */
     protected function reservedItemSetsForClientIp(): ?array
     {
@@ -343,7 +346,7 @@ class IsAllowedMediaContent extends AbstractPlugin
      * Check if the idp of the user is reserved and limited to some item sets.
      *
      * @return array|null Null if the user is not listed in reserved idps, else
-     *   array of item sets, that may be empty.
+     *   array of item sets, that may be empty, that means any.
      */
     protected function reservedItemSetsForAuthSsoIdp(): ?array
     {
