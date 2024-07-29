@@ -366,10 +366,8 @@ return [
         ],
         'block_settings' => [
             'accessRequest' => [
-                'heading' => null,
                 'consent_label' => 'By submitting this form, I accept the policy for processing my personal data.', // @translate
                 'fields' => [],
-                'template' => '',
             ],
         ],
     ],

@@ -3,9 +3,6 @@
  * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var \Omeka\Api\Representation\SitePageBlockRepresentation $block
  * @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource
- * @var string $heading
- * @var array $options
- * The options contains a specific template for the form: common/access-request-block
  *
  * @see \Access\View\Helper\AccessRequest
  */
@@ -15,14 +12,11 @@
 // By default, this check is done by the view helper too.
 // if (!$isAccessRequestable) return;
 
-$escape = $this->plugin('escapeHtml');
-
-$options['template'] = 'common/access-request-block';
+$options = [
+    'template' => 'common/access-request-block',
+];
 ?>
 
 <div class="block access-request-block">
-<?php if (!empty($heading)): ?>
-    <h2><?= $escape($heading) ?></h2>
-    <?php endif; ?>
     <?= $this->accessRequest($resource, $options) ?>
 </div>

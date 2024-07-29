@@ -96,15 +96,8 @@ class AccessRequest extends AbstractBlockLayout implements TemplateableBlockLayo
 
     public function render(PhpRenderer $view, SitePageBlockRepresentation $block, $templateViewScript = self::PARTIAL_NAME)
     {
-        $options = $block->data();
-        $options['html'] = '';
-        unset($options['template']);
-
-        $vars = [];
-        $vars['block'] = $block;
+        $vars = ['block' => $block] + $block->data();
         $vars['resource'] = null;
-        $vars['heading'] = $options['heading'];
-        $vars['options'] = $options;
 
         $id = $view->params()->fromQuery('id');
         if ($id) {
@@ -115,8 +108,7 @@ class AccessRequest extends AbstractBlockLayout implements TemplateableBlockLayo
             }
         }
 
-        $template = $block->dataValue('template');
-        return $view->partial($template ?? $templateViewScript, $vars);
+        return $view->partial($templateViewScript, $vars);
     }
 
     /**

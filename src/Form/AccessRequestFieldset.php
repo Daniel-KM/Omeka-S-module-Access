@@ -17,16 +17,6 @@ class AccessRequestFieldset extends Fieldset
     {
         $this
             ->add([
-                'name' => 'o:block[__blockIndex__][o:data][heading]',
-                'type' => Element\Text::class,
-                'options' => [
-                    'label' => 'Block title', // @translate
-                ],
-                'attributes' => [
-                    'id' => 'access_heading',
-                ],
-            ])
-            ->add([
                 'name' => 'o:block[__blockIndex__][o:data][consent_label]',
                 'type' => Element\Text::class,
                 'options' => [
@@ -50,20 +40,5 @@ class AccessRequestFieldset extends Fieldset
                 ],
             ])
         ;
-        if (class_exists('BlockPlus\Form\Element\TemplateSelect')) {
-            $this
-                ->add([
-                    'name' => 'o:block[__blockIndex__][o:data][template]',
-                    'type' => \BlockPlus\Form\Element\TemplateSelect::class,
-                    'options' => [
-                        'label' => 'Template to display', // @translate
-                        'info' => 'Templates are in folder "common/block-layout" of the theme and should start with "access-request".', // @translate
-                        'template' => 'common/block-layout/access-request',
-                    ],
-                    'attributes' => [
-                        'class' => 'chosen-select',
-                    ],
-                ]);
-        }
     }
 }
