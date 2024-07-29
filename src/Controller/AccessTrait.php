@@ -3,7 +3,6 @@
 namespace Access\Controller;
 
 use Access\Api\Representation\AccessRequestRepresentation;
-use Omeka\Stdlib\Message;
 
 trait AccessTrait
 {

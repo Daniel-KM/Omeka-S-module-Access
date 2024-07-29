@@ -7,8 +7,9 @@ use Laminas\Form\Fieldset;
 use Omeka\Form\Element as OmekaElement;
 
 /**
- * @see \Access\Form\AccessRequesetFieldset
+ * @see \Access\Form\AccessRequestFieldset
  * @see \ContactUs\Form\ContactUsFieldset
+ * @see \ContactUs\Form\NewsletterFieldset
  */
 class AccessRequestFieldset extends Fieldset
 {

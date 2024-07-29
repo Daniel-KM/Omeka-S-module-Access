@@ -147,8 +147,19 @@
             const element = $('input[name="access_modes[]"][value=ip]');
             if (element.prop('checked')) {
                 $('#access_ip_item_sets').closest('.field').show(300);
+                $('#access_ip_proxy').closest('.field').show(300);
             } else {
                 $('#access_ip_item_sets').closest('.field').hide(300);
+                $('#access_ip_proxy').closest('.field').hide(300);
+            }
+        }
+
+        const modeEmailRegex = function() {
+            const element = $('input[name="access_modes[]"][value=email_regex]');
+            if (element.prop('checked')) {
+                $('#access_email_regex').closest('.field').show(300);
+            } else {
+                $('#access_email_regex').closest('.field').hide(300);
             }
         }
 
@@ -162,9 +173,11 @@
         }
 
         $('input[name="access_modes[]"][value=ip]').on('click', modeIp);
+        $('input[name="access_modes[]"][value=email_regex]').on('click', modeEmailRegex);
         $('input[name=access_property]').on('click', accessViaProperty);
 
         modeIp();
+        modeEmailRegex();
         accessViaProperty();
 
     });

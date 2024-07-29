@@ -4,7 +4,6 @@ namespace Access\Job;
 
 use Access\Api\Representation\AccessStatusRepresentation;
 use Omeka\Job\AbstractJob;
-use Omeka\Stdlib\Message;
 
 class AccessStatusUpdate extends AbstractJob
 {
