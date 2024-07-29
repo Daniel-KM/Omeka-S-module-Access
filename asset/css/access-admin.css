@@ -143,9 +143,6 @@
     .access-requests .display-block .tablesaw-cell-content {
         display: block;
     }
-    .batch-edit .field-container > legend {
-        font-size: 16px;
-    }
 
     /* Log. */
     .browse td:first-child,
