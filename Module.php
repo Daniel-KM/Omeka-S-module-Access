@@ -1707,9 +1707,11 @@ HTML;
         foreach ($idpItemSets as $idpName => $itemSetIdsString) {
             $allow = [];
             $forbid = [];
+            $isFederation = $idpName === 'federation';
+            // Empty line.
             if (!$idpName && !$itemSetIdsString) {
                 continue;
-            } elseif (!$idpName || !isset($idps[$idpName])) {
+            } elseif (!$isFederation && (!$idpName || !isset($idps[$idpName]))) {
                 $message = new PsrMessage(
                     'The idp "{idp}" is empty or not defined in module Single Sign-On.', // @translate
                     ['idp' => $idpName]
