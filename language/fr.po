@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-29 00:00+0000\n"
+"POT-Creation-Date: 2024-11-25 00:00+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
@@ -441,13 +441,13 @@ msgstr ""
 "common/block-layout » vers « view/common/block-template » dans vos thèmes. "
 "Vous pouvez vérifier les pages : {json}"
 
-#: data/scripts/upgrade.php:278
+#: data/scripts/upgrade.php:282
 msgid "It is now possible to define accesses by sso idps and item sets."
 msgstr ""
 "Il est désormais possible de définir des accès par idp sso et par "
 "collections."
 
-#: data/scripts/upgrade.php:283
+#: data/scripts/upgrade.php:287
 msgid ""
 "It is now possible to define excluded item sets for accesses by ip and sso "
 "idp."
@@ -455,7 +455,7 @@ msgstr ""
 "Il est désormais possible de définir des collections exclues pour les accès "
 "par ip et par idp sso."
 
-#: data/scripts/upgrade.php:290
+#: data/scripts/upgrade.php:295
 msgid ""
 "The key \"accessresource\" in the file config/local.config.php at the root "
 "of Omeka can be removed."
@@ -588,17 +588,19 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:1694
-msgid "No idp are defined. Check the config of module Single Sign-On first."
+#: Module.php:1699
+#, fuzzy
+#| msgid "No idp are defined. Check the config of module Single Sign-On first."
+msgid "No idps are defined. Check the config of module Single Sign-On first."
 msgstr ""
 "Aucune idp n’est définie. Vérifiez la configuration du module Single Sign-On "
 "d’abord."
 
-#: Module.php:1711
+#: Module.php:1716
 msgid "The idp \"{idp}\" is empty or not defined in module Single Sign-On."
 msgstr "L’idp « {idp} » est vide ou non défini par le module Single Sign-On."
 
-#: Module.php:1721
+#: Module.php:1726
 msgid ""
 "The item sets list \"{input}\" for idp {idp} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
@@ -606,7 +608,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’idp « {idp} » est incorrecte : "
 "ce doit être des numéros, éventuellement préfixés de « - »."
 
-#: Module.php:1732
+#: Module.php:1737
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains duplicate item sets "
 "({list})."
@@ -614,7 +616,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’idp « {idp} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:1744
+#: Module.php:1749
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains unknown item sets "
 "({list})."
@@ -678,24 +680,24 @@ msgstr ""
 msgid "End of indexation."
 msgstr "Fin de l’indexation."
 
-#: src/Job/AccessStatusRecursive.php:82
+#: src/Job/AccessStatusRecursive.php:84
 msgid "No resource to process."
 msgstr "Aucune ressource à traiter."
 
-#: src/Job/AccessStatusRecursive.php:115
+#: src/Job/AccessStatusRecursive.php:117
 msgid "End of indexation of access statuses in properties."
 msgstr "Fin de l’indexation des statuts d’accès dans les propriétés."
 
-#: src/Job/AccessStatusRecursive.php:125
+#: src/Job/AccessStatusRecursive.php:127
 msgid "No resource \"{resource_id}\" to process."
 msgstr "Pas de ressource « {resource_id} » à traiter."
 
-#: src/Job/AccessStatusRecursive.php:134
+#: src/Job/AccessStatusRecursive.php:136
 #, php-format
 msgid "Resource #%d is not an item or an item set."
 msgstr "La ressource #%d n’est pas un contenu ou une collection."
 
-#: src/Job/AccessStatusRecursive.php:144
+#: src/Job/AccessStatusRecursive.php:146
 #, php-format
 msgid "No access status for resource #%d."
 msgstr "Aucun accès à la ressource #%d."
@@ -1035,8 +1037,9 @@ msgid "Bypass embargo dates for reserved resources"
 msgstr "Ne pas tenir compte de l’embargo pour les ressources à accès réservé"
 
 #: src/Form/ConfigForm.php:266
-msgid "Create missing access status of all resources"
-msgstr "Créer les statuts d’accès manquants pour toutes les ressources"
+msgid "Jobs to create missing access status of all resources"
+msgstr ""
+"Tâches pour créer les statuts d’accès manquants pour toutes les ressources"
 
 #: src/Form/ConfigForm.php:276
 msgid "Copy level and embargo"
@@ -1340,12 +1343,12 @@ msgstr "Journaux"
 msgid "The resource or the access doesn’t exist."
 msgstr "La ressource ou l’accès n’existe pas."
 
-#: config/module.config.php:353 config/module.config.php:356
-#: config/module.config.php:360
+#: config/module.config.php:354 config/module.config.php:357
+#: config/module.config.php:361
 msgid "New request status!"
 msgstr "Nouveau statut de demande !"
 
-#: config/module.config.php:354
+#: config/module.config.php:355
 msgid ""
 "A user or visitor requested to access resource {resource}. Please, check "
 "request dashboard."
@@ -1354,7 +1357,7 @@ msgstr ""
 "Merci de vérifier le tableau de bord."
 
 # "consulter la liste des demandes."
-#: config/module.config.php:355
+#: config/module.config.php:356
 msgid ""
 "A user or visitor updated the request to access a resource {resource}. "
 "Please, check request dashboard."
@@ -1362,7 +1365,7 @@ msgstr ""
 "Un utilisateur ou un visiteur a mis à jour la demande d’accès à une "
 "ressource {resource}. Merci de consulter la liste des demandes."
 
-#: config/module.config.php:357
+#: config/module.config.php:358
 msgid ""
 "Your request to access resource {resource} is sent to administrator. You "
 "will be informed soon about it."
@@ -1370,15 +1373,15 @@ msgstr ""
 "Votre demande pour accéder à la ressource {resource} a été envoyée à "
 "l’administrateur. Nous vous répondrons très bientôt."
 
-#: config/module.config.php:358
+#: config/module.config.php:359
 msgid "Your request to access resource {resource} was accepted."
 msgstr "Votre demande d’accès à la ressource {resource} a été acceptée."
 
-#: config/module.config.php:359 config/module.config.php:363
+#: config/module.config.php:360 config/module.config.php:364
 msgid "Your request to access resource {resource} was rejected."
 msgstr "Votre demande d’accès à la ressource {resource} a été rejetée."
 
-#: config/module.config.php:361
+#: config/module.config.php:362
 msgid ""
 "Your request to access resource {resource} is sent to administrator. You "
 "will be inform when your request will change."
@@ -1386,7 +1389,7 @@ msgstr ""
 "Votre demande pour accéder à la ressource {resource} a été envoyée à "
 "l’administrateur. Vous serez informé quand elle sera prise en compte."
 
-#: config/module.config.php:362
+#: config/module.config.php:363
 msgid ""
 "Your request to access resource {resource} was accepted. You will be able to "
 "access it after clicking {session_url}."
@@ -1394,12 +1397,12 @@ msgstr ""
 "Votre demande d’accès à la ressource {resource} a été acceptée. Vous pouvez "
 "y accéder via l’url {session_url}."
 
-#: config/module.config.php:364
+#: config/module.config.php:365
 msgid "This resource is not available for now. Contact the webmaster."
 msgstr ""
 "Cette ressource n’est pas disponible pour le moment. Contacter le webmaster."
 
-#: config/module.config.php:368
+#: config/module.config.php:369
 msgid ""
 "By submitting this form, I accept the policy for processing my personal data."
 msgstr ""
