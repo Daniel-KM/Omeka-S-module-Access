@@ -388,13 +388,12 @@ The image [Locked file] is licensed under [GNU/GPL].
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2019-2023 (see [Daniel-KM] on GitLab)
+* Copyright Daniel Berthereau, 2019-2024 (see [Daniel-KM] on GitLab)
 * Copyright Saki (image [Locked file], see [Saki])
 
 
 [Access]: https://gitlab.com/Daniel-KM/Omeka-S-module-Access
 [Omeka S]: https://omeka.org/s
-[Generic]: https://gitlab.com/Daniel-KM/Omeka-S-module-Generic
 [Guest]: https://gitlab.com/Daniel-KM/Omeka-S-module-Guest
 [Guest Role]: https://github.com/biblibre/omeka-s-module-GuestRole
 [Blocks Disposition]: https://gitlab.com/Daniel-KM/Omeka-S-module-BlocksDisposition
