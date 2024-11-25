@@ -70,9 +70,11 @@ class AccessStatusRecursive extends AbstractJob
         $plugins = $services->get('ControllerPluginManager');
         $this->accessStatusForResource = $plugins->get('accessStatus');
 
-        $result = $this->prepareProperties(true);
-        if (!$result) {
-            return;
+        if ($this->accessViaProperty) {
+            $result = $this->prepareProperties(true);
+            if (!$result) {
+                return;
+            }
         }
 
         $resourceId = (int) $this->getArg('resource_id');
