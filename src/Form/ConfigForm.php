@@ -263,7 +263,7 @@ forbidden = forbidden
                 'name' => 'fieldset_index',
                 'type' => Fieldset::class,
                 'options' => [
-                    'label' => 'Create missing access status of all resources', // @translate
+                    'label' => 'Jobs to create missing access status of all resources', // @translate
                 ],
             ]);
 
