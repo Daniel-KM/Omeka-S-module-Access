@@ -1518,10 +1518,8 @@ HTML;
     protected function processUpdateStatus(array $args, bool $useForeground = false): void
     {
         $services = $this->getServiceLocator();
-
-        $plugins = $services->get('ControllerPluginManager');
-        $urlPlugin = $plugins->get('url');
-        $messenger = $plugins->get('messenger');
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+        $urlHelper = $services->get('ViewHelperManager')->get('url');
 
         $args += [
             'recursive' => [],
@@ -1538,13 +1536,13 @@ HTML;
             'A job was launched in background to update access statuses according to parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
             [
                 'link_job' => sprintf('<a href="%s">',
-                    htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
+                    htmlspecialchars($urlHelper('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
                 ),
                 'job_id' => $job->getId(),
                 'link_end' => '</a>',
                 'link_log' => sprintf('<a href="%1$s">', $this->isModuleActive('Log')
-                    ? $urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])
-                    : $urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
+                    ? $urlHelper('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])
+                    : $urlHelper('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
             ]
         );
         $message->setEscapeHtml(false);
