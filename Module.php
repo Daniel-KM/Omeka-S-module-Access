@@ -24,7 +24,7 @@ use Omeka\Module\AbstractModule;
 /**
  * Access
  *
- * @copyright Daniel Berthereau, 2019-2024
+ * @copyright Daniel Berthereau, 2019-2025
  * @license http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.txt
  */
 class Module extends AbstractModule
