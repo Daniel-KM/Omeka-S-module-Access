@@ -11,6 +11,11 @@ $i18n = $plugins->get('i18n');
 $escape = $plugins->get('escapeHtml');
 $assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
+$user = $plugins->get('identity')();
+$breadcrumbs = $plugins->has('breadcrumbs') ? $plugins->get('breadcrumbs') : null;
+$guestNavigation = $user && $plugins->has('guestNavigation') ? $plugins->get('guestNavigation')() : null;
+
+$hasGuestNav = $guestNavigation && $guestNavigation->getContainer()->count();
 
 $this->headLink()
     ->appendStylesheet($assetUrl('vendor/tablesaw/tablesaw.stackonly.css', 'Omeka'));
@@ -19,6 +24,16 @@ $this->headScript()
 
 $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
 ?>
+
+<?php if ($breadcrumbs && !$hasGuestNav): ?>
+<?= $breadcrumbs() ?>
+<?php endif; ?>
+
+<?php if ($hasGuestNav): ?>
+<nav class="navigation-guest">
+    <?= $guestNavigation->menu()->renderMenu() ?>
+</nav>
+<?php endif; ?>
 
 <?= $this->pageTitle($translate('Access requests')) ?>
 
