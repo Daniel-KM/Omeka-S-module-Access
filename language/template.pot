@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-25 00:00+0000\n"
+"POT-Creation-Date: 2025-01-06 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -59,7 +59,7 @@ msgstr ""
 #: view/access/admin/request/edit.phtml:29
 #: view/access/admin/request/edit.phtml:31
 #: view/access/admin/request/show.phtml:24
-#: view/access/site/request/browse.phtml:23
+#: view/access/site/request/browse.phtml:38
 msgid "Access requests"
 msgstr ""
 
@@ -181,7 +181,7 @@ msgid "No access records yet."
 msgstr ""
 
 #: view/access/admin/log/browse.phtml:68
-#: view/access/site/request/browse.phtml:60
+#: view/access/site/request/browse.phtml:75
 msgid "Refresh page"
 msgstr ""
 
@@ -202,14 +202,14 @@ msgstr ""
 #: view/access/admin/request/browse.phtml:57
 #: view/access/admin/request/show-details.phtml:37
 #: view/access/admin/request/show.phtml:43
-#: view/access/site/request/browse.phtml:37
+#: view/access/site/request/browse.phtml:52
 msgid "Recursive"
 msgstr ""
 
 #: view/access/admin/request/browse.phtml:59
 #: view/access/admin/request/show-details.phtml:48
 #: view/access/admin/request/show.phtml:52
-#: view/access/site/request/browse.phtml:39
+#: view/access/site/request/browse.phtml:54
 msgid "Dates"
 msgstr ""
 
@@ -263,7 +263,7 @@ msgstr ""
 msgid "Edit access request"
 msgstr ""
 
-#: view/access/site/request/browse.phtml:60
+#: view/access/site/request/browse.phtml:75
 msgid "No access requests yet."
 msgstr ""
 
@@ -492,55 +492,55 @@ msgid ""
 "root of Omeka. See {link}readme{link_end}."
 msgstr ""
 
-#: Module.php:1538
+#: Module.php:1536
 msgid ""
 "A job was launched in background to update access statuses according to "
 "parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end})."
 msgstr ""
 
-#: Module.php:1582
+#: Module.php:1580
 msgid "The ip \"{ip}\" is empty or invalid."
 msgstr ""
 
-#: Module.php:1592
+#: Module.php:1590
 msgid ""
 "The item sets list \"{input}\" for ip {ip} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
 msgstr ""
 
-#: Module.php:1603
+#: Module.php:1601
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains duplicate item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:1615
+#: Module.php:1613
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains unknown item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:1699
+#: Module.php:1697
 msgid "No idps are defined. Check the config of module Single Sign-On first."
 msgstr ""
 
-#: Module.php:1716
+#: Module.php:1714
 msgid "The idp \"{idp}\" is empty or not defined in module Single Sign-On."
 msgstr ""
 
-#: Module.php:1726
+#: Module.php:1724
 msgid ""
 "The item sets list \"{input}\" for idp {idp} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
 msgstr ""
 
-#: Module.php:1737
+#: Module.php:1735
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains duplicate item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:1749
+#: Module.php:1747
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains unknown item sets "
 "({list})."

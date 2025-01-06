@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-25 00:00+0000\n"
+"POT-Creation-Date: 2025-01-06 00:00+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
@@ -70,7 +70,7 @@ msgstr "Accès"
 #: view/access/admin/request/edit.phtml:29
 #: view/access/admin/request/edit.phtml:31
 #: view/access/admin/request/show.phtml:24
-#: view/access/site/request/browse.phtml:23
+#: view/access/site/request/browse.phtml:38
 msgid "Access requests"
 msgstr "Demandes d’accès"
 
@@ -196,7 +196,7 @@ msgid "No access records yet."
 msgstr "Aucun enregistrement d’accès."
 
 #: view/access/admin/log/browse.phtml:68
-#: view/access/site/request/browse.phtml:60
+#: view/access/site/request/browse.phtml:75
 msgid "Refresh page"
 msgstr "Rafraîchir la page"
 
@@ -217,14 +217,14 @@ msgstr "Demandeur"
 #: view/access/admin/request/browse.phtml:57
 #: view/access/admin/request/show-details.phtml:37
 #: view/access/admin/request/show.phtml:43
-#: view/access/site/request/browse.phtml:37
+#: view/access/site/request/browse.phtml:52
 msgid "Recursive"
 msgstr "Récursif"
 
 #: view/access/admin/request/browse.phtml:59
 #: view/access/admin/request/show-details.phtml:48
 #: view/access/admin/request/show.phtml:52
-#: view/access/site/request/browse.phtml:39
+#: view/access/site/request/browse.phtml:54
 msgid "Dates"
 msgstr "Dates"
 
@@ -283,7 +283,7 @@ msgstr "Champs"
 msgid "Edit access request"
 msgstr "Modifier la demande d’accès"
 
-#: view/access/site/request/browse.phtml:60
+#: view/access/site/request/browse.phtml:75
 msgid "No access requests yet."
 msgstr "Aucune demande d’accès actuellement."
 
@@ -551,7 +551,7 @@ msgstr ""
 "Pour contrôler l’accès aux fichiers, vous devez ajouter une règle dans le "
 "fichier .htaccess à la racine d’Omeka. Voir le {link}lisez-moi{link_end}."
 
-#: Module.php:1538
+#: Module.php:1536
 msgid ""
 "A job was launched in background to update access statuses according to "
 "parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end})."
@@ -560,11 +560,11 @@ msgstr ""
 "d’accès selon les paramètres : ({link_job}tâche #{job_id}{link_end}, "
 "{link_log}journaux{link_end})."
 
-#: Module.php:1582
+#: Module.php:1580
 msgid "The ip \"{ip}\" is empty or invalid."
 msgstr "L’ip « {ip} » est vide ou incorrecte."
 
-#: Module.php:1592
+#: Module.php:1590
 msgid ""
 "The item sets list \"{input}\" for ip {ip} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
@@ -572,7 +572,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » est incorrecte : ce "
 "doit être des numéros, éventuellement préfixés de « - »."
 
-#: Module.php:1603
+#: Module.php:1601
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains duplicate item sets "
 "({list})."
@@ -580,7 +580,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:1615
+#: Module.php:1613
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains unknown item sets "
 "({list})."
@@ -588,7 +588,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:1699
+#: Module.php:1697
 #, fuzzy
 #| msgid "No idp are defined. Check the config of module Single Sign-On first."
 msgid "No idps are defined. Check the config of module Single Sign-On first."
@@ -596,11 +596,11 @@ msgstr ""
 "Aucune idp n’est définie. Vérifiez la configuration du module Single Sign-On "
 "d’abord."
 
-#: Module.php:1716
+#: Module.php:1714
 msgid "The idp \"{idp}\" is empty or not defined in module Single Sign-On."
 msgstr "L’idp « {idp} » est vide ou non défini par le module Single Sign-On."
 
-#: Module.php:1726
+#: Module.php:1724
 msgid ""
 "The item sets list \"{input}\" for idp {idp} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
@@ -608,7 +608,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’idp « {idp} » est incorrecte : "
 "ce doit être des numéros, éventuellement préfixés de « - »."
 
-#: Module.php:1737
+#: Module.php:1735
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains duplicate item sets "
 "({list})."
@@ -616,7 +616,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’idp « {idp} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:1749
+#: Module.php:1747
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains unknown item sets "
 "({list})."
