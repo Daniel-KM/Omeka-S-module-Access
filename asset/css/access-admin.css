@@ -1,4 +1,4 @@
-@media screen {
+@media all {
     header nav .access-request::before,
     .access-requests .subhead::before,
     .access-request .no-resources::before {
