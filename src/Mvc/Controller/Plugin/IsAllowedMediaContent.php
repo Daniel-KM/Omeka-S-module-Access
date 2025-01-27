@@ -316,7 +316,7 @@ class IsAllowedMediaContent extends AbstractPlugin
 
         // Check a single ip.
         if (isset($listIps[$ip])) {
-            return array_intersect_key($ip, ['allow' => null, 'forbid' => null]);
+            return array_intersect_key($listIps[$ip], ['allow' => null, 'forbid' => null]);
         }
 
         // Check an ip range.
