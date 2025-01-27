@@ -106,14 +106,14 @@ eventually adding `|medium|square` to the list of thumbnails:
 
 ```apache
 # Set rule for original and selected derivative files (usually at least large thumbnails).
-RewriteRule "^files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
+RewriteRule "^/files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
 ```
 
 An alternative with flag [L]:
 
 ```apache
 # Set rule for original and selected derivative files (usually at least large thumbnails).
-RewriteRule "^files/(original|large)/(.*)$" "%{REQUEST_SCHEME}://%{HTTP_HOST}/access/files/$1/$2" [L]
+RewriteRule "^/files/(original|large)/(.*)$" "%{REQUEST_SCHEME}://%{HTTP_HOST}/access/files/$1/$2" [L]
 ```
 
 The request scheme (http or https) is needed when you set the domain, but you can
@@ -127,7 +127,7 @@ eventually adding `|medium|square` to the list of thumbnails:
 
 ```apache
 # Set rule for original and selected derivative files (usually at least large thumbnails).
-RewriteRule "^files/(original|large)/(.*)$" "/digital-library/access/files/$1/$2" [P]
+RewriteRule "^/files/(original|large)/(.*)$" "/digital-library/access/files/$1/$2" [P]
 ```
 
 ##### Common issues
@@ -149,7 +149,7 @@ First, try with the alternative (flag [P] or [L]).
 
 ```apache
 # Set rule for original and selected derivative files (usually at least large thumbnails).
-RewriteRule "^files/(original|large)/(.*)$" "http://%{HTTP_HOST}/digital-library/access/files/$1/$2" [P]
+RewriteRule "^/files/(original|large)/(.*)$" "http://%{HTTP_HOST}/digital-library/access/files/$1/$2" [P]
 ```
 
 #### Compatibility with module Statistics
@@ -163,10 +163,10 @@ even if a user as a no reserved access to it. For example:
 
 ```apache
 # Redirect direct access to files to the module Access.
-RewriteRule "^files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
+RewriteRule "^/files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
 
 # Redirect direct download of files to the module Access.
-RewriteRule "^download/files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
+RewriteRule "^/download/files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
 ```
 
 In fact, if not redirected, it acts the same way than a direct access to a
