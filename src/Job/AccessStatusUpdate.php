@@ -243,91 +243,91 @@ class AccessStatusUpdate extends AbstractJob
             'embargo_end_type' => \Doctrine\DBAL\ParameterType::STRING,
         ];
 
-        $sql = <<<SQL
-# Remove all level and embargo values set in statuses.
-DELETE `value`
-FROM `value`
-JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
-JOIN `access_status` ON `access_status`.`id` = `value`.`resource_id`
-WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
-;
-SQL;
+        $sql = <<<'SQL'
+            # Remove all level and embargo values set in statuses.
+            DELETE `value`
+            FROM `value`
+            JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
+            JOIN `access_status` ON `access_status`.`id` = `value`.`resource_id`
+            WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+            ;
+            SQL;
 
         if ($this->hasNumericDataTypes) {
-            $sql .= "\n" . <<<SQL
-# Remove all embargo numeric timestamps set in statuses.
-DELETE `numeric_data_types_timestamp`
-FROM `numeric_data_types_timestamp`
-JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
-JOIN `access_status` ON `access_status`.`id` = `value`.`resource_id`
-WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
-;
-SQL;
+            $sql .= "\n" . <<<'SQL'
+                # Remove all embargo numeric timestamps set in statuses.
+                DELETE `numeric_data_types_timestamp`
+                FROM `numeric_data_types_timestamp`
+                JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
+                JOIN `access_status` ON `access_status`.`id` = `value`.`resource_id`
+                WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
+                ;
+                SQL;
         }
 
         $sql .= "\n" . <<<SQL
-# Set all levels set in statuses.
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT
-    `access_status`.`id`,
-    :property_level,
-    :level_type,
-    CASE `access_status`.`level`
-        WHEN "free" THEN {$quotedList['free']}
-        WHEN "reserved" THEN {$quotedList['reserved']}
-        WHEN "protected" THEN {$quotedList['protected']}
-        WHEN "forbidden" THEN {$quotedList['forbidden']}
-        ELSE {$quotedList['free']}
-    END,
-    1
-FROM `access_status`
-;
-SQL;
+            # Set all levels set in statuses.
+            INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+            SELECT
+                `access_status`.`id`,
+                :property_level,
+                :level_type,
+                CASE `access_status`.`level`
+                    WHEN "free" THEN {$quotedList['free']}
+                    WHEN "reserved" THEN {$quotedList['reserved']}
+                    WHEN "protected" THEN {$quotedList['protected']}
+                    WHEN "forbidden" THEN {$quotedList['forbidden']}
+                    ELSE {$quotedList['free']}
+                END,
+                1
+            FROM `access_status`
+            ;
+            SQL;
 
-        $sql .= "\n" . <<<SQL
-# Set all embargo start timestamp set in statuses.
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT
-    `access_status`.`id`,
-    :property_embargo_start,
-    :embargo_start_type,
-    `access_status`.`embargo_start`,
-    1
-FROM `access_status`
-WHERE `access_status`.`embargo_start` IS NOT NULL
-;
-SQL;
+        $sql .= "\n" . <<<'SQL'
+            # Set all embargo start timestamp set in statuses.
+            INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+            SELECT
+                `access_status`.`id`,
+                :property_embargo_start,
+                :embargo_start_type,
+                `access_status`.`embargo_start`,
+                1
+            FROM `access_status`
+            WHERE `access_status`.`embargo_start` IS NOT NULL
+            ;
+            SQL;
         if ($this->hasNumericDataTypes) {
-            $sql .= "\n" . <<<SQL
-INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-SELECT `access_status`.`id`, :property_embargo_start, UNIX_TIMESTAMP(`access_status`.`embargo_start`)
-FROM `access_status`
-WHERE `access_status`.`embargo_start` IS NOT NULL
-;
-SQL;
+            $sql .= "\n" . <<<'SQL'
+                INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                SELECT `access_status`.`id`, :property_embargo_start, UNIX_TIMESTAMP(`access_status`.`embargo_start`)
+                FROM `access_status`
+                WHERE `access_status`.`embargo_start` IS NOT NULL
+                ;
+                SQL;
         }
 
-        $sql .= "\n" . <<<SQL
-# Set all embargo end timestamp set in statuses.
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT
-    `access_status`.`id`,
-    :property_embargo_end,
-    :embargo_end_type,
-    `access_status`.`embargo_end`,
-    1
-FROM `access_status`
-WHERE `access_status`.`embargo_end` IS NOT NULL
-;
-SQL;
+        $sql .= "\n" . <<<'SQL'
+            # Set all embargo end timestamp set in statuses.
+            INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+            SELECT
+                `access_status`.`id`,
+                :property_embargo_end,
+                :embargo_end_type,
+                `access_status`.`embargo_end`,
+                1
+            FROM `access_status`
+            WHERE `access_status`.`embargo_end` IS NOT NULL
+            ;
+            SQL;
         if ($this->hasNumericDataTypes) {
-            $sql .= "\n" . <<<SQL
-INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-SELECT `access_status`.`id`, :property_embargo_end, UNIX_TIMESTAMP(`access_status`.`embargo_end`)
-FROM `access_status`
-WHERE `access_status`.`embargo_end` IS NOT NULL
-;
-SQL;
+            $sql .= "\n" . <<<'SQL'
+                INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                SELECT `access_status`.`id`, :property_embargo_end, UNIX_TIMESTAMP(`access_status`.`embargo_end`)
+                FROM `access_status`
+                WHERE `access_status`.`embargo_end` IS NOT NULL
+                ;
+                SQL;
         }
 
         $this->connection->executeStatement($sql, $bind, $types);
@@ -339,34 +339,34 @@ SQL;
     {
         if (in_array($this->missingMode, AccessStatusRepresentation::LEVELS)) {
             $sql = <<<SQL
-# Set the specified status for all missing resources.
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `id`, "{$this->missingMode}", NULL, NULL
-FROM `resource`
-ON DUPLICATE KEY UPDATE
-   `id` = `resource`.`id`
-;
-SQL;
+                # Set the specified status for all missing resources.
+                INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+                SELECT `id`, "{$this->missingMode}", NULL, NULL
+                FROM `resource`
+                ON DUPLICATE KEY UPDATE
+                   `id` = `resource`.`id`
+                ;
+                SQL;
         } else {
             $mode = substr($this->missingMode, 11);
             $sql = <<<SQL
-# Set free all missing public resources.
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `id`, "free", NULL, NULL
-FROM `resource`
-WHERE `is_public` = 1
-ON DUPLICATE KEY UPDATE
-    `id` = `resource`.`id`
-;
-# Set reserved/protected/forbidden all missing private resources.
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `id`, "$mode", NULL, NULL
-FROM `resource`
-WHERE `is_public` = 0
-ON DUPLICATE KEY UPDATE
-    `id` = `resource`.`id`
-;
-SQL;
+                # Set free all missing public resources.
+                INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+                SELECT `id`, "free", NULL, NULL
+                FROM `resource`
+                WHERE `is_public` = 1
+                ON DUPLICATE KEY UPDATE
+                    `id` = `resource`.`id`
+                ;
+                # Set reserved/protected/forbidden all missing private resources.
+                INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+                SELECT `id`, "$mode", NULL, NULL
+                FROM `resource`
+                WHERE `is_public` = 0
+                ON DUPLICATE KEY UPDATE
+                    `id` = `resource`.`id`
+                ;
+                SQL;
         }
 
         $this->connection->executeStatement($sql);
@@ -395,82 +395,82 @@ SQL;
         // or embargos without levels, in which case the default level is used.
 
         $sql = <<<SQL
-# Set access statuses according to values.
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT
-    `resource`.`id`,
-    (CASE `value`.`value`
-        WHEN {$quotedList['free']} THEN "free"
-        WHEN {$quotedList['reserved']} THEN "reserved"
-        WHEN {$quotedList['protected']} THEN "protected"
-        WHEN {$quotedList['forbidden']} THEN "forbidden"
-        ELSE $subSql
-    END),
-    NULL,
-    NULL
-FROM `resource`
-JOIN `value`
-    ON `value`.`resource_id` = `resource`.`id`
-    AND `value`.`property_id` = $this->propertyLevelId
-    AND `value`.`value` IN ($quotedListString)
-ON DUPLICATE KEY UPDATE
-    `level` = (CASE `value`.`value`
-        WHEN {$quotedList['free']} THEN "free"
-        WHEN {$quotedList['reserved']} THEN "reserved"
-        WHEN {$quotedList['protected']} THEN "protected"
-        WHEN {$quotedList['forbidden']} THEN "forbidden"
-        ELSE $subSql
-    END)
-;
-# Set access embargo start according to values.
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT
-    `resource_id`,
-    $subSql,
-    CASE `value`.`value`
-        WHEN NULL THEN NULL
-        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
-        ELSE NULL
-    END,
-    NULL
-FROM `resource`
-JOIN `value`
-    ON `value`.`resource_id` = `resource`.`id`
-    AND `value`.`property_id` = $this->propertyEmbargoStartId
-ON DUPLICATE KEY UPDATE
-    `embargo_start` = CASE `value`.`value`
-        WHEN NULL THEN NULL
-        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
-        ELSE NULL
-    END
-;
-# Set access embargo end according to values.
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT
-    `resource_id`,
-    $subSql,
-    NULL,
-    CASE `value`.`value`
-        WHEN NULL THEN NULL
-        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
-        ELSE NULL
-    END
-FROM `resource`
-JOIN `value`
-    ON `value`.`resource_id` = `resource`.`id`
-    AND `value`.`property_id` = $this->propertyEmbargoEndId
-ON DUPLICATE KEY UPDATE
-    `embargo_end` = CASE `value`.`value`
-        WHEN NULL THEN NULL
-        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-        WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
-        ELSE NULL
-    END
-;
-SQL;
+            # Set access statuses according to values.
+            INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+            SELECT
+                `resource`.`id`,
+                (CASE `value`.`value`
+                    WHEN {$quotedList['free']} THEN "free"
+                    WHEN {$quotedList['reserved']} THEN "reserved"
+                    WHEN {$quotedList['protected']} THEN "protected"
+                    WHEN {$quotedList['forbidden']} THEN "forbidden"
+                    ELSE $subSql
+                END),
+                NULL,
+                NULL
+            FROM `resource`
+            JOIN `value`
+                ON `value`.`resource_id` = `resource`.`id`
+                AND `value`.`property_id` = $this->propertyLevelId
+                AND `value`.`value` IN ($quotedListString)
+            ON DUPLICATE KEY UPDATE
+                `level` = (CASE `value`.`value`
+                    WHEN {$quotedList['free']} THEN "free"
+                    WHEN {$quotedList['reserved']} THEN "reserved"
+                    WHEN {$quotedList['protected']} THEN "protected"
+                    WHEN {$quotedList['forbidden']} THEN "forbidden"
+                    ELSE $subSql
+                END)
+            ;
+            # Set access embargo start according to values.
+            INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+            SELECT
+                `resource_id`,
+                $subSql,
+                CASE `value`.`value`
+                    WHEN NULL THEN NULL
+                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
+                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
+                    ELSE NULL
+                END,
+                NULL
+            FROM `resource`
+            JOIN `value`
+                ON `value`.`resource_id` = `resource`.`id`
+                AND `value`.`property_id` = $this->propertyEmbargoStartId
+            ON DUPLICATE KEY UPDATE
+                `embargo_start` = CASE `value`.`value`
+                    WHEN NULL THEN NULL
+                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
+                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
+                    ELSE NULL
+                END
+            ;
+            # Set access embargo end according to values.
+            INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+            SELECT
+                `resource_id`,
+                $subSql,
+                NULL,
+                CASE `value`.`value`
+                    WHEN NULL THEN NULL
+                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
+                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
+                    ELSE NULL
+                END
+            FROM `resource`
+            JOIN `value`
+                ON `value`.`resource_id` = `resource`.`id`
+                AND `value`.`property_id` = $this->propertyEmbargoEndId
+            ON DUPLICATE KEY UPDATE
+                `embargo_end` = CASE `value`.`value`
+                    WHEN NULL THEN NULL
+                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
+                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
+                    ELSE NULL
+                END
+            ;
+            SQL;
 
         $this->connection->executeStatement($sql);
 

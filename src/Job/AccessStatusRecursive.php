@@ -280,18 +280,18 @@ class AccessStatusRecursive extends AbstractJob
 
         // Use insert into instead of update, because the access statuses may
         // not exist yet.
-        $sql = <<<SQL
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `media`.`id`, :level, :embargo_start, :embargo_end
-FROM `media`
-WHERE `media`.`item_id` = :resource_id
-    AND `media`.`id` IN (:media_ids)
-ON DUPLICATE KEY UPDATE
-    `level` = :level,
-    `embargo_start` = :embargo_start,
-    `embargo_end` = :embargo_end
-;
-SQL;
+        $sql = <<<'SQL'
+            INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+            SELECT `media`.`id`, :level, :embargo_start, :embargo_end
+            FROM `media`
+            WHERE `media`.`item_id` = :resource_id
+                AND `media`.`id` IN (:media_ids)
+            ON DUPLICATE KEY UPDATE
+                `level` = :level,
+                `embargo_start` = :embargo_start,
+                `embargo_end` = :embargo_end
+            ;
+            SQL;
 
         if ($this->accessViaProperty) {
             $sql .= "\n" . $this->sqlUpdateItemProperties($bind, $types);
@@ -302,76 +302,76 @@ SQL;
 
     protected function sqlUpdateItemProperties(array $bind, array $types): string
     {
-        $sql = <<<SQL
-DELETE `value`
-FROM `value`
-JOIN `media` ON `media`.`id` = `value`.`resource_id`
-WHERE `media`.`item_id` = :resource_id
-    AND `media`.`id` IN (:media_ids)
-    AND `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
-;
-SQL;
+        $sql = <<<'SQL'
+            DELETE `value`
+            FROM `value`
+            JOIN `media` ON `media`.`id` = `value`.`resource_id`
+            WHERE `media`.`item_id` = :resource_id
+                AND `media`.`id` IN (:media_ids)
+                AND `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+            ;
+            SQL;
 
         if ($this->hasNumericDataTypes) {
-            $sql .= "\n" . <<<SQL
-DELETE `numeric_data_types_timestamp`
-FROM `numeric_data_types_timestamp`
-JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
-WHERE `media`.`item_id` = :resource_id
-    AND `media`.`id` IN (:media_ids)
-    AND `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
-;
-SQL;
+            $sql .= "\n" . <<<'SQL'
+            DELETE `numeric_data_types_timestamp`
+            FROM `numeric_data_types_timestamp`
+            JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
+            WHERE `media`.`item_id` = :resource_id
+                AND `media`.`id` IN (:media_ids)
+                AND `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
+            ;
+            SQL;
         }
 
-        $sql .= "\n" . <<<SQL
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `media`.`id`, :property_level, :level_type, :level_value, 1
-FROM `media`
-WHERE `media`.`item_id` = :resource_id
-    AND `media`.`id` IN (:media_ids)
-;
-SQL;
+        $sql .= "\n" . <<<'SQL'
+            INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+            SELECT `media`.`id`, :property_level, :level_type, :level_value, 1
+            FROM `media`
+            WHERE `media`.`item_id` = :resource_id
+                AND `media`.`id` IN (:media_ids)
+            ;
+            SQL;
 
         if (!empty($bind['embargo_start_value'])) {
-            $sql .= "\n" . <<<SQL
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `media`.`id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
-FROM `media`
-WHERE `media`.`item_id` = :resource_id
-    AND `media`.`id` IN (:media_ids)
-;
-SQL;
+            $sql .= "\n" . <<<'SQL'
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT `media`.`id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
+                FROM `media`
+                WHERE `media`.`item_id` = :resource_id
+                    AND `media`.`id` IN (:media_ids)
+                ;
+                SQL;
             if ($this->hasNumericDataTypes) {
-                $sql .= "\n" . <<<SQL
-INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
-FROM `media`
-WHERE `media`.`item_id` = :resource_id
-    AND `media`.`id` IN (:media_ids)
-;
-SQL;
+                $sql .= "\n" . <<<'SQL'
+                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                    SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
+                    FROM `media`
+                    WHERE `media`.`item_id` = :resource_id
+                        AND `media`.`id` IN (:media_ids)
+                    ;
+                    SQL;
             }
         }
 
         if (!empty($bind['embargo_end_value'])) {
-            $sql .= "\n" . <<<SQL
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `media`.`id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
-FROM `media`
-WHERE `media`.`item_id` = :resource_id
-    AND `media`.`id` IN (:media_ids)
-;
-SQL;
+            $sql .= "\n" . <<<'SQL'
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT `media`.`id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
+                FROM `media`
+                WHERE `media`.`item_id` = :resource_id
+                    AND `media`.`id` IN (:media_ids)
+                ;
+                SQL;
             if ($this->hasNumericDataTypes) {
-                $sql .= "\n" . <<<SQL
-INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
-FROM `media`
-WHERE `media`.`item_id` = :resource_id
-    AND `media`.`id` IN (:media_ids)
-;
-SQL;
+                $sql .= "\n" . <<<'SQL'
+                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                    SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
+                    FROM `media`
+                    WHERE `media`.`item_id` = :resource_id
+                        AND `media`.`id` IN (:media_ids)
+                    ;
+                    SQL;
             }
         }
 
@@ -382,27 +382,27 @@ SQL;
     {
         if ($this->isAdminRole) {
             // Update resources without check when user can view all resources.
-            $sql = <<<SQL
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `item_item_set`.`item_id`, :level, :embargo_start, :embargo_end
-FROM `item_item_set`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-ON DUPLICATE KEY UPDATE
-    `level` = :level,
-    `embargo_start` = :embargo_start,
-    `embargo_end` = :embargo_end
-;
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `media`.`id`, :level, :embargo_start, :embargo_end
-FROM `media`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-ON DUPLICATE KEY UPDATE
-    `level` = :level,
-    `embargo_start` = :embargo_start,
-    `embargo_end` = :embargo_end
-;
-SQL;
+            $sql = <<<'SQL'
+                INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+                SELECT `item_item_set`.`item_id`, :level, :embargo_start, :embargo_end
+                FROM `item_item_set`
+                WHERE `item_item_set`.`item_set_id` = :resource_id
+                ON DUPLICATE KEY UPDATE
+                    `level` = :level,
+                    `embargo_start` = :embargo_start,
+                    `embargo_end` = :embargo_end
+                ;
+                INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+                SELECT `media`.`id`, :level, :embargo_start, :embargo_end
+                FROM `media`
+                JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+                WHERE `item_item_set`.`item_set_id` = :resource_id
+                ON DUPLICATE KEY UPDATE
+                    `level` = :level,
+                    `embargo_start` = :embargo_start,
+                    `embargo_end` = :embargo_end
+                ;
+                SQL;
 
             if ($this->accessViaProperty) {
                 $sql .= "\n" . $this->sqlUpdateItemSetPropertiesAllowed($bind, $types);
@@ -443,32 +443,32 @@ SQL;
         }
 
         $sql = <<<SQL
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `item_item_set`.`item_id`, :level, :embargo_start, :embargo_end
-FROM `item_item_set`
-JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-ON DUPLICATE KEY UPDATE
-    `level` = :level,
-    `embargo_start` = :embargo_start,
-    `embargo_end` = :embargo_end
-;
-INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-SELECT `media`.`id`, :level, :embargo_start, :embargo_end
-FROM `media`
-JOIN `resource` ON `resource`.`id` = `media`.`id`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource_item`.`is_public` = 1 $orWhereUser)
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-ON DUPLICATE KEY UPDATE
-    `level` = :level,
-    `embargo_start` = :embargo_start,
-    `embargo_end` = :embargo_end
-;
-SQL;
+            INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+            SELECT `item_item_set`.`item_id`, :level, :embargo_start, :embargo_end
+            FROM `item_item_set`
+            JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
+            WHERE `item_item_set`.`item_set_id` = :resource_id
+                AND (`resource`.`is_public` = 1 $orWhereUser)
+            ON DUPLICATE KEY UPDATE
+                `level` = :level,
+                `embargo_start` = :embargo_start,
+                `embargo_end` = :embargo_end
+            ;
+            INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
+            SELECT `media`.`id`, :level, :embargo_start, :embargo_end
+            FROM `media`
+            JOIN `resource` ON `resource`.`id` = `media`.`id`
+            JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+            JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
+            WHERE `item_item_set`.`item_set_id` = :resource_id
+                AND (`resource_item`.`is_public` = 1 $orWhereUser)
+                AND (`resource`.`is_public` = 1 $orWhereUser)
+            ON DUPLICATE KEY UPDATE
+                `level` = :level,
+                `embargo_start` = :embargo_start,
+                `embargo_end` = :embargo_end
+            ;
+            SQL;
 
         if ($this->accessViaProperty) {
             $sql .= "\n" . $this->sqlUpdateItemSetPropertiesNotAllowed($bind, $types);
@@ -479,107 +479,107 @@ SQL;
 
     protected function sqlUpdateItemSetPropertiesAllowed(array $bind, array $types): string
     {
-        $sql = <<<SQL
-DELETE `value`
-FROM `value`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `value`.`resource_id`
-WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
-    AND `item_item_set`.`item_set_id` = :resource_id
-;
-DELETE `value`
-FROM `value`
-JOIN `media` ON `media`.`id` = `value`.`resource_id`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
-;
-SQL;
+        $sql = <<<'SQL'
+            DELETE `value`
+            FROM `value`
+            JOIN `item_item_set` ON `item_item_set`.`item_id` = `value`.`resource_id`
+            WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+                AND `item_item_set`.`item_set_id` = :resource_id
+            ;
+            DELETE `value`
+            FROM `value`
+            JOIN `media` ON `media`.`id` = `value`.`resource_id`
+            JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+            WHERE `item_item_set`.`item_set_id` = :resource_id
+                AND `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+            ;
+            SQL;
 
         if ($this->hasNumericDataTypes) {
-            $sql .= "\n" . <<<SQL
-DELETE `numeric_data_types_timestamp`
-FROM `numeric_data_types_timestamp`
-JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
-;
-SQL;
+            $sql .= "\n" . <<<'SQL'
+                DELETE `numeric_data_types_timestamp`
+                FROM `numeric_data_types_timestamp`
+                JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
+                JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+                WHERE `item_item_set`.`item_set_id` = :resource_id
+                    AND `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
+                ;
+                SQL;
         }
 
-        $sql .= "\n" . <<<SQL
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `item_item_set`.`item_id`, :property_level, :level_type, :level_value, 1
-FROM `item_item_set`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-;
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `media`.`id`, :property_level, :level_type, :level_value, 1
-FROM `media`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-;
-SQL;
+        $sql .= "\n" . <<<'SQL'
+            INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+            SELECT `item_item_set`.`item_id`, :property_level, :level_type, :level_value, 1
+            FROM `item_item_set`
+            WHERE `item_item_set`.`item_set_id` = :resource_id
+            ;
+            INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+            SELECT `media`.`id`, :property_level, :level_type, :level_value, 1
+            FROM `media`
+            JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+            WHERE `item_item_set`.`item_set_id` = :resource_id
+            ;
+            SQL;
 
         if (!empty($bind['embargo_start_value'])) {
-            $sql .= "\n" . <<<SQL
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
-FROM `item_item_set`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-;
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `media`.`id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
-FROM `media`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-;
-SQL;
+            $sql .= "\n" . <<<'SQL'
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
+                FROM `item_item_set`
+                WHERE `item_item_set`.`item_set_id` = :resource_id
+                ;
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT `media`.`id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
+                FROM `media`
+                JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+                WHERE `item_item_set`.`item_set_id` = :resource_id
+                ;
+                SQL;
             if ($this->hasNumericDataTypes) {
-                $sql .= "\n" . <<<SQL
-INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_timestamp
-FROM `item_item_set`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-;
-INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
-FROM `media`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-;
-SQL;
+                $sql .= "\n" . <<<'SQL'
+                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                    SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_timestamp
+                    FROM `item_item_set`
+                    WHERE `item_item_set`.`item_set_id` = :resource_id
+                    ;
+                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                    SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
+                    FROM `media`
+                    JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+                    WHERE `item_item_set`.`item_set_id` = :resource_id
+                    ;
+                    SQL;
             }
         }
 
         if (!empty($bind['embargo_end_value'])) {
-            $sql .= "\n" . <<<SQL
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
-FROM `item_item_set`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-;
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `media`.`id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
-FROM `media`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-;
-SQL;
+            $sql .= "\n" . <<<'SQL'
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
+                FROM `item_item_set`
+                WHERE `item_item_set`.`item_set_id` = :resource_id
+                ;
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT `media`.`id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
+                FROM `media`
+                JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+                WHERE `item_item_set`.`item_set_id` = :resource_id
+                ;
+                SQL;
             if ($this->hasNumericDataTypes) {
-                $sql .= "\n" . <<<SQL
-INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_timestamp
-FROM `item_item_set`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-;
-INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
-FROM `media`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-;
-SQL;
+                $sql .= "\n" . <<<'SQL'
+                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                    SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_timestamp
+                    FROM `item_item_set`
+                    WHERE `item_item_set`.`item_set_id` = :resource_id
+                    ;
+                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                    SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
+                    FROM `media`
+                    JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+                    WHERE `item_item_set`.`item_set_id` = :resource_id
+                    ;
+                    SQL;
             }
         }
 
@@ -595,154 +595,154 @@ SQL;
         }
 
         $sql = <<<SQL
-DELETE `value`
-FROM `value`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `value`.`resource_id`
-JOIN `resource` ON `resource_item`.`id` = `item_item_set`.`item_id`
-WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
-    AND `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-DELETE `value`
-FROM `value`
-JOIN `media` ON `media`.`id` = `value`.`resource_id`
-JOIN `resource` ON `resource`.`id` = `media`.`id`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
-    AND `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource_item`.`is_public` = 1 $orWhereUser)
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-SQL;
+            DELETE `value`
+            FROM `value`
+            JOIN `item_item_set` ON `item_item_set`.`item_id` = `value`.`resource_id`
+            JOIN `resource` ON `resource_item`.`id` = `item_item_set`.`item_id`
+            WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+                AND `item_item_set`.`item_set_id` = :resource_id
+                AND (`resource`.`is_public` = 1 $orWhereUser)
+            ;
+            DELETE `value`
+            FROM `value`
+            JOIN `media` ON `media`.`id` = `value`.`resource_id`
+            JOIN `resource` ON `resource`.`id` = `media`.`id`
+            JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+            JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
+            WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+                AND `item_item_set`.`item_set_id` = :resource_id
+                AND (`resource_item`.`is_public` = 1 $orWhereUser)
+                AND (`resource`.`is_public` = 1 $orWhereUser)
+            ;
+            SQL;
 
         if ($this->hasNumericDataTypes) {
             $sql .= "\n" . <<<SQL
-DELETE `numeric_data_types_timestamp`
-FROM `numeric_data_types_timestamp`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `numeric_data_types_timestamp`.`resource_id`
-JOIN `resource` ON `resource_item`.`id` = `item_item_set`.`item_id`
-WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
-    AND `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-DELETE `numeric_data_types_timestamp`
-FROM `numeric_data_types_timestamp`
-JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
-JOIN `resource` ON `resource`.`id` = `media`.`id`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
-    AND `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource_item`.`is_public` = 1 $orWhereUser)
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-SQL;
+                DELETE `numeric_data_types_timestamp`
+                FROM `numeric_data_types_timestamp`
+                JOIN `item_item_set` ON `item_item_set`.`item_id` = `numeric_data_types_timestamp`.`resource_id`
+                JOIN `resource` ON `resource_item`.`id` = `item_item_set`.`item_id`
+                WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
+                    AND `item_item_set`.`item_set_id` = :resource_id
+                    AND (`resource`.`is_public` = 1 $orWhereUser)
+                ;
+                DELETE `numeric_data_types_timestamp`
+                FROM `numeric_data_types_timestamp`
+                JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
+                JOIN `resource` ON `resource`.`id` = `media`.`id`
+                JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+                JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
+                WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
+                    AND `item_item_set`.`item_set_id` = :resource_id
+                    AND (`resource_item`.`is_public` = 1 $orWhereUser)
+                    AND (`resource`.`is_public` = 1 $orWhereUser)
+                ;
+                SQL;
         }
 
         $sql .= "\n" . <<<SQL
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `item_item_set`.`item_id`, :property_level, :level_type, :level_value, 1
-FROM `item_item_set`
-JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `media`.`id`, :property_level, :level_type, :level_value, 1
-FROM `media`
-JOIN `resource` ON `resource`.`id` = `media`.`id`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource_item`.`is_public` = 1 $orWhereUser)
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-SQL;
+            INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+            SELECT `item_item_set`.`item_id`, :property_level, :level_type, :level_value, 1
+            FROM `item_item_set`
+            JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
+            WHERE `item_item_set`.`item_set_id` = :resource_id
+                AND (`resource`.`is_public` = 1 $orWhereUser)
+            ;
+            INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+            SELECT `media`.`id`, :property_level, :level_type, :level_value, 1
+            FROM `media`
+            JOIN `resource` ON `resource`.`id` = `media`.`id`
+            JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+            JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
+            WHERE `item_item_set`.`item_set_id` = :resource_id
+                AND (`resource_item`.`is_public` = 1 $orWhereUser)
+                AND (`resource`.`is_public` = 1 $orWhereUser)
+            ;
+            SQL;
 
         if (!empty($bind['embargo_start_value'])) {
             $sql .= "\n" . <<<SQL
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
-FROM `item_item_set`
-JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `media`.`id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
-FROM `media`
-JOIN `resource` ON `resource`.`id` = `media`.`id`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource_item`.`is_public` = 1 $orWhereUser)
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-SQL;
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
+                FROM `item_item_set`
+                JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
+                WHERE `item_item_set`.`item_set_id` = :resource_id
+                    AND (`resource`.`is_public` = 1 $orWhereUser)
+                ;
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT `media`.`id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
+                FROM `media`
+                JOIN `resource` ON `resource`.`id` = `media`.`id`
+                JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+                JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
+                WHERE `item_item_set`.`item_set_id` = :resource_id
+                    AND (`resource_item`.`is_public` = 1 $orWhereUser)
+                    AND (`resource`.`is_public` = 1 $orWhereUser)
+                ;
+                SQL;
             if ($this->hasNumericDataTypes) {
                 $sql .= "\n" . <<<SQL
-INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_timestamp
-FROM `item_item_set`
-JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
-FROM `media`
-JOIN `resource` ON `resource`.`id` = `media`.`id`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource_item`.`is_public` = 1 $orWhereUser)
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-SQL;
+                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                    SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_timestamp
+                    FROM `item_item_set`
+                    JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
+                    WHERE `item_item_set`.`item_set_id` = :resource_id
+                        AND (`resource`.`is_public` = 1 $orWhereUser)
+                    ;
+                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                    SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
+                    FROM `media`
+                    JOIN `resource` ON `resource`.`id` = `media`.`id`
+                    JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+                    JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
+                    WHERE `item_item_set`.`item_set_id` = :resource_id
+                        AND (`resource_item`.`is_public` = 1 $orWhereUser)
+                        AND (`resource`.`is_public` = 1 $orWhereUser)
+                    ;
+                    SQL;
             }
         }
 
         if (!empty($bind['embargo_end_value'])) {
             $sql .= "\n" . <<<SQL
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
-FROM `item_item_set`
-JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-SELECT `media`.`id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
-FROM `media`
-JOIN `resource` ON `resource`.`id` = `media`.`id`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource_item`.`is_public` = 1 $orWhereUser)
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-SQL;
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
+                FROM `item_item_set`
+                JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
+                WHERE `item_item_set`.`item_set_id` = :resource_id
+                    AND (`resource`.`is_public` = 1 $orWhereUser)
+                ;
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT `media`.`id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
+                FROM `media`
+                JOIN `resource` ON `resource`.`id` = `media`.`id`
+                JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+                JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
+                WHERE `item_item_set`.`item_set_id` = :resource_id
+                    AND (`resource_item`.`is_public` = 1 $orWhereUser)
+                    AND (`resource`.`is_public` = 1 $orWhereUser)
+                ;
+                SQL;
             if ($this->hasNumericDataTypes) {
                 $sql .= "\n" . <<<SQL
-INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_timestamp
-FROM `item_item_set`
-JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
-FROM `media`
-JOIN `resource` ON `resource`.`id` = `media`.`id`
-JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-WHERE `item_item_set`.`item_set_id` = :resource_id
-    AND (`resource_item`.`is_public` = 1 $orWhereUser)
-    AND (`resource`.`is_public` = 1 $orWhereUser)
-;
-SQL;
+                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                    SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_timestamp
+                    FROM `item_item_set`
+                    JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
+                    WHERE `item_item_set`.`item_set_id` = :resource_id
+                        AND (`resource`.`is_public` = 1 $orWhereUser)
+                    ;
+                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                    SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
+                    FROM `media`
+                    JOIN `resource` ON `resource`.`id` = `media`.`id`
+                    JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
+                    JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
+                    WHERE `item_item_set`.`item_set_id` = :resource_id
+                        AND (`resource_item`.`is_public` = 1 $orWhereUser)
+                        AND (`resource`.`is_public` = 1 $orWhereUser)
+                    ;
+                    SQL;
             }
         }
 

@@ -461,15 +461,15 @@ class IsAllowedMediaContent extends AbstractPlugin
         */
         /*
         $dql = <<<DQL
-SELECT ar
-FROM Access\Entity\AccessRequest ar
-JOIN ar.resources r
-WHERE
-    ar.enabled = 1
-    AND ($sqlModesString)
-    AND r.id = :media_id
- ORDER BY ar.created DESC
-        DQL;
+            SELECT ar
+            FROM Access\Entity\AccessRequest ar
+            JOIN ar.resources r
+            WHERE
+                ar.enabled = 1
+                AND ($sqlModesString)
+                AND r.id = :media_id
+             ORDER BY ar.created DESC
+            DQL;
         $query = $this->entityManager
             ->createQuery($dql)
             ->setParameters(new ArrayCollection([
@@ -483,21 +483,21 @@ WHERE
         */
 
         $sql = <<<SQL
-SELECT ar.id
-FROM access_request AS ar
-JOIN access_resource AS r ON r.access_request_id = ar.id
-WHERE
-    ar.enabled = 1
-    AND (
-        $sqlModesString
-    )
-    AND (
-        r.resource_id = :media_id
-        OR (ar.recursive = 1 AND r.resource_id = :item_id)
-        $orInItemSets
-    )
-ORDER BY ar.id DESC
-SQL;
+            SELECT ar.id
+            FROM access_request AS ar
+            JOIN access_resource AS r ON r.access_request_id = ar.id
+            WHERE
+                ar.enabled = 1
+                AND (
+                    $sqlModesString
+                )
+                AND (
+                    r.resource_id = :media_id
+                    OR (ar.recursive = 1 AND r.resource_id = :item_id)
+                    $orInItemSets
+                )
+            ORDER BY ar.id DESC
+            SQL;
         $accessRequestIds = $this->entityManager->getConnection()
             ->executeQuery($sql, $bind, $types)
             ->fetchFirstColumn();

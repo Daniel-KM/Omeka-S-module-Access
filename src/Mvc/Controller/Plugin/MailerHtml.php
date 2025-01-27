@@ -76,22 +76,22 @@ class MailerHtml extends AbstractPlugin
                     ->addHeaderLine('Content-Type: multipart/alternative; boundary=' . $boundary);
                 $raw = strip_tags($body);
                 $body = <<<BODY
---$boundary
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-MIME-Version: 1.0
-
-$raw
-
---$boundary
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/html; charset=UTF-8
-MIME-Version: 1.0
-
-$body
-
---$boundary--
-BODY;
+                    --$boundary
+                    Content-Transfer-Encoding: quoted-printable
+                    Content-Type: text/plain; charset=UTF-8
+                    MIME-Version: 1.0
+                    
+                    $raw
+                    
+                    --$boundary
+                    Content-Transfer-Encoding: quoted-printable
+                    Content-Type: text/html; charset=UTF-8
+                    MIME-Version: 1.0
+                    
+                    $body
+                    
+                    --$boundary--
+                    BODY;
             }
             // Partial html.
             else {

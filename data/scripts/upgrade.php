@@ -70,33 +70,33 @@ if (version_compare((string) $oldVersion, '3.4.19', '<')) {
         }
     }
 
-    $sql = <<<SQL
-UPDATE `vocabulary`
-SET
-    `comment` = 'Generic and common properties that are useful in Omeka for the curation of resources. The use of more common or more precise ontologies is recommended when it is possible.'
-WHERE `prefix` = 'curation'
-;
-UPDATE `property`
-JOIN `vocabulary` on `vocabulary`.`id` = `property`.`vocabulary_id`
-SET
-    `property`.`local_name` = 'start',
-    `property`.`label` = 'Start',
-    `property`.`comment` = 'A start related to the resource, for example the start of an embargo.'
-WHERE
-    `vocabulary`.`prefix` = 'curation'
-    AND `property`.`local_name` = 'dateStart'
-;
-UPDATE `property`
-JOIN `vocabulary` on `vocabulary`.`id` = `property`.`vocabulary_id`
-SET
-    `property`.`local_name` = 'end',
-    `property`.`label` = 'End',
-    `property`.`comment` = 'A end related to the resource, for example the end of an embargo.'
-WHERE
-    `vocabulary`.`prefix` = 'curation'
-    AND `property`.`local_name` = 'dateEnd'
-;
-SQL;
+    $sql = <<<'SQL'
+        UPDATE `vocabulary`
+        SET
+            `comment` = 'Generic and common properties that are useful in Omeka for the curation of resources. The use of more common or more precise ontologies is recommended when it is possible.'
+        WHERE `prefix` = 'curation'
+        ;
+        UPDATE `property`
+        JOIN `vocabulary` on `vocabulary`.`id` = `property`.`vocabulary_id`
+        SET
+            `property`.`local_name` = 'start',
+            `property`.`label` = 'Start',
+            `property`.`comment` = 'A start related to the resource, for example the start of an embargo.'
+        WHERE
+            `vocabulary`.`prefix` = 'curation'
+            AND `property`.`local_name` = 'dateStart'
+        ;
+        UPDATE `property`
+        JOIN `vocabulary` on `vocabulary`.`id` = `property`.`vocabulary_id`
+        SET
+            `property`.`local_name` = 'end',
+            `property`.`label` = 'End',
+            `property`.`comment` = 'A end related to the resource, for example the end of an embargo.'
+        WHERE
+            `vocabulary`.`prefix` = 'curation'
+            AND `property`.`local_name` = 'dateEnd'
+        ;
+        SQL;
     $connection->executeStatement($sql);
 
     $levels = [
@@ -115,12 +115,12 @@ SQL;
 
 if (version_compare((string) $oldVersion, '3.4.21', '<')) {
     $sql = <<<'SQL'
-ALTER TABLE `access_request`
-    ADD `name` VARCHAR(190) DEFAULT NULL AFTER `end`,
-    ADD `message` LONGTEXT DEFAULT NULL AFTER `name`,
-    ADD `fields` LONGTEXT DEFAULT NULL COMMENT '(DC2Type:json_array)' AFTER `message`
-;
-SQL;
+        ALTER TABLE `access_request`
+            ADD `name` VARCHAR(190) DEFAULT NULL AFTER `end`,
+            ADD `message` LONGTEXT DEFAULT NULL AFTER `name`,
+            ADD `fields` LONGTEXT DEFAULT NULL COMMENT '(DC2Type:json_array)' AFTER `message`
+        ;
+        SQL;
     $connection->executeStatement($sql);
 
     $messageUserUpdated = $settings->get('access_message_user_request_updated') ?: $configLocal['access']['settings']['access_message_user_request_accepted'];
