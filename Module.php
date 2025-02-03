@@ -17,6 +17,7 @@ use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
+use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Entity\Resource;
 use Omeka\Module\AbstractModule;
@@ -49,8 +50,16 @@ class Module extends AbstractModule
         /** @var bool $skipMessage */
         $skipMessage = true;
         require_once __DIR__ . '/data/scripts/upgrade_vocabulary.php';
+    }
 
-        // Check if module AccessResource is installed.
+    protected function upgradeFromAccessResource(): bool
+    {
+        $services = $this->getServiceLocator();
+        $plugins = $services->get('ControllerPluginManager');
+        $translate = $plugins->get('translate');
+        $messenger = $plugins->get('messenger');
+
+        // Check if module AccessResource is installed to upgrade from it.
 
         /** @var \Doctrine\DBAL\Connection $connection */
         $connection = $services->get('Omeka\Connection');
@@ -58,13 +67,12 @@ class Module extends AbstractModule
             $connection->executeQuery('SELECT id FROM access_log LIMIT 1')->fetchOne();
         } catch (\Exception $e) {
             // Continue standard install.
-            return;
+            return false;
         }
 
-        $plugins = $services->get('ControllerPluginManager');
-        $messenger = $plugins->get('messenger');
-
         // Check upgrade from old module AccessResource if any.
+        // The module should be present, active or not, and at version 3.4.17.1,
+
         $moduleManager = $services->get('Omeka\ModuleManager');
         $module = $moduleManager->getModule('AccessResource');
         $version = $module ? $module->getIni('version') : null;
@@ -76,7 +84,7 @@ class Module extends AbstractModule
             \Omeka\Module\Manager::STATE_NEEDS_UPGRADE,
         ])) {
             // Continue standard install.
-            return;
+            return false;
         }
 
         if (version_compare($version, '3.4.17.1', '<')) {
@@ -103,7 +111,7 @@ class Module extends AbstractModule
             throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
         }
 
-        // Upgrade the database with new features.
+        // Upgrade the database with new features since 3.4.17.1.
 
         /**
          * @var string $oldVersion
@@ -113,6 +121,43 @@ class Module extends AbstractModule
         $newVersion = '999';
         $filepath = __DIR__ . '/data/scripts/upgrade.php';
         require_once $filepath;
+
+        return true;
+    }
+
+    public function install(ServiceLocatorInterface $services): void
+    {
+        $this->setServiceLocator($services);
+
+        $this->initTranslations();
+
+        /**@var \Laminas\Mvc\I18n\Translator $translator */
+        $translator = $services->get('MvcTranslator');
+
+        $this->preInstall();
+
+        // Check and upgrade from module AccessResource if any.
+        $wasUpgradedFromAccessResource = $this->upgradeFromAccessResource();
+
+        // Else process standard install.
+        if (!$wasUpgradedFromAccessResource) {
+            $sqlFile = __DIR__ . '/data/install/schema.sql';
+            if (!$this->checkNewTablesFromFile($sqlFile)) {
+                $message = new PsrMessage(
+                    'This module cannot install its tables, because they exist already. Try to remove them first.' // @translate
+                );
+                throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message->setTranslator($translator));
+            }
+            $this->execSqlFromFile($sqlFile);
+        }
+
+        $this
+            ->installAllResources()
+            ->manageConfig('install')
+            ->manageMainSettings('install')
+            ->manageSiteSettings('install')
+            ->manageUserSettings('install')
+            ->postInstall();
     }
 
     protected function postInstall(): void
