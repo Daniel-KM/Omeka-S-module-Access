@@ -36,6 +36,9 @@ if (!$accessResourceModule) {
 
 // Convert the settings.
 
+// This option was not upgraded from an old server, so update it manually.
+$useProperty = (bool) $settings->get('accessresource_property');
+
 $sql = <<<'SQL'
 REPLACE INTO `setting` (`id`, `value`)
 SELECT
@@ -46,6 +49,8 @@ WHERE
     `setting`.`id` LIKE "accessresource#_%" ESCAPE "#";
 SQL;
 $connection->executeStatement($sql);
+
+$settings->set('access_property', $useProperty);
 
 // Convert the site settings.
 

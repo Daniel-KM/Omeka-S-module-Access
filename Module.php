@@ -87,7 +87,7 @@ class Module extends AbstractModule
             return false;
         }
 
-        if (version_compare($version, '3.4.17.1', '<')) {
+        if (version_compare($version, '3.4.17', '<')) {
             throw new \Omeka\Module\Exception\ModuleCannotInstallException(
                 $translate('To be automatically upgraded and replaced by this module, the module "Access Resource" should be upgraded first to version 3.4.17.1. Else uninstall it first, but you will lose access statuses and requests.') // @translate
             );
