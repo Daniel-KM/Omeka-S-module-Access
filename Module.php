@@ -625,7 +625,7 @@ class Module extends AbstractModule
             $embargoEnd = $rawData['embargo_end_date'] ?? null;
             $embargoEnd = trim((string) $embargoEnd) ?: null;
             if ($embargoEnd) {
-                $embargoEnd .= 'T' . (empty($rawData['embargo_end_time']) ? '00:00:00' : $rawData['embargo_end_time'] . ':00');
+                $embargoEnd .= 'T' . (empty($rawData['embargo_end_time']) ? '23:59:59' : $rawData['embargo_end_time'] . ':59');
             }
             $newData['o-access:embargo_end'] = $embargoEnd;
         }
@@ -762,7 +762,7 @@ class Module extends AbstractModule
                 $accessStatusValues = [
                     'o-access:level' => ['value' => $level, 'type' => null],
                     'o-access:embargo_start' => ['value' => $embargoStart && substr($embargoStart, -8) === '00:00:00' ? substr($embargoStart, 0, 10) : $embargoStart, 'type' => null],
-                    'o-access:embargo_end' => ['value' => $embargoEnd && substr($embargoEnd, -8) === '00:00:00' ? substr($embargoEnd, 0, 10) : $embargoEnd, 'type' => null],
+                    'o-access:embargo_end' => ['value' => $embargoEnd && substr($embargoEnd, -8) === '23:59:59' ? substr($embargoEnd, 0, 10) : $embargoEnd, 'type' => null],
                 ];
             } else {
                 $accessStatusValues = [];
@@ -920,7 +920,7 @@ class Module extends AbstractModule
                 $embargoEnd = $resourceData['embargo_end_date'] ?? null;
                 $embargoEnd = trim((string) $embargoEnd) ?: null;
                 if ($embargoEnd) {
-                    $embargoEnd .= 'T' . (empty($resourceData['embargo_end_time']) ? '00:00:00' : $resourceData['embargo_end_time'] . ':00');
+                    $embargoEnd .= 'T' . (empty($resourceData['embargo_end_time']) ? '23:59:59' : $resourceData['embargo_end_time'] . ':59');
                 }
             }
             $accessStatusValues = [];
@@ -1049,7 +1049,7 @@ class Module extends AbstractModule
                 $date = $data['o-access:end-date'] ?? null;
                 $date = trim((string) $date) ?: null;
                 if ($date) {
-                    $date .= 'T' . (empty($data['o-access:end-time']) ? '00:00:00' : $data['o-access:end-time'] . ':00');
+                    $date .= 'T' . (empty($data['o-access:end-time']) ? '23:59:59' : $data['o-access:end-time'] . ':59');
                 }
                 $data['o-access:end'] = $date;
                 if (!$data['o:user'] && !$data['o:email'] && !$data['o-access:token']) {

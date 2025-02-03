@@ -461,7 +461,7 @@ class AccessStatusUpdate extends AbstractJob
                 CASE `value`.`value`
                     WHEN NULL THEN NULL
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
+                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 23:59:59')
                     ELSE NULL
                 END
             FROM `resource`
@@ -472,7 +472,7 @@ class AccessStatusUpdate extends AbstractJob
                 `embargo_end` = CASE `value`.`value`
                     WHEN NULL THEN NULL
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
+                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 23:59:59')
                     ELSE NULL
                 END
             ;
