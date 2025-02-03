@@ -39,7 +39,7 @@ $deleteButton = ($accessRequest && $accessRequest->userIsAllowed('delete'))
         endif;
         echo $hyperlink($translate('Cancel'), $url('admin/access-request'), ['class' => 'button']);
     ?>
-    <button type="submit" name="submit" form="form-access-request"><?= $translate('Save') ?></button>
+    <button type="submit" name="submit" form="form-access-request" class="button"><?= $translate('Save') ?></button>
 </div>
 
 <?php $this->trigger('view.edit.before'); ?>
