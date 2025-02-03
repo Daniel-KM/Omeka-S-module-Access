@@ -330,7 +330,11 @@ class AccessStatusUpdate extends AbstractJob
                 SQL;
         }
 
-        $this->connection->executeStatement($sql, $bind, $types);
+        // The transaction avoids to lost values when date is invalid.
+        // The exception is still thrown.
+        $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql, $bind, $types) {
+            $this->connection->executeStatement($sql, $bind, $types);
+        });
 
         return $this;
     }
@@ -369,7 +373,9 @@ class AccessStatusUpdate extends AbstractJob
                 SQL;
         }
 
-        $this->connection->executeStatement($sql);
+        $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql) {
+            $this->connection->executeStatement($sql);
+        });
 
         return $this;
     }
@@ -472,7 +478,9 @@ class AccessStatusUpdate extends AbstractJob
             ;
             SQL;
 
-        $this->connection->executeStatement($sql);
+        $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql) {
+            $this->connection->executeStatement($sql);
+        });
 
         return $this;
     }

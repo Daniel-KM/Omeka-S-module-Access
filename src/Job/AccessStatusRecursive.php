@@ -297,7 +297,9 @@ class AccessStatusRecursive extends AbstractJob
             $sql .= "\n" . $this->sqlUpdateItemProperties($bind, $types);
         }
 
-        $this->connection->executeStatement($sql, $bind, $types);
+        $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql, $bind, $types) {
+            $this->connection->executeStatement($sql, $bind, $types);
+        });
     }
 
     protected function sqlUpdateItemProperties(array $bind, array $types): string
@@ -408,7 +410,9 @@ class AccessStatusRecursive extends AbstractJob
                 $sql .= "\n" . $this->sqlUpdateItemSetPropertiesAllowed($bind, $types);
             }
 
-            $this->connection->executeStatement($sql, $bind, $types);
+            $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql, $bind, $types) {
+                $this->connection->executeStatement($sql, $bind, $types);
+            });
             return;
         }
 
@@ -474,7 +478,9 @@ class AccessStatusRecursive extends AbstractJob
             $sql .= "\n" . $this->sqlUpdateItemSetPropertiesNotAllowed($bind, $types);
         }
 
-        $this->connection->executeStatement($sql, $bind, $types);
+        $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql, $bind, $types) {
+            $this->connection->executeStatement($sql, $bind, $types);
+        });
     }
 
     protected function sqlUpdateItemSetPropertiesAllowed(array $bind, array $types): string
