@@ -400,6 +400,9 @@ class AccessStatusUpdate extends AbstractJob
         // Use insert: statuses were created previously, but there may be levels
         // or embargos without levels, in which case the default level is used.
 
+        // The process check for dates like "0000", that is an error, or partial
+        // dates, that are completed.
+
         $sql = <<<SQL
             # Set access statuses according to values.
             INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
@@ -437,6 +440,8 @@ class AccessStatusUpdate extends AbstractJob
                     WHEN NULL THEN NULL
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
+                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-01'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-01'), '%Y-%m-%d'), ' 00:00:00')
+                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-01-01'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-01-01'), '%Y-%m-%d'), ' 00:00:00')
                     ELSE NULL
                 END,
                 NULL
@@ -449,6 +454,8 @@ class AccessStatusUpdate extends AbstractJob
                     WHEN NULL THEN NULL
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
+                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-01'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-01'), '%Y-%m-%d'), ' 00:00:00')
+                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-01-01'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-01-01'), '%Y-%m-%d'), ' 00:00:00')
                     ELSE NULL
                 END
             ;
@@ -462,6 +469,8 @@ class AccessStatusUpdate extends AbstractJob
                     WHEN NULL THEN NULL
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 23:59:59')
+                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-28'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-28'), '%Y-%m-%d'), ' 23:59:59')
+                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-12-31'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-12-31'), '%Y-%m-%d'), ' 23:59:59')
                     ELSE NULL
                 END
             FROM `resource`
@@ -473,6 +482,8 @@ class AccessStatusUpdate extends AbstractJob
                     WHEN NULL THEN NULL
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 23:59:59')
+                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-28'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-28'), '%Y-%m-%d'), ' 23:59:59')
+                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-12-31'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-12-31'), '%Y-%m-%d'), ' 23:59:59')
                     ELSE NULL
                 END
             ;
