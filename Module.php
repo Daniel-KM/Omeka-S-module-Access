@@ -1106,11 +1106,11 @@ class Module extends AbstractModule
         ]);
 
         $html = <<<'HTML'
-<div id="access" class="section">
-    %1$s
-    %2$s
-</div>
-HTML;
+            <div id="access" class="section">
+                %1$s
+                %2$s
+            </div>
+            HTML;
         echo sprintf($html, $requestHtml, $requestForm);
     }
 
