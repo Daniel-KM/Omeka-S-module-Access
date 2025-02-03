@@ -17,6 +17,9 @@ files) is replaced by a fake file, unless a specific right is granted.
 
 See [below](#usage) for more information on usage.
 
+You may use module [Guest Private] to access public or private resources on
+private sites.
+
 
 Installation
 ------------
@@ -394,6 +397,7 @@ Copyright
 
 [Access]: https://gitlab.com/Daniel-KM/Omeka-S-module-Access
 [Omeka S]: https://omeka.org/s
+[Guest Private]: https://gitlab.com/Daniel-KM/Omeka-S-module-GuestPrivate
 [Guest]: https://gitlab.com/Daniel-KM/Omeka-S-module-Guest
 [Guest Role]: https://github.com/biblibre/omeka-s-module-GuestRole
 [Blocks Disposition]: https://gitlab.com/Daniel-KM/Omeka-S-module-BlocksDisposition
