@@ -436,8 +436,9 @@ class AccessStatusUpdate extends AbstractJob
             SELECT
                 `resource_id`,
                 $subSql,
-                CASE `value`.`value`
-                    WHEN NULL THEN NULL
+                CASE
+                    WHEN `value`.`value` IS NULL THEN NULL
+                    WHEN LENGTH(TRIM(REPLACE(REPLACE(REPLACE(`value`.`value`, '0', ''), '-', ''), ':', ''))) = 0 THEN NULL
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
                     WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-01'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-01'), '%Y-%m-%d'), ' 00:00:00')
@@ -450,8 +451,9 @@ class AccessStatusUpdate extends AbstractJob
                 ON `value`.`resource_id` = `resource`.`id`
                 AND `value`.`property_id` = $this->propertyEmbargoStartId
             ON DUPLICATE KEY UPDATE
-                `embargo_start` = CASE `value`.`value`
-                    WHEN NULL THEN NULL
+                `embargo_start` = CASE
+                    WHEN `value`.`value` IS NULL THEN NULL
+                    WHEN LENGTH(TRIM(REPLACE(REPLACE(REPLACE(`value`.`value`, '0', ''), '-', ''), ':', ''))) = 0 THEN NULL
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
                     WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-01'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-01'), '%Y-%m-%d'), ' 00:00:00')
@@ -465,8 +467,9 @@ class AccessStatusUpdate extends AbstractJob
                 `resource_id`,
                 $subSql,
                 NULL,
-                CASE `value`.`value`
-                    WHEN NULL THEN NULL
+                CASE
+                    WHEN `value`.`value` IS NULL THEN NULL
+                    WHEN LENGTH(TRIM(REPLACE(REPLACE(REPLACE(`value`.`value`, '0', ''), '-', ''), ':', ''))) = 0 THEN NULL
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 23:59:59')
                     WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-28'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-28'), '%Y-%m-%d'), ' 23:59:59')
@@ -478,8 +481,9 @@ class AccessStatusUpdate extends AbstractJob
                 ON `value`.`resource_id` = `resource`.`id`
                 AND `value`.`property_id` = $this->propertyEmbargoEndId
             ON DUPLICATE KEY UPDATE
-                `embargo_end` = CASE `value`.`value`
-                    WHEN NULL THEN NULL
+                `embargo_end` = CASE
+                    WHEN `value`.`value` IS NULL THEN NULL
+                    WHEN LENGTH(TRIM(REPLACE(REPLACE(REPLACE(`value`.`value`, '0', ''), '-', ''), ':', ''))) = 0 THEN NULL
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
                     WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 23:59:59')
                     WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-28'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-28'), '%Y-%m-%d'), ' 23:59:59')
