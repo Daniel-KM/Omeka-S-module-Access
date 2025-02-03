@@ -7,25 +7,30 @@ use Common\Stdlib\PsrMessage;
 /**
  * @var Module $this
  * @var \Laminas\ServiceManager\ServiceLocatorInterface $services
- * @var string $oldVersion
  * @var string $newVersion
- */
-
-/**
- * @var \Doctrine\DBAL\Connection $connection
- * @var array $config
- * @var \Omeka\Mvc\Controller\Plugin\Api $api
+ * @var string $oldVersion
+ *
+ * @var \Omeka\Api\Manager $api
+ * @var \Omeka\View\Helper\Url $url
+ * @var \Laminas\Log\Logger $logger
  * @var \Omeka\Settings\Settings $settings
  * @var \Laminas\I18n\View\Helper\Translate $translate
+ * @var \Doctrine\DBAL\Connection $connection
+ * @var \Laminas\Mvc\I18n\Translator $translator
  * @var \Doctrine\ORM\EntityManager $entityManager
+ * @var \Omeka\Settings\SiteSettings $siteSettings
  * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
  */
 $plugins = $services->get('ControllerPluginManager');
+$url = $services->get('ViewHelperManager')->get('url');
 $api = $plugins->get('api');
+$logger = $services->get('Omeka\Logger');
 $settings = $services->get('Omeka\Settings');
 $translate = $plugins->get('translate');
+$translator = $services->get('MvcTranslator');
 $connection = $services->get('Omeka\Connection');
 $messenger = $plugins->get('messenger');
+$siteSettings = $services->get('Omeka\Settings\Site');
 $entityManager = $services->get('Omeka\EntityManager');
 
 $config = $services->get('Config');
@@ -287,6 +292,13 @@ if (version_compare($oldVersion, '3.4.27', '<')) {
         'It is now possible to define excluded item sets for accesses by ip and sso idp.' // @translate
     );
     $messenger->addSuccess($message);
+}
+
+if (version_compare((string) $oldVersion, '3.4.31', '<')) {
+    $message = new PsrMessage(
+        'When no time is set to an date of end of embargo, the check is now done against 23:59:59 and no more 00:00:00.' // @translate
+    );
+    $messenger->addWarning($message);
 }
 
 // Check for old module.
