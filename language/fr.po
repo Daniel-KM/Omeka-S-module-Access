@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-06 00:00+0000\n"
+"POT-Creation-Date: 2025-02-03 00:00+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
@@ -22,12 +22,12 @@ msgstr ""
 msgid "This module requires module %1$s version %2$s or greater."
 msgstr "Ce module requiert le module %1$s version %2$s or greater."
 
-#: data/scripts/upgrade.php:36 Module.php:43
+#: data/scripts/upgrade.php:41 Module.php:44
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr "Le module %1$s doit être mis à niveau à la version %2$s ou supérieure."
 
-#: Module.php:84
+#: Module.php:92
 msgid ""
 "To be automatically upgraded and replaced by this module, the module "
 "\"Access Resource\" should be upgraded first to version 3.4.17.1. Else "
@@ -38,7 +38,7 @@ msgstr ""
 "est aussi possible de le désinstaller, mais vous perdrez les statuts d’accès "
 "et les demandes."
 
-#: Module.php:90
+#: Module.php:98
 msgid ""
 "To be automatically upgraded and replaced by this module, the module "
 "\"Access Resource\" should be downgraded first to version 3.4.17.1. Else "
@@ -49,7 +49,7 @@ msgstr ""
 "est aussi possible de le désinstaller, mais vous perdrez les statuts d’accès "
 "et les demandes."
 
-#: Module.php:458
+#: Module.php:505
 msgid ""
 "When properties are used, three properties should be defined for \"level\", "
 "\"embargo start\" and \"embargo end\"."
@@ -58,21 +58,9 @@ msgstr ""
 "définies pour le « niveau », le « début de l’embargo » et la « fin de "
 "l’embargo »."
 
-#: Module.php:473
+#: Module.php:520
 msgid "Job is not launched: no option was set."
 msgstr "La tâche n’est pas lancée : aucune option n’a été définie."
-
-#: Module.php:1353
-msgid "Access"
-msgstr "Accès"
-
-#: Module.php:1375 view/access/admin/request/browse.phtml:30
-#: view/access/admin/request/edit.phtml:29
-#: view/access/admin/request/edit.phtml:31
-#: view/access/admin/request/show.phtml:24
-#: view/access/site/request/browse.phtml:38
-msgid "Access requests"
-msgstr "Demandes d’accès"
 
 #: src/Api/Representation/AccessRequestRepresentation.php:191
 #, php-format
@@ -199,6 +187,14 @@ msgstr "Aucun enregistrement d’accès."
 #: view/access/site/request/browse.phtml:75
 msgid "Refresh page"
 msgstr "Rafraîchir la page"
+
+#: view/access/admin/request/browse.phtml:30
+#: view/access/admin/request/edit.phtml:29
+#: view/access/admin/request/edit.phtml:31
+#: view/access/admin/request/show.phtml:24
+#: view/access/site/request/browse.phtml:38
+msgid "Access requests"
+msgstr "Demandes d’accès"
 
 #: view/access/admin/request/browse.phtml:39
 msgid "Add new request"
@@ -375,7 +371,7 @@ msgstr "Accès interdit"
 msgid "Dashboard"
 msgstr "Tableau de bord"
 
-#: data/scripts/upgrade_from_accessresource.php:90
+#: data/scripts/upgrade_from_accessresource.php:95
 #, php-format
 msgid "The module \"%1$s\" was upgraded by module \"%2$s\" and uninstalled."
 msgstr ""
@@ -385,11 +381,11 @@ msgstr ""
 msgid "The vocabulary \"{vocabulary}\" was updated successfully."
 msgstr "Le vocabulaire « {vocabulary} » a été correctement mis à jour."
 
-#: data/scripts/upgrade.php:136
+#: data/scripts/upgrade.php:141
 msgid "It is now possible to add a page block to request an access."
 msgstr "Il est désormais possible d’ajouter un bloc pour demander un accès."
 
-#: data/scripts/upgrade.php:141
+#: data/scripts/upgrade.php:146
 msgid ""
 "New messages were added to make a distinction between user/visitor and "
 "accepted/rejected. Check main settings to adapt them."
@@ -397,7 +393,7 @@ msgstr ""
 "De nouveaux messages ont été ajoutés pour distinguer utilisateur/visiteur et "
 "accepté/rejeté. Vérifiez-les dans les paramètres généraux."
 
-#: data/scripts/upgrade.php:156
+#: data/scripts/upgrade.php:161
 msgid ""
 "The module manages now http requests \"Content Range\" that allow to read "
 "files faster."
@@ -405,7 +401,7 @@ msgstr ""
 "Le module gère désormais les requêtes http de type « Content Range » qui "
 "permettent de lire les fichiers plus rapidement."
 
-#: data/scripts/upgrade.php:178
+#: data/scripts/upgrade.php:183
 msgid ""
 "A new access mode allows to limit access to medias to users with a specific "
 "email via regex."
@@ -413,7 +409,7 @@ msgstr ""
 "Un nouveau mode d’accès permet de limiter l’accès aux utilisateurs avec une "
 "adresse mail spécifique, via regex."
 
-#: data/scripts/upgrade.php:253
+#: data/scripts/upgrade.php:258
 msgid ""
 "The settings \"heading\" was removed from block Access request. New blocks "
 "\"Heading\" or \"Html\" were prepended to all blocks that had a filled "
@@ -423,7 +419,7 @@ msgstr ""
 "nouveau bloc « Titre » (Heading) ou « Html » a été ajouté avec le précédent "
 "contenu. Vous pouvez vérifier les pages pour les styles : {json}"
 
-#: data/scripts/upgrade.php:263
+#: data/scripts/upgrade.php:268
 msgid ""
 "The setting \"template\" was moved to the new block layout settings "
 "available since Omeka S v4.1. You may check pages for styles: {json}"
@@ -431,7 +427,7 @@ msgstr ""
 "Le paramètre « template » a été déplacé dans les nouveaux paramètres de bloc "
 "depuis Omeka S v4.1. Vous pouvez vérifier les pages pour les styles : {json}"
 
-#: data/scripts/upgrade.php:270
+#: data/scripts/upgrade.php:275
 msgid ""
 "The template files for the block Access request should be moved from \"view/"
 "common/block-layout\" to \"view/common/block-template\" in your themes. You "
@@ -441,13 +437,13 @@ msgstr ""
 "common/block-layout » vers « view/common/block-template » dans vos thèmes. "
 "Vous pouvez vérifier les pages : {json}"
 
-#: data/scripts/upgrade.php:282
+#: data/scripts/upgrade.php:287
 msgid "It is now possible to define accesses by sso idps and item sets."
 msgstr ""
 "Il est désormais possible de définir des accès par idp sso et par "
 "collections."
 
-#: data/scripts/upgrade.php:287
+#: data/scripts/upgrade.php:292
 msgid ""
 "It is now possible to define excluded item sets for accesses by ip and sso "
 "idp."
@@ -455,7 +451,15 @@ msgstr ""
 "Il est désormais possible de définir des collections exclues pour les accès "
 "par ip et par idp sso."
 
-#: data/scripts/upgrade.php:295
+#: data/scripts/upgrade.php:299
+msgid ""
+"When no time is set to an date of end of embargo, the check is now done "
+"against 23:59:59 and no more 00:00:00."
+msgstr ""
+"Quand aucune date n’est définie pour la fin d’un embargo, la vérification "
+"est faîte sur 23:59:59 et non plus sur 00:00:00."
+
+#: data/scripts/upgrade.php:307
 msgid ""
 "The key \"accessresource\" in the file config/local.config.php at the root "
 "of Omeka can be removed."
@@ -463,7 +467,7 @@ msgstr ""
 "L’index « accessresource » dans le fichier config/local.config.php à la "
 "racine d’Omeka peut être supprimé."
 
-#: Module.php:99
+#: Module.php:107
 msgid ""
 "An error occurred during migration of module \"{module}\". Check the config "
 "and uninstall it manually."
@@ -471,7 +475,15 @@ msgstr ""
 "Une erreur est survenue pendant la migration du module « {module} ». "
 "Vérifier la config et désinstaller le manuellement."
 
-#: Module.php:125
+#: Module.php:147
+msgid ""
+"This module cannot install its tables, because they exist already. Try to "
+"remove them first."
+msgstr ""
+"Ce module ne peut pas installer ses tables car elles existent déjà. Essayez "
+"de les supprimer manuellement."
+
+#: Module.php:170
 msgid ""
 "It is recommenced to run the job in config form to initialize all access "
 "statuses."
@@ -479,7 +491,7 @@ msgstr ""
 "Il est recommandé de lancer la tâche dans la configuration pour initialiser "
 "tous les statuts d’accès."
 
-#: Module.php:597
+#: Module.php:644
 msgid ""
 "Cleaned params used for Access:\n"
 "{json}"
@@ -487,63 +499,69 @@ msgstr ""
 "Paramètres utilisés pour le module Access :\n"
 "{json}"
 
-#: Module.php:1010 src/Controller/Admin/RequestController.php:182
+#: Module.php:991 Module.php:1400 src/Form/SettingsFieldset.php:11
+#: src/Form/SettingsFieldset.php:14 src/Form/Admin/BatchEditFieldset.php:34
+#: config/module.config.php:280
+msgid "Access"
+msgstr "Accès"
+
+#: Module.php:1057 src/Controller/Admin/RequestController.php:182
 msgid "You should set either a user or an email or check box for token."
 msgstr "Vous devez définir un utilisateur, un courriel ou un jeton."
 
-#: Module.php:1033 src/Controller/Admin/RequestController.php:208
+#: Module.php:1080 src/Controller/Admin/RequestController.php:208
 msgid "Access request successfully created."
 msgstr "Demande d’accès créée avec succès."
 
-#: Module.php:1108 src/Form/Admin/BatchEditFieldset.php:48
+#: Module.php:1155 src/Form/Admin/BatchEditFieldset.php:48
 msgid "Free"
 msgstr "Libre"
 
-#: Module.php:1109 src/Form/Admin/BatchEditFieldset.php:49
+#: Module.php:1156 src/Form/Admin/BatchEditFieldset.php:49
 msgid "Reserved"
 msgstr "Réservé"
 
-#: Module.php:1110 src/Form/Admin/BatchEditFieldset.php:50
+#: Module.php:1157 src/Form/Admin/BatchEditFieldset.php:50
 msgid "Protected"
 msgstr "Protégé"
 
-#: Module.php:1125 src/ColumnType/AccessLevel.php:13
+#: Module.php:1172 src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr "Niveau d’accès"
 
-#: Module.php:1139 src/Form/Admin/BatchEditFieldset.php:87
+#: Module.php:1186 src/Form/Admin/BatchEditFieldset.php:87
 msgid "Embargo start"
 msgstr "Début de l’embargo"
 
-#: Module.php:1156 Module.php:1164 src/Form/Admin/BatchEditFieldset.php:132
+#: Module.php:1203 Module.php:1211 src/Form/Admin/BatchEditFieldset.php:132
 msgid "Embargo end"
 msgstr "Fin de l’embargo"
 
-#: Module.php:1174
+#: Module.php:1221
 #, php-format
 msgid "Access level (managed via property %s)"
 msgstr "Niveau d’accès (géré par la propriété %s)"
 
-#: Module.php:1177
+#: Module.php:1224
 #, php-format
 msgid "Embargo start (managed via property %s)"
 msgstr "Début de l’embargo (géré par la propriété %s)"
 
-#: Module.php:1180
+#: Module.php:1227
 #, php-format
 msgid "Embargo end (managed via property %s)"
 msgstr "Fin de l’embargo (géré par la propriété %s)"
 
-#: Module.php:1191 src/Form/Admin/BatchEditFieldset.php:186
+#: Module.php:1238 src/Form/Admin/BatchEditFieldset.php:186
 msgid "Apply access level and embargo to items and medias"
 msgstr ""
 "Appliquer des niveaux d’accès et des embargos aux contenus et aux médias"
 
-#: Module.php:1192 src/Form/Admin/BatchEditFieldset.php:187
+#: Module.php:1239 src/Form/Admin/BatchEditFieldset.php:187
 msgid "Apply access level and embargo to medias"
 msgstr "Appliquer un niveau d’accès et un embargo aux médias"
 
-#: Module.php:1474
+#: Module.php:1521
 msgid ""
 "To control access to files, you must add a rule in file .htaccess at the "
 "root of Omeka. See {link}readme{link_end}."
@@ -551,7 +569,7 @@ msgstr ""
 "Pour contrôler l’accès aux fichiers, vous devez ajouter une règle dans le "
 "fichier .htaccess à la racine d’Omeka. Voir le {link}lisez-moi{link_end}."
 
-#: Module.php:1536
+#: Module.php:1583
 msgid ""
 "A job was launched in background to update access statuses according to "
 "parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end})."
@@ -560,11 +578,11 @@ msgstr ""
 "d’accès selon les paramètres : ({link_job}tâche #{job_id}{link_end}, "
 "{link_log}journaux{link_end})."
 
-#: Module.php:1580
+#: Module.php:1627
 msgid "The ip \"{ip}\" is empty or invalid."
 msgstr "L’ip « {ip} » est vide ou incorrecte."
 
-#: Module.php:1590
+#: Module.php:1637
 msgid ""
 "The item sets list \"{input}\" for ip {ip} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
@@ -572,7 +590,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » est incorrecte : ce "
 "doit être des numéros, éventuellement préfixés de « - »."
 
-#: Module.php:1601
+#: Module.php:1648
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains duplicate item sets "
 "({list})."
@@ -580,7 +598,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:1613
+#: Module.php:1660
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains unknown item sets "
 "({list})."
@@ -588,19 +606,17 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:1697
-#, fuzzy
-#| msgid "No idp are defined. Check the config of module Single Sign-On first."
+#: Module.php:1744
 msgid "No idps are defined. Check the config of module Single Sign-On first."
 msgstr ""
 "Aucune idp n’est définie. Vérifiez la configuration du module Single Sign-On "
 "d’abord."
 
-#: Module.php:1714
+#: Module.php:1761
 msgid "The idp \"{idp}\" is empty or not defined in module Single Sign-On."
 msgstr "L’idp « {idp} » est vide ou non défini par le module Single Sign-On."
 
-#: Module.php:1724
+#: Module.php:1771
 msgid ""
 "The item sets list \"{input}\" for idp {idp} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
@@ -608,7 +624,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’idp « {idp} » est incorrecte : "
 "ce doit être des numéros, éventuellement préfixés de « - »."
 
-#: Module.php:1735
+#: Module.php:1782
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains duplicate item sets "
 "({list})."
@@ -616,7 +632,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’idp « {idp} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:1747
+#: Module.php:1794
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains unknown item sets "
 "({list})."
@@ -1432,13 +1448,6 @@ msgstr ""
 
 #~ msgid "This module has resources that cannot be installed."
 #~ msgstr "Ce module a des ressources qui ne peuvent pas être installées."
-
-#~ msgid ""
-#~ "This module cannot install its tables, because they exist already. Try to "
-#~ "remove them first."
-#~ msgstr ""
-#~ "Ce module ne peut pas installer ses tables car elles existent déjà. "
-#~ "Essayez de les supprimer manuellement."
 
 #, php-format
 #~ msgid "The module removed tables \"%s\" from a previous broken install."
