@@ -5,9 +5,11 @@ namespace Access\Controller\Admin;
 use Access\Controller\AccessTrait;
 use Access\Entity\AccessRequest;
 use Access\Form\Admin\AccessRequestForm;
+use Common\Mvc\Controller\Plugin\JSend;
+use Common\Stdlib\PsrMessage;
 use Doctrine\ORM\EntityManager;
+use Laminas\Http\Response as HttpResponse;
 use Laminas\Mvc\Controller\AbstractActionController;
-use Laminas\View\Model\JsonModel;
 use Laminas\View\Model\ViewModel;
 use Omeka\DataType\Manager as DataTypeManager;
 use Omeka\Form\ConfirmForm;
@@ -99,7 +101,7 @@ class RequestController extends AbstractActionController
         $view = new ViewModel([
             'linkTitle' => $linkTitle,
             'resource' => $accessRequest,
-            'values' => json_encode($values),
+            'values' => json_encode($values, 320),
         ]);
         return $view
             ->setTerminal(true);
@@ -125,7 +127,10 @@ class RequestController extends AbstractActionController
 
         // Here, no id means add.
         if ($id && !$accessRequest) {
-            $this->messenger()->addError(sprintf('Access request record with id #%s does not exist', $id)); // @translate
+            $this->messenger()->addError(new PsrMessage(
+                'Access request record with id #{access_request_id} does not exist', // @translate
+                ['access_request_id' => $id]
+            ));
             return $this->redirect()->toRoute('admin/access-request');
         }
 
@@ -271,7 +276,7 @@ class RequestController extends AbstractActionController
             'partialPath' => 'access/admin/request/show-details',
             'linkTitle' => $linkTitle,
             'accessRequest' => $resource,
-            'values' => json_encode($values),
+            'values' => json_encode($values, 320),
         ]);
         return $view
             ->setTerminal(true)
@@ -300,15 +305,14 @@ class RequestController extends AbstractActionController
         // Rights are already checked in acl for this controller.
 
         if (!$this->getRequest()->isPost()) {
-            $this->getResponse()->setStatusCode(405);
-            return new JsonModel([
-                'status' => 'fail',
-                'data' => [
-                    'access_request' => [
-                        'o:id' => $this->translate('Method should be post.'), // @translate
-                    ],
+            $msg = new PsrMessage(
+                'Method should be post.' // @translate
+            );
+            return $this->jSend(JSend::FAIL, [
+                'access_request' => [
+                    'o:id' => $msg->setTranslator($this->translator()),
                 ],
-            ]);
+            ], null, HttpResponse::STATUS_CODE_405);
         }
 
         $api = $this->api();
@@ -322,25 +326,22 @@ class RequestController extends AbstractActionController
         }
 
         if (!$id || !$accessRequest) {
-            $this->getResponse()->setStatusCode(404);
-            return new JsonModel([
-                'status' => 'fail',
-                'data' => [
-                    'access_request' => [
-                        'o:id' => sprintf($this->translate('The request #%s is invalid or unavailable.'), $id), // @translate
-                    ],
+            $msg = new PsrMessage(
+                'The request #{access_request_id} is invalid or unavailable.', // @translate
+                ['access_request_id' => $id]
+            );
+            return $this->jSend(JSend::FAIL, [
+                'access_request' => [
+                    'o:id' => $msg->setTranslator($this->translator()),
                 ],
-            ]);
+            ], null, HttpResponse::STATUS_CODE_404);
         }
 
         $api->delete('access_requests', $id);
 
-        return new JsonModel([
-            'status' => 'success',
-            'data' => [
-                'access_request' => [
-                    'o:id' => $id,
-                ],
+        return $this->jSend(JSend::SUCCESS, [
+            'access_request' => [
+                'o:id' => $id,
             ],
         ]);
     }
@@ -350,15 +351,14 @@ class RequestController extends AbstractActionController
         // Rights are already checked in acl for this controller.
 
         if (!$this->getRequest()->isPost()) {
-            $this->getResponse()->setStatusCode(405);
-            return new JsonModel([
-                'status' => 'fail',
-                'data' => [
-                    'access_request' => [
-                        'o:id' => $this->translate('Method should be post.'), // @translate
-                    ],
+            $msg = new PsrMessage(
+                'Method should be post.' // @translate
+            );
+            return $this->jSend(JSend::FAIL, [
+                'access_request' => [
+                    'o:id' => $msg->setTranslator($this->translator()),
                 ],
-            ]);
+            ], null, HttpResponse::STATUS_CODE_405);
         }
 
         $api = $this->api();
@@ -371,15 +371,15 @@ class RequestController extends AbstractActionController
         }
 
         if (!$id || !$accessRequest) {
-            $this->getResponse()->setStatusCode(404);
-            return new JsonModel([
-                'status' => 'fail',
-                'data' => [
-                    'access_request' => [
-                        'o:id' => sprintf($this->translate('The request #%s is invalid or unavailable.'), $id), // @translate
-                    ],
+            $msg = new PsrMessage(
+                'The request #{access_request_id} is invalid or unavailable.', // @translate
+                ['access_request_id' => $id]
+            );
+            return $this->jSend(JSend::FAIL, [
+                'access_request' => [
+                    'o:id' => $msg->setTranslator($this->translator()),
                 ],
-            ]);
+            ], null, HttpResponse::STATUS_CODE_404);
         }
 
         $status = $accessRequest->status() === AccessRequest::STATUS_ACCEPTED
@@ -399,13 +399,10 @@ class RequestController extends AbstractActionController
             }
         }
 
-        return new JsonModel([
-            'status' => 'success',
-            'data' => [
-                'access_request' => [
-                    'o:id' => $id,
-                    'o:status' => $status,
-                ],
+        return $this->jSend(JSend::SUCCESS, [
+            'access_request' => [
+                'o:id' => $id,
+                'o:status' => $status,
             ],
         ]);
     }

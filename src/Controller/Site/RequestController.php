@@ -5,8 +5,9 @@ namespace Access\Controller\Site;
 use Access\Controller\AccessTrait;
 use Access\Entity\AccessRequest;
 use Access\Form\Site\AccessRequestForm;
+use Common\Mvc\Controller\Plugin\JSend;
+use Laminas\Http\Response as HttpResponse;
 use Laminas\Mvc\Controller\AbstractActionController;
-use Laminas\View\Model\JsonModel;
 use Laminas\View\Model\ViewModel;
 
 class RequestController extends AbstractActionController
@@ -78,97 +79,87 @@ class RequestController extends AbstractActionController
         $requestUri = $this->params()->fromPost('request_uri');
 
         if (!$this->getRequest()->isPost()) {
-            $msg = $this->translate('Method should be post.'); // @translate
+            $msg = new PsrMessage(
+                'Method should be post.' // @translate
+            );
             if ($requestUri) {
                 $this->messenger()->addError($msg);
                 return $this->redirect()->toUrl($requestUri);
             }
-            $this->getResponse()->setStatusCode(405);
-            return new JsonModel([
-                'status' => 'fail',
-                'data' => [
-                    'access_request' => [
-                        'o:id' => $msg,
-                    ],
+            return $this->jSend(JSend::FAIL, [
+                'access_request' => [
+                    'o:id' => $msg->setTranslator($this->translator()),
                 ],
-            ]);
+            ], null, HttpResponse::STATUS_CODE_405);
         }
 
         $modes = $this->settings()->get('access_modes');
         $individualModes = array_intersect(['user', 'email', 'token'], $modes);
         if (!count($individualModes)) {
-            $msg = $this->translate('Individual access requests are not allowed.'); // @translate
+            $msg = new PsrMessage(
+                'Individual access requests are not allowed.' // @translate
+            );
             if ($requestUri) {
                 $this->messenger()->addError($msg);
                 return $this->redirect()->toUrl($requestUri);
             }
-            $this->getResponse()->setStatusCode(405);
-            return new JsonModel([
-                'status' => 'fail',
-                'data' => [
-                    'access_request' => [
-                        'o:resource' => $msg,
-                    ],
+            return $this->jSend(JSend::FAIL, [
+                'access_request' => [
+                    'o:resource' => $msg->setTranslator($this->translator()),
                 ],
-            ]);
+            ], null, HttpResponse::STATUS_CODE_405);
         }
 
         $api = $this->api();
         $post = $this->params()->fromPost();
         $resources = $post['o:resource'] ?? null;
         if (!$resources) {
-            $msg = $this->translate('No resources were requested.'); // @translate
+            $msg = new PsrMessage(
+                'No resources were requested.' // @translate
+            );
             if ($requestUri) {
                 $this->messenger()->addError($msg);
                 return $this->redirect()->toUrl($requestUri);
             }
-            $this->getResponse()->setStatusCode(405);
-            return new JsonModel([
-                'status' => 'fail',
-                'data' => [
-                    'access_request' => [
-                        'o:resource' => $msg,
-                    ],
+            return $this->jSend(JSend::FAIL, [
+                'access_request' => [
+                    'o:resource' => $msg->setTranslator($this->translator()),
                 ],
-            ]);
+            ], null, HttpResponse::STATUS_CODE_405);
         }
 
         // Here, the request is done by user or email.
         $user = $this->identity();
         $email = $this->params()->fromPost('o:email');
         if (!$user && !$email) {
-            $msg = $this->translate('An email is required.'); // @translate
+            $msg = new PsrMessage(
+                'An email is required.' // @translate
+            );
             if ($requestUri) {
                 $this->messenger()->addError($msg);
                 return $this->redirect()->toUrl($requestUri);
             }
-            $this->getResponse()->setStatusCode(405);
-            return new JsonModel([
-                'status' => 'fail',
-                'data' => [
-                    'access_request' => [
-                        'o:email' => $msg,
-                    ],
+            return $this->jSend(JSend::FAIL, [
+                'access_request' => [
+                    'o:email' => $msg->setTranslator($this->translator()),
                 ],
-            ]);
+            ], null, HttpResponse::STATUS_CODE_405);
         } elseif ($user && $email) {
             $post['email'] = null;
         } elseif (!$user && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             // Early check: normally checked below.
-            $msg = $this->translate('A valid email is required.'); // @translate
+            $msg = new PsrMessage(
+                'A valid email is required.' // @translate
+            );
             if ($requestUri) {
                 $this->messenger()->addError($msg);
                 return $this->redirect()->toUrl($requestUri);
             }
-            $this->getResponse()->setStatusCode(405);
-            return new JsonModel([
-                'status' => 'fail',
-                'data' => [
-                    'access_request' => [
-                        'o:email' => $msg,
-                    ],
+            return $this->jSend(JSend::FAIL, [
+                'access_request' => [
+                    'o:email' => $msg->setTranslator($this->translator()),
                 ],
-            ]);
+            ], null, HttpResponse::STATUS_CODE_405);
         }
 
         // TODO Find a way to load the list of resources in RequestController.
@@ -189,13 +180,9 @@ class RequestController extends AbstractActionController
                 $this->messenger()->addFormErrors($form);
                 return $this->redirect()->toUrl($requestUri);
             }
-            $this->getResponse()->setStatusCode(405);
-            return new JsonModel([
-                'status' => 'fail',
-                'data' => [
-                    'access_request' => $form->getMessages(),
-                ],
-            ]);
+            return $this->jSend(JSend::FAIL, [
+                'access_request' => $form->getMessages(),
+            ], null, HttpResponse::STATUS_CODE_405);
         }
 
         $data = $form->getData();
@@ -224,14 +211,10 @@ class RequestController extends AbstractActionController
                 $this->messenger()->addError($msg);
                 return $this->redirect()->toUrl($requestUri);
             }
-            $this->getResponse()->setStatusCode(500);
-            return new JsonModel([
-                // TODO This is error.
-                'status' => 'fail',
-                'data' => [
-                    'access_request' => $form->getMessages(),
-                ],
-            ]);
+            // TODO This is error (check js).
+            return $this->jSend(JSend::FAIL, [
+                'access_request' => $form->getMessages(),
+            ], null, HttpResponse::STATUS_CODE_405);
         }
         $accessRequest = $response->getContent();
 
@@ -240,32 +223,30 @@ class RequestController extends AbstractActionController
 
         if ($result) {
             if ($requestUri) {
-                $msg = $this->translate('The request was submitted successfully.'); // @translate
+                $msg = new PsrMessage(
+                    'The request was submitted successfully.' // @translate
+                );
                 $this->messenger()->addSuccess($msg);
                 return $this->redirect()->toUrl($requestUri);
             }
-            return new JsonModel([
-                'status' => 'success',
-                'data' => [
-                    'access_request' => [
-                        'o:id' => $accessRequest->id(),
-                    ],
+            return $this->jSend(JSend::SUCCESS, [
+                'access_request' => [
+                    'o:id' => $accessRequest->id(),
                 ],
             ]);
         } else {
-            $msg = $this->translate('The request was sent, but an issue occurred when sending the confirmation email.'); // @translate
+            $msg = new PsrMessage(
+                'The request was sent, but an issue occurred when sending the confirmation email.' // @translate
+            );
             if ($requestUri) {
                 $this->messenger()->addWarning($msg);
                 return $this->redirect()->toUrl($requestUri);
             }
-            return new JsonModel([
-                'status' => 'success',
-                'data' => [
-                    'access_request' => [
-                        'o:id' => $accessRequest->id(),
-                    ],
+            return $this->jSend(JSend::SUCCESS, [
+                'access_request' => [
+                    'o:id' => $accessRequest->id(),
                 ],
-                'message' => $msg,
+                $msg->setTranslator($this->translator()),
             ]);
         }
 
