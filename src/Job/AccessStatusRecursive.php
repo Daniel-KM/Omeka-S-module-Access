@@ -420,7 +420,7 @@ class AccessStatusRecursive extends AbstractJob
 
         // To check rights via sql, the item ids are passed to the query.
         $countItems = $this->api
-            ->search('items', ['item_set_id' => $bind['resource_id']], ['initialize' => false, 'finalize' => false])->getTotalResults();
+            ->search('items', ['item_set_id' => $bind['resource_id'], 'limit' => 0], ['initialize' => false, 'finalize' => false])->getTotalResults();
         if (!$countItems) {
             return;
         }
@@ -429,7 +429,7 @@ class AccessStatusRecursive extends AbstractJob
         // media by a list of items.
         /*
         $countMedias = $api
-            ->search('media', ['item_set_id' => $bind['resource_id']], ['initialize' => false, 'finalize' => false])->getTotalResults();
+            ->search('media', ['item_set_id' => $bind['resource_id'], 'limit' => 0], ['initialize' => false, 'finalize' => false])->getTotalResults();
         if ($countMedias) {
            return;
         }
