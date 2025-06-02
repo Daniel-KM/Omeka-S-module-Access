@@ -172,7 +172,11 @@ trait AccessTrait
             /* // TODO Use an event to manage direct access (store the session before processing).
              $resourceId = (int) reset($post['o:resource']);
             /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource * /
-            $resource = $this->api()->searchOne('resources', ['id' => $resourceId])->getContent();
+            try {
+                $resource = $this->api()->read('resources', ['id' => $resourceId])->getContent();
+            } catch (\Exception $e) {
+                $resource = null;
+            }
             if ($resource) {
                 $accessRequest = $post['access_request'];
                 $tokenOrEmail = $accessRequest->token() ?: $accessRequest->email();

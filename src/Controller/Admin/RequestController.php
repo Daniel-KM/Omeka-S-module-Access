@@ -117,10 +117,13 @@ class RequestController extends AbstractActionController
         $id = $this->params('id');
 
         /** @var \Access\Api\Representation\AccessRequestRepresentation $accessRequest */
-        $accessRequest = $id
-            ? $this->api()->searchOne('access_requests', ['id' => $id])->getContent()
-            : null;
+        try {
+            $accessRequest = $id ? $this->api()->read('access_requests', ['id' => $id])->getContent() : null;
+        } catch (\Exception $e) {
+            $accessRequest = null;
+        }
 
+        // Here, no id means add.
         if ($id && !$accessRequest) {
             $this->messenger()->addError(sprintf('Access request record with id #%s does not exist', $id)); // @translate
             return $this->redirect()->toRoute('admin/access-request');
@@ -295,40 +298,48 @@ class RequestController extends AbstractActionController
     public function removeAction()
     {
         // Rights are already checked in acl for this controller.
-        if ($this->getRequest()->isPost()) {
-            $api = $this->api();
-            $id = $this->params('id');
-            $accessRequest = $api->searchOne('access_requests', ['id' => $id])->getContent();
-            if ($id && !$accessRequest) {
-                $this->getResponse()->setStatusCode(404);
-                return new JsonModel([
-                    'status' => 'fail',
-                    'data' => [
-                        'access_request' => [
-                            'o:id' => sprintf($this->translate('The request #%s is invalid or unavailable.'), $id), // @translate
-                        ],
-                    ],
-                ]);
-            }
 
-            $api->delete('access_requests', $id);
-
+        if (!$this->getRequest()->isPost()) {
+            $this->getResponse()->setStatusCode(405);
             return new JsonModel([
-                'status' => 'success',
+                'status' => 'fail',
                 'data' => [
                     'access_request' => [
-                        'o:id' => $id,
+                        'o:id' => $this->translate('Method should be post.'), // @translate
                     ],
                 ],
             ]);
         }
 
-        $this->getResponse()->setStatusCode(405);
+        $api = $this->api();
+        $id = $this->params('id');
+
+        /** @var \Access\Api\Representation\AccessRequestRepresentation $accessRequest */
+        try {
+            $accessRequest = $id ? $this->api()->read('access_requests', ['id' => $id])->getContent() : null;
+        } catch (\Exception $e) {
+            $accessRequest = null;
+        }
+
+        if (!$id || !$accessRequest) {
+            $this->getResponse()->setStatusCode(404);
+            return new JsonModel([
+                'status' => 'fail',
+                'data' => [
+                    'access_request' => [
+                        'o:id' => sprintf($this->translate('The request #%s is invalid or unavailable.'), $id), // @translate
+                    ],
+                ],
+            ]);
+        }
+
+        $api->delete('access_requests', $id);
+
         return new JsonModel([
-            'status' => 'fail',
+            'status' => 'success',
             'data' => [
                 'access_request' => [
-                    'o:id' => $this->translate('Method should be post.'), // @translate
+                    'o:id' => $id,
                 ],
             ],
         ]);
@@ -337,56 +348,63 @@ class RequestController extends AbstractActionController
     public function toggleAction()
     {
         // Rights are already checked in acl for this controller.
-        if ($this->getRequest()->isPost()) {
-            $api = $this->api();
-            $id = $this->params('id');
-            $accessRequest = $api->searchOne('access_requests', ['id' => $id])->getContent();
-            if ($id && !$accessRequest) {
-                $this->getResponse()->setStatusCode(404);
-                return new JsonModel([
-                    'status' => 'fail',
-                    'data' => [
-                        'access_request' => [
-                            'o:id' => sprintf($this->translate('The request #%s is invalid or unavailable.'), $id), // @translate
-                        ],
-                    ],
-                ]);
-            }
 
-            $status = $accessRequest->status() === AccessRequest::STATUS_ACCEPTED
-                ? AccessRequest::STATUS_REJECTED
-                : AccessRequest::STATUS_ACCEPTED;
-
-            $accessRequest = $api->update('access_requests', $id, ['o:status' => $status])->getContent();
-
-            if ($accessRequest->user() || $accessRequest->email()) {
-                $post['request_from'] = 'admin';
-                $result = $this->sendRequestEmailUpdate($accessRequest, $post);
-                if (!$result) {
-                    $message = new Message(
-                        $this->translate('The request was sent, but an issue occurred when sending the confirmation email.') // @translate
-                    );
-                    $this->messenger()->addWarning($message);
-                }
-            }
-
+        if (!$this->getRequest()->isPost()) {
+            $this->getResponse()->setStatusCode(405);
             return new JsonModel([
-                'status' => 'success',
+                'status' => 'fail',
                 'data' => [
                     'access_request' => [
-                        'o:id' => $id,
-                        'o:status' => $status,
+                        'o:id' => $this->translate('Method should be post.'), // @translate
                     ],
                 ],
             ]);
         }
 
-        $this->getResponse()->setStatusCode(405);
+        $api = $this->api();
+        $id = $this->params('id');
+
+        try {
+            $accessRequest = $id ? $api->read('access_requests', ['id' => $id])->getContent() : null;
+        } catch (\Exception $e) {
+            $accessRequest = null;
+        }
+
+        if (!$id || !$accessRequest) {
+            $this->getResponse()->setStatusCode(404);
+            return new JsonModel([
+                'status' => 'fail',
+                'data' => [
+                    'access_request' => [
+                        'o:id' => sprintf($this->translate('The request #%s is invalid or unavailable.'), $id), // @translate
+                    ],
+                ],
+            ]);
+        }
+
+        $status = $accessRequest->status() === AccessRequest::STATUS_ACCEPTED
+            ? AccessRequest::STATUS_REJECTED
+            : AccessRequest::STATUS_ACCEPTED;
+
+        $accessRequest = $api->update('access_requests', $id, ['o:status' => $status])->getContent();
+
+        if ($accessRequest->user() || $accessRequest->email()) {
+            $post['request_from'] = 'admin';
+            $result = $this->sendRequestEmailUpdate($accessRequest, $post);
+            if (!$result) {
+                $message = new Message(
+                    $this->translate('The request was sent, but an issue occurred when sending the confirmation email.') // @translate
+                );
+                $this->messenger()->addWarning($message);
+            }
+        }
+
         return new JsonModel([
-            'status' => 'fail',
+            'status' => 'success',
             'data' => [
                 'access_request' => [
-                    'o:id' => $this->translate('Method should be post.'), // @translate
+                    'o:id' => $id,
+                    'o:status' => $status,
                 ],
             ],
         ]);
