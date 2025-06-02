@@ -310,7 +310,8 @@ return [
 
             'access_property' => false,
 
-            'access_property_level' => 'curation:access',
+            // The property level may be dcterms:accessRights, curation:access or anything else.
+            'access_property_level' => 'dcterms:accessRights',
             'access_property_levels' => [
                 // \Access\Entity\AccessStatus is not available during install/update, so use strings as key.
                 'free' => 'free',
