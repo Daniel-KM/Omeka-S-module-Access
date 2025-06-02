@@ -56,8 +56,8 @@ class AccessRequestForm extends Form
     public function init(): void
     {
         $this
-            ->setAttribute('id', 'form-access-request')
-            ->setName('form-access-request');
+            ->setAttribute('id', 'access-request-form')
+            ->setName('access-request-form');
 
         if (!$this->user) {
             $this

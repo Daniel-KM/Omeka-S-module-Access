@@ -58,7 +58,7 @@ class AccessRequestForm extends Form
         ];
 
         $this
-            ->setAttribute('id', 'form-access-request');
+            ->setAttribute('id', 'access-request-form');
 
         if ($this->resourceId) {
             $this
