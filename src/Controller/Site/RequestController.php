@@ -6,6 +6,7 @@ use Access\Controller\AccessTrait;
 use Access\Entity\AccessRequest;
 use Access\Form\Site\AccessRequestForm;
 use Common\Mvc\Controller\Plugin\JSend;
+use Common\Stdlib\PsrMessage;
 use Laminas\Http\Response as HttpResponse;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
@@ -206,7 +207,9 @@ class RequestController extends AbstractActionController
             'o-access:fields' => $fields,
         ]);
         if (!$response) {
-            $msg = $this->translate('An error occurred when saving message.'); // @translate
+            $msg = new PsrMessage(
+                'An error occurred when saving message.' // @translate
+            );
             if ($requestUri) {
                 $this->messenger()->addError($msg);
                 return $this->redirect()->toUrl($requestUri);

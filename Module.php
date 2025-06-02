@@ -2,7 +2,7 @@
 
 namespace Access;
 
-if (!class_exists(\Common\TraitModule::class)) {
+if (!class_exists('Common\TraitModule', false)) {
     require_once dirname(__DIR__) . '/Common/TraitModule.php';
 }
 
@@ -555,7 +555,7 @@ class Module extends AbstractModule
 
     /**
      * Clean params for batch update to avoid to do it for each resource.
-     * Anyway, the individual proces is skipped for process without property.
+     * Anyway, the individual procces is skipped for process without property.
      */
     public function handleBatchUpdatePre(Event $event): void
     {
@@ -1587,9 +1587,9 @@ class Module extends AbstractModule
                 ),
                 'job_id' => $job->getId(),
                 'link_end' => '</a>',
-                'link_log' => sprintf('<a href="%1$s">', $this->isModuleActive('Log')
-                    ? $urlHelper('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])
-                    : $urlHelper('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
+                'link_log' => class_exists('Log\Module', false)
+                    ? sprintf('<a href="%1$s">', $urlHelper('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]]))
+                    : sprintf('<a href="%1$s" target="_blank">', $urlHelper('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()])),
             ]
         );
         $message->setEscapeHtml(false);

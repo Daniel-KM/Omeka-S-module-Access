@@ -68,17 +68,17 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests show');
     <?php if ($fields = $accessRequest->fields()): ?>
     <div class="property">
         <dt><?= $translate('Fields') ?></dt>
-        <dd class="value"><?= json_encode($fields, 448) ?></dd>
+        <dd class="value"><?= $escape(json_encode($fields, 448)) ?></dd>
     </div>
     <?php endif; ?>
     <div class="property">
         <dt><?= $translate('Created') ?></dt>
-        <dd class="value"><?=  $i18n->dateFormat($accessRequest->created()) ?></dd>
+        <dd class="value"><?= $i18n->dateFormat($accessRequest->created()) ?></dd>
     </div>
     <?php if ($modified = $accessRequest->modified()): ?>
     <div class="property">
         <dt><?= $translate('Modified') ?></dt>
-        <dd class="value"><?=  $i18n->dateFormat($modified) ?></dd>
+        <dd class="value"><?= $i18n->dateFormat($modified) ?></dd>
     </div>
     <?php endif; ?>
 </dl>

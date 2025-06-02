@@ -67,19 +67,19 @@ $accessRequest = $resource;
     <?php if ($fields = $accessRequest->fields()): ?>
     <div class="meta-group">
         <h4><?= $escape($translate('Fields')) ?></h4>
-        <div class="value"><?= json_encode($fields, 448) ?></div>
+        <div class="value"><?= $escape(json_encode($fields, 448)) ?></div>
     </div>
     <?php endif; ?>
 
     <div class="meta-group">
         <h4><?= $escape($translate('Created')) ?></h4>
-        <div class="value"><?=  $i18n->dateFormat($accessRequest->created()) ?></div>
+        <div class="value"><?= $i18n->dateFormat($accessRequest->created()) ?></div>
     </div>
 
     <?php if ($modified = $accessRequest->modified()): ?>
     <div class="meta-group">
         <h4><?= $escape($translate('Modified')) ?></h4>
-        <div class="value"><?=  $i18n->dateFormat($modified) ?></div>
+        <div class="value"><?= $i18n->dateFormat($modified) ?></div>
     </div>
     <?php endif; ?>
 

@@ -112,7 +112,7 @@ class AccessRequestForm extends Form
                 $fieldType = $data['type'] ?? Element\Select::class;
                 $fieldValue = isset($data['value']) ? (is_array($data['value']) ? $data['value'] : [$data['value']]) : [];
                 if ($fieldType === 'hidden' || $fieldType === Element\Hidden::class) {
-                    $fieldValue = json_encode($fieldValue);
+                    $fieldValue = json_encode($fieldValue, 320);
                 }
                 $this
                     ->add([

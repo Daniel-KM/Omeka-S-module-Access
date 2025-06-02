@@ -13,7 +13,6 @@ use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 use Omeka\DataType\Manager as DataTypeManager;
 use Omeka\Form\ConfirmForm;
-use Omeka\Stdlib\Message;
 
 class RequestController extends AbstractActionController
 {
@@ -186,7 +185,7 @@ class RequestController extends AbstractActionController
                 }
                 $data['o-access:end'] = $date;
                 if (!$data['o:user'] && !$data['o:email'] && !$data['o-access:token']) {
-                    $message = new Message(
+                    $message = new PsrMessage(
                         'You should set either a user or an email or check box for token.' // @translate
                     );
                     $this->messenger()->addError($message);
@@ -212,7 +211,7 @@ class RequestController extends AbstractActionController
                     if (!$id) {
                         $response = $this->api($form)->create('access_requests', $data);
                         if ($response) {
-                            $message = new Message(
+                            $message = new PsrMessage(
                                 'Access request successfully created.', // @translate
                             );
                             $this->messenger()->addSuccess($message);
@@ -221,8 +220,8 @@ class RequestController extends AbstractActionController
                                 $post['request_from'] = 'admin';
                                 $result = $this->sendRequestEmailCreate($accessRequest, $post);
                                 if (!$result) {
-                                    $message = new Message(
-                                        $this->translate('The request was sent, but an issue occurred when sending the confirmation email.') // @translate
+                                    $message = new PsrMessage(
+                                        'The request was sent, but an issue occurred when sending the confirmation email.' // @translate
                                     );
                                     $this->messenger()->addWarning($message);
                                 }
@@ -232,7 +231,7 @@ class RequestController extends AbstractActionController
                     } else {
                         $response = $this->api($form)->update('access_requests', $id, $data);
                         if ($response) {
-                            $message = new Message(
+                            $message = new PsrMessage(
                                 'Access request successfully updated.' // @translate
                             );
                             $this->messenger()->addSuccess($message);
@@ -241,8 +240,8 @@ class RequestController extends AbstractActionController
                                 $post['request_from'] = 'admin';
                                 $result = $this->sendRequestEmailUpdate($accessRequest, $post);
                                 if (!$result) {
-                                    $message = new Message(
-                                        $this->translate('The request was sent, but an issue occurred when sending the confirmation email.') // @translate
+                                    $message = new PsrMessage(
+                                        'The request was sent, but an issue occurred when sending the confirmation email.' // @translate
                                     );
                                     $this->messenger()->addWarning($message);
                                 }
@@ -392,8 +391,8 @@ class RequestController extends AbstractActionController
             $post['request_from'] = 'admin';
             $result = $this->sendRequestEmailUpdate($accessRequest, $post);
             if (!$result) {
-                $message = new Message(
-                    $this->translate('The request was sent, but an issue occurred when sending the confirmation email.') // @translate
+                $message = new PsrMessage(
+                    'The request was sent, but an issue occurred when sending the confirmation email.' // @translate
                 );
                 $this->messenger()->addWarning($message);
             }

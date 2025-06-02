@@ -9,56 +9,65 @@ use Laminas\Mime\Part as MimePart;
 trait AccessTrait
 {
     /**
-     * Send email to admin/user when a request is created.
+     * Send email to admin and user when a request is created.
      */
     protected function sendRequestEmailCreate(AccessRequestRepresentation $accessRequest, array $post): bool
     {
         if (!$this->settings()->get('access_message_send')) {
             return true;
         }
+
         // If no user, it should be already checked.
         if ($user = $accessRequest->user()) {
             $post['o:email'] = $user->email();
             $post['o:name'] = $user->name();
         }
+
         // Simplify process (for placeholders).
         $post['access_request'] = $accessRequest;
         if (!is_array($post['o:resource'])) {
             $post['o:resource'] = empty($post['o:resource']) ? [] : [$post['o:resource']];
         }
+
         $isVisitor = $this->isVisitor($accessRequest, $post);
         $result1 = $this->sendMailToAdmin('created', $post);
         $result2 = $this->sendMailToUser('created', $post, $isVisitor);
+
         return $result1 && $result2;
     }
 
     /**
-     * Send email to admin/user when a request is updated.
+     * Send email to admin and user when a request is updated.
      */
     protected function sendRequestEmailUpdate(AccessRequestRepresentation $accessRequest, array $post): bool
     {
         if (!$this->settings()->get('access_message_send')) {
             return true;
         }
+
         // If no user, it should be already checked.
         if ($user = $accessRequest->user()) {
             $post['o:email'] = $user->email();
             $post['o:name'] = $user->name();
         }
+
         // Simplify process (for placeholders).
         $post['access_request'] = $accessRequest;
         if (!is_array($post['o:resource'])) {
             $post['o:resource'] = empty($post['o:resource']) ? [] : [$post['o:resource']];
         }
+
         $isVisitor = $this->isVisitor($accessRequest, $post);
         $isRejected = $accessRequest->status() === \Access\Entity\AccessRequest::STATUS_REJECTED;
+
         // $this->sendMailToAdmin('updated', $post);
         $result = $this->sendMailToUser('updated', $post, $isVisitor, $isRejected);
+
         return $result;
     }
 
     /**
-     * Send a mail to administrator
+     * Send a mail to administrator.
      *
      * @param string $action "created" or "updated".
      */
@@ -147,7 +156,7 @@ trait AccessTrait
 
         // The session url is the resource url with an argument.
         if (strpos($string, '{session_url}') !== false && !empty($post['o:resource'])) {
-            $siteSlug = $this->defaultSiteSlug();
+            $siteSlug = $helpers->get('defaultSite')('slug');
             $accessRequest = $post['access_request'];
             // TODO Use a hash of the email with some data (created, etc.) for security.
             $tokenOrEmail = $accessRequest->token() ?: $accessRequest->email();
@@ -192,27 +201,5 @@ trait AccessTrait
         }
         $user = $accessRequest->user();
         return $user === null;
-    }
-
-    /**
-     * Get the default site slug.
-     *
-     * @todo Store the source site in the access request.
-     */
-    protected function defaultSiteSlug(): string
-    {
-        $api = $this->api();
-        $mainSite = (int) $this->settings()->get('default_site');
-        if ($mainSite) {
-            return $api->read('sites', ['id' => $mainSite])->getContent()->slug();
-        }
-        // Search first public site first.
-        $slugs = $api->search('sites', ['is_public' => true, 'limit' => 1], ['initialize' => false, 'returnScalar' => 'slug'])->getContent();
-        if ($slugs) {
-            return reset($slugs);
-        }
-        // Else first site.
-        $slugs = $api->search('sites', ['limit' => 1], ['initialize' => false, 'returnScalar' => 'slug'])->getContent();
-        return $slugs ? reset($slugs) : '';
     }
 }

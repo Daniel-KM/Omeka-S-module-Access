@@ -135,6 +135,6 @@ class AccessRequest extends AbstractBlockLayout implements TemplateableBlockLayo
      */
     protected function fixEndOfLine($string)
     {
-        return str_replace(["\r\n", "\n\r", "\r"], ["\n", "\n", "\n"], $string);
+        return strtr($string, ["\r\n" => "\n", "\n\r" => "\n", "\r" => "\n"]);
     }
 }
