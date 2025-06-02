@@ -261,7 +261,7 @@ class AccessStatusRecursive extends AbstractJob
             ->set('access_status.level', ':level')
             ->setParameter('level', $level)
             ->where($expr->in('access_status.id', ':ids'))
-            ->setParameter('ids', $mediaIds, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY)
+            ->setParameter('ids', array_values($mediaIds), \Doctrine\DBAL\Connection::PARAM_INT_ARRAY)
         ;
         $qb->getQuery()->execute();
          */
@@ -275,7 +275,7 @@ class AccessStatusRecursive extends AbstractJob
             return;
         }
 
-        $bind['media_ids'] = $mediaIds;
+        $bind['media_ids'] = array_values($mediaIds);
         $types['media_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
 
         // Use insert into instead of update, because the access statuses may

@@ -444,7 +444,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         $mediaItemSetIds = $this->mediaItemSetIds($media);
         if ($mediaItemSetIds) {
             $orInItemSets = 'OR (ar.recursive = 1 AND r.resource_id IN (:item_set_ids))';
-            $bind['item_set_ids'] = $mediaItemSetIds;
+            $bind['item_set_ids'] = array_values($mediaItemSetIds);
             $types['item_set_ids'] = \Doctrine\DBAL\Connection::PARAM_INT_ARRAY;
         }
 
