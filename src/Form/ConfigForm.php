@@ -72,9 +72,11 @@ class ConfigForm extends Form
                 'attributes' => [
                     'id' => 'access_ip_item_sets',
                     'rows' => 12,
-                    'placeholder' => '12.34.56.78
-124.8.16.32 = 1 2 -5
-65.43.21.0/24 = 1 -7',
+                    'placeholder' => <<<'TXT'
+                        12.34.56.78
+                        124.8.16.32 = 17 89 -1940
+                        65.43.21.0/24 = -2005
+                        TXT,
                 ],
             ])
 
@@ -101,9 +103,11 @@ class ConfigForm extends Form
                 'attributes' => [
                     'id' => 'access_auth_sso_idp_item_sets',
                     'rows' => 12,
-                    'placeholder' => 'idp.example.org
-shibboleth.another-example.org = 1 2 -5
-federation = -4',
+                    'placeholder' => <<<'TXT'
+                        idp.example.org =
+                        shibboleth.another-example.org = 17 89 -1940
+                        federation = -2005
+                        TXT,
                 ],
             ])
 
@@ -181,11 +185,12 @@ federation = -4',
                     'id' => 'access_property_levels',
                     'class' => 'access-property',
                     'rows' => 4,
-                    'placeholder' => 'free = free
-reserved = reserved
-protected = protected
-forbidden = forbidden
-',
+                    'placeholder' => <<<'TXT'
+                        free = free
+                        reserved = reserved
+                        protected = protected
+                        forbidden = forbidden
+                        TXT,
                 ],
             ])
             ->add([

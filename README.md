@@ -29,6 +29,10 @@ Installation
 To allow access to reserved resources for user with role "Guest", the module
 will need to identify users, generally with the module [Guest] or [Guest Role].
 
+To define specific item sets, you can use standard item sets or use the module
+[Dynamic Item Sets] to include items automatically in specific items sets
+according to metadata.
+
 The public part can be managed easily via the module [Blocks Disposition], but
 it is recommended to use resource page blocks if the theme supports them.
 
@@ -245,6 +249,8 @@ can be managed in multiple ways:
     all reserved files (currently unsupported).
   - `auth_sso`: all users authenticated via SAML/Shibboleth (module SingleSignOn)
     have access to all reserved files.
+  - `auth_sso_idp`: users authenticated by specified identity providers have
+    access to a list of reserved media by item sets.
   - `email_regex`: all authenticated users with an email matching a regex
     pattern have access to all reserved files.
 - Individual modes
@@ -269,8 +275,9 @@ There are two ways to indicate which resources are reserved.
 
 - By default, it is a specific setting available as a radio button in the
   advanced tab of the resource form.
-- The second way is to set a value to a specified property, for example `curation:access`.
-  The value can be "free", "reserved", "protected" or "forbidden". The
+- The second way is to set a value to a specified property, for example
+  `dcterms:accessRights` or `curation:access`.
+  The default values are "free", "reserved", "protected" or "forbidden". The
   property and the names can be translated or modified in the config. It is
   recommended to create a custom vocab and to use it via the resource templates
   to avoid errors in the values.
@@ -281,6 +288,50 @@ status is not forbidden and not during an embargo, if any.
 Note that a public item can have a private media and vice-versa. So, most of the
 time, the value should be set in the metadata of the media. The value can be
 specified for the item too to simplify management.
+
+### Item sets
+
+As indicated above, it is possible to define specific rights by item sets when
+using some access mode, mainly ip and sso idp.
+
+To define a specific rights, set the ip or the idp, then "=", then the item set
+ids to which the ip or the idp can access. If there is no item set defined, the
+check will be defined per item. Each item set may be prepended with a "-" to
+forbid access to a specific item set. This option is useful when a global item
+set is defined to identify all reserved resources. When a federation like
+Renater is used, set "federation =" then the item sets.
+
+The order matters: the user is checked in the order of the list, so the
+federation is generally specified at last.
+
+The use of the module [Dynamic Item Sets] may be useful, because it allows to
+define items included in a item sets according to a standard query.
+
+#### Example for the access mode "ip"
+
+```
+12.34.56.78
+124.8.16.32 = 17 89 -1940
+65.43.21.0/24 = -2005
+```
+
+Here, the user identified via the first ip has access to all reserved resources;
+the user identified via the second ip has access to item sets #17 and #89, but
+not to item set #1940. The federation has access to all items, except those of
+item set 2005.
+
+#### Example for the access mode "sso idp"
+
+```
+idp.example.org =
+shibboleth.another-example.org = 17 89 -1940
+federation = -2005
+```
+
+Here, the user identified via idp.example.org has access to all reserved
+resources; the user identifier via the second idp has access to item sets #17
+and #89, but not to item set #1940. The federation has access to all items,
+except those of item set #2005.
 
 ### Embargo
 
@@ -331,10 +382,11 @@ Guest users have a specific board too: `/s/my-site/guest/access-request`.
 TODO
 ----
 
+- [ ] Unit tests with all combinaison of settings (important).
 - [ ] Fix ip check for ipv6.
 - [ ] Use Omeka Store instead of local file system.
 - [ ] Update temporal to avoid to check embargo each time via php.
-- [ ] Reindexation (trigger event?) when embargo is updated automatically.
+- [ ] Reindexation (trigger event?) when embargo is updated automatically. Use the cron task of module EasyAdmin?
 
 
 Warning
@@ -400,6 +452,7 @@ Copyright
 [Guest Private]: https://gitlab.com/Daniel-KM/Omeka-S-module-GuestPrivate
 [Guest]: https://gitlab.com/Daniel-KM/Omeka-S-module-Guest
 [Guest Role]: https://github.com/biblibre/omeka-s-module-GuestRole
+[Dynamic Item Sets]: https://gitlab.com/Daniel-KM/Omeka-S-module-DynamicItemSets
 [Blocks Disposition]: https://gitlab.com/Daniel-KM/Omeka-S-module-BlocksDisposition
 [Derivative Media]: https://gitlab.com/Daniel-KM/Omeka-S-module-DerivativeMedia
 [Group]: https://gitlab.com/Daniel-KM/Omeka-S-module-Group/-/releases
