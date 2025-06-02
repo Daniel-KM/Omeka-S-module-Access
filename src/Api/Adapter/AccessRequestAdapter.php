@@ -265,6 +265,8 @@ class AccessRequestAdapter extends AbstractEntityAdapter
 
         $data = $request->getContent();
 
+        $entityManager = $this->getEntityManager();
+
         // Only admins can update requests and manage specific params of the
         // requests (resources, status and dates).
         $operation = $request->getOperation();
@@ -291,14 +293,14 @@ class AccessRequestAdapter extends AbstractEntityAdapter
                 $existingResourceIds = [];
                 foreach ($data['o:resource'] as $resource) {
                     if (is_numeric($resource)) {
-                        $resource = $this->getAdapter('resources')->findEntity($resource);
+                        $resource = $entityManager->find(\Omeka\Entity\Resource::class, $resource);
                     } elseif (is_array($resource)) {
                         $resourceId = isset($resource['o:id']) ? (int) $resource['o:id'] : null;
-                        $resource = $resourceId ? $this->getAdapter('resources')->findEntity($resourceId) : null;
+                        $resource = $resourceId ? $entityManager->find(\Omeka\Entity\Resource::class, $resourceId) : null;
                     } elseif ($resource instanceof \Omeka\Entity\Resource) {
                         $resource = $resource;
                     } elseif ($resource instanceof \Omeka\Api\Representation\AbstractResourceEntityRepresentation) {
-                        $resource = $this->getAdapter('resources')->findEntity($resource->id());
+                        $resource = $entityManager->find(\Omeka\Entity\Resource::class, $resource->id());
                     } else {
                         $resource = null;
                     }
@@ -324,14 +326,14 @@ class AccessRequestAdapter extends AbstractEntityAdapter
             if ($data['o:user'] === null) {
                 $user = null;
             } elseif (is_numeric($data['o:user'])) {
-                $user = $this->getAdapter('users')->findEntity($data['o:user']);
+                $user = $entityManager->find(\Omeka\Entity\User::class, $data['o:user']);
             } elseif (is_array($data['o:user'])) {
                 $userId = isset($data['o:user']['o:id']) ? (int) $data['o:user']['o:id'] : null;
-                $user = $userId ? $this->getAdapter('users')->findEntity($userId) : null;
+                $user = $userId ? $entityManager->find(\Omeka\Entity\User::class, $userId) : null;
             } elseif ($data['o:user'] instanceof \Omeka\Entity\User) {
                 $user = $data['o:user'];
             } elseif ($data['o:user'] instanceof \Omeka\Api\Representation\UserRepresentation) {
-                $user = $this->getAdapter('users')->findEntity($data['o:user']->id());
+                $user = $entityManager->find(\Omeka\Entity\User::class, $data['o:user']->id());
             } else {
                 $user = null;
             }
