@@ -301,6 +301,13 @@ if (version_compare((string) $oldVersion, '3.4.31', '<')) {
     $messenger->addWarning($message);
 }
 
+if (version_compare((string) $oldVersion, '3.4.32', '<')) {
+    // New default property.
+    if (!$settings->get('access_property') || !$settings->get('access_property_level')) {
+        $settings->set('access_property_level', 'dcterms:accessRights');
+    }
+}
+
 // Check for old module.
 if (!empty($config['accessresource'])) {
     $message = new PsrMessage(
