@@ -3,6 +3,8 @@
 namespace Access\Controller;
 
 use Access\Api\Representation\AccessRequestRepresentation;
+use Laminas\Mime\Message as MimeMessage;
+use Laminas\Mime\Part as MimePart;
 
 trait AccessTrait
 {
@@ -67,31 +69,21 @@ trait AccessTrait
         }
 
         $settings = $this->settings();
-        $moduleConfig = require dirname(__DIR__, 2) . '/config/module.config.php';
+        $moduleSettings = require dirname(__DIR__, 2) . '/config/module.config.php';
+        $moduleSettings = $moduleSettings['access']['settings'];
 
-        $adminEmail = $settings->get('administrator_email');
-
-        // Mail to administrator.
-        // Sender: Don't use user mail: the server may not be able to send it.
-        // See mailer.
-        $mail = [];
-        $mail['from'] = $adminEmail;
-        $mail['fromName'] = null;
-        $mail['to'] = $adminEmail;
-        $mail['toName'] = null;
-        // $mail['toName'] = 'Omeka S Admin';
         if ($action === 'created') {
-            $mail['subject'] = $settings->get('access_message_admin_subject', $this->translate($moduleConfig['access']['settings']['access_message_admin_subject']));
-            $mail['body'] = $settings->get('access_message_admin_request_created', $this->translate($moduleConfig['access']['settings']['access_message_admin_request_created']));
+            $subject = $settings->get('access_message_admin_subject', $this->translate($moduleSettings['access_message_admin_subject']));
+            $body = $settings->get('access_message_admin_request_created', $this->translate($moduleSettings['access_message_admin_request_created']));
         } elseif ($action === 'updated') {
-            $mail['subject'] = $settings->get('access_message_admin_subject', $this->translate($moduleConfig['access']['settings']['access_message_admin_subject']));
-            $mail['body'] = $settings->get('access_message_admin_request_updated', $this->translate($moduleConfig['access']['settings']['access_message_admin_request_updated']));
+            $subject = $settings->get('access_message_admin_subject', $this->translate($moduleSettings['access_message_admin_subject']));
+            $body = $settings->get('access_message_admin_request_updated', $this->translate($moduleSettings['access_message_admin_request_updated']));
         }
 
-        $mail['body'] = $this->replaceText($mail['body'], $post);
+        $subject = $this->replacePlaceholders($subject, $post);
+        $body = $this->replacePlaceholders($body, $post);
 
-        /** @uses \Access\Mvc\Controller\Plugin\MailerHtml */
-        return $this->mailerHtml($mail['to'], $mail['subject'], $mail['body'], $mail['toName']);
+        return $this->sendEmail($subject, $body);
     }
 
     /**
@@ -106,37 +98,28 @@ trait AccessTrait
         }
 
         $settings = $this->settings();
-        $moduleConfig = require dirname(__DIR__, 2) . '/config/module.config.php';
-
-        $adminEmail = $settings->get('administrator_email');
+        $moduleSettings = require dirname(__DIR__, 2) . '/config/module.config.php';
+        $moduleSettings = $moduleSettings['access']['settings'];
 
         // Messages are not the same for users and visitors.
         $userVisitor = $isVisitor ? 'visitor' : 'user';
+        $acceptedRejected = $isRejected ? 'rejected' : 'accepted';
 
-        // Mail to user.
-        // Sender: Don't use user mail: the server may not be able to send it.
-        // See mailer.
-        $mail = [];
-        $mail['from'] = $adminEmail;
-        $mail['fromName'] = null;
-        $mail['to'] = $post['o:email'];
-        $mail['toName'] = $post['o:name'] ?? null;
         if ($action === 'created') {
-            $mail['subject'] = $settings->get("access_message_{$userVisitor}_subject", $this->translate($moduleConfig['access']['settings']["access_message_{$userVisitor}_subject"]));
-            $mail['body'] = $settings->get("access_message_{$userVisitor}_request_created", $this->translate($moduleConfig['access']['settings']["access_message_{$userVisitor}_request_created"]));
+            $subject = $settings->get("access_message_{$userVisitor}_subject", $this->translate($moduleSettings["access_message_{$userVisitor}_subject"]));
+            $body = $settings->get("access_message_{$userVisitor}_request_created", $this->translate($moduleSettings["access_message_{$userVisitor}_request_created"]));
         } elseif ($action === 'updated') {
-            $mail['subject'] = $settings->get("access_message_{$userVisitor}_subject", $this->translate($moduleConfig['access']['settings']["access_message_{$userVisitor}_subject"]));
-            $acceptedRejected = $isRejected ? 'rejected' : 'accepted';
-            $mail['body'] = $settings->get("access_message_{$userVisitor}_request_{$acceptedRejected}", $this->translate($moduleConfig['access']['settings']["access_message_{$userVisitor}_request_{$acceptedRejected}"]));
+            $subject = $settings->get("access_message_{$userVisitor}_subject", $this->translate($moduleSettings["access_message_{$userVisitor}_subject"]));
+            $body = $settings->get("access_message_{$userVisitor}_request_{$acceptedRejected}", $this->translate($moduleSettings["access_message_{$userVisitor}_request_{$acceptedRejected}"]));
         }
 
-        $mail['body'] = $this->replaceText($mail['body'], $post);
+        $subject = $this->replacePlaceholders($subject, $post);
+        $body = $this->replacePlaceholders($body, $post);
 
-        /** @uses \Access\Mvc\Controller\Plugin\MailerHtml */
-        return $this->mailerHtml($mail['to'], $mail['subject'], $mail['body'], $mail['toName']);
+        return $this->sendEmail($subject, $body, [$post['to'] => (string) $post['toName']]);
     }
 
-    protected function replaceText(string $string, array $post): string
+    protected function replacePlaceholders(string $string, array $post): string
     {
         $plugins = $this->getPluginManager();
         $url = $plugins->get('url');
@@ -146,7 +129,7 @@ trait AccessTrait
         try {
             $site = $plugins->get('currentSite')();
         } catch (\Exception $e) {
-            $site = null;
+            $site = $plugins->get('defaultSite')();
         }
 
         $replace = [
@@ -192,7 +175,7 @@ trait AccessTrait
             }
         }
 
-        return str_replace(array_keys($replace), array_values($replace), $string);
+        return strtr($string, $replace);
     }
 
     /**
