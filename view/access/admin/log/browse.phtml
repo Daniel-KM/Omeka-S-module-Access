@@ -15,10 +15,10 @@ $hyperlink= $plugins->get('hyperlink');
 $this->headLink()
     ->appendStylesheet($this->assetUrl('css/access-admin.css', 'Access'));
 
-$this->htmlElement('body')->appendAttribute('class', 'sites browse');
+$this->htmlElement('body')->appendAttribute('class', 'access access-logs browse');
 ?>
 
-<?= $this->pageTitle($translate('Access logs')) ?>
+<?= $this->pageTitle($translate('Logs'), 1, $translate('Access')) ?>
 
 <?php if (count($accessLogs)): ?>
     <div class="browse-controls">

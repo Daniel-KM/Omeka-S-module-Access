@@ -1,7 +1,10 @@
 @media all {
     header nav .access-request::before,
     .access-requests .subhead::before,
-    .access-request .no-resources::before {
+    .access-request .no-resources::before,
+    header nav .access-log::before,
+    .access-logs .subhead::before,
+    .access-log .no-resources::before {
         content:"";
     }
 

@@ -24,10 +24,10 @@ $this->headLink()
 $this->headScript()
     ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
 
-$this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
+$this->htmlElement('body')->appendAttribute('class', 'access access-requests browse');
 ?>
 
-<?= $this->pageTitle($translate('Access requests')) ?>
+<?= $this->pageTitle($translate('Requests'), 1, $translate('Access')) ?>
 
 <div class="browse-controls">
     <?= $this->pagination() ?>

@@ -18,10 +18,10 @@ $this->headLink()
 $this->headScript()
     ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
 
-$this->htmlElement('body')->appendAttribute('class', 'access-requests show');
+$this->htmlElement('body')->appendAttribute('class', 'access access-requests show');
 ?>
 
-<?= $this->pageTitle('#' . $escape($accessRequest->id()), 1, $translate('Access requests')) ?>
+<?= $this->pageTitle('#' . $escape($accessRequest->id()), 1, $translate('Access')) ?>
 
 <div id="page-actions">
     <?php if ($allowIndividualRequests && $accessRequest->userIsAllowed('update')): ?>

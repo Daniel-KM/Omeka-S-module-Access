@@ -17,19 +17,16 @@ $this->headLink()
 $this->headScript()
     ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
 
-$this->htmlElement('body')->appendAttribute('class', 'access-requests edit');
+$this->htmlElement('body')->appendAttribute('class', 'access access-requests edit');
 
 $deleteButton = ($accessRequest && $accessRequest->userIsAllowed('delete'))
     ? '<a href="javascript: void(0)" class="delete button">' . $translate('Delete') . '</a>'
     : null;
 ?>
 
-<?php
-    if ($accessRequest):
-        echo $this->pageTitle($accessRequest->displayTitle(), 1, $translate('Access requests'), $translate('Edit'));
-    else:
-        echo $this->pageTitle($translate('New access request'), 1, $translate('Access requests'), $translate('Add'));
-    endif;
+<?= $accessRequest
+    ? $this->pageTitle($accessRequest->displayTitle(), 1, $translate('Access'), $translate('Edit'))
+    : $this->pageTitle($translate('New access request'), 1, $translate('Access'), $translate('Add'));
 ?>
 
 <div id="page-actions">
