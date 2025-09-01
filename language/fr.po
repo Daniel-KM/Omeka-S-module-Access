@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-03 00:00+0000\n"
+"POT-Creation-Date: 2025-09-01 00:00+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
@@ -49,7 +49,7 @@ msgstr ""
 "est aussi possible de le désinstaller, mais vous perdrez les statuts d’accès "
 "et les demandes."
 
-#: Module.php:505
+#: Module.php:517
 msgid ""
 "When properties are used, three properties should be defined for \"level\", "
 "\"embargo start\" and \"embargo end\"."
@@ -58,98 +58,51 @@ msgstr ""
 "définies pour le « niveau », le « début de l’embargo » et la « fin de "
 "l’embargo »."
 
-#: Module.php:520
+#: Module.php:532
 msgid "Job is not launched: no option was set."
 msgstr "La tâche n’est pas lancée : aucune option n’a été définie."
 
-#: src/Api/Representation/AccessRequestRepresentation.php:191
+#: src/Api/Representation/AccessRequestRepresentation.php:171
 #, php-format
 msgid "Request #%d"
 msgstr "Demande #%d"
 
-#: src/Api/Representation/AccessRequestRepresentation.php:203
+#: src/Api/Representation/AccessRequestRepresentation.php:183
 #, php-format
 msgid "User: %s"
 msgstr "Utilisateur : %s"
 
-#: src/Api/Representation/AccessRequestRepresentation.php:206
+#: src/Api/Representation/AccessRequestRepresentation.php:186
 #, php-format
 msgid "Visitor: %s"
 msgstr "Visiteur : %s"
 
-#: src/Api/Representation/AccessRequestRepresentation.php:210
+#: src/Api/Representation/AccessRequestRepresentation.php:190
 #, php-format
 msgid "Token: %s"
 msgstr "Jeton : %s"
 
-#: src/Api/Representation/AccessRequestRepresentation.php:212
+#: src/Api/Representation/AccessRequestRepresentation.php:192
 msgid "Undefined"
 msgstr "Indéfini"
 
-#: src/Api/Representation/AccessRequestRepresentation.php:250
-#: src/Api/Representation/AccessStatusRepresentation.php:156
+#: src/Api/Representation/AccessRequestRepresentation.php:230
+#: src/Api/Representation/AccessStatusRepresentation.php:153
 #, php-format
 msgid "from %s"
 msgstr "de %s"
 
-#: src/Api/Representation/AccessRequestRepresentation.php:254
-#: src/Api/Representation/AccessStatusRepresentation.php:160
+#: src/Api/Representation/AccessRequestRepresentation.php:234
+#: src/Api/Representation/AccessStatusRepresentation.php:157
 #, php-format
 msgid "until %s"
 msgstr "jusqu’à %s"
 
-#: src/Api/Representation/AccessRequestRepresentation.php:260
-#: src/Api/Representation/AccessStatusRepresentation.php:166
+#: src/Api/Representation/AccessRequestRepresentation.php:240
+#: src/Api/Representation/AccessStatusRepresentation.php:163
 #, php-format
 msgid "from %1$s until %2$s"
 msgstr "de %1$s à %2$s"
-
-#: src/Controller/Admin/RequestController.php:217
-#: src/Controller/Admin/RequestController.php:237
-#: src/Controller/Admin/RequestController.php:367
-#: src/Controller/Site/RequestController.php:256
-msgid ""
-"The request was sent, but an issue occurred when sending the confirmation "
-"email."
-msgstr ""
-"La demande a été envoyée, mais un problème est survenu lors de l’envoi du "
-"mail de confirmation."
-
-#: src/Controller/Admin/RequestController.php:308
-#: src/Controller/Admin/RequestController.php:350
-#, php-format
-msgid "The request #%s is invalid or unavailable."
-msgstr "La demande #%s est incorrecte ou indisponible."
-
-#: src/Controller/Admin/RequestController.php:331
-#: src/Controller/Admin/RequestController.php:389
-#: src/Controller/Site/RequestController.php:81
-msgid "Method should be post."
-msgstr "La méthode doit être un Post."
-
-#: src/Controller/Site/RequestController.php:100
-msgid "Individual access requests are not allowed."
-msgstr "Les demandes d’accès individuelles ne sont pas autorisées."
-
-#: src/Controller/Site/RequestController.php:120
-msgid "No resources were requested."
-msgstr "Aucune ressource n’a été demandée."
-
-#: src/Controller/Site/RequestController.php:140
-msgid "An email is required."
-msgstr "Un courriel est requis."
-
-#: src/Controller/Site/RequestController.php:158
-msgid "A valid email is required."
-msgstr "Un courriel valide est requis."
-
-#: src/Controller/Site/RequestController.php:222
-msgid "An error occurred when saving message."
-msgstr "Il y a eu une erreur lors de l’enregistrement du message."
-
-#: src/Controller/Site/RequestController.php:243
-msgid "The request was submitted successfully."
-msgstr "La demande a été envoyée avec succès."
 
 #: src/Service/ViewHelper/IsAccessRequestableFactory.php:16
 msgid "Full access is not supported currently"
@@ -164,8 +117,16 @@ msgstr ""
 "ressource. L’id de la ressource doit être passée en tant qu’argument url."
 
 #: view/access/admin/log/browse.phtml:21
-msgid "Access logs"
-msgstr "Journaux d’accès"
+msgid "Logs"
+msgstr "Journaux"
+
+#: view/access/admin/log/browse.phtml:21
+#: view/access/admin/request/browse.phtml:30
+#: view/access/admin/request/edit.phtml:28
+#: view/access/admin/request/edit.phtml:29
+#: view/access/admin/request/show.phtml:24
+msgid "Access"
+msgstr "Accès"
 
 #: view/access/admin/log/browse.phtml:33
 msgid "Action"
@@ -189,12 +150,9 @@ msgid "Refresh page"
 msgstr "Rafraîchir la page"
 
 #: view/access/admin/request/browse.phtml:30
-#: view/access/admin/request/edit.phtml:29
-#: view/access/admin/request/edit.phtml:31
-#: view/access/admin/request/show.phtml:24
-#: view/access/site/request/browse.phtml:38
-msgid "Access requests"
-msgstr "Demandes d’accès"
+#: view/common/access-request-list.phtml:29
+msgid "Requests"
+msgstr "Demandes"
 
 #: view/access/admin/request/browse.phtml:39
 msgid "Add new request"
@@ -261,7 +219,7 @@ msgstr ""
 msgid "No access requests."
 msgstr "Aucune demande d’accès."
 
-#: view/access/admin/request/edit.phtml:31
+#: view/access/admin/request/edit.phtml:29
 msgid "New access request"
 msgstr "Nouvelle demande d’accès"
 
@@ -278,6 +236,10 @@ msgstr "Champs"
 #: view/access/admin/request/show.phtml:28
 msgid "Edit access request"
 msgstr "Modifier la demande d’accès"
+
+#: view/access/site/request/browse.phtml:38
+msgid "Access requests"
+msgstr "Demandes d’accès"
 
 #: view/access/site/request/browse.phtml:75
 msgid "No access requests yet."
@@ -336,10 +298,6 @@ msgid ""
 msgstr ""
 "L’accès à cette collection est libre, la demande doit donc inclure les "
 "contenus et les médias."
-
-#: view/common/access-request-list.phtml:29
-msgid "Requests"
-msgstr "Demandes"
 
 #: view/common/access-request-list.phtml:34
 msgid "There are no requests for this resource."
@@ -459,7 +417,7 @@ msgstr ""
 "Quand aucune date n’est définie pour la fin d’un embargo, la vérification "
 "est faîte sur 23:59:59 et non plus sur 00:00:00."
 
-#: data/scripts/upgrade.php:307
+#: data/scripts/upgrade.php:314
 msgid ""
 "The key \"accessresource\" in the file config/local.config.php at the root "
 "of Omeka can be removed."
@@ -491,7 +449,7 @@ msgstr ""
 "Il est recommandé de lancer la tâche dans la configuration pour initialiser "
 "tous les statuts d’accès."
 
-#: Module.php:644
+#: Module.php:656
 msgid ""
 "Cleaned params used for Access:\n"
 "{json}"
@@ -499,69 +457,71 @@ msgstr ""
 "Paramètres utilisés pour le module Access :\n"
 "{json}"
 
-#: Module.php:991 Module.php:1400 src/Form/SettingsFieldset.php:11
-#: src/Form/SettingsFieldset.php:14 src/Form/Admin/BatchEditFieldset.php:34
-#: config/module.config.php:280
-msgid "Access"
-msgstr "Accès"
-
-#: Module.php:1057 src/Controller/Admin/RequestController.php:182
+#: Module.php:1069 src/Controller/Admin/RequestController.php:194
 msgid "You should set either a user or an email or check box for token."
 msgstr "Vous devez définir un utilisateur, un courriel ou un jeton."
 
-#: Module.php:1080 src/Controller/Admin/RequestController.php:208
+#: Module.php:1092 src/Controller/Admin/RequestController.php:220
 msgid "Access request successfully created."
 msgstr "Demande d’accès créée avec succès."
 
-#: Module.php:1155 src/Form/Admin/BatchEditFieldset.php:48
+#: Module.php:1167 src/Form/Admin/BatchEditFieldset.php:48
 msgid "Free"
 msgstr "Libre"
 
-#: Module.php:1156 src/Form/Admin/BatchEditFieldset.php:49
+#: Module.php:1168 src/Form/Admin/BatchEditFieldset.php:49
 msgid "Reserved"
 msgstr "Réservé"
 
-#: Module.php:1157 src/Form/Admin/BatchEditFieldset.php:50
+#: Module.php:1169 src/Form/Admin/BatchEditFieldset.php:50
 msgid "Protected"
 msgstr "Protégé"
 
-#: Module.php:1172 src/ColumnType/AccessLevel.php:13
+#: Module.php:1184 src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr "Niveau d’accès"
 
-#: Module.php:1186 src/Form/Admin/BatchEditFieldset.php:87
+#: Module.php:1198 src/Form/Admin/BatchEditFieldset.php:87
 msgid "Embargo start"
 msgstr "Début de l’embargo"
 
-#: Module.php:1203 Module.php:1211 src/Form/Admin/BatchEditFieldset.php:132
+#: Module.php:1215 Module.php:1223 src/Form/Admin/BatchEditFieldset.php:132
 msgid "Embargo end"
 msgstr "Fin de l’embargo"
 
-#: Module.php:1221
+#: Module.php:1233
 #, php-format
 msgid "Access level (managed via property %s)"
 msgstr "Niveau d’accès (géré par la propriété %s)"
 
-#: Module.php:1224
+#: Module.php:1236
 #, php-format
 msgid "Embargo start (managed via property %s)"
 msgstr "Début de l’embargo (géré par la propriété %s)"
 
-#: Module.php:1227
+#: Module.php:1239
 #, php-format
 msgid "Embargo end (managed via property %s)"
 msgstr "Fin de l’embargo (géré par la propriété %s)"
 
-#: Module.php:1238 src/Form/Admin/BatchEditFieldset.php:186
+#: Module.php:1250 src/Form/Admin/BatchEditFieldset.php:186
 msgid "Apply access level and embargo to items and medias"
 msgstr ""
 "Appliquer des niveaux d’accès et des embargos aux contenus et aux médias"
 
-#: Module.php:1239 src/Form/Admin/BatchEditFieldset.php:187
+#: Module.php:1251 src/Form/Admin/BatchEditFieldset.php:187
 msgid "Apply access level and embargo to medias"
 msgstr "Appliquer un niveau d’accès et un embargo aux médias"
 
-#: Module.php:1521
+#: Module.php:1531
+msgid "Access: Reindex resources"
+msgstr "Accès : Réindexer les ressources"
+
+#: Module.php:1539
+msgid "Options to reindex accesses"
+msgstr "Options pour réindexer les accès"
+
+#: Module.php:1572
 msgid ""
 "To control access to files, you must add a rule in file .htaccess at the "
 "root of Omeka. See {link}readme{link_end}."
@@ -569,7 +529,7 @@ msgstr ""
 "Pour contrôler l’accès aux fichiers, vous devez ajouter une règle dans le "
 "fichier .htaccess à la racine d’Omeka. Voir le {link}lisez-moi{link_end}."
 
-#: Module.php:1583
+#: Module.php:1628
 msgid ""
 "A job was launched in background to update access statuses according to "
 "parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end})."
@@ -578,11 +538,11 @@ msgstr ""
 "d’accès selon les paramètres : ({link_job}tâche #{job_id}{link_end}, "
 "{link_log}journaux{link_end})."
 
-#: Module.php:1627
+#: Module.php:1672
 msgid "The ip \"{ip}\" is empty or invalid."
 msgstr "L’ip « {ip} » est vide ou incorrecte."
 
-#: Module.php:1637
+#: Module.php:1682
 msgid ""
 "The item sets list \"{input}\" for ip {ip} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
@@ -590,7 +550,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » est incorrecte : ce "
 "doit être des numéros, éventuellement préfixés de « - »."
 
-#: Module.php:1648
+#: Module.php:1693
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains duplicate item sets "
 "({list})."
@@ -598,7 +558,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:1660
+#: Module.php:1705
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains unknown item sets "
 "({list})."
@@ -606,17 +566,17 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:1744
+#: Module.php:1789
 msgid "No idps are defined. Check the config of module Single Sign-On first."
 msgstr ""
 "Aucune idp n’est définie. Vérifiez la configuration du module Single Sign-On "
 "d’abord."
 
-#: Module.php:1761
+#: Module.php:1806
 msgid "The idp \"{idp}\" is empty or not defined in module Single Sign-On."
 msgstr "L’idp « {idp} » est vide ou non défini par le module Single Sign-On."
 
-#: Module.php:1771
+#: Module.php:1816
 msgid ""
 "The item sets list \"{input}\" for idp {idp} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
@@ -624,7 +584,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’idp « {idp} » est incorrecte : "
 "ce doit être des numéros, éventuellement préfixés de « - »."
 
-#: Module.php:1782
+#: Module.php:1827
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains duplicate item sets "
 "({list})."
@@ -632,32 +592,13 @@ msgstr ""
 "La liste des collections « {input} » pour l’idp « {idp} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:1794
+#: Module.php:1839
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains unknown item sets "
 "({list})."
 msgstr ""
 "La liste des collections « {input} » pour l’idp « {idp} » contient des "
 "collections inconnues ({list})."
-
-#: src/Mvc/Controller/Plugin/MailerHtml.php:50
-msgid "Email not sent: the subject is missing."
-msgstr "Mail non envoyé : pas de sujet."
-
-#: src/Mvc/Controller/Plugin/MailerHtml.php:56
-#, php-format
-msgid "Email not sent: content is missing (subject: %1$s)."
-msgstr "Mail non envoyé : pas de contenu (sujet : %1$s)."
-
-#: src/Mvc/Controller/Plugin/MailerHtml.php:62
-#, php-format
-msgid "Email not sent: no recipient (subject: %1$s)."
-msgstr "Mail non envoyé : pas de destinataire (sujet : %1$s)."
-
-#: src/Mvc/Controller/Plugin/MailerHtml.php:119
-#, php-format
-msgid "An email was sent to %1$s with subject: %2$s"
-msgstr "Un mail a été envoyé à %1$s avec le sujet : %2$s"
 
 #: src/Job/AccessStatusUpdate.php:110
 msgid "Sync mode {mode} is invalid."
@@ -762,6 +703,80 @@ msgstr ""
 "Le type de données pour le niveau de propriété n’est pas défini, de sorte "
 "que « %s » sera utilisé par défaut s’il n’est pas défini dans les "
 "métadonnées."
+
+#: src/Form/AccessReindexFieldset.php:22
+msgid "Jobs to create missing access status of all resources"
+msgstr ""
+"Tâches pour créer les statuts d’accès manquants pour toutes les ressources"
+
+#: src/Form/AccessReindexFieldset.php:28
+msgid "Copy level and embargo"
+msgstr "Copier le niveau et l’embargo"
+
+#: src/Form/AccessReindexFieldset.php:31
+msgid "From item sets to items and medias"
+msgstr "Des collections aux contenus et aux médias"
+
+#: src/Form/AccessReindexFieldset.php:32
+msgid "From items to medias"
+msgstr "Des contenus aux médias"
+
+#: src/Form/AccessReindexFieldset.php:44
+msgid "Copy access level and embargo"
+msgstr "Copier le niveau d’accès et l’embargo"
+
+#: src/Form/AccessReindexFieldset.php:47 src/Form/AccessReindexFieldset.php:64
+msgid "Skip"
+msgstr "Ignorer"
+
+#: src/Form/AccessReindexFieldset.php:48
+msgid "Copy data from property values into indexes"
+msgstr "Copier les données des valeurs des propriétés dans les index"
+
+#: src/Form/AccessReindexFieldset.php:49
+msgid "Copy data from indexes into property values"
+msgstr "Copier les données des index dans les valeurs des propriétés"
+
+#: src/Form/AccessReindexFieldset.php:61
+msgid "Fill missing statuses"
+msgstr "Remplir les statuts manquants"
+
+#: src/Form/AccessReindexFieldset.php:65
+msgid "Set access level free for all resources without status"
+msgstr "Définir un niveau d’accès libre pour toutes les ressources sans statut"
+
+#: src/Form/AccessReindexFieldset.php:66
+msgid "Set access level reserved for all resources without status"
+msgstr ""
+"Définir le niveau d’accès réservé pour toutes les ressources sans statut"
+
+#: src/Form/AccessReindexFieldset.php:67
+msgid "Set access level protected for all resources without status"
+msgstr ""
+"Définir le niveau d’accès protégé pour toutes les ressources sans statut"
+
+#: src/Form/AccessReindexFieldset.php:68
+msgid "Set access level forbidden for all resources without status"
+msgstr ""
+"Définir le niveau d’accès interdit pour toutes les ressources sans statut"
+
+#: src/Form/AccessReindexFieldset.php:69
+msgid "Set access level free when public and reserved when private"
+msgstr ""
+"Définir le niveau d’accès libre quand la ressource est publique et réservé "
+"lorsqu’elle est privée"
+
+#: src/Form/AccessReindexFieldset.php:70
+msgid "Set access level free when public and protected when private"
+msgstr ""
+"Définir le niveau d’accès libre quand la ressource est publique et protégé "
+"lorsqu’elle est privée"
+
+#: src/Form/AccessReindexFieldset.php:71
+msgid "Set access level free when public and forbidden when private"
+msgstr ""
+"Définir le niveau d’accès libre quand la ressource est publique et interdit "
+"lorsqu’elle est privée"
 
 #: src/Form/SettingsFieldset.php:28
 msgid "Send email to admin and user or visitor on access request or update"
@@ -965,18 +980,18 @@ msgstr ""
 "particulier quand une collection est définie globalement pour les ressources "
 "réservées."
 
-#: src/Form/ConfigForm.php:85
+#: src/Form/ConfigForm.php:87
 msgid "Check forwarded ip first (in proxy environment)"
 msgstr "Vérifier d’abord l’ip renvoyée (dans un environnement avec proxy)"
 
-#: src/Form/ConfigForm.php:97
+#: src/Form/ConfigForm.php:99
 msgid ""
 "List of sso idp with open access, eventually limited to selected item sets"
 msgstr ""
 "Liste des idps sso autorisant un libre accès, éventuellement limité à des "
 "collections"
 
-#: src/Form/ConfigForm.php:98
+#: src/Form/ConfigForm.php:100
 msgid ""
 "These identity providers will have unrestricted access to all resources or "
 "only resources of the specified item sets. List them separated by a \"=\", "
@@ -995,34 +1010,34 @@ msgstr ""
 "collection exclue, en particulier quand une collection est définie "
 "globalement pour les ressources réservées."
 
-#: src/Form/ConfigForm.php:115
+#: src/Form/ConfigForm.php:119
 msgid ""
 "Regex on email of users allowed to access reserved medias (option above)"
 msgstr ""
 "Regex sur l’adresse mail des utilisateurs autorisés à accéder aux médias "
 "réservés (option ci-dessus)"
 
-#: src/Form/ConfigForm.php:126
+#: src/Form/ConfigForm.php:130
 msgid "Set access level and embargo via a property"
 msgstr "Définir le niveau d’accès et l’embargo via une propriété"
 
-#: src/Form/ConfigForm.php:130
+#: src/Form/ConfigForm.php:134
 msgid "required"
 msgstr "requis"
 
-#: src/Form/ConfigForm.php:162
+#: src/Form/ConfigForm.php:166
 msgid "Set property when access uses property"
 msgstr "Définir la propriété lorsque l’accès utilise la propriété"
 
-#: src/Form/ConfigForm.php:177
+#: src/Form/ConfigForm.php:181
 msgid "Labels for the four levels for mode property/level"
 msgstr "Libellés des quatre niveaux pour le mode propriété/niveau"
 
-#: src/Form/ConfigForm.php:195
+#: src/Form/ConfigForm.php:200
 msgid "Data type to use for the level"
 msgstr "Type de données à utiliser pour le niveau"
 
-#: src/Form/ConfigForm.php:196
+#: src/Form/ConfigForm.php:201
 msgid ""
 "A data type like \"literal\" (default) or \"customvocab:X\" (recommended), "
 "where X is the custom vocab id to set. This value is used for batch "
@@ -1032,15 +1047,15 @@ msgstr ""
 "X » (recommandé), où X est l’id du vocabulaire personnalisé à définir. Cette "
 "valeur est utilisée pour les traitements en lot."
 
-#: src/Form/ConfigForm.php:209
+#: src/Form/ConfigForm.php:214
 msgid "Set property to use for embargo start"
 msgstr "Propriété pour le début de l’embargo"
 
-#: src/Form/ConfigForm.php:224
+#: src/Form/ConfigForm.php:229
 msgid "Set property to use for embargo end"
 msgstr "Propriété pour la fin de l’embargo"
 
-#: src/Form/ConfigForm.php:240
+#: src/Form/ConfigForm.php:245
 msgid ""
 "Show the access status in advanced tab of resource form when properties are "
 "used"
@@ -1048,89 +1063,15 @@ msgstr ""
 "Afficher le statut d’accès dans l’onglet avancé du formulaire des ressources "
 "lorsque des propriétés sont utilisées"
 
-#: src/Form/ConfigForm.php:252
+#: src/Form/ConfigForm.php:257
 msgid "Bypass embargo dates for reserved resources"
 msgstr "Ne pas tenir compte de l’embargo pour les ressources à accès réservé"
 
-#: src/Form/ConfigForm.php:266
-msgid "Jobs to create missing access status of all resources"
-msgstr ""
-"Tâches pour créer les statuts d’accès manquants pour toutes les ressources"
-
-#: src/Form/ConfigForm.php:276
-msgid "Copy level and embargo"
-msgstr "Copier le niveau et l’embargo"
-
-#: src/Form/ConfigForm.php:278
-msgid "From item sets to items and medias"
-msgstr "Des collections aux contenus et aux médias"
-
-#: src/Form/ConfigForm.php:279
-msgid "From items to medias"
-msgstr "Des contenus aux médias"
-
-#: src/Form/ConfigForm.php:291
-msgid "Copy access level and embargo"
-msgstr "Copier le niveau d’accès et l’embargo"
-
-#: src/Form/ConfigForm.php:293 src/Form/ConfigForm.php:308
-msgid "Skip"
-msgstr "Ignorer"
-
-#: src/Form/ConfigForm.php:294
-msgid "Copy data from property values into indexes"
-msgstr "Copier les données des valeurs des propriétés dans les index"
-
-#: src/Form/ConfigForm.php:295
-msgid "Copy data from indexes into property values"
-msgstr "Copier les données des index dans les valeurs des propriétés"
-
-#: src/Form/ConfigForm.php:306
-msgid "Fill missing statuses"
-msgstr "Remplir les statuts manquants"
-
-#: src/Form/ConfigForm.php:309
-msgid "Set access level free for all resources without status"
-msgstr "Définir un niveau d’accès libre pour toutes les ressources sans statut"
-
-#: src/Form/ConfigForm.php:310
-msgid "Set access level reserved for all resources without status"
-msgstr ""
-"Définir le niveau d’accès réservé pour toutes les ressources sans statut"
-
-#: src/Form/ConfigForm.php:311
-msgid "Set access level protected for all resources without status"
-msgstr ""
-"Définir le niveau d’accès protégé pour toutes les ressources sans statut"
-
-#: src/Form/ConfigForm.php:312
-msgid "Set access level forbidden for all resources without status"
-msgstr ""
-"Définir le niveau d’accès interdit pour toutes les ressources sans statut"
-
-#: src/Form/ConfigForm.php:313
-msgid "Set access level free when public and reserved when private"
-msgstr ""
-"Définir le niveau d’accès libre quand la ressource est publique et réservé "
-"lorsqu’elle est privée"
-
-#: src/Form/ConfigForm.php:314
-msgid "Set access level free when public and protected when private"
-msgstr ""
-"Définir le niveau d’accès libre quand la ressource est publique et protégé "
-"lorsqu’elle est privée"
-
-#: src/Form/ConfigForm.php:315
-msgid "Set access level free when public and forbidden when private"
-msgstr ""
-"Définir le niveau d’accès libre quand la ressource est publique et interdit "
-"lorsqu’elle est privée"
-
-#: src/Form/ConfigForm.php:326
+#: src/Form/ConfigForm.php:282
 msgid "Process reindexation"
-msgstr "Réindexation du processus"
+msgstr "Lancer la réindexation"
 
-#: src/Form/ConfigForm.php:330
+#: src/Form/ConfigForm.php:286
 msgid "Process"
 msgstr "Traitement"
 
@@ -1246,11 +1187,11 @@ msgid "The requested resources cannot be empty."
 msgstr "Il convient de demander au moins une ressource."
 
 #: src/Api/Adapter/AccessRequestAdapter.php:258
-#: src/Api/Adapter/AccessRequestAdapter.php:431
+#: src/Api/Adapter/AccessRequestAdapter.php:433
 msgid "The status must be one of the list of statuses."
 msgstr "Le statut doit faire partie de la liste des statuts."
 
-#: src/Api/Adapter/AccessRequestAdapter.php:427
+#: src/Api/Adapter/AccessRequestAdapter.php:429
 msgid "At least one resource must be requested."
 msgstr "Au moins une ressource doit être demandée."
 
@@ -1290,22 +1231,51 @@ msgstr "Est sous embargo"
 msgid "Embargo date"
 msgstr "Date de l’embargo"
 
-#: src/Controller/Admin/RequestController.php:125
-#, php-format
-msgid "Access request record with id #%s does not exist"
-msgstr "La demande d’accès avec l’identifiant #%s n’existe pas"
+#: src/Controller/Admin/RequestController.php:74
+#: src/Controller/Admin/LogController.php:74
+msgid "Individual access modes (single user, email, token) are not enabled."
+msgstr ""
+"Les demandes d’accès individuel (utilisateur simple, mail, jeton) ne sont "
+"pas activées."
 
-#: src/Controller/Admin/RequestController.php:228
+#: src/Controller/Admin/RequestController.php:135
+msgid "Access request record with id #{access_request_id} does not exist"
+msgstr ""
+"La demande d’accès pour l’identifiant #{access_request_id} n’existe pas"
+
+#: src/Controller/Admin/RequestController.php:229
+#: src/Controller/Admin/RequestController.php:249
+#: src/Controller/Admin/RequestController.php:400
+#: src/Controller/Site/RequestController.php:242
+msgid ""
+"The request was sent, but an issue occurred when sending the confirmation "
+"email."
+msgstr ""
+"La demande a été envoyée, mais un problème est survenu lors de l’envoi du "
+"mail de confirmation."
+
+#: src/Controller/Admin/RequestController.php:240
 msgid "Access request successfully updated."
 msgstr "Demande d’accès mise à jour avec succès."
 
-#: src/Controller/Admin/RequestController.php:267
+#: src/Controller/Admin/RequestController.php:279
 msgid "access request"
 msgstr "demande d’accès"
 
-#: src/Controller/Admin/RequestController.php:286
+#: src/Controller/Admin/RequestController.php:298
 msgid "Access request successfully deleted"
 msgstr "Demande d’accès supprimée avec succès"
+
+#: src/Controller/Admin/RequestController.php:313
+#: src/Controller/Admin/RequestController.php:359
+#: src/Controller/Site/RequestController.php:84
+msgid "Method should be post."
+msgstr "La méthode doit être un Post."
+
+#: src/Controller/Admin/RequestController.php:334
+#: src/Controller/Admin/RequestController.php:379
+msgid "The request #{access_request_id} is invalid or unavailable."
+msgstr "La demande #{access_request_id} est incorrecte ou indisponible."
 
 #: src/Controller/AccessFileController.php:78
 msgid "The file {file} (derivative: {derivative}) is invalid or not available."
@@ -1327,6 +1297,30 @@ msgstr ""
 "Le visiteur n’a pas le droit de lire le fichier {file} ou le fichier est "
 "invalide."
 
+#: src/Controller/Site/RequestController.php:101
+msgid "Individual access requests are not allowed."
+msgstr "Les demandes d’accès individuel ne sont pas autorisées."
+
+#: src/Controller/Site/RequestController.php:119
+msgid "No resources were requested."
+msgstr "Aucune ressource n’a été demandée."
+
+#: src/Controller/Site/RequestController.php:137
+msgid "An email is required."
+msgstr "Un courriel est requis."
+
+#: src/Controller/Site/RequestController.php:153
+msgid "A valid email is required."
+msgstr "Un courriel valide est requis."
+
+#: src/Controller/Site/RequestController.php:211
+msgid "An error occurred when saving message."
+msgstr "Il y a eu une erreur lors de l’enregistrement du message."
+
+#: src/Controller/Site/RequestController.php:230
+msgid "The request was submitted successfully."
+msgstr "La demande a été envoyée avec succès."
+
 #: src/Site/ResourcePageBlockLayout/AccessRequest.php:13
 msgid "Access request form"
 msgstr "Formulaire de demandes d’accès"
@@ -1347,15 +1341,11 @@ msgstr ""
 "Pour ajouter des champs, chaque ligne doit contenir un nom et un libellé "
 "séparés par un « = »."
 
-#: config/module.config.php:222
+#: config/module.config.php:221
 msgid "Accesses"
 msgstr "Accès"
 
-#: config/module.config.php:241
-msgid "Logs"
-msgstr "Journaux"
-
-#: config/module.config.php:281
+#: config/module.config.php:280
 msgid "The resource or the access doesn’t exist."
 msgstr "La ressource ou l’accès n’existe pas."
 
@@ -1424,6 +1414,24 @@ msgid ""
 msgstr ""
 "En soumettant ce formulaire, j’accepte la politique de traitement de mes "
 "données personnelles."
+
+#~ msgid "Access logs"
+#~ msgstr "Journaux d’accès"
+
+#~ msgid "Email not sent: the subject is missing."
+#~ msgstr "Mail non envoyé : pas de sujet."
+
+#, php-format
+#~ msgid "Email not sent: content is missing (subject: %1$s)."
+#~ msgstr "Mail non envoyé : pas de contenu (sujet : %1$s)."
+
+#, php-format
+#~ msgid "Email not sent: no recipient (subject: %1$s)."
+#~ msgstr "Mail non envoyé : pas de destinataire (sujet : %1$s)."
+
+#, php-format
+#~ msgid "An email was sent to %1$s with subject: %2$s"
+#~ msgstr "Un mail a été envoyé à %1$s avec le sujet : %2$s"
 
 #~ msgid "Block title"
 #~ msgstr "Titre du bloc"
@@ -1792,9 +1800,6 @@ msgstr ""
 #~ msgid "Enabled"
 #~ msgstr "Activé"
 
-#~ msgid "Access resources"
-#~ msgstr "Accès aux ressources"
-
 #~ msgid "Add new access"
 #~ msgstr "Ajouter un nouvel accès"
 
@@ -1963,9 +1968,6 @@ msgstr ""
 
 #~ msgid "Curation"
 #~ msgstr "Curation"
-
-#~ msgid "Curation of resource access"
-#~ msgstr "Gestion des accès aux ressources"
 
 #~ msgid "Gives an ability for private resource to be listed (previewed)."
 #~ msgstr "Permet aux ressources privées d’être listée (prévisualisées)."
