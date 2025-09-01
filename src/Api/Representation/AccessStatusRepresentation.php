@@ -43,25 +43,22 @@ class AccessStatusRepresentation extends AbstractEntityRepresentation
      */
     public function getJsonLd()
     {
+        $getDateTimeJsonLd = function (?\DateTime $dateTime): ?array {
+            return $dateTime
+                ? [
+                    '@value' => $dateTime->format('c'),
+                    '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
+                ]
+                : null;
+        };
+
         $jsonLd = [
             'level' => $this->level(),
         ];
 
         // Append the start and the end if there is at least one of them.
-        $embargoStart = $this->embargoStart();
-        $embargoEnd = $this->embargoEnd();
-        if ($embargoStart) {
-            $embargoStart = [
-                '@value' => $this->getDateTime($embargoStart),
-                '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
-            ];
-        }
-        if ($embargoEnd) {
-            $embargoEnd = [
-                '@value' => $this->getDateTime($embargoEnd),
-                '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
-            ];
-        }
+        $embargoStart = $getDateTimeJsonLd($this->embargoStart());
+        $embargoEnd = $getDateTimeJsonLd($this->embargoEnd());
         if ($embargoStart || $embargoEnd) {
             $jsonLd += [
                 'embargoStart ' => $embargoStart,

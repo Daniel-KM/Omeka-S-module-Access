@@ -30,59 +30,39 @@ class AccessRequestRepresentation extends AbstractEntityRepresentation
 
     public function getJsonLd()
     {
+        $getDateTimeJsonLd = function (?\DateTime $dateTime): ?array {
+            return $dateTime
+                ? [
+                    '@value' => $dateTime->format('c'),
+                    '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
+                ]
+                : null;
+        };
+
         $resources = [];
         foreach ($this->resources() as $resourceRepresentation) {
-            $resources[] = $resourceRepresentation->getReference();
+            $resources[] = $resourceRepresentation->getReference()->jsonSerialize();
         }
 
         $user = $this->user();
 
-        $start = $this->start();
-        if ($start) {
-            $start = [
-                '@value' => $this->getDateTime($start),
-                '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
-            ];
-        }
-
-        $end = $this->end();
-        if ($end) {
-            $end = [
-                '@value' => $this->getDateTime($end),
-                '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
-            ];
-        }
-
-        $created = [
-            '@value' => $this->getDateTime($this->created()),
-            '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
-        ];
-
-        $modified = $this->modified();
-        if ($modified) {
-            $modified = [
-                '@value' => $this->getDateTime($modified),
-                '@type' => 'http://www.w3.org/2001/XMLSchema#dateTime',
-            ];
-        }
-
         return [
             'o:id' => $this->id(),
             'o:resource' => $resources,
-            'o:user' => $user ? $user->getReference() : null,
+            'o:user' => $user ? $user->getReference()->jsonSerialize() : null,
             'o:email' => $this->email(),
             'o-access:token' => $this->token(),
             'o:status' => $this->status(),
             'o-access:recursive' => $this->recursive(),
             'o-access:enabled' => $this->enabled(),
             'o-access:temporal' => $this->temporal(),
-            'o-access:start' => $start,
-            'o-access:end' => $end,
+            'o-access:start' => $getDateTimeJsonLd($this->start()),
+            'o-access:end' => $getDateTimeJsonLd($this->end()),
             'o:name' => $this->name(),
             'o:message' => $this->message(),
             'o-access:fields' => $this->fields(),
-            'o:created' => $created,
-            'o:modified' => $modified,
+            'o:created' => $getDateTimeJsonLd($this->created()),
+            'o:modified' => $getDateTimeJsonLd($this->modified()),
         ];
     }
 
