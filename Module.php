@@ -447,6 +447,18 @@ class Module extends AbstractModule
             'form.add_elements',
             [$this, 'handleMainSettings']
         );
+
+        // Add a job to update item sets.
+        $sharedEventManager->attach(
+            \EasyAdmin\Form\CheckAndFixForm::class,
+            'form.add_elements',
+            [$this, 'handleEasyAdminJobsForm']
+        );
+        $sharedEventManager->attach(
+            \EasyAdmin\Controller\Admin\CheckAndFixController::class,
+            'easyadmin.job',
+            [$this, 'handleEasyAdminJobs']
+        );
     }
 
     public function getConfigForm(PhpRenderer $renderer)
@@ -455,7 +467,7 @@ class Module extends AbstractModule
 
         $renderer->headScript()
             ->appendFile($renderer->assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
-        return '<style>fieldset[name=fieldset_index] .inputs label {display: block;}</style>'
+        return '<style>fieldset[name=access_reindex] .inputs label {display: block;}</style>'
             . $this->getConfigFormAuto($renderer);
     }
 
@@ -509,11 +521,11 @@ class Module extends AbstractModule
         }
 
         $post = $controller->getRequest()->getPost();
-        if (!empty($post['fieldset_index']['process_index'])) {
+        if (!empty($post['access_reindex']['process_index'])) {
             $vars = [
-                'recursive' => $post['fieldset_index']['recursive'] ?? [],
-                'sync' => $post['fieldset_index']['sync'] ?? 'skip',
-                'missing' => $post['fieldset_index']['missing'] ?? 'skip',
+                'recursive' => $post['access_reindex']['recursive'] ?? [],
+                'sync' => $post['access_reindex']['sync'] ?? 'skip',
+                'missing' => $post['access_reindex']['missing'] ?? 'skip',
             ];
             if ($vars === ['recursive' => [], 'sync' => 'skip', 'missing' => 'skip']) {
                 $message = new \Omeka\Stdlib\Message(
@@ -1505,6 +1517,45 @@ class Module extends AbstractModule
         ;
     }
 
+    public function handleEasyAdminJobsForm(Event $event): void
+    {
+        /**
+         * @var \EasyAdmin\Form\CheckAndFixForm $form
+         * @var \Laminas\Form\Element\Radio $process
+         */
+        $form = $event->getTarget();
+        $fieldset = $form->get('module_tasks');
+
+        $process = $fieldset->get('process');
+        $valueOptions = $process->getValueOptions();
+        $valueOptions['access_reindex'] = 'Access: Reindex resources'; // @translate
+        $process->setValueOptions($valueOptions);
+
+        $fieldset
+            ->add([
+                'name' => 'access_reindex_settings',
+                'type' => \Access\Form\AccessReindexFieldset::class,
+                'options' => [
+                    'label' => 'Options to reindex accesses', // @translate
+                ],
+                'attributes' => [
+                    'class' => 'access_reindex',
+                ],
+            ])
+        ;
+    }
+
+    public function handleEasyAdminJobs(Event $event): void
+    {
+        $process = $event->getParam('process');
+        if ($process === 'access_reindex') {
+            $params = $event->getParam('params');
+            $event->setParam('job', \Access\Job\AccessStatusUpdate::class);
+            $args = $params['module_tasks']['access_reindex_settings'] ?? [];
+            $event->setParam('args', $args);
+        }
+    }
+
     /**
      * @see \Access\Module::warnConfig()
      * @see \Statistics\Module::warnConfig()
@@ -1567,12 +1618,6 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
         $urlHelper = $services->get('ViewHelperManager')->get('url');
-
-        $args += [
-            'recursive' => [],
-            'sync' => 'skip',
-            'missing' => 'skip',
-        ];
 
         /** @var \Omeka\Job\Dispatcher $dispatcher */
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);

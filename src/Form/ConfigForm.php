@@ -2,8 +2,8 @@
 
 namespace Access\Form;
 
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
-use Laminas\Form\Fieldset;
 use Laminas\Form\Form;
 use Omeka\Form\Element as OmekaElement;
 
@@ -14,7 +14,7 @@ class ConfigForm extends Form
         $this
             ->add([
                 'name' => 'access_full',
-                'type' => Element\Radio::class,
+                'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'Protection', // @translate
                     'value_options' => [
@@ -34,7 +34,7 @@ class ConfigForm extends Form
 
             ->add([
                 'name' => 'access_modes',
-                'type' => Element\MultiCheckbox::class,
+                'type' => CommonElement\OptionalMultiCheckbox::class,
                 'options' => [
                     'label' => 'Access modes', // @translate
                     'value_options' => [
@@ -82,7 +82,7 @@ class ConfigForm extends Form
 
             ->add([
                 'name' => 'access_ip_proxy',
-                'type' => Element\Checkbox::class,
+                'type' => CommonElement\OptionalCheckbox::class,
                 'options' => [
                     'label' => 'Check forwarded ip first (in proxy environment)', // @translate
                 ],
@@ -125,7 +125,7 @@ class ConfigForm extends Form
 
             ->add([
                 'name' => 'access_property',
-                'type' => Element\Checkbox::class,
+                'type' => CommonElement\OptionalCheckbox::class,
                 'options' => [
                     'label' => 'Set access level and embargo via a property', // @translate
                 ],
@@ -138,7 +138,7 @@ class ConfigForm extends Form
             /* // TODO Only mode "level" (three/four values) is supported for now.
             ->add([
                 'name' => 'access_property_level_mode',
-                'type' => Element\Radio::class,
+                'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'Set access via property', // @translate
                     'value_options' => [
@@ -161,7 +161,7 @@ class ConfigForm extends Form
 
             ->add([
                 'name' => 'access_property_level',
-                'type' => OmekaElement\PropertySelect::class,
+                'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
                     'label' => 'Set property when access uses property', // @translate
                     'term_as_value' => true,
@@ -209,7 +209,7 @@ class ConfigForm extends Form
 
             ->add([
                 'name' => 'access_property_embargo_start',
-                'type' => OmekaElement\PropertySelect::class,
+                'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
                     'label' => 'Set property to use for embargo start', // @translate
                     'term_as_value' => true,
@@ -224,7 +224,7 @@ class ConfigForm extends Form
             ])
             ->add([
                 'name' => 'access_property_embargo_end',
-                'type' => OmekaElement\PropertySelect::class,
+                'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
                     'label' => 'Set property to use for embargo end', // @translate
                     'term_as_value' => true,
@@ -240,7 +240,7 @@ class ConfigForm extends Form
 
             ->add([
                 'name' => 'access_property_show_in_advanced_tab',
-                'type' => Element\Checkbox::class,
+                'type' => CommonElement\OptionalCheckbox::class,
                 'options' => [
                     'label' => 'Show the access status in advanced tab of resource form when properties are used', // @translate
                 ],
@@ -252,7 +252,7 @@ class ConfigForm extends Form
 
             ->add([
                 'name' => 'access_embargo_bypass',
-                'type' => Element\Checkbox::class,
+                'type' => CommonElement\OptionalCheckbox::class,
                 'options' => [
                     'label' => 'Bypass embargo dates for reserved resources', // @translate
                 ],
@@ -263,67 +263,18 @@ class ConfigForm extends Form
         ;
 
         // Process indexation of missing access levels for items and medias.
+        // Used in EasyAdmin too.
+
         $this
             ->add([
-                'name' => 'fieldset_index',
-                'type' => Fieldset::class,
+                'name' => 'access_reindex',
+                'type' => AccessReindexFieldset::class,
                 'options' => [
-                    'label' => 'Jobs to create missing access status of all resources', // @translate
+                    'use_as_base_fieldset' => false,
                 ],
             ]);
-
-        $fieldset = $this->get('fieldset_index');
+        $fieldset = $this->get('access_reindex');
         $fieldset
-            ->add([
-                'name' => 'recursive',
-                'type' => Element\MultiCheckbox::class,
-                'options' => [
-                    'label' => 'Copy level and embargo', // @translate
-                    'value_options' => [
-                        'from_item_sets_to_items_and_media' => 'From item sets to items and medias', // @translate
-                        'from_items_to_media' => 'From items to medias', // @translate
-                        // TODO Add "when not set".
-                    ],
-                ],
-                'attributes' => [
-                    'id' => 'recursive',
-                ],
-            ])
-            ->add([
-                'name' => 'sync',
-                'type' => Element\Radio::class,
-                'options' => [
-                    'label' => 'Copy access level and embargo', // @translate
-                    'value_options' => [
-                        'skip' => 'Skip', // @translate
-                        'from_properties_to_index' => 'Copy data from property values into indexes', // @translate
-                        'from_index_to_properties' => 'Copy data from indexes into property values', // @translate
-                    ],
-                ],
-                'attributes' => [
-                    'id' => 'sync',
-                ],
-            ])
-            ->add([
-                'name' => 'missing',
-                'type' => Element\Radio::class,
-                'options' => [
-                    'label' => 'Fill missing statuses', // @translate
-                    'value_options' => [
-                        'skip' => 'Skip', // @translate
-                        'free' => 'Set access level free for all resources without status', // @translate
-                        'reserved' => 'Set access level reserved for all resources without status', // @translate
-                        'protected' => 'Set access level protected for all resources without status', // @translate
-                        'forbidden' => 'Set access level forbidden for all resources without status', // @translate
-                        'visibility_reserved' => 'Set access level free when public and reserved when private', // @translate
-                        'visibility_protected' => 'Set access level free when public and protected when private', // @translate
-                        'visibility_forbidden' => 'Set access level free when public and forbidden when private', // @translate
-                    ],
-                ],
-                'attributes' => [
-                    'id' => 'missing',
-                ],
-            ])
             ->add([
                 'name' => 'process_index',
                 'type' => Element\Submit::class,
@@ -334,46 +285,6 @@ class ConfigForm extends Form
                     'id' => 'process_index',
                     'value' => 'Process', // @translate
                 ],
-            ])
-        ;
-
-        $this->getInputFilter()
-            ->add([
-                'name' => 'access_full',
-                'required' => false,
-            ])
-            ->add([
-                'name' => 'access_modes',
-                'required' => false,
-            ])
-            ->add([
-                'name' => 'access_property',
-                'required' => false,
-            ])
-            ->add([
-                'name' => 'access_property_level',
-                'required' => false,
-            ])
-            ->add([
-                'name' => 'access_property_embargo_start',
-                'required' => false,
-            ])
-            ->add([
-                'name' => 'access_property_embargo_end',
-                'required' => false,
-            ])
-            ->get('fieldset_index')
-            ->add([
-                'name' => 'recursive',
-                'required' => false,
-            ])
-            ->add([
-                'name' => 'sync',
-                'required' => false,
-            ])
-            ->add([
-                'name' => 'missing',
-                'required' => false,
             ])
         ;
     }

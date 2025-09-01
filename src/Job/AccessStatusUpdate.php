@@ -17,14 +17,9 @@ class AccessStatusUpdate extends AbstractJob
     const SQL_LIMIT = 25;
 
     /**
-     * @var \Omeka\Mvc\Controller\Plugin\Logger
+     * @var \Omeka\Api\Manager
      */
-    protected $logger;
-
-    /**
-     * @var \Doctrine\ORM\EntityManager
-     */
-    protected $entityManager;
+    protected $api;
 
     /**
      * @var \Doctrine\DBAL\Connection
@@ -32,9 +27,14 @@ class AccessStatusUpdate extends AbstractJob
     protected $connection;
 
     /**
-     * @var \Omeka\Api\Manager
+     * @var \Doctrine\ORM\EntityManager
      */
-    protected $api;
+    protected $entityManager;
+
+    /**
+     * @var \Omeka\Mvc\Controller\Plugin\Logger
+     */
+    protected $logger;
 
     /**
      * @var string
@@ -104,7 +104,7 @@ class AccessStatusUpdate extends AbstractJob
             'from_properties_to_accesses',
             'from_accesses_to_properties',
         ];
-        $this->syncMode = $this->getArg('sync', 'skip');
+        $this->syncMode = $this->getArg('sync', 'skip') ?: 'skip';
         if (!in_array($this->missingMode, $syncModes)) {
             $this->logger->err(
                 'Sync mode {mode} is invalid.', // @translate
@@ -123,7 +123,7 @@ class AccessStatusUpdate extends AbstractJob
             'visibility_protected',
             'visibility_forbidden',
         ];
-        $this->missingMode = $this->getArg('missing', 'skip');
+        $this->missingMode = $this->getArg('missing', 'skip') ?: 'skip';
         if (!in_array($this->missingMode, $missingModes)) {
             $this->logger->err(
                 'Missing mode {mode} is invalid.', // @translate
@@ -132,7 +132,7 @@ class AccessStatusUpdate extends AbstractJob
             return;
         }
 
-        $this->recursiveProcesses = $this->getArg('recursive', []);
+        $this->recursiveProcesses = $this->getArg('recursive', []) ?: [];
         $recursives = [
             'from_item_sets_to_items_and_media',
             'from_items_to_media',
