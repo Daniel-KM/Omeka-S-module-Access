@@ -17,19 +17,9 @@ class AccessStatusRecursive extends AbstractJob
     const SQL_LIMIT = 25;
 
     /**
-     * @var \Omeka\Mvc\Controller\Plugin\Logger
+     * @var \Access\Mvc\Controller\Plugin\AccessStatus
      */
-    protected $logger;
-
-    /**
-     * @var \Doctrine\ORM\EntityManager
-     */
-    protected $entityManager;
-
-    /**
-     * @var \Doctrine\DBAL\Connection
-     */
-    protected $connection;
+    protected $accessStatusForResource;
 
     /**
      * @var \Omeka\Api\Manager
@@ -37,9 +27,19 @@ class AccessStatusRecursive extends AbstractJob
     protected $api;
 
     /**
-     * @var \Access\Mvc\Controller\Plugin\AccessStatus
+     * @var \Doctrine\DBAL\Connection
      */
-    protected $accessStatusForResource;
+    protected $connection;
+
+    /**
+     * @var \Doctrine\ORM\EntityManager
+     */
+    protected $entityManager;
+
+    /**
+     * @var \Omeka\Mvc\Controller\Plugin\Logger
+     */
+    protected $logger;
 
     /**
      * @var bool

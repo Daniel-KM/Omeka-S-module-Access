@@ -35,7 +35,6 @@
             }
         }
 
-
         $('.request-access').on('click', function(e) {
             e.preventDefault();
             $('.access-request-form').toggle();
