@@ -162,7 +162,7 @@ class AccessStatusRecursive extends AbstractJob
             'embargo_end' => $embargoEndStatus,
         ];
         $types = [
-            'resource_id' => $resourceId,
+            'resource_id' => \Doctrine\DBAL\ParameterType::INTEGER,
             'level' => \Doctrine\DBAL\ParameterType::STRING,
             'embargo_start' => $embargoStartStatus ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL,
             'embargo_end' => $embargoEndStatus ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL,
