@@ -116,11 +116,11 @@ eventually adding `|medium|square` to the list of thumbnails:
 RewriteRule "^/files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
 ```
 
-An alternative with flag [L]:
+An alternative with flag [NC,L], without need of mod proxy:
 
 ```apache
 # Set rule for original and selected derivative files (usually at least large thumbnails).
-RewriteRule "^/files/(original|large)/(.*)$" "%{REQUEST_SCHEME}://%{HTTP_HOST}/access/files/$1/$2" [L]
+RewriteRule "^/files/(original|large)/(.*)$" "%{REQUEST_SCHEME}://%{HTTP_HOST}/access/files/$1/$2" [NC,L]
 ```
 
 The request scheme (http or https) is needed when you set the domain, but you can
