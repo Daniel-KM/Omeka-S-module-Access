@@ -280,7 +280,17 @@ class IsAllowedMediaContent extends AbstractPlugin
         static $mediaItemSetIds = [];
         $mediaId = $media->id();
         if (!isset($mediaItemSetIds[$mediaId])) {
-            $mediaItemSetIds[$mediaId] = array_keys($media->item()->itemSets());
+            // Use a sql query because the item sets may be private.
+            $sql = <<<'SQL'
+                SELECT `item_set_id`
+                FROM `item_item_set`
+                WHERE `item_id` = :item_id
+                ORDER BY `item_set_id` ASC;
+                SQL;
+            $itemSetIds = $this->entityManager->getConnection()
+                ->executeQuery($sql, ['item_id' => $media->item()->id()], ['item_id' => \Doctrine\DBAL\ParameterType::INTEGER])
+                ->fetchFirstColumn();
+            $mediaItemSetIds[$mediaId] = $itemSetIds;
         }
         return $mediaItemSetIds[$mediaId];
     }
