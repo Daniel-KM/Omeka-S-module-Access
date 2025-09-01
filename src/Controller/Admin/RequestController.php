@@ -211,7 +211,7 @@ class RequestController extends AbstractActionController
                     } else {
                         $data['o-access:token'] = $accessRequest && $accessRequest->token()
                             ? $accessRequest->token()
-                            : substr(str_replace(['+', '/', '='], '', base64_encode(random_bytes(48))), 0, 16);
+                            : substr(strtr(base64_encode(random_bytes(128)), ['+' => '', '/' => '', '=' => '']), 0, 16);
                     }
                     if (!$id) {
                         $response = $this->api($form)->create('access_requests', $data);

@@ -1072,7 +1072,7 @@ class Module extends AbstractModule
                     } elseif ($data['o:email']) {
                         $data['o-access:token'] = null;
                     } else {
-                        $data['o-access:token'] = substr(str_replace(['+', '/', '='], '', base64_encode(random_bytes(48))), 0, 16);
+                        $data['o-access:token'] = substr(strtr(base64_encode(random_bytes(128)), ['+' => '', '/' => '', '=' => '']), 0, 16);
                     }
                     $response = $api($form)->create('access_requests', $data);
                     if ($response) {
