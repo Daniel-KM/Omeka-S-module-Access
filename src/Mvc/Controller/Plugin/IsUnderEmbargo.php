@@ -26,7 +26,7 @@ class IsUnderEmbargo extends AbstractPlugin
      */
     public function __invoke(?AbstractResourceEntityRepresentation $resource): ?bool
     {
-        if (is_null($resource)) {
+        if ($resource === null) {
             return null;
         }
 
