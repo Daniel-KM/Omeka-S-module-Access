@@ -146,7 +146,7 @@ class RequestController extends AbstractActionController
                 ],
             ], null, HttpResponse::STATUS_CODE_405);
         } elseif ($user && $email) {
-            $post['email'] = null;
+            $post['o:email'] = null;
         } elseif (!$user && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             // Early check: normally checked below.
             $msg = new PsrMessage(
@@ -187,7 +187,7 @@ class RequestController extends AbstractActionController
         }
 
         $data = $form->getData();
-        $fields = $post['fields'];
+        $fields = $post['fields'] ?? [];
 
         /* TODO Check for existing requests.
         $accessRequests = $api->search('access_requests', [

@@ -125,7 +125,7 @@ trait AccessTrait
         $subject = $this->replacePlaceholders($subject, $post);
         $body = $this->replacePlaceholders($body, $post);
 
-        return $this->sendEmail($body, $subject, [$post['to'] => (string) $post['toName']]);
+        return $this->sendEmail($body, $subject, [$post['o:email'] => (string) $post['o:name'] ?? null]);
     }
 
     protected function replacePlaceholders(string $string, array $post): string
