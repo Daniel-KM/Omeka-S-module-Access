@@ -152,7 +152,7 @@ class RequestController extends AbstractActionController
             $data = $accessRequest->jsonSerialize();
             $res = [];
             foreach ($data['o:resource'] as $resource) {
-                $res[] = $resource->id();
+                $res[] = $resource['o:id'];
             }
             $data['o:resource'] = implode(' ', $res);
             $data['o:user'] = $accessRequest->user() ? $accessRequest->user()->id() : null;
