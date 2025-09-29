@@ -863,6 +863,10 @@ class Module extends AbstractModule
             $accessStatus
                 ->setId($resource)
                 ->setLevel(AccessStatus::FREE);
+            // The persist may be needed early when adding a media to an item
+            // via a backgrund process (see BulkImport).
+            $entityManager->persist($resource);
+            $entityManager->persist($accessStatus);
         }
 
         // TODO Make the access status editable via api (already possible via the key "o-access:level" anyway).
