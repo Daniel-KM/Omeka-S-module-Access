@@ -1324,22 +1324,32 @@ class Module extends AbstractModule
 
         $resourceName = $resource ? $resource->resourceName() : $this->resourceNameFromRoute();
         if (($resourceName === 'item_sets' && $resource && $resource->itemCount())
-            // Media may are not yet stored during creation.
             || $resourceName === 'items'
+            // Media may not be stored yet during creation.
         ) {
-            $recursiveElement = new \Laminas\Form\Element\Checkbox('access_recursive');
+            $recursiveElement = new \Common\Form\Element\OptionalRadio('access_recursive');
             $recursiveElement
                 ->setLabel($resourceName === 'item_sets'
-                    ? 'Apply access level and embargo to items and medias' // @translate
-                    : 'Apply access level and embargo to medias' // @translate
+                    ? 'Copy access level and embargo to items and medias' // @translate
+                    : 'Copy access level and embargo to medias' // @translate
+                )
+                ->setValueOptions($resourceName === 'item_sets'
+                    ? [
+                        '0' => 'No', // @translate
+                        '1' => 'Yes', // @translate
+                    ]
+                    : [
+                        '0' => 'New medias only', // @translate
+                        '1' => 'All medias', // @translate
+                    ]
                 )
                 ->setAttributes([
                     'id' => 'o-access-recursive',
                     // The status is recursive only when creating items to
                     // avoid to override individual statuses of related
                     // resources.
-                    'value' => $resourceName === 'items'
-                        && $event->getName() === 'view.add.form.advanced',
+                    'value' => (string) (int) ($resourceName === 'items'
+                        && $event->getName() === 'view.add.form.advanced'),
                 ]);
         }
 
