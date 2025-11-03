@@ -453,6 +453,14 @@ class Module extends AbstractModule
             [$this, 'handleMainSettings']
         );
 
+        // TODO What is the better event to handle a cron?
+
+        $sharedEventManager->attach(
+            '*',
+            'view.layout',
+            [$this, 'handleCron']
+        );
+
         // Add a job to update item sets.
         $sharedEventManager->attach(
             \EasyAdmin\Form\CheckAndFixForm::class,
@@ -469,6 +477,8 @@ class Module extends AbstractModule
     public function getConfigForm(PhpRenderer $renderer)
     {
         $this->warnConfig();
+
+        $this->infoEmbargo();
 
         $renderer->headScript()
             ->appendFile($renderer->assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
@@ -1610,6 +1620,29 @@ class Module extends AbstractModule
         ;
     }
 
+    public function handleCron(Event $event): void
+    {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        $accessEmbargoFree = $settings->get('access_embargo_free');
+        if (!in_array($accessEmbargoFree, ['free_clear', 'free_keep', 'keep_clear'], true)) {
+            return;
+        }
+
+        $lastCron = (int) $settings->get('access_cron_last');
+        $time = time();
+        if ($lastCron + 86400 > $time) {
+            return;
+        }
+
+        $settings->set('easyadmin_cron_last', $time);
+
+        /** @var \Omeka\Job\Dispatcher $dispatcher */
+        $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
+        $dispatcher->dispatch(\Access\Job\AccessEmbargoUpdate::class);
+    }
+
     public function handleEasyAdminJobsForm(Event $event): void
     {
         /**
@@ -1671,6 +1704,40 @@ class Module extends AbstractModule
         $message->setEscapeHtml(false);
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
         $messenger->addError($message);
+    }
+
+    protected function infoEmbargo(): void
+    {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        $accessEmbargoFree = $settings->get('access_embargo_free', 'keep_keep');
+        [$modeLevel, $modeDate] = explode('_', $accessEmbargoFree) + [1 => null];
+
+        if ($modeLevel === 'free' && $modeDate === 'clear') {
+            $message = new PsrMessage(
+                'According to setting, when embargo ends, the access level is set to "free" and the embargo dates are cleared.' // @translate
+            );
+        } elseif ($modeLevel === 'free' && $modeDate === 'keep') {
+            $message = new PsrMessage(
+                'According to setting, when embargo ends, the access level is set to "free" and the embargo dates are kept.' // @translate
+            );
+        } elseif ($modeLevel === 'keep' && $modeDate === 'clear') {
+            $message = new PsrMessage(
+                'According to setting, when embargo ends, the access level is kept and the embargo dates are cleared.' // @translate
+            );
+        } else {
+            if ($accessEmbargoFree !== 'keep_keep') {
+                $settings->set('access_embargo_free', 'keep_keep');
+            }
+            $message = new PsrMessage(
+                'According to setting, when embargo ends, the access level and the embargo dates are kept.' // @translate
+            );
+        }
+
+        /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+        $messenger->addNotice($message);
     }
 
     /**

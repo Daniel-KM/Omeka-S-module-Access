@@ -260,6 +260,25 @@ class ConfigForm extends Form
                     'id' => 'access_embargo_bypass',
                 ],
             ])
+            ->add([
+                'name' => 'access_embargo_free',
+                'type' => CommonElement\OptionalRadio::class,
+                'options' => [
+                    'label' => 'Update access status when embargo ends', // @translate
+                    'label_attributes' => [
+                        'style' => 'display: block;',
+                    ],
+                    'value_options' => [
+                        'free_keep' => 'Set access level to "free" and keep embargo date', // @translate
+                        'free_clear' => 'Set access level to "free" and remove embargo date', // @translate
+                        'keep_keep' => 'Keep access level and embargo date', // @translate
+                        'keep_clear' => 'Keep access level and remove embargo date', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'access_embargo_free',
+                ],
+            ])
         ;
 
         // Process indexation of missing access levels for items and medias.

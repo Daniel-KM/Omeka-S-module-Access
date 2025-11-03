@@ -326,6 +326,7 @@ return [
             'access_property_show_in_advanced_tab' => false,
 
             'access_embargo_bypass' => false,
+            'access_embargo_free' => 'free_keep',
 
             // Hidden settings automatically filled after saving config.
             // It contains the same data than "access_ip_item_sets", but

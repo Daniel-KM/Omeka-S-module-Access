@@ -14,11 +14,19 @@ use Omeka\Entity\Resource;
  * get it directly for any mode and any param (with or without item/media…) and
  * without php processing.
  *
+ * The indexes on dates allow to update accesses quicker when embargo ends.
+ *
  * @Entity
  * @Table(
  *      indexes={
  *          @Index(
  *              columns={"level"}
+ *          ),
+ *          @Index(
+ *              columns={"embargo_start"}
+ *          ),
+ *          @Index(
+ *              columns={"embargo_end"}
  *          )
  *      }
  * )

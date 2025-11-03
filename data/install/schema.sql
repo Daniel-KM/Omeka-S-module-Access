@@ -43,6 +43,8 @@ CREATE TABLE `access_status` (
     `embargo_start` DATETIME DEFAULT NULL,
     `embargo_end` DATETIME DEFAULT NULL,
     INDEX IDX_898BF02E9AEACC13 (`level`),
+    INDEX `IDX_898BF02E41CE64D3` (`embargo_start`),
+    INDEX `IDX_898BF02E197EE67A` (`embargo_end`),
     PRIMARY KEY(`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB;
 
