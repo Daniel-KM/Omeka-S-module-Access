@@ -68,6 +68,7 @@ if (version_compare((string) $oldVersion, '3.4.19', '<')) {
                     'property_id_2' => $propertyNew->id(),
                 ]);
             } catch (\Exception $e) {
+                // Already done.
             }
             $connection->executeStatement('DELETE FROM `property` WHERE id = :property_id;', [
                 'property_id' => $propertyNew->id(),
@@ -306,6 +307,33 @@ if (version_compare((string) $oldVersion, '3.4.32', '<')) {
     if (!$settings->get('access_property') || !$settings->get('access_property_level')) {
         $settings->set('access_property_level', 'dcterms:accessRights');
     }
+}
+
+if (version_compare((string) $oldVersion, '3.4.35', '<')) {
+    $sql = <<<'SQL'
+        ALTER TABLE `access_status`
+        ADD INDEX `IDX_898BF02E41CE64D3` (`embargo_start`),
+        ADD INDEX `IDX_898BF02E197EE67A` (`embargo_end`);
+        SQL;
+    try {
+        $connection->executeStatement($sql);
+    } catch (\Exception $e) {
+        // Already done.
+    }
+
+    if (!$settings->get('access_embargo_free')) {
+        $settings->set('access_embargo_free', 'keep_keep');
+    }
+
+    $message = new PsrMessage(
+        'A new option allows to update the status level and to remove the embargo metadata when it ends. Default option is to keep them.' // @translate
+    );
+    $messenger->addSuccess($message);
+
+    $message = new PsrMessage(
+        'A job is run once a day to update accesses when embargo ends.' // @translate
+    );
+    $messenger->addSuccess($message);
 }
 
 // Check for old module.
