@@ -19,6 +19,7 @@ use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\View\Renderer\PhpRenderer;
+use Omeka\Entity\Item;
 use Omeka\Entity\Resource;
 use Omeka\Module\AbstractModule;
 
@@ -839,6 +840,22 @@ class Module extends AbstractModule
                 $this->manageAccessStatusForResource($media, $resourceData);
             }
         }
+
+        // Check unchanged status level of the medias when updating the status
+        // level of an item in order to display a warning.
+        // This is needed only when the option "access_recursive" is not set,
+        // because when set, the status is copied, so running as wanted by user.
+        if ($resourceName === 'items' && empty($resourceData['access_recursive'])) {
+            $mediaIds = $this->listMediaAccessDifferentThanItem($resource);
+            if ($mediaIds) {
+                $messenger = $services->get('ControllerPluginManager')->get('messenger');
+                $message = new PsrMessage(
+                    'The access level of the item #{item_id} is different from access level for medias {media_ids}. Update them if needed in tab "advanced".', // @translate
+                    ['item_id' => $resource->getId(), 'media_ids' => implode(', ', $mediaIds)],
+                );
+                $messenger->addWarning($message);
+            }
+        }
     }
 
     protected function manageAccessStatusForResource(Resource $resource, array $resourceData): void
@@ -1000,6 +1017,64 @@ class Module extends AbstractModule
             $services->get(\Omeka\Job\Dispatcher::class)
                 ->dispatch(\Access\Job\AccessStatusRecursive::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
         }
+    }
+
+    /**
+     * List media ids that have a different level and embargo values than item.
+     */
+    protected function listMediaAccessDifferentThanItem(Item $item): array
+    {
+        /**
+         * @var \Omeka\Entity\Item $item
+         * @var \Access\Entity\AccessStatus $accessStatus
+         */
+        $medias = $item->getMedia();
+        if (!$medias->count()) {
+            return [];
+        }
+
+        $differentMediaIds = [];
+        $services = $this->getServiceLocator();
+        $entityManager = $services->get('Omeka\EntityManager');
+
+        // Normally not possible.
+        $defaultAccess = $access = [
+            'level' => null,
+            'embargoStart' => null,
+            'embargoEnd' => null,
+        ];
+
+        $accessStatus = $entityManager->getReference(AccessStatus::class, $item->getId());
+        if ($accessStatus) {
+            $access = [
+                'level' => $accessStatus->getLevel(),
+                'embargoStart' => $accessStatus->getEmbargoStart(),
+                'embargoEnd' => $accessStatus->getEmbargoEnd(),
+            ];
+        } else {
+            $access = $defaultAccess;
+        }
+
+        foreach ($medias as $media) {
+            $mediaAccessStatus = $entityManager->getReference(AccessStatus::class, $media->getId());
+            if ($mediaAccessStatus) {
+                $mediaAccess = [
+                    'level' => $mediaAccessStatus->getLevel(),
+                    'embargoStart' => $mediaAccessStatus->getEmbargoStart(),
+                    'embargoEnd' => $mediaAccessStatus->getEmbargoEnd()
+                ];
+            } else {
+                $mediaAccess = $defaultAccess;
+            }
+            if ($mediaAccess['level'] !== $access['level']
+                || $mediaAccess['embargoStart'] !== $access['embargoStart']
+                || $mediaAccess['embargoEnd'] !== $access['embargoEnd']
+            ) {
+                $differentMediaIds[] = $media->getId();
+            }
+        }
+
+        return $differentMediaIds;
     }
 
     /**
