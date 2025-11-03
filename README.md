@@ -10,11 +10,6 @@ from the anonymous visitors, but nevertheless available globally or on requests
 by guests users, reserved to a list of ips, or available by an email or a token.
 Start and end dates of an embargo can be used too, separately or not.
 
-Furthermore, you can set the right to see a resource at the media level, so the
-item and media metadata are visible and the visitors know that a media exist.
-The file itself (the original one and eventually the large and other derivatives
-files) is replaced by a fake file, unless a specific right is granted.
-
 See [below](#usage) for more information on usage.
 
 You may use module [Guest Private] to access public or private resources on
@@ -159,6 +154,12 @@ First, try with the alternative (flag [P] or [L]).
 RewriteRule "^/files/(original|large)/(.*)$" "http://%{HTTP_HOST}/digital-library/access/files/$1/$2" [P]
 ```
 
+- Remove the leading "/" before "files/", for example:
+
+```apache
+RewriteRule "^files/(original|large|medium|square)/(.*)$" "%{REQUEST_SCHEME}://%{HTTP_HOST}/access/files/$1/$2" [NC,L]
+```
+
 #### Compatibility with module Statistics
 
 The module is compatible with the module [Statistics].
@@ -221,6 +222,9 @@ saved, if needed, else access won't be updated to the attached resources. It
 allows to have specific access for specific items or medias. Furthermore, this
 mechanism does not apply when the access status is set via property. In that
 case, all resources are managed individually.
+
+Anyway, the recursivity is useful only when there are multiple medias and the
+status of some of them is different.
 
 Finally, the option applies only to existing resources: if an item is created
 after a change in an item set, it won't apply to it, so you will need to set the
@@ -350,8 +354,23 @@ use the datatype "numeric timestamp" from the module [Numeric Datatypes], but a
 literal is fine. The date must be an iso one (`2022-03-14`). A time can be set
 too (`2022-03-14T12:34:56`).
 
-A check is automatically done when an anonymous visitor or a reserved user is
-accessing a file.
+**Important**: Generally, it is enough to set the embargo on the item. Set it on
+medias only when there are multiple medias with various status or date of
+embargo.
+
+A setting allows to indicate what to do when an embargo ends: keep status level
+or set it free, keep dates or set them null.
+
+A job is run automatically once a day to update access status and embargo.
+
+Furthermore, a check is automatically done when an anonymous visitor or a
+restricted user is accessing a restricted file. In that case, the media may be
+set public automatically when the embargo is finished.
+
+The job does not update the resource when the visibility is not logical, for
+example when the resource have been set public with a date of end of embargo.
+Of course, don't set a date of end of embargo if the record is not ready or when
+it should remain private.
 
 ### Management of requests
 
@@ -387,6 +406,7 @@ TODO
 - [ ] Use Omeka Store instead of local file system.
 - [ ] Update temporal to avoid to check embargo each time via php.
 - [ ] Reindexation (trigger event?) when embargo is updated automatically. Use the cron task of module EasyAdmin?
+- [ ] Clarify process for embargo start and update embargo start date with a specific option (no one seems to use it anyway).
 
 
 Warning
