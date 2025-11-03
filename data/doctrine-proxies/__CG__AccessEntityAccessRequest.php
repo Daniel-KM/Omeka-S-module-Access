@@ -67,10 +67,10 @@ class AccessRequest extends \Access\Entity\AccessRequest implements \Doctrine\OR
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'recursive', 'enabled', 'temporal', 'start', 'end', 'name', 'body', 'fields', 'created', 'modified', 'resources'];
+            return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'recursive', 'enabled', 'temporal', 'start', 'end', 'name', 'message', 'fields', 'created', 'modified', 'resources'];
         }
 
-        return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'recursive', 'enabled', 'temporal', 'start', 'end', 'name', 'body', 'fields', 'created', 'modified', 'resources'];
+        return ['__isInitialized__', 'id', 'user', 'email', 'token', 'status', 'recursive', 'enabled', 'temporal', 'start', 'end', 'name', 'message', 'fields', 'created', 'modified', 'resources'];
     }
 
     /**
@@ -426,23 +426,23 @@ class AccessRequest extends \Access\Entity\AccessRequest implements \Doctrine\OR
     /**
      * {@inheritDoc}
      */
-    public function setBody(?string $body): \Access\Entity\AccessRequest
+    public function setMessage(?string $message): \Access\Entity\AccessRequest
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setBody', [$body]);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setMessage', [$message]);
 
-        return parent::setBody($body);
+        return parent::setMessage($message);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getBody(): ?string
+    public function getMessage(): ?string
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getBody', []);
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getMessage', []);
 
-        return parent::getBody();
+        return parent::getMessage();
     }
 
     /**

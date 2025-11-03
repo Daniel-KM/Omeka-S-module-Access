@@ -3,7 +3,6 @@
 namespace Access\Job;
 
 use Omeka\Job\AbstractJob;
-use Omeka\Stdlib\Message;
 
 class AccessStatusRecursive extends AbstractJob
 {
@@ -37,7 +36,7 @@ class AccessStatusRecursive extends AbstractJob
     protected $entityManager;
 
     /**
-     * @var \Omeka\Mvc\Controller\Plugin\Logger
+     * @var \Laminas\Log\LoggerInterface
      */
     protected $logger;
 
@@ -132,20 +131,20 @@ class AccessStatusRecursive extends AbstractJob
 
         $resourceName = $resource->getResourceName();
         if (!in_array($resourceName, ['items', 'item_sets'])) {
-            $this->logger->warn(new Message(
-                'Resource #%d is not an item or an item set.', // @translate
-                $resourceId
-            ));
+            $this->logger->warn(
+                'Resource #{resource_id} is not an item or an item set.', // @translate
+                ['resource_id' => $resourceId]
+            );
             return null;
         }
 
         /** @var \Access\Entity\AccessStatus $accessStatus */
         $accessStatus = $this->accessStatusForResource->__invoke($resource);
         if (!$accessStatus) {
-            $this->logger->warn(new Message(
-                'No access status for resource #%d.', // @translate
-                $resourceId
-            ));
+            $this->logger->warn(
+                'No access status for resource #{resource_id}.', // @translate
+                ['resource_id' => $resourceId]
+            );
             return null;
         }
 

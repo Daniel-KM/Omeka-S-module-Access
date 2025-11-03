@@ -607,8 +607,6 @@ class Module extends AbstractModule
             return;
         }
 
-        $request = $event->getParam('request');
-
         $data = $request->getContent('data');
         if (empty($data['access'])) {
             unset($data['access']);
@@ -616,6 +614,7 @@ class Module extends AbstractModule
             return;
         }
 
+        // The flag is set below after first process to avoid to reprocess.
         if (!empty($data['access']['is_batch_process'])) {
             return;
         }
@@ -628,59 +627,65 @@ class Module extends AbstractModule
         $settings = $services->get('Omeka\Settings');
 
         $rawData = $data['access'];
-        $newData = [];
+        $processData = [];
 
         // Access level.
         if (!empty($rawData['o-access:level']) && in_array($rawData['o-access:level'], AccessStatusRepresentation::LEVELS)) {
-            $newData['o-access:level'] = $rawData['o-access:level'];
+            $processData['o-access:level'] = $rawData['o-access:level'];
         }
 
         // Embargo start.
         if (empty($rawData['embargo_start_update'])) {
             // Nothing to do.
         } elseif ($rawData['embargo_start_update'] === 'remove') {
-            $newData['o-access:embargo_start'] = null;
+            $processData['o-access:embargo_start'] = null;
         } elseif ($rawData['embargo_start_update'] === 'set') {
             $embargoStart = $rawData['embargo_start_date'] ?? null;
             $embargoStart = trim((string) $embargoStart) ?: null;
             if ($embargoStart) {
                 $embargoStart .= 'T' . (empty($rawData['embargo_start_time']) ? '00:00:00' : $rawData['embargo_start_time'] . ':00');
             }
-            $newData['o-access:embargo_start'] = $embargoStart;
+            $processData['o-access:embargo_start'] = $embargoStart;
         }
 
         // Embargo end.
         if (empty($rawData['embargo_end_update'])) {
             // Nothing to do.
         } elseif ($rawData['embargo_end_update'] === 'remove') {
-            $newData['o-access:embargo_end'] = null;
+            $processData['o-access:embargo_end'] = null;
         } elseif ($rawData['embargo_end_update'] === 'set') {
             $embargoEnd = $rawData['embargo_end_date'] ?? null;
             $embargoEnd = trim((string) $embargoEnd) ?: null;
             if ($embargoEnd) {
                 $embargoEnd .= 'T' . (empty($rawData['embargo_end_time']) ? '23:59:59' : $rawData['embargo_end_time'] . ':59');
             }
-            $newData['o-access:embargo_end'] = $embargoEnd;
+            $processData['o-access:embargo_end'] = $embargoEnd;
         }
 
-        if (!empty($rawData['access_recursive'])) {
-            $newData['access_recursive'] = true;
-        }
+        // TODO Manage three states: boolean => batch process; null or missing => no? Useless.
+        // When properties are not used, it is the only element of the fieldset.
+        $processData['access_recursive'] = !empty($rawData['access_recursive']);
 
-        $needProcess = array_key_exists('o-access:level', $newData)
-            || array_key_exists('o-access:embargo_start', $newData)
-            || array_key_exists('o-access:embargo_end', $newData)
-            || array_key_exists('access_recursive', $newData);
+        $settings = $services->get('Omeka\Settings');
+        $accessViaProperty = (bool) $settings->get('access_property');
+        if ($accessViaProperty) {
+            $needProcess = $processData['access_recursive'];
+        } else {
+            $needProcess = !empty($processData['o-access:level'])
+                || array_key_exists('o-access:embargo_start', $processData)
+                || array_key_exists('o-access:embargo_end', $processData)
+                || $processData['access_recursive'];
+        }
 
         if ($needProcess) {
             $this->getServiceLocator()->get('Omeka\Logger')->info(
                 "Cleaned params used for Access:\n{json}", // @translate
-                ['json' => $newData]
+                ['json' => $processData]
             );
-            $newData = [
+            $processData = [
                 'is_batch_process' => true,
-            ] + $newData;
-            $data['access'] = $newData;
+            ] + $processData;
+            $data['access'] = $processData;
         } else {
             unset($data['access']);
         }
@@ -837,23 +842,44 @@ class Module extends AbstractModule
 
         // This is an api-post event, so id is ready and checks are done.
         $resource = $event->getParam('response')->getContent();
+        $resourceName = $resource->getResourceName();
 
-        $this->manageAccessStatusForResource($resource, $resourceData);
+        // Just to clarify.
+        $accessData = array_intersect_key($resourceData['access'] ?? [], [
+            'o-access:level' => null,
+            'o-access:embargo_start' => null,
+            'o-access:embargo_end' => null,
+            // Related to the form.
+            'access_recursive' => null,
+            'embargo_start_date' => null,
+            'embargo_start_time' => null,
+            'embargo_end_date' => null,
+            'embargo_end_time' => null,
+            // Related to previous process.
+            'is_batch_process' => null,
+        ]);
+
+        // For item sets and items, the access is managed recursively when set.
+        // Of course for medias, there is no recursivity.
+        $this->manageAccessStatusForResource($resource, $accessData);
 
         // Create the access statuses for new medias: there is no event during
         // media creation via item.
-        if ($resource->getResourceName() === 'items'
-            && empty($resourceData['access_recursive'])
-        ) {
+        // This is needed only when the option "access_recursive" is not set,
+        // because when set, it is already managed via manageAccessStatusForResource().
+        if ($resourceName === 'items' && empty($accessData['access_recursive'])) {
             $services = $this->getServiceLocator();
             $entityManager = $services->get('Omeka\EntityManager');
+            // $settings = $services->get('Omeka\Settings');
             $isUpdate = $event->getName() === 'api.update.post';
+            // $accessViaProperty = (bool) $settings->get('access_property');
             foreach ($resource->getMedia() as $media) {
                 // Don't modify media with an existing status during update.
+                // TODO Except when managed with property? Not sure. Not for now.
                 if ($isUpdate && $entityManager->getReference(AccessStatus::class, $media->getId())) {
                     continue;
                 }
-                $this->manageAccessStatusForResource($media, $resourceData);
+                $this->manageAccessStatusForResource($media, $accessData);
             }
         }
 
@@ -861,7 +887,7 @@ class Module extends AbstractModule
         // level of an item in order to display a warning.
         // This is needed only when the option "access_recursive" is not set,
         // because when set, the status is copied, so running as wanted by user.
-        if ($resourceName === 'items' && empty($resourceData['access_recursive'])) {
+        if ($resourceName === 'items' && empty($accessData['access_recursive'])) {
             $mediaIds = $this->listMediaAccessDifferentThanItem($resource);
             if ($mediaIds) {
                 $messenger = $services->get('ControllerPluginManager')->get('messenger');
@@ -874,7 +900,7 @@ class Module extends AbstractModule
         }
     }
 
-    protected function manageAccessStatusForResource(Resource $resource, array $resourceData): void
+    protected function manageAccessStatusForResource(Resource $resource, array $accessData): void
     {
         /**
          * @var \Doctrine\ORM\EntityManager $entityManager
@@ -906,7 +932,7 @@ class Module extends AbstractModule
         // Request "isPartial" does not check "should hydrate" for properties,
         // so properties are always managed, but not access keys.
 
-        $accessRecursive = !empty($resourceData['access_recursive']);
+        $accessRecursive = !empty($accessData['access_recursive']);
 
         $accessViaProperty = (bool) $settings->get('access_property');
         if ($accessViaProperty) {
@@ -950,30 +976,30 @@ class Module extends AbstractModule
                 'o-access:embargo_end' => ['value' => $embargoEndVal, 'type' => $embargoEndType],
             ];
         } else {
-            $levelIsSet = array_key_exists('o-access:level', $resourceData);
-            $level = $resourceData['o-access:level'] ?? null;
+            $levelIsSet = array_key_exists('o-access:level', $accessData);
+            $level = $accessData['o-access:level'] ?? null;
             // The process via resource form returns two keys (date and time),
             // but the background process use the right key.
-            $embargoStartIsSet = array_key_exists('o-access:embargo_start', $resourceData);
-            $embargoStart = $resourceData['o-access:embargo_start'] ?? null;
+            $embargoStartIsSet = array_key_exists('o-access:embargo_start', $accessData);
+            $embargoStart = $accessData['o-access:embargo_start'] ?? null;
             // No standard keys means a form process.
             // Merge date and time used in advanced tab of resource form.
             if (!$embargoStartIsSet) {
-                $embargoStartIsSet = array_key_exists('embargo_start_date', $resourceData);
-                $embargoStart = $resourceData['embargo_start_date'] ?? null;
+                $embargoStartIsSet = array_key_exists('embargo_start_date', $accessData);
+                $embargoStart = $accessData['embargo_start_date'] ?? null;
                 $embargoStart = trim((string) $embargoStart) ?: null;
                 if ($embargoStart) {
-                    $embargoStart .= 'T' . (empty($resourceData['embargo_start_time']) ? '00:00:00' : $resourceData['embargo_start_time'] . ':00');
+                    $embargoStart .= 'T' . (empty($accessData['embargo_start_time']) ? '00:00:00' : $accessData['embargo_start_time'] . ':00');
                 }
             }
-            $embargoEndIsSet = array_key_exists('o-access:embargo_end', $resourceData);
-            $embargoEnd = $resourceData['o-access:embargo_end'] ?? null;
+            $embargoEndIsSet = array_key_exists('o-access:embargo_end', $accessData);
+            $embargoEnd = $accessData['o-access:embargo_end'] ?? null;
             if (!$embargoEndIsSet) {
-                $embargoEndIsSet = array_key_exists('embargo_end_date', $resourceData);
-                $embargoEnd = $resourceData['embargo_end_date'] ?? null;
+                $embargoEndIsSet = array_key_exists('embargo_end_date', $accessData);
+                $embargoEnd = $accessData['embargo_end_date'] ?? null;
                 $embargoEnd = trim((string) $embargoEnd) ?: null;
                 if ($embargoEnd) {
-                    $embargoEnd .= 'T' . (empty($resourceData['embargo_end_time']) ? '23:59:59' : $resourceData['embargo_end_time'] . ':59');
+                    $embargoEnd .= 'T' . (empty($accessData['embargo_end_time']) ? '23:59:59' : $accessData['embargo_end_time'] . ':59');
                 }
             }
             $accessStatusValues = [];

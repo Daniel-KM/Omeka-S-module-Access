@@ -17,12 +17,12 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'Protection', // @translate
+                    'label_attributes' => [
+                        'style' => 'display: block;',
+                    ],
                     'value_options' => [
                         '0' => 'Protect media content only (files)', // @translate
                         '1' => 'Protect records and content (not supported currently)', // @translate
-                    ],
-                    'label_attributes' => [
-                        'style' => 'display: block;',
                     ],
                 ],
                 'attributes' => [
@@ -37,6 +37,9 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalMultiCheckbox::class,
                 'options' => [
                     'label' => 'Access modes', // @translate
+                    'label_attributes' => [
+                        'style' => 'display: block;',
+                    ],
                     'value_options' => [
                         'ip' => 'IP: visitors with specified ips have access to a list of reserved media by item sets', // @translate
                         'guest' => 'Guest: all users, included guests, have access to all reserved medias', // @translate
@@ -49,9 +52,6 @@ class ConfigForm extends Form
                         'user' => 'User: authenticated users should request access to specific reserved medias', // @translate
                         'email' => 'Email: A visitor identified by email should request access to specific reserved medias', // @translate
                         'token' => 'Token: A user or visitor with a token have access to specific reserved medias', // @translate
-                    ],
-                    'label_attributes' => [
-                        'style' => 'display: block;',
                     ],
                 ],
                 'attributes' => [
@@ -141,13 +141,13 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'Set access via property', // @translate
+                    'label_attributes' => [
+                        'style' => 'display: block;',
+                    ],
                     'value_options' => [
                         'level' => 'Access via property with mode "level" (four possible values)', // @translate
                         'reserved' => 'Access via property with mode "reserved" (presence or not of a value)', // @translate
                         'protected' => 'Access via property with mode "protected" (presence or not of a value)', // @translate
-                    ],
-                    'label_attributes' => [
-                        'style' => 'display: block;',
                     ],
                 ],
                 'attributes' => [

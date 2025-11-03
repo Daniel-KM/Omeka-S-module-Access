@@ -39,8 +39,10 @@ class BatchEditFieldset extends Fieldset
                 'data-collection-action' => 'replace',
             ]);
 
+        // When properties are used, the only option is to apply recursively.
+
         if ($this->accessViaProperty) {
-            $this->initAccessRecursive();
+            $this->appendAccessRecursive();
             return;
         }
 
@@ -170,11 +172,12 @@ class BatchEditFieldset extends Fieldset
                     'data-collection-action' => 'replace',
                 ],
             ])
-            ->initAccessRecursive()
+
+            ->appendAccessRecursive()
         ;
     }
 
-    protected function initAccessRecursive(): self
+    protected function appendAccessRecursive(): self
     {
         if (in_array($this->resourceType, ['itemSet', 'item'])) {
             $this

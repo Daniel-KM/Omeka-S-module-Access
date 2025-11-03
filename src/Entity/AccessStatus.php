@@ -68,6 +68,10 @@ class AccessStatus extends AbstractEntity
     protected $id;
 
     /**
+     * One of the constants free/reserved/protected/forbidden above.
+     *
+     * @var string
+     *
      * @Column(
      *     type="string",
      *     length=15,

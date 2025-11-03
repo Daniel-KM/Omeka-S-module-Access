@@ -5,7 +5,7 @@
     header nav .access-log::before,
     .access-logs .subhead::before,
     .access-log .no-resources::before {
-        content:"";
+        content:""; /* far fa-unlock-alt */
     }
 
     .inputs input[name=embargo_start_date],

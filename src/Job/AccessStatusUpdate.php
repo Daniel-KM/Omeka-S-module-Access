@@ -32,19 +32,19 @@ class AccessStatusUpdate extends AbstractJob
     protected $entityManager;
 
     /**
-     * @var \Omeka\Mvc\Controller\Plugin\Logger
+     * @var \Laminas\Log\LoggerInterface
      */
     protected $logger;
 
     /**
      * @var string
      */
-    protected $missingMode = 'skip';
+    protected $modeMissing = 'skip';
 
     /**
      * @var string
      */
-    protected $syncMode = 'skip';
+    protected $modeSync = 'skip';
 
     /**
      * @var array
@@ -99,21 +99,21 @@ class AccessStatusUpdate extends AbstractJob
 
         $settings = $services->get('Omeka\Settings');
 
-        $syncModes = [
+        $modeSyncs = [
             'skip',
             'from_properties_to_accesses',
             'from_accesses_to_properties',
         ];
-        $this->syncMode = $this->getArg('sync', 'skip') ?: 'skip';
-        if (!in_array($this->missingMode, $syncModes)) {
+        $this->modeSync = $this->getArg('sync', 'skip') ?: 'skip';
+        if (!in_array($this->modeMissing, $modeSyncs)) {
             $this->logger->err(
                 'Sync mode {mode} is invalid.', // @translate
-                ['mode' => $this->syncMode]
+                ['mode' => $this->modeSync]
             );
             return;
         }
 
-        $missingModes = [
+        $modeMissings = [
             'skip',
             'free',
             'reserved',
@@ -123,11 +123,11 @@ class AccessStatusUpdate extends AbstractJob
             'visibility_protected',
             'visibility_forbidden',
         ];
-        $this->missingMode = $this->getArg('missing', 'skip') ?: 'skip';
-        if (!in_array($this->missingMode, $missingModes)) {
+        $this->modeMissing = $this->getArg('missing', 'skip') ?: 'skip';
+        if (!in_array($this->modeMissing, $modeMissings)) {
             $this->logger->err(
                 'Missing mode {mode} is invalid.', // @translate
-                ['mode' => $this->missingMode]
+                ['mode' => $this->modeMissing]
             );
             return;
         }
@@ -145,8 +145,8 @@ class AccessStatusUpdate extends AbstractJob
             return;
         }
 
-        if ($this->syncMode === 'skip'
-            && $this->missingMode === 'skip'
+        if ($this->modeSync === 'skip'
+            && $this->modeMissing === 'skip'
             && $this->recursiveProcesses === []
         ) {
             $this->logger->warn(
@@ -156,13 +156,13 @@ class AccessStatusUpdate extends AbstractJob
         }
 
         $this->accessViaProperty = (bool) $settings->get('access_property');
-        if (!$this->accessViaProperty && $this->syncMode !== 'skip') {
+        if (!$this->accessViaProperty && $this->modeSync !== 'skip') {
             $this->logger->warn(
                 'Synchronization of property values and index is set, but the config for access mode does not use properties.' // @translate
             );
         }
 
-        if ($this->accessViaProperty || $this->syncMode !== 'skip') {
+        if ($this->accessViaProperty || $this->modeSync !== 'skip') {
             $result = $this->prepareProperties(true);
             if (!$result) {
                 return;
@@ -198,15 +198,15 @@ class AccessStatusUpdate extends AbstractJob
             }
         }
 
-        if ($this->syncMode === 'from_properties_to_index') {
+        if ($this->modeSync === 'from_properties_to_index') {
             $this->updateLevelAndEmbargoViaProperty();
-        } elseif ($this->syncMode === 'from_index_to_properties') {
+        } elseif ($this->modeSync === 'from_index_to_properties') {
             // This job can be skipped if the missing mode is not skip, but it
             // is simpler to understand. It's just a quick sql anyway.
             $this->copyIndexIntoPropertyValues();
         }
 
-        if ($this->missingMode !== 'skip') {
+        if ($this->modeMissing !== 'skip') {
             $this->addMissingLevelViaVisibility();
             // Update properties when the config use them.
             if ($this->accessViaProperty) {
@@ -341,18 +341,18 @@ class AccessStatusUpdate extends AbstractJob
 
     protected function addMissingLevelViaVisibility(): self
     {
-        if (in_array($this->missingMode, AccessStatusRepresentation::LEVELS)) {
+        if (in_array($this->modeMissing, AccessStatusRepresentation::LEVELS)) {
             $sql = <<<SQL
                 # Set the specified status for all missing resources.
                 INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-                SELECT `id`, "{$this->missingMode}", NULL, NULL
+                SELECT `id`, "{$this->modeMissing}", NULL, NULL
                 FROM `resource`
                 ON DUPLICATE KEY UPDATE
                    `id` = `resource`.`id`
                 ;
                 SQL;
         } else {
-            $mode = substr($this->missingMode, 11);
+            $mode = substr($this->modeMissing, 11);
             $sql = <<<SQL
                 # Set free all missing public resources.
                 INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
@@ -389,10 +389,10 @@ class AccessStatusUpdate extends AbstractJob
         $quotedListString = implode(', ', $quotedList);
 
         // Insert missing access according to property values.
-        if (in_array($this->missingMode, AccessStatusRepresentation::LEVELS)) {
-            $subSql = "'$this->missingMode'";
+        if (in_array($this->modeMissing, AccessStatusRepresentation::LEVELS)) {
+            $subSql = "'$this->modeMissing'";
         } else {
-            $mode = substr($this->missingMode, 11);
+            $mode = substr($this->modeMissing, 11);
             $subSql = "IF(`resource`.`is_public` = 1, 'free', '$mode')";
         }
 

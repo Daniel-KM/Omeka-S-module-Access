@@ -3,7 +3,7 @@
 namespace Access\Job;
 
 use Access\Api\Representation\AccessStatusRepresentation;
-use Omeka\Stdlib\Message;
+use Common\Stdlib\PsrMessage;
 
 trait AccessPropertiesTrait
 {
@@ -102,18 +102,18 @@ trait AccessPropertiesTrait
                 $this->propertyLevelId = (int) reset($this->propertyLevelId);
             } else {
                 $hasError = true;
-                $message = new Message(
-                    'Property "%1$s" for level does not exist.', // @translate
-                    $this->propertyLevel
+                $message = new PsrMessage(
+                    'Property {property} for level does not exist.', // @translate
+                    ['property' => $this->propertyLevel]
                 );
-                $useLogger ? $this->logger->err($message) : $messenger->addError($message);
+                $useLogger ? $this->logger->err($message->getMessage(), $message->getContext()) : $messenger->addError($message);
             }
         } else {
             $hasError = true;
-            $message = new Message(
+            $message = new PsrMessage(
                 'Property to set access level is not defined.' // @translate
             );
-            $useLogger ? $this->logger->err($message) : $messenger->addError($message);
+            $useLogger ? $this->logger->err($message->getMessage()) : $messenger->addError($message);
         }
 
         if ($this->propertyEmbargoStart) {
@@ -122,18 +122,18 @@ trait AccessPropertiesTrait
                 $this->propertyEmbargoStartId = (int) reset($this->propertyEmbargoStartId);
             } else {
                 $hasError = true;
-                $message = new Message(
-                    'Property "%1$s" for embargo start does not exist.', // @translate
-                    $this->propertyEmbargoStart
+                $message = new PsrMessage(
+                    'Property {property} for embargo start does not exist.', // @translate
+                    ['property' => $this->propertyEmbargoStart]
                 );
-                $useLogger ? $this->logger->err($message) : $messenger->addError($message);
+                $useLogger ? $this->logger->err($message->getMessage(), $message->getContext()) : $messenger->addError($message);
             }
         } else {
             $hasError = true;
-            $message = new Message(
+            $message = new PsrMessage(
                 'Property to set embargo start is not defined.' // @translate
             );
-            $useLogger ? $this->logger->err($message) : $messenger->addError($message);
+            $useLogger ? $this->logger->err($message->getMessage()) : $messenger->addError($message);
         }
 
         if ($this->propertyEmbargoEnd) {
@@ -142,29 +142,29 @@ trait AccessPropertiesTrait
                 $this->propertyEmbargoEndId = (int) reset($this->propertyEmbargoEndId);
             } else {
                 $hasError = true;
-                $message = new Message(
-                    'Property "%1$s" for embargo end does not exist.', // @translate
-                    $this->propertyEmbargoEnd
+                $message = new PsrMessage(
+                    'Property {property} for embargo end does not exist.', // @translate
+                    ['property' => $this->propertyEmbargoEnd]
                 );
-                $useLogger ? $this->logger->err($message) : $messenger->addError($message);
+                $useLogger ? $this->logger->err($message->getMessage(), $message->getContext()) : $messenger->addError($message);
             }
         } else {
             $hasError = true;
-            $message = new Message(
+            $message = new PsrMessage(
                 'Property to set embargo end is not defined.' // @translate
             );
-            $useLogger ? $this->logger->err($message) : $messenger->addError($message);
+            $useLogger ? $this->logger->err($message->getMessage()) : $messenger->addError($message);
         }
 
-        // This is not an error since default levels may be used, but this is an
+        // This is not an error since default levels may be used, but this is a
         // sensitive job because it modifies values, so stop it.
         if (count(array_intersect_key($this->accessLevels, AccessStatusRepresentation::LEVELS)) !== 4) {
             $hasError = true;
-            $message = new Message(
-                'List of property levels is incomplete, missing "%s".', // @translate
-                implode('", "', array_diff_key(AccessStatusRepresentation::LEVELS, $this->accessLevels))
+            $message = new PsrMessage(
+                'List of property levels is incomplete, missing {strings}.', // @translate
+                ['strings' => implode(', ', array_diff_key(AccessStatusRepresentation::LEVELS, $this->accessLevels))]
             );
-            $useLogger ? $this->logger->err($message) : $messenger->addError($message);
+            $useLogger ? $this->logger->err($message->getMessage(), $message->getContext()) : $messenger->addError($message);
         } else {
             $this->accessLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $this->accessLevels), AccessStatusRepresentation::LEVELS);
         }
@@ -178,11 +178,11 @@ trait AccessPropertiesTrait
             } catch (\Exception $e) {
                 $this->levelDataType = 'literal';
             }
-            $message = new Message(
-                'The data type for property level is not set, so "%s" will be used by default when it is not set in metadata.', // @translate
-                $this->levelDataType
+            $message = new PsrMessage(
+                'The data type for property level is not set, so {data_type} will be used by default when it is not set in metadata.', // @translate
+                ['data_type' => $this->levelDataType]
             );
-            $useLogger ? $this->logger->warn($message) : $messenger->addWarning($message);
+            $useLogger ? $this->logger->warn($message->getMessage(), $message->getContext()) : $messenger->addWarning($message);
         }
 
         // Don't repeat messages.
