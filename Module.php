@@ -481,8 +481,13 @@ class Module extends AbstractModule
 
         $this->infoEmbargo();
 
+        $assetUrl = $renderer->plugin('assetUrl');
+        $renderer->headLink()
+            ->appendStylesheet($assetUrl('css/common-dialog.css', 'Common'));
         $renderer->headScript()
-            ->appendFile($renderer->assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
+            ->appendFile($assetUrl('js/common-dialog.js', 'Common'), 'text/javascript', ['defer' => 'defer'])
+            ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
+
         return '<style>fieldset[name=access_reindex] .inputs label {display: block;}</style>'
             . $this->getConfigFormAuto($renderer);
     }
@@ -1242,6 +1247,7 @@ class Module extends AbstractModule
 
         $assetUrl = $view->plugin('assetUrl');
         $view->headLink()
+            ->appendStylesheet($assetUrl('css/common-dialog.css', 'Common'))
             ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
 
         // Get current access if any.
@@ -1547,8 +1553,10 @@ class Module extends AbstractModule
         $view = $event->getTarget();
         $assetUrl = $view->plugin('assetUrl');
         $view->headLink()
+            ->appendStylesheet($assetUrl('css/common-dialog.css', 'Common'))
             ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
         $view->headScript()
+            ->appendFile($assetUrl('js/common-dialog.js', 'Common'), 'text/javascript', ['defer' => 'defer'])
             ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
     }
 

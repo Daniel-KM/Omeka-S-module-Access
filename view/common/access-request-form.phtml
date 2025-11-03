@@ -17,8 +17,10 @@ $allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $t
 
 if ($level !== 'forbidden')  {
     $this->headLink()
+        ->appendStylesheet($assetUrl('css/common-dialog.css', 'Common'))
         ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
     $this->headScript()
+        ->appendFile($assetUrl('js/common-dialog.js', 'Common'), 'text/javascript', ['defer' => 'defer'])
         ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
 }
 ?>

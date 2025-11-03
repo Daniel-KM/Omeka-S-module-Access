@@ -9,11 +9,13 @@ $url = $plugins->get('url');
 $api = $plugins->get('api');
 $i18n = $plugins->get('i18n');
 $escape = $plugins->get('escapeHtml');
+$assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
 $hyperlink= $plugins->get('hyperlink');
 
 $this->headLink()
-    ->appendStylesheet($this->assetUrl('css/access-admin.css', 'Access'));
+    ->appendStylesheet($assetUrl('css/common-dialog.css', 'Common'))
+    ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
 
 $this->htmlElement('body')->appendAttribute('class', 'access access-logs browse');
 ?>

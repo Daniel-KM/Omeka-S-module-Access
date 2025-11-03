@@ -25,8 +25,10 @@ $allowIndividualRequests = (bool) array_intersect(['user', 'email', 'token'], $a
 $allowGlobalRequests = (bool) array_intersect(['ip', 'guest', 'auth_external', 'auth_cas', 'auth_ldap', 'auth_sso'], $accessModes);
 
 $this->headLink()
+    ->appendStylesheet($assetUrl('css/common-dialog.css', 'Common'))
     ->appendStylesheet($assetUrl('css/access-request.css', 'Access'));
 $this->headScript()
+    ->appendFile($assetUrl('js/common-dialog.js', 'Common'), 'text/javascript', ['defer' => 'defer'])
     ->appendFile($assetUrl('js/access-request.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
 
 $formSubmitUrl = $url('site/access-request/default', ['action' => 'submit'], true);

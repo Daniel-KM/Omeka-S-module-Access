@@ -1,41 +1,24 @@
+'use strict';
+
+/**
+ * Requires common-dialog.js.
+ */
+
 (function($) {
 
     $(document).ready(function() {
 
-        const jsendFail = function(response, textStatus) {
-            if (!response || (!response.message && !response.data)) {
-                alert(Omeka.jsTranslate('Something went wrong' + ': ' + textStatus));
-            } else if (response.message) {
-                alert(response.message);
-            } else if (response.data) {
-                var msg = '';
-                Object.values(response.data).forEach(value => {
-                    if (value && typeof value === 'object') {
-                        Object.values(value).forEach(val => {
-                            if (val && typeof val === 'object') {
-                                Object.values(val).forEach(va => {
-                                    if (va && typeof va === 'object') {
-                                        Object.values(va).forEach(v => {
-                                            msg += "\n" + v;
-                                        });
-                                    } else {
-                                        msg += "\n" + va;
-                                    }
-                                });
-                            } else {
-                                msg += "\n" + val;
-                            }
-                        });
-                    } else {
-                        msg += "\n" + value;
-                    }
-                });
-                msg = msg.trim();
-                alert(msg.length ? msg : Omeka.jsTranslate('Something went wrong'));
-            }
-        }
+        /**
+         * Use common-dialog.js.
+         *
+         * @see Access, Comment, ContactUs, Contribute, Generate, Guest, Resa, SearchHistory, Selection, TwoFactorAuth.
+         */
 
-        // Direct deletion of an access.
+        /**
+         * Direct deletion of an access.
+         *
+         * @todo Use CommonDialog.jSend?
+         */
         $('#content').on('click', 'body.show a.o-icon-delete', function (e) {
             e.preventDefault();
 
@@ -44,10 +27,11 @@
             $.ajax(
                 {
                     url: url,
-                    method: "POST",
-                    beforeSend: function () {
-                        button.removeClass('o-icon-delete').addClass('o-icon-transmit');
-                    }
+                    method: 'POST',
+                    beforeSend: function() {
+                        button.removeClass('o-icon-delete');
+                        CommonDialog.spinnerEnable(button[0]);
+                    },
                 })
                 .done(function (response) {
                     button.parent().parent().remove();
@@ -55,15 +39,18 @@
                         alert(response.message);
                     }
                 })
-                .fail(function (jqXHR, textStatus) {
-                    jsendFail(jqXHR.responseJSON, textStatus);
-                })
+                .fail(CommonDialog.jSendFail)
                 .always(function () {
-                    button.removeClass('o-icon-transmit').addClass('o-icon-delete');
+                    button.addClass('o-icon-delete');
+                    CommonDialog.spinnerDisable(button[0]);
                 });
         });
 
-        // Toggle the status of an access or a request.
+        /**
+         * Toggle the status of an access or a request.
+         *
+         * @todo Use CommonDialog.jSend?
+         */
         $('#content').on('click', 'a.status-toggle-access-request', function (e) {
             e.preventDefault();
 
@@ -73,10 +60,11 @@
             $.ajax(
                 {
                     url: url,
-                    method: "POST",
-                    beforeSend: function () {
-                        button.removeClass('o-icon-' + status).addClass('o-icon-transmit');
-                    }
+                    method: 'POST',
+                    beforeSend: function() {
+                        button.removeClass('o-icon-' + status);
+                        CommonDialog.spinnerEnable(button[0]);
+                    },
                 })
                 .done(function (response) {
                     status = response.data.access_request['o:status'];
@@ -85,11 +73,10 @@
                         alert(response.message);
                     }
                 })
-                .fail(function (jqXHR, textStatus) {
-                    jsendFail(jqXHR.responseJSON, textStatus);
-                })
+                .fail(CommonDialog.jSendFail)
                 .always(function () {
-                    button.removeClass('o-icon-transmit').addClass('o-icon-' + status);
+                    button.addClass('o-icon-' + status);
+                    CommonDialog.spinnerDisable(button[0]);
                 });
         });
 

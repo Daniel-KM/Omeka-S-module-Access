@@ -1,39 +1,18 @@
+'use strict';
+
+/**
+ * Requires common-dialog.js.
+ */
+
 (function($) {
 
     $(document).ready(function() {
 
-        const jsendFail = function(response, textStatus) {
-            if (!response || (!response.message && !response.data)) {
-                alert(Omeka.jsTranslate('Something went wrong' + ': ' + textStatus));
-            } else if (response.message) {
-                alert(response.message);
-            } else if (response.data) {
-                var msg = '';
-                Object.values(response.data).forEach(value => {
-                    if (value && typeof value === 'object') {
-                        Object.values(value).forEach(val => {
-                            if (val && typeof val === 'object') {
-                                Object.values(val).forEach(va => {
-                                    if (va && typeof va === 'object') {
-                                        Object.values(va).forEach(v => {
-                                            msg += "\n" + v;
-                                        });
-                                    } else {
-                                        msg += "\n" + va;
-                                    }
-                                });
-                            } else {
-                                msg += "\n" + val;
-                            }
-                        });
-                    } else {
-                        msg += "\n" + value;
-                    }
-                });
-                msg = msg.trim();
-                alert(msg.length ? msg : Omeka.jsTranslate('Something went wrong'));
-            }
-        }
+        /**
+         * Use common-dialog.js.
+         *
+         * @see Access, Comment, ContactUs, Contribute, Generate, Guest, Resa, SearchHistory, Selection, TwoFactorAuth.
+         */
 
         $('.request-access').on('click', function(e) {
             e.preventDefault();
@@ -52,26 +31,8 @@
         });
 
         $('.access-request-form form').on('submit', function(e) {
-            e.preventDefault();
-            const data = $(this).serializeArray();
-            const url = $('.access-request-form').data('uri');
-
-            $.ajax(
-                {
-                    method: "POST",
-                    url: url,
-                    data: data,
-                    dataType: 'json'
-                })
-                .done(function (response) {
-                    $('.access-request-form').hide();
-                    if (response.message) {
-                        alert(response.message);
-                    }
-                })
-                .fail(function (jqXHR, textStatus) {
-                    jsendFail(jqXHR.responseJSON, textStatus);
-                });
+            // Add the class to trigger jSend automatically (no preventDefault()).
+            $(this).addClass('form-jsend');
         });
 
     });

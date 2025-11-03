@@ -57,6 +57,7 @@ class AccessRequestForm extends Form
     {
         $this
             ->setAttribute('id', 'access-request-form')
+            ->setAttribute('class', 'form-jsend')
             ->setName('access-request-form');
 
         if (!$this->user) {

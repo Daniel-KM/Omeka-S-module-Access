@@ -58,7 +58,8 @@ class AccessRequestForm extends Form
         ];
 
         $this
-            ->setAttribute('id', 'access-request-form');
+            ->setAttribute('id', 'access-request-form')
+            ->setAttribute('class', 'form-jsend');
 
         if ($this->resourceId) {
             $this
