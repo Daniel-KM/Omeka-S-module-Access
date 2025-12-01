@@ -876,7 +876,9 @@ class Module extends AbstractModule
             foreach ($resource->getMedia() as $media) {
                 // Don't modify media with an existing status during update.
                 // TODO Except when managed with property? Not sure. Not for now.
-                if ($isUpdate && $entityManager->getReference(AccessStatus::class, $media->getId())) {
+                // Use find, not getReference(), because getReference() may
+                // return a proxy, so the check is always true with it.
+                if ($isUpdate && $entityManager->find(AccessStatus::class, $media->getId())) {
                     continue;
                 }
                 $this->manageAccessStatusForResource($media, $accessData);
@@ -1111,7 +1113,9 @@ class Module extends AbstractModule
             'embargoEnd' => null,
         ];
 
-        $accessStatus = $entityManager->getReference(AccessStatus::class, $item->getId());
+        // Use find, not getReference(), because getReference() may return a
+        // proxy, so the check is always true with it.
+        $accessStatus = $entityManager->find(AccessStatus::class, $item->getId());
         if ($accessStatus) {
             $access = [
                 'level' => $accessStatus->getLevel(),
@@ -1123,7 +1127,7 @@ class Module extends AbstractModule
         }
 
         foreach ($medias as $media) {
-            $mediaAccessStatus = $entityManager->getReference(AccessStatus::class, $media->getId());
+            $mediaAccessStatus = $entityManager->find(AccessStatus::class, $media->getId());
             if ($mediaAccessStatus) {
                 $mediaAccess = [
                     'level' => $mediaAccessStatus->getLevel(),
