@@ -149,6 +149,11 @@ class IsAllowedMediaContent extends AbstractPlugin
 
         /** @var \Access\Entity\AccessStatus $accessStatus */
         $accessStatus = $this->accessStatus->__invoke($media);
+        // If media has no access status, inherit from item.
+        if (!$accessStatus) {
+            $accessStatus = $this->accessStatus->__invoke($media->item());
+        }
+        // If neither media nor item has access status, allow access (free by default).
         if (!$accessStatus) {
             return true;
         }

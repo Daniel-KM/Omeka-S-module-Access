@@ -951,6 +951,13 @@ class Module extends AbstractModule
                 $accessLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('access_property_levels', [])), AccessStatusRepresentation::LEVELS);
                 $levelValue = $representation->value($levelProperty);
                 $levelVal = $levelValue ? array_search((string) $levelValue->value(), $accessLevels) : null;
+                // If media has no level property, inherit from parent item.
+                if (!$levelVal && $resourceName === 'media') {
+                    $itemAdapter = $services->get('Omeka\ApiAdapterManager')->get('items');
+                    $itemRepresentation = $itemAdapter->getRepresentation($resource->getItem());
+                    $itemLevelValue = $itemRepresentation->value($levelProperty);
+                    $levelVal = $itemLevelValue ? array_search((string) $itemLevelValue->value(), $accessLevels) : null;
+                }
                 $level = $levelVal ?: AccessStatus::FREE;
                 $levelType = $levelValue ? $levelValue->type() : null;
             }
@@ -959,6 +966,15 @@ class Module extends AbstractModule
                 $embargoStartIsSet = true;
                 $embargoStartValue = $representation->value($embargoStartProperty);
                 $embargoStartVal = $embargoStartValue ? (string) $embargoStartValue->value() : null;
+                // If media has no embargo start property, inherit from parent item.
+                if (!$embargoStartVal && $resourceName === 'media') {
+                    if (!isset($itemRepresentation)) {
+                        $itemAdapter = $services->get('Omeka\ApiAdapterManager')->get('items');
+                        $itemRepresentation = $itemAdapter->getRepresentation($resource->getItem());
+                    }
+                    $itemEmbargoStartValue = $itemRepresentation->value($embargoStartProperty);
+                    $embargoStartVal = $itemEmbargoStartValue ? (string) $itemEmbargoStartValue->value() : null;
+                }
                 $embargoStart = $embargoStartVal ?: null;
                 $embargoStartType = $embargoStartValue ? $embargoStartValue->type() : null;
             }
@@ -967,6 +983,15 @@ class Module extends AbstractModule
                 $embargoEndIsSet = true;
                 $embargoEndValue = $representation->value($embargoEndProperty);
                 $embargoEndVal = $embargoEndValue ? (string) $embargoEndValue->value() : null;
+                // If media has no embargo end property, inherit from parent item.
+                if (!$embargoEndVal && $resourceName === 'media') {
+                    if (!isset($itemRepresentation)) {
+                        $itemAdapter = $services->get('Omeka\ApiAdapterManager')->get('items');
+                        $itemRepresentation = $itemAdapter->getRepresentation($resource->getItem());
+                    }
+                    $itemEmbargoEndValue = $itemRepresentation->value($embargoEndProperty);
+                    $embargoEndVal = $itemEmbargoEndValue ? (string) $itemEmbargoEndValue->value() : null;
+                }
                 $embargoEnd = $embargoEndVal ?: null;
                 $embargoEndType = $embargoEndValue ? $embargoEndValue->type() : null;
             }
