@@ -105,7 +105,7 @@ class AccessStatusUpdate extends AbstractJob
             'from_accesses_to_properties',
         ];
         $this->modeSync = $this->getArg('sync', 'skip') ?: 'skip';
-        if (!in_array($this->modeMissing, $modeSyncs)) {
+        if (!in_array($this->modeSync, $modeSyncs)) {
             $this->logger->err(
                 'Sync mode {mode} is invalid.', // @translate
                 ['mode' => $this->modeSync]

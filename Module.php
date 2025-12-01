@@ -1696,7 +1696,7 @@ class Module extends AbstractModule
             return;
         }
 
-        $settings->set('easyadmin_cron_last', $time);
+        $settings->set('access_cron_last', $time);
 
         /** @var \Omeka\Job\Dispatcher $dispatcher */
         $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);

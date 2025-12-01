@@ -349,6 +349,9 @@ return [
                 */
             ],
             'access_auth_sso_idp_item_sets_by_idp' => [],
+
+            // Hidden value.
+            'access_cron_last' => 0,
         ],
         'settings' => [
             'access_message_send' => true,
