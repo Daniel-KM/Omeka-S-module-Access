@@ -125,9 +125,11 @@ class AccessFileController extends AbstractActionController
             $this->entityManager->flush();
         }
 
+        $forceDownload = (bool) $this->params()->fromQuery('download');
+
         return $isAllowedMediaContent
-            ? $this->sendFile($filepath, $media, null, basename($filepath), $storageType)
-            : $this->sendFakeFile($media, basename($filepath));
+            ? $this->sendFile($filepath, $media, null, basename($filepath), $storageType, $forceDownload)
+            : $this->sendFakeFile($media, basename($filepath), $forceDownload);
     }
 
     protected function mediaFromFilename(string $filename): ?MediaRepresentation
@@ -160,7 +162,7 @@ class AccessFileController extends AbstractActionController
     }
 
     /**
-     * This is the 'file' action that is invoked when a user wants to download
+     * This is the "file" action that is invoked when a user wants to download
      * the given file.
      *
      * @see \Access\Controller\AccessFileController::sendFile()
@@ -175,7 +177,8 @@ class AccessFileController extends AbstractActionController
         ?string $mediaType = null,
         ?string $filename = null,
         ?string $storageType = null,
-        bool $cache = false
+        bool $cache = false,
+        bool $forceDownload = false
     ): \Laminas\Http\PhpEnvironment\Response {
         if (!$mediaType) {
             $mediaType = $storageType === 'original' ? $media->mediaType() : 'image/jpeg';
@@ -184,17 +187,21 @@ class AccessFileController extends AbstractActionController
         $filename = $filename ? basename($filename) : basename($filepath);
         $filesize = (int) filesize($filepath);
 
+        $dispositionMode = $forceDownload
+            ? 'attachment'
+            : 'inline';
+
         /** @var \Laminas\Http\PhpEnvironment\Response $response */
         $response = $this->getResponse();
 
         // Write headers.
         $headers = $response->getHeaders()
             ->addHeaderLine('Content-Type: ' . $mediaType)
-            ->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', 'inline', $filename))
+            ->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', $dispositionMode, $filename))
+            // ->addHeaderLine('Content-Description', 'File Transfer')
             ->addHeaderLine('Content-Transfer-Encoding: binary');
         // $header = new Header\ContentLength();
         if ($cache) {
-            // Use this to open files directly.
             // Cache for 30 days.
             $headers
                 ->addHeaderLine('Cache-Control: private, max-age=2592000, post-check=2592000, pre-check=2592000')
@@ -303,8 +310,11 @@ class AccessFileController extends AbstractActionController
      * This is the 'file' action that is invoked when a user wants to download
      * the given file without rights.
      */
-    protected function sendFakeFile(?MediaRepresentation $media, ?string $filename = null)
-    {
+    protected function sendFakeFile(
+        ?MediaRepresentation $media,
+        ?string $filename = null,
+        bool $forceDownload = false
+    ) {
         $mediaType = $media ? (string) $media->mediaType() : 'image/png';
         $mediaTypeMain = strtok($mediaType, '/');
         switch ($mediaType) {
@@ -340,6 +350,6 @@ class AccessFileController extends AbstractActionController
         $filepath = OMEKA_PATH . $filepath;
 
         // "asset" means theme asset, not Asset entity.
-        return $this->sendFile($filepath, $media, $mediaType, $filename, 'asset');
+        return $this->sendFile($filepath, $media, $mediaType, $filename, 'asset', false, $forceDownload);
     }
 }
