@@ -482,6 +482,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         $types['item_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
 
         $mediaItemSetIds = $this->mediaItemSetIds($media);
+        $orInItemSets = '';
         if ($mediaItemSetIds) {
             $orInItemSets = 'OR (ar.recursive = 1 AND r.resource_id IN (:item_set_ids))';
             $bind['item_set_ids'] = array_values($mediaItemSetIds);
