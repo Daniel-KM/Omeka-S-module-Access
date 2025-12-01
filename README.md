@@ -28,8 +28,9 @@ To define specific item sets, you can use standard item sets or use the module
 [Dynamic Item Sets] to include items automatically in specific items sets
 according to metadata.
 
-The public part can be managed easily via the module [Blocks Disposition], but
-it is recommended to use resource page blocks if the theme supports them.
+For old themes, the public part can be managed easily via the module
+[Blocks Disposition], but it is recommended to use resource page blocks for new
+themes.
 
 The module is compatible with the module [Statistics]. It is important to
 redirect download urls to the module (see below config of ".htaccess").
@@ -194,7 +195,15 @@ Omeka has two modes of visibility: public or private. This module adds a second
 check for anonymous or specific users: the right to access to a resource. This
 rights has four levels: free, reserved, protected or forbidden. These access
 levels applies on record or media files, but the current version supports only
-protection of media contents.
+protection of media contents. The mode protected is not used in current version.
+Furthermore, a check is done on embargo dates, if any.
+
+So with this module, there are three conditions to make a file accessible by a
+visitor or a user:
+- visibility of the item and the media should be public;
+- access level should be free for anonymous visitor or reserved if the user has
+  some rights defined in config;
+- embargo dates should be undefined or ended.
 
 So an anonymous visitor can see a public media, but can view the file only if
 the level is set to free. The user should have a permission when the level is
@@ -206,7 +215,8 @@ is limited to files, that is the only type in the current version of the module.
 
 The permission to see a reserved content can be done via many ways: Users can be
 checked via the role guest, the authentication via an external identity provider
-(module [CAS], [LDAP] and [Single Sign-On]), by ip, by email or by a token.
+(module [CAS], [LDAP] and [Single Sign-On]), by ip (v4 or v6), by email or by a
+token.
 
 One important thing to understand is to choose to define the access for each
 type of resource: item sets, items and media and to choose if the access is done
@@ -293,6 +303,31 @@ Note that a public item can have a private media and vice-versa. So, most of the
 time, the value should be set in the metadata of the media. The value can be
 specified for the item too to simplify management.
 
+### Inheritance behavior
+
+When a media does not have an explicit access status set:
+
+- **At runtime**: The media inherits the access level and embargo settings from
+  its parent item. If neither the media nor the item has an access status, the
+  media content is accessible (free by default).
+- **On save with property mode**: When access is managed via properties, if a
+  media does not have the access level property set, it will inherit the value
+  from the parent item property. The same applies to embargo start and end
+  properties.
+- **On save without property mode**: When creating new medias via an item, the
+  item access data is applied to the new medias by default. Use the "recursive"
+  option to explicitly copy access settings to all medias.
+
+This inheritance behavior ensures that restricted items have their medias
+restricted as well, even when access is not explicitly set on individual medias.
+
+### Advanced search
+
+The advanced search form includes a multi-select filter for access levels. You
+can select multiple levels to search for resources matching any of the selected
+levels. When no levels are selected, all resources are returned regardless of
+their access level.
+
 ### Item sets
 
 As indicated above, it is possible to define specific rights by item sets when
@@ -358,8 +393,16 @@ too (`2022-03-14T12:34:56`).
 medias only when there are multiple medias with various status or date of
 embargo.
 
-A setting allows to indicate what to do when an embargo ends: keep status level
-or set it free, keep dates or set them null.
+Two settings control what happens when an embargo ends:
+
+- What to do with the access level:
+  - `free`: Set access level to "free"
+  - `under`: Set access level to the level under ("free" for reserved, "reserved"
+    for protected/forbidden)
+  - `keep`: Keep the current access level
+- What to do with the embargo dates:
+  - `clear`: Remove the embargo dates
+  - `keep`: Keep the embargo dates
 
 A job is run automatically once a day to update access status and embargo.
 
@@ -397,16 +440,81 @@ will add a session cookie that will allow to browse the selected resources.
 In public front-end, a dashboard is added for visitors: `/s/my-site/access-request`.
 Guest users have a specific board too: `/s/my-site/guest/access-request`.
 
+### Check of status levels
+
+In some cases, when the status is stored in a property, you may want to check if
+all resources values statuses are well stored in the table access_status. Here
+are some sql queries for that, with French values and where curation:access is
+used (property 185 here):
+
+```sql
+# Items
+SELECT `access_status`.`id`, `access_status`.`level`, `resource`.`is_public`
+FROM `value`
+INNER JOIN `access_status` ON `value`.`resource_id` = `access_status`.`id`
+INNER JOIN `item` ON `item`.`id` = `access_status`.`id`
+INNER JOIN `resource` ON `resource`.`id` = `item`.`id`
+WHERE `value`.`property_id` = 185
+    AND `value`.`value` = "Accès libre"
+    AND `access_status`.`level` != 'free';
+
+SELECT `access_status`.`id`, `access_status`.`level`, `resource`.`is_public`
+FROM `value`
+INNER JOIN `access_status` ON `value`.`resource_id` = `access_status`.`id`
+INNER JOIN `item` ON `item`.`id` = `access_status`.`id`
+INNER JOIN `resource` ON `resource`.`id` = `item`.`id`
+WHERE `value`.`property_id` = 185
+    AND `value`.`value` = "Accès restreint"
+    AND `access_status`.`level` != 'reserved';
+
+SELECT `access_status`.`id`, `access_status`.`level`, `resource`.`is_public`
+FROM `value`
+INNER JOIN `access_status` ON `value`.`resource_id` = `access_status`.`id`
+INNER JOIN `item` ON `item`.`id` = `access_status`.`id`
+INNER JOIN `resource` ON `resource`.`id` = `item`.`id`
+WHERE `value`.`property_id` = 185
+    AND `value`.`value` = "Non consultable"
+    AND `access_status`.`level` != 'forbidden';
+
+# Media
+SELECT `access_status`.`id`, `access_status`.`level`, `resource`.`is_public`
+FROM `value`
+INNER JOIN `access_status` ON `value`.`resource_id` = `access_status`.`id`
+INNER JOIN `media` ON `media`.`id` = `access_status`.`id`
+INNER JOIN `resource` ON `resource`.`id` = `media`.`id`
+WHERE `value`.`property_id` = 185
+    AND `value`.`value` = "Accès libre"
+    AND `access_status`.`level` != 'free';
+
+SELECT `access_status`.`id`, `access_status`.`level`, `resource`.`is_public`
+FROM `value`
+INNER JOIN `access_status` ON `value`.`resource_id` = `access_status`.`id`
+INNER JOIN `media` ON `media`.`id` = `access_status`.`id`
+INNER JOIN `resource` ON `resource`.`id` = `media`.`id`
+WHERE `value`.`property_id` = 185
+    AND `value`.`value` = "Accès restreint"
+    AND `access_status`.`level` != 'reserved';
+
+SELECT `access_status`.`id`, `access_status`.`level`, `resource`.`is_public`
+FROM `value`
+INNER JOIN `access_status` ON `value`.`resource_id` = `access_status`.`id`
+INNER JOIN `media` ON `media`.`id` = `access_status`.`id`
+INNER JOIN `resource` ON `resource`.`id` = `media`.`id`
+WHERE `value`.`property_id` = 185
+    AND `value`.`value` = "Non consultable"
+    AND `access_status`.`level` != 'forbidden';
+```
+
 
 TODO
 ----
 
-- [ ] Unit tests with all combinaison of settings (important).
-- [ ] Fix ip check for ipv6.
+- [x] Fix ip check for ipv6.
 - [ ] Use Omeka Store instead of local file system.
 - [ ] Update temporal to avoid to check embargo each time via php.
-- [ ] Reindexation (trigger event?) when embargo is updated automatically. Use the cron task of module EasyAdmin?
+- [x] Reindexation (trigger event?) when embargo is updated automatically. Use the cron task of module EasyAdmin?
 - [ ] Clarify process for embargo start and update embargo start date with a specific option (no one seems to use it anyway).
+- [ ] Add a mode cas_itemsets to define access rules by cas attributes and item sets (like sso_idp).
 
 
 Warning
