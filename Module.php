@@ -1689,8 +1689,10 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $accessEmbargoFree = $settings->get('access_embargo_free');
-        if (!in_array($accessEmbargoFree, ['free_clear', 'free_keep', 'under_clear', 'under_keep', 'keep_clear'], true)) {
+        $modeLevel = $settings->get('access_embargo_ended_level', 'free');
+        $modeDate = $settings->get('access_embargo_ended_date', 'keep');
+        // Skip cron if both level and date are set to 'keep' (no update needed).
+        if ($modeLevel === 'keep' && $modeDate === 'keep') {
             return;
         }
 
@@ -1775,8 +1777,8 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $accessEmbargoFree = $settings->get('access_embargo_free', 'keep_keep');
-        [$modeLevel, $modeDate] = explode('_', $accessEmbargoFree) + [1 => null];
+        $modeLevel = $settings->get('access_embargo_ended_level', 'free');
+        $modeDate = $settings->get('access_embargo_ended_date', 'keep');
 
         if ($modeLevel === 'free' && $modeDate === 'clear') {
             $message = new PsrMessage(
@@ -1799,9 +1801,6 @@ class Module extends AbstractModule
                 'According to setting, when embargo ends, the access level is kept and the embargo dates are cleared.' // @translate
             );
         } else {
-            if ($accessEmbargoFree !== 'keep_keep') {
-                $settings->set('access_embargo_free', 'keep_keep');
-            }
             $message = new PsrMessage(
                 'According to setting, when embargo ends, the access level and the embargo dates are kept.' // @translate
             );

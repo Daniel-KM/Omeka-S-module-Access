@@ -261,24 +261,38 @@ class ConfigForm extends Form
                 ],
             ])
             ->add([
-                'name' => 'access_embargo_free',
+                'name' => 'access_embargo_ended_level',
                 'type' => CommonElement\OptionalRadio::class,
                 'options' => [
-                    'label' => 'Update access status when embargo ends', // @translate
+                    'label' => 'Update access level when embargo ends', // @translate
                     'label_attributes' => [
                         'style' => 'display: block;',
                     ],
                     'value_options' => [
-                        'free_keep' => 'Set access level to "free" and keep embargo date', // @translate
-                        'free_clear' => 'Set access level to "free" and remove embargo date', // @translate
-                        'under_keep' => 'Set access level to the level under ("free" for reserved, "reserved" for protected/forbidden) and keep embargo date', // @translate
-                        'under_clear' => 'Set access level to the level under ("free" for reserved, "reserved" for protected/forbidden) and remove embargo date', // @translate
-                        'keep_keep' => 'Keep access level and embargo date', // @translate
-                        'keep_clear' => 'Keep access level and remove embargo date', // @translate
+                        'free' => 'Set access level to "free"', // @translate
+                        'under' => 'Set access level to the level under ("free" for reserved, "reserved" for protected/forbidden)', // @translate
+                        'keep' => 'Keep access level', // @translate
                     ],
                 ],
                 'attributes' => [
-                    'id' => 'access_embargo_free',
+                    'id' => 'access_embargo_ended_level',
+                ],
+            ])
+            ->add([
+                'name' => 'access_embargo_ended_date',
+                'type' => CommonElement\OptionalRadio::class,
+                'options' => [
+                    'label' => 'Update embargo dates when embargo ends', // @translate
+                    'label_attributes' => [
+                        'style' => 'display: block;',
+                    ],
+                    'value_options' => [
+                        'clear' => 'Remove embargo dates', // @translate
+                        'keep' => 'Keep embargo dates', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'access_embargo_ended_date',
                 ],
             ])
         ;

@@ -105,8 +105,10 @@ class AccessEmbargoUpdate extends AbstractJob
         $settings = $services->get('Omeka\Settings');
 
         // The check is done before job, so just a quick check here.
-        $accessEmbargoFree = $settings->get('access_embargo_free');
-        if (!in_array($accessEmbargoFree, ['free_clear', 'free_keep', 'under_clear', 'under_keep', 'keep_clear'], true)) {
+        $this->modeLevel = $settings->get('access_embargo_ended_level', 'free');
+        $this->modeDate = $settings->get('access_embargo_ended_date', 'keep');
+        // Skip if both level and date are set to 'keep' (no update needed).
+        if ($this->modeLevel === 'keep' && $this->modeDate === 'keep') {
             $this->logger->notice('Skipping process according to the option defined.'); // @translate
             return;
         }
@@ -119,8 +121,6 @@ class AccessEmbargoUpdate extends AbstractJob
         }
 
         // TODO Update start embargo (for now, only end of embargo are updated).
-
-        [$this->modeLevel, $this->modeDate] = explode('_', $accessEmbargoFree);
 
         // Count the total of resources with an embargo.
         $sql = <<<'SQL'
