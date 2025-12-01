@@ -340,11 +340,31 @@ class IsAllowedMediaContent extends AbstractPlugin
         }
 
         // Check an ip range.
-        // FIXME Fix check of ip for ipv6 (ip2long).
-        $ipLong = ip2long($ip);
-        foreach ($listIps as $range) {
-            if ($ipLong >= $range['low'] && $ipLong <= $range['high']) {
-                return array_intersect_key($range, ['allow' => null, 'forbid' => null]);
+        // Determine if client IP is IPv4 or IPv6.
+        $isIpv6 = strpos($ip, ':') !== false;
+        if ($isIpv6) {
+            $ipBinary = inet_pton($ip);
+            if ($ipBinary === false) {
+                return null;
+            }
+            foreach ($listIps as $range) {
+                if (!empty($range['ipv6']) && isset($range['low_bin'], $range['high_bin'])) {
+                    if ($ipBinary >= $range['low_bin'] && $ipBinary <= $range['high_bin']) {
+                        return array_intersect_key($range, ['allow' => null, 'forbid' => null]);
+                    }
+                }
+            }
+        } else {
+            $ipLong = ip2long($ip);
+            if ($ipLong === false) {
+                return null;
+            }
+            foreach ($listIps as $range) {
+                if (empty($range['ipv6']) && isset($range['low'], $range['high'])) {
+                    if ($ipLong >= $range['low'] && $ipLong <= $range['high']) {
+                        return array_intersect_key($range, ['allow' => null, 'forbid' => null]);
+                    }
+                }
             }
         }
 
