@@ -13,6 +13,7 @@ use Access\Form\Admin\BatchEditFieldset;
 use Common\Stdlib\PsrMessage;
 use Common\TraitModule;
 use DateTime;
+use Doctrine\DBAL\Connection;
 use Laminas\EventManager\Event;
 use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\Mvc\Controller\AbstractController;
@@ -1509,8 +1510,6 @@ class Module extends AbstractModule
 
     /**
      * Helper to build search queries.
-     *
-     * @param Event $event
      */
     public function handleApiSearchQuery(Event $event): void
     {
@@ -1528,12 +1527,11 @@ class Module extends AbstractModule
             $qb = $event->getParam('queryBuilder');
             $expr = $qb->expr();
 
-            // No array.
-            if (is_array($query['access'])) {
-                $query['access'] = reset($query['access']);
-            }
+            // Handle single or multiple access levels.
+            $accessLevels = is_array($query['access']) ? $query['access'] : [$query['access']];
+            $accessLevels = array_intersect($accessLevels, AccessStatusRepresentation::LEVELS);
 
-            if (in_array($query['access'], AccessStatusRepresentation::LEVELS)) {
+            if ($accessLevels) {
                 $accessStatusAlias = $adapter->createAlias();
                 $qb
                     ->innerJoin(
@@ -1541,12 +1539,25 @@ class Module extends AbstractModule
                         $accessStatusAlias,
                         \Doctrine\ORM\Query\Expr\Join::WITH,
                         "$accessStatusAlias.id = omeka_root.id"
-                    )
-                    ->andWhere($expr->eq(
-                        "$accessStatusAlias.level",
-                        $adapter->createNamedParameter($qb, $query['access'])
-                    ));
+                    );
+                if (count($accessLevels) === 1) {
+                    $qb
+                        ->andWhere($expr->eq(
+                            "$accessStatusAlias.level",
+                            $adapter->createNamedParameter($qb, reset($accessLevels))
+                        ));
+                } else {
+                    $levelAlias = $adapter->createAlias();
+                    $qb
+                        ->andWhere($expr->in(
+                            "$accessStatusAlias.level",
+                            ":$levelAlias"
+                        ))
+                        ->setParameter($levelAlias, $accessLevels, Connection::PARAM_STR_ARRAY)
+                    ;
+                }
             } else {
+                // A way to return no value when the query has bad argument.
                 $qb
                     ->andWhere('"no" = "access"');
             }
@@ -1568,20 +1579,29 @@ class Module extends AbstractModule
         $filters = $event->getParam('filters');
         $query = $event->getParam('query', []);
 
-        if (isset($query['access']) && $query['access'] !== '') {
+        if (isset($query['access']) && $query['access'] !== '' && $query['access'] !== []) {
             $services = $this->getServiceLocator();
             $translator = $services->get('MvcTranslator');
             $settings = $services->get('Omeka\Settings');
-            $value = $query['access'];
-            if ($value) {
+            $values = is_array($query['access']) ? $query['access'] : [$query['access']];
+            $values = array_filter($values);
+            if ($values) {
                 $filterLabel = $translator->translate('Access'); // @translate
                 $accessViaProperty = (bool) $settings->get('access_property');
-                if ($accessViaProperty) {
-                    $accessLevels = $settings->get('access_property_levels', AccessStatusRepresentation::LEVELS);
-                    $filters[$filterLabel][] = $accessLevels[$value] ?? $value;
-                } else {
-                    $filters[$filterLabel][] = $translator->translate($value);
+                $accessLevels = $accessViaProperty
+                    ? $settings->get('access_property_levels', AccessStatusRepresentation::LEVELS)
+                    : AccessStatusRepresentation::LEVELS;
+                $displayValues = [];
+                foreach ($values as $value) {
+                    if (isset($accessLevels[$value])) {
+                        $displayValues[] = $accessViaProperty
+                            ? $accessLevels[$value]
+                            : $translator->translate($accessLevels[$value]);
+                    } else {
+                        $displayValues[] = $translator->translate($value);
+                    }
                 }
+                $filters[$filterLabel][] = implode(', ', $displayValues);
             }
         }
 

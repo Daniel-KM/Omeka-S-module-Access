@@ -6,20 +6,28 @@
  */
 
 use \Access\Api\Representation\AccessStatusRepresentation;
-use \Common\Form\Element\OptionalRadio;
+use \Common\Form\Element\OptionalMultiCheckbox;
 
 $plugins = $this->getHelperPluginManager();
 $setting = $plugins->get('setting');
 
 $accessLevels = $setting('access_property_levels', AccessStatusRepresentation::LEVELS);
-$valueOptions = ['' => 'All'] + $accessLevels;
-unset($valueOptions['protected']);
+$fullAccess = (bool) $setting('access_full');
+if (!$fullAccess) {
+    unset($accessLevels['protected']);
+}
 
-$accessElement = (new OptionalRadio('access'))
+// Default to all levels selected when no query is set.
+$queryAccess = $query['access'] ?? [];
+if (!is_array($queryAccess)) {
+    $queryAccess = $queryAccess ? [$queryAccess] : [];
+}
+
+$accessElement = (new OptionalMultiCheckbox('access'))
     ->setLabel('Access')
-    ->setLabelAttributes(['class' => 'type-radio'])
-    ->setValueOptions($valueOptions)
-    ->setValue($query['access'] ?? '');
+    ->setLabelAttributes(['class' => 'type-checkbox'])
+    ->setValueOptions($accessLevels)
+    ->setValue($queryAccess);
 ?>
 
 <?= $this->formRow($accessElement) ?>
