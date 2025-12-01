@@ -1661,7 +1661,7 @@ class Module extends AbstractModule
         $settings = $services->get('Omeka\Settings');
 
         $accessEmbargoFree = $settings->get('access_embargo_free');
-        if (!in_array($accessEmbargoFree, ['free_clear', 'free_keep', 'keep_clear'], true)) {
+        if (!in_array($accessEmbargoFree, ['free_clear', 'free_keep', 'under_clear', 'under_keep', 'keep_clear'], true)) {
             return;
         }
 
@@ -1756,6 +1756,14 @@ class Module extends AbstractModule
         } elseif ($modeLevel === 'free' && $modeDate === 'keep') {
             $message = new PsrMessage(
                 'According to setting, when embargo ends, the access level is set to "free" and the embargo dates are kept.' // @translate
+            );
+        } elseif ($modeLevel === 'under' && $modeDate === 'clear') {
+            $message = new PsrMessage(
+                'According to setting, when embargo ends, the access level is set to the level under ("free" for reserved, "reserved" for protected/forbidden) and the embargo dates are cleared.' // @translate
+            );
+        } elseif ($modeLevel === 'under' && $modeDate === 'keep') {
+            $message = new PsrMessage(
+                'According to setting, when embargo ends, the access level is set to the level under ("free" for reserved, "reserved" for protected/forbidden) and the embargo dates are kept.' // @translate
             );
         } elseif ($modeLevel === 'keep' && $modeDate === 'clear') {
             $message = new PsrMessage(

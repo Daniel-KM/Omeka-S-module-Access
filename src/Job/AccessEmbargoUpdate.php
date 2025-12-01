@@ -36,7 +36,9 @@ class AccessEmbargoUpdate extends AbstractJob
     protected $logger;
 
     /**
-     * May be "free" or "keep".
+     * May be "free", "under", or "keep".
+     *
+     * "under" means: reserved => free, protected/forbidden => reserved.
      *
      * @var string
      */
@@ -104,7 +106,7 @@ class AccessEmbargoUpdate extends AbstractJob
 
         // The check is done before job, so just a quick check here.
         $accessEmbargoFree = $settings->get('access_embargo_free');
-        if (!in_array($accessEmbargoFree, ['free_clear', 'free_keep', 'keep_clear'], true)) {
+        if (!in_array($accessEmbargoFree, ['free_clear', 'free_keep', 'under_clear', 'under_keep', 'keep_clear'], true)) {
             $this->logger->notice('Skipping process according to the option defined.'); // @translate
             return;
         }
@@ -158,9 +160,9 @@ class AccessEmbargoUpdate extends AbstractJob
                 AND `embargo_end` IS NULL
                 AND NOW() >= `embargo_start`;
             SQL;
-        $totalWithEmbargoToUpdate['start_after'] = $this->modeLevel === 'keep'
-            ? 0
-            : (int) $this->connection->executeQuery($sql)->fetchOne();
+        $totalWithEmbargoToUpdate['start_after'] = in_array($this->modeLevel, ['free', 'under'], true)
+            ? (int) $this->connection->executeQuery($sql)->fetchOne()
+            : 0;
 
         $sql = <<<'SQL'
             SELECT COUNT(`id`)
@@ -179,9 +181,8 @@ class AccessEmbargoUpdate extends AbstractJob
                 AND NOW() >= `embargo_start`
                 AND NOW() <= `embargo_end`;
             SQL;
-        $totalWithEmbargoToUpdate['both_during'] = $this->modeLevel === 'keep'
-            ? 0
-            // : (int) $this->connection->executeQuery($sql)->fetchOne();
+        $totalWithEmbargoToUpdate['both_during'] = in_array($this->modeLevel, ['free', 'under'], true)
+            ? 0 // During embargo: no change (user should set the right level).
             : 0;
 
         $sql = <<<'SQL'
@@ -208,6 +209,16 @@ class AccessEmbargoUpdate extends AbstractJob
         } elseif ($this->modeLevel === 'free' && $this->modeDate === 'keep') {
             $this->logger->info(
                 'Applying level "free" for {count}/{total} resources with an embargo that ended.', // @translate
+                ['count' => $totalToUpdate, 'total' => $totalWithEmbargo]
+            );
+        } elseif ($this->modeLevel === 'under' && $this->modeDate === 'clear') {
+            $this->logger->info(
+                'Applying level under and clear embargo date for {count}/{total} resources with an embargo that ended.', // @translate
+                ['count' => $totalToUpdate, 'total' => $totalWithEmbargo]
+            );
+        } elseif ($this->modeLevel === 'under' && $this->modeDate === 'keep') {
+            $this->logger->info(
+                'Applying level under for {count}/{total} resources with an embargo that ended.', // @translate
                 ['count' => $totalToUpdate, 'total' => $totalWithEmbargo]
             );
         } elseif ($this->modeLevel === 'keep' && $this->modeDate === 'clear') {
@@ -261,6 +272,30 @@ class AccessEmbargoUpdate extends AbstractJob
             $sql = <<<'SQL'
                 UPDATE `access_status`
                 SET `level` = 'free'
+                SQL;
+        } elseif ($this->modeLevel === 'under' && $this->modeDate === 'clear') {
+            // "under" means: reserved -> free, protected -> reserved, forbidden -> reserved
+            $sql = <<<'SQL'
+                UPDATE `access_status`
+                SET `level` = CASE
+                        WHEN `level` = 'reserved' THEN 'free'
+                        WHEN `level` = 'protected' THEN 'reserved'
+                        WHEN `level` = 'forbidden' THEN 'reserved'
+                        ELSE `level`
+                    END,
+                    `embargo_start` = NULL,
+                    `embargo_end` = NULL
+                SQL;
+        } elseif ($this->modeLevel === 'under' && $this->modeDate === 'keep') {
+            // "under" means: reserved -> free, protected -> reserved, forbidden -> reserved
+            $sql = <<<'SQL'
+                UPDATE `access_status`
+                SET `level` = CASE
+                        WHEN `level` = 'reserved' THEN 'free'
+                        WHEN `level` = 'protected' THEN 'reserved'
+                        WHEN `level` = 'forbidden' THEN 'reserved'
+                        ELSE `level`
+                    END
                 SQL;
         } elseif ($this->modeLevel === 'keep' && $this->modeDate === 'clear') {
             $sql = <<<'SQL'

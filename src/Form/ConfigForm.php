@@ -271,6 +271,8 @@ class ConfigForm extends Form
                     'value_options' => [
                         'free_keep' => 'Set access level to "free" and keep embargo date', // @translate
                         'free_clear' => 'Set access level to "free" and remove embargo date', // @translate
+                        'under_keep' => 'Set access level to the level under ("free" for reserved, "reserved" for protected/forbidden) and keep embargo date', // @translate
+                        'under_clear' => 'Set access level to the level under ("free" for reserved, "reserved" for protected/forbidden) and remove embargo date', // @translate
                         'keep_keep' => 'Keep access level and embargo date', // @translate
                         'keep_clear' => 'Keep access level and remove embargo date', // @translate
                     ],

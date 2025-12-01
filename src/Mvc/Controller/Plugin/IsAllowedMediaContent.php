@@ -107,7 +107,10 @@ class IsAllowedMediaContent extends AbstractPlugin
     /**
      * Check if access to media content is allowed for the current user.
      *
-     * The check is done on level and embargo.
+     * Three independent criteria are checked:
+     * 1. Visibility: public/private (handled by Omeka core before this module)
+     * 2. Access level: free/reserved/protected/forbidden
+     * 3. Embargo: if under embargo, access is denied
      *
      * Accessibility and visibility are decorrelated, so, for example, a visitor
      * cannot see a private media or a public media with reserved content.
@@ -121,11 +124,11 @@ class IsAllowedMediaContent extends AbstractPlugin
      *   - External: authenticated externally (cas for now, ldap or sso later).
      *   - Guest: guest users.
      * - individual modes
-     *   - User: authenticated users via a request .
+     *   - User: authenticated users via a request.
      *   - Email: visitor identified by email via a request.
      *   - Token: user or visitor with a token via a request.
      *
-     * The embargo is checked first.
+     * The embargo is rare and slower to check, so checked last.
      *
      * @todo Check embargo via a new column in accessStatus?
      */
@@ -150,12 +153,14 @@ class IsAllowedMediaContent extends AbstractPlugin
             return true;
         }
 
+        // Check access level first (quick string comparison, most common check).
         $level = $accessStatus->getLevel();
         if ($level === AccessStatus::FORBIDDEN || !in_array($level, AccessStatusRepresentation::LEVELS)) {
             return false;
         }
 
-        // Check embargo first.
+        // Check embargo (independent criterion, but rarer so checked after level).
+        // A resource under embargo is denied regardless of its access level.
         if ($this->isUnderEmbargo($accessStatus)) {
             return false;
         }
