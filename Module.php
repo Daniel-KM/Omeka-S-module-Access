@@ -169,7 +169,7 @@ class Module extends AbstractModule
 
         // Don't add the job to update initial status: use config form.
         $message = new PsrMessage(
-            'It is recommenced to run the job in config form to initialize all access statuses.' // @translate
+            'It is recommended to run the job in config form to initialize all access statuses.' // @translate
         );
         $messenger->addWarning($message);
 

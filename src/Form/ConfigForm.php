@@ -164,6 +164,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
                     'label' => 'Set property when access uses property', // @translate
+                    'info' => 'Warning: a full reindexation is needed when changing the property.', // @translate
                     'term_as_value' => true,
                     'empty_option' => '',
                 ],
