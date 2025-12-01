@@ -60,6 +60,15 @@ it in the `modules` directory.
 If the module was installed from the source, rename the name of the folder of
 the module to `Access`.
 
+* For test
+
+The module includes a comprehensive test suite with unit and functional tests.
+Run them from the root of Omeka:
+
+```sh
+vendor/bin/phpunit -c modules/Access/test/phpunit.xml
+```
+
 ### Configuration of the web server
 
 Omeka does not manage the requests of the files of the web server (generally
