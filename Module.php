@@ -166,6 +166,13 @@ class Module extends AbstractModule
     {
         $services = $this->getServiceLocator();
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
+        $settings = $services->get('Omeka\Settings');
+
+        $searchFields = $settings->get('advancedsearch_search_fields');
+        if ($searchFields !== null) {
+            $searchFields[] = 'common/advanced-search/access';
+            $settings->set('advancedsearch_search_fields', $searchFields);
+        }
 
         // Don't add the job to update initial status: use config form.
         $message = new PsrMessage(

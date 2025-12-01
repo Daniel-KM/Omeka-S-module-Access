@@ -321,9 +321,7 @@ if (version_compare((string) $oldVersion, '3.4.35', '<')) {
         // Already done.
     }
 
-    if (!$settings->get('access_embargo_free')) {
-        $settings->set('access_embargo_free', 'keep_keep');
-    }
+    $settings->set('access_embargo_free', 'keep_keep');
 
     $message = new PsrMessage(
         'A new option allows to update the status level and to remove the embargo metadata when it ends. Default option is to keep them.' // @translate
@@ -334,6 +332,38 @@ if (version_compare((string) $oldVersion, '3.4.35', '<')) {
         'A job is run once a day to update accesses when embargo ends.' // @translate
     );
     $messenger->addSuccess($message);
+}
+
+if (version_compare((string) $oldVersion, '3.4.36', '<')) {
+    // Migrate from access_embargo_free to the two new settings.
+    // Only if the process is not already done.
+    if (!$settings->get('access_embargo_ended_level')) {
+        $accessEmbargoFree = $settings->get('access_embargo_free', 'free_keep');
+        $parts = explode('_', $accessEmbargoFree);
+        $modeLevel = $parts[0] ?? 'free';
+        $modeDate = $parts[1] ?? 'keep';
+        // Validate and set defaults if invalid.
+        if (!in_array($modeLevel, ['free', 'under', 'keep'], true)) {
+            $modeLevel = 'free';
+        }
+        if (!in_array($modeDate, ['clear', 'keep'], true)) {
+            $modeDate = 'keep';
+        }
+        $settings->set('access_embargo_ended_level', $modeLevel);
+        $settings->set('access_embargo_ended_date', $modeDate);
+        $settings->delete('access_embargo_free');
+    }
+
+    $searchFields = $settings->get('advancedsearch_search_fields');
+    if ($searchFields !== null) {
+        $searchFields[] = 'common/advanced-search/access';
+        $settings->set('advancedsearch_search_fields', $searchFields);
+    }
+
+    $message = new PsrMessage(
+        'The three criteria to access a media are now fully independant: visibility of item and media should be public; access level should be free (or reserved for authorized users); resource should not be under embargo.' // @translate
+    );
+    $messenger->addWarning($message);
 }
 
 // Check for old module.
