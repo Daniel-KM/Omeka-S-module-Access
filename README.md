@@ -66,7 +66,7 @@ The module includes a comprehensive test suite with unit and functional tests.
 Run them from the root of Omeka:
 
 ```sh
-vendor/bin/phpunit -c modules/Access/test/phpunit.xml
+vendor/bin/phpunit -c modules/Access/phpunit.xml
 ```
 
 ### Configuration of the web server
@@ -580,7 +580,7 @@ The image [Locked file] is licensed under [GNU/GPL].
 Copyright
 ---------
 
-* Copyright Daniel Berthereau, 2019-2025 (see [Daniel-KM] on GitLab)
+* Copyright Daniel Berthereau, 2019-2026 (see [Daniel-KM] on GitLab)
 * Copyright Saki (image [Locked file], see [Saki])
 
 
