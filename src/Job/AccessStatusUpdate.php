@@ -198,9 +198,9 @@ class AccessStatusUpdate extends AbstractJob
             }
         }
 
-        if ($this->modeSync === 'from_properties_to_index') {
+        if ($this->modeSync === 'from_properties_to_accesses') {
             $this->updateLevelAndEmbargoViaProperty();
-        } elseif ($this->modeSync === 'from_index_to_properties') {
+        } elseif ($this->modeSync === 'from_accesses_to_properties') {
             // This job can be skipped if the missing mode is not skip, but it
             // is simpler to understand. It's just a quick sql anyway.
             $this->copyIndexIntoPropertyValues();

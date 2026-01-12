@@ -407,14 +407,21 @@ class IsAllowedMediaContent extends AbstractPlugin
             return null;
         }
 
+        if (!$this->userSettings) {
+            return null;
+        }
+
         $authenticator = $this->userSettings->get('connection_authenticator');
         if ($authenticator !== 'SingleSignOn') {
             return null;
         }
 
         $idpName = $this->userSettings->get('connection_idp');
-        return $reservedIdps[$idpName]
-            ?? $reservedIdps['federation']
+        if ($idpName && isset($reservedIdps[$idpName])) {
+            return $reservedIdps[$idpName];
+        }
+
+        return $reservedIdps['federation']
             ?? null;
     }
 

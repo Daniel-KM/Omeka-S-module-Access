@@ -252,7 +252,5 @@ class RequestController extends AbstractActionController
                 $msg->setTranslator($this->translator()),
             ]);
         }
-
-        return $result;
     }
 }

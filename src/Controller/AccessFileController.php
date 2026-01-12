@@ -316,25 +316,30 @@ class AccessFileController extends AbstractActionController
     ) {
         $mediaType = $media ? (string) $media->mediaType() : 'image/png';
         $mediaTypeMain = strtok($mediaType, '/');
-        switch ($mediaType) {
-            case $mediaTypeMain === 'image':
+        switch ($mediaTypeMain) {
+            case 'image':
                 $mediaType = 'image/png';
                 $file = 'img/locked-file.png';
                 break;
-            case 'application/pdf':
-                $file = 'img/locked-file.pdf';
-                break;
-            case $mediaTypeMain === 'audio':
-            case $mediaTypeMain === 'video':
+            case 'audio':
+            case 'video':
                 $mediaType = 'video/mp4';
                 $file = 'img/locked-file.mp4';
                 break;
-            case 'application/vnd.oasis.opendocument.text':
-                $file = 'img/locked-file.odt';
-                break;
             default:
-                $mediaType = 'image/png';
-                $file = 'img/locked-file.png';
+                // Check specific full media types.
+                switch ($mediaType) {
+                    case 'application/pdf':
+                        $file = 'img/locked-file.pdf';
+                        break;
+                    case 'application/vnd.oasis.opendocument.text':
+                        $file = 'img/locked-file.odt';
+                        break;
+                    default:
+                        $mediaType = 'image/png';
+                        $file = 'img/locked-file.png';
+                        break;
+                }
                 break;
         }
 

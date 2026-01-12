@@ -142,7 +142,7 @@ class AccessLog extends AbstractEntity
         return $this;
     }
 
-    public function getAction(): ?string
+    public function getAction(): string
     {
         return $this->action;
     }

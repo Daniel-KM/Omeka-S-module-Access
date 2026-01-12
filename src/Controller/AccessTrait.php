@@ -81,6 +81,8 @@ trait AccessTrait
         $moduleSettings = require dirname(__DIR__, 2) . '/config/module.config.php';
         $moduleSettings = $moduleSettings['access']['settings'];
 
+        $subject = '';
+        $body = '';
         if ($action === 'created') {
             $subject = $settings->get('access_message_admin_subject', $this->translate($moduleSettings['access_message_admin_subject']));
             $body = $settings->get('access_message_admin_request_created', $this->translate($moduleSettings['access_message_admin_request_created']));
@@ -114,6 +116,8 @@ trait AccessTrait
         $userVisitor = $isVisitor ? 'visitor' : 'user';
         $acceptedRejected = $isRejected ? 'rejected' : 'accepted';
 
+        $subject = '';
+        $body = '';
         if ($action === 'created') {
             $subject = $settings->get("access_message_{$userVisitor}_subject", $this->translate($moduleSettings["access_message_{$userVisitor}_subject"]));
             $body = $settings->get("access_message_{$userVisitor}_request_created", $this->translate($moduleSettings["access_message_{$userVisitor}_request_created"]));
