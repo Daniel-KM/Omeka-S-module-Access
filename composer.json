@@ -1,0 +1,46 @@
+{
+    "name": "daniel-km/omeka-s-module-access",
+    "description": "Module for Omeka S that allows a visitor or a user to access to selected reserved resources via a request, an ip check, an authentication, or a token.",
+    "type": "library",
+    "license": "CECILL-2.1",
+    "authors": [
+        {
+            "name": "Daniel Berthereau",
+            "email": "Daniel.packagist@Berthereau.net"
+        }
+    ],
+    "homepage": "https://gitlab.com/Daniel-KM/Omeka-S-module-Access",
+    "support": {
+        "issues": "https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/issues",
+        "forum": "https://forum.omeka.org/"
+    },
+    "keywords": [
+        "Omeka S",
+        "module",
+        "access",
+        "protection",
+        "copyright"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Access\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AccessTest\\": "test/AccessTest/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "7.4"
+        },
+        "allow-plugins": {
+            "composer/installers": true,
+            "oomphinc/composer-installers-extender": true
+        }
+    },
+    "extra": {
+        "installer-name" : "Access"
+    }
+}
