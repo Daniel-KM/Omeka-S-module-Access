@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-01 00:00+0000\n"
+"POT-Creation-Date: 2026-01-12 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -41,17 +41,17 @@ msgid ""
 "uninstall it first, but you will lose access statuses and requests."
 msgstr ""
 
-#: Module.php:539
+#: Module.php:546
 msgid ""
 "When properties are used, three properties should be defined for \"level\", "
 "\"embargo start\" and \"embargo end\"."
 msgstr ""
 
-#: Module.php:554
+#: Module.php:561
 msgid "Job is not launched: no option was set."
 msgstr ""
 
-#: Module.php:1589 view/access/admin/log/browse.phtml:23
+#: Module.php:1596 view/access/admin/log/browse.phtml:23
 #: view/access/admin/request/browse.phtml:32
 #: view/access/admin/request/edit.phtml:30
 #: view/access/admin/request/edit.phtml:31
@@ -59,7 +59,7 @@ msgstr ""
 msgid "Access"
 msgstr ""
 
-#: Module.php:1619 view/access/site/request/browse.phtml:38
+#: Module.php:1626 view/access/site/request/browse.phtml:38
 msgid "Access requests"
 msgstr ""
 
@@ -379,14 +379,14 @@ msgstr ""
 msgid "A job is run once a day to update accesses when embargo ends."
 msgstr ""
 
-#: data/scripts/upgrade.php:358
+#: data/scripts/upgrade.php:364
 msgid ""
 "The three criteria to access a media are now fully independant: visibility "
 "of item and media should be public; access level should be free (or reserved "
 "for authorized users); resource should not be under embargo."
 msgstr ""
 
-#: data/scripts/upgrade.php:366
+#: data/scripts/upgrade.php:372
 msgid ""
 "The key \"accessresource\" in the file config/local.config.php at the root "
 "of Omeka can be removed."
@@ -404,188 +404,188 @@ msgid ""
 "remove them first."
 msgstr ""
 
-#: Module.php:172
+#: Module.php:179
 msgid ""
 "It is recommended to run the job in config form to initialize all access "
 "statuses."
 msgstr ""
 
-#: Module.php:683
+#: Module.php:690
 msgid ""
 "Cleaned params used for Access:\n"
 "{json}"
 msgstr ""
 
-#: Module.php:898
+#: Module.php:905
 msgid ""
 "The access level of the item #{item_id} is different from access level for "
 "medias {media_ids}. Update them if needed in tab \"advanced\"."
 msgstr ""
 
-#: Module.php:1224 src/Controller/Admin/RequestController.php:194
+#: Module.php:1231 src/Controller/Admin/RequestController.php:194
 msgid "You should set either a user or an email or check box for token."
 msgstr ""
 
-#: Module.php:1247 src/Controller/Admin/RequestController.php:220
+#: Module.php:1254 src/Controller/Admin/RequestController.php:220
 msgid "Access request successfully created."
 msgstr ""
 
-#: Module.php:1323 src/Form/Admin/BatchEditFieldset.php:50
+#: Module.php:1330 src/Form/Admin/BatchEditFieldset.php:50
 msgid "Free"
 msgstr ""
 
-#: Module.php:1324 src/Form/Admin/BatchEditFieldset.php:51
+#: Module.php:1331 src/Form/Admin/BatchEditFieldset.php:51
 msgid "Reserved"
 msgstr ""
 
-#: Module.php:1325 src/Form/Admin/BatchEditFieldset.php:52
+#: Module.php:1332 src/Form/Admin/BatchEditFieldset.php:52
 msgid "Protected"
 msgstr ""
 
-#: Module.php:1340 src/ColumnType/AccessLevel.php:13
+#: Module.php:1347 src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr ""
 
-#: Module.php:1354 src/Form/Admin/BatchEditFieldset.php:89
+#: Module.php:1361 src/Form/Admin/BatchEditFieldset.php:89
 msgid "Embargo start"
 msgstr ""
 
-#: Module.php:1371 Module.php:1379 src/Form/Admin/BatchEditFieldset.php:134
+#: Module.php:1378 Module.php:1386 src/Form/Admin/BatchEditFieldset.php:134
 msgid "Embargo end"
 msgstr ""
 
-#: Module.php:1389
+#: Module.php:1396
 #, php-format
 msgid "Access level (managed via property %s)"
 msgstr ""
 
-#: Module.php:1392
+#: Module.php:1399
 #, php-format
 msgid "Embargo start (managed via property %s)"
 msgstr ""
 
-#: Module.php:1395
+#: Module.php:1402
 #, php-format
 msgid "Embargo end (managed via property %s)"
 msgstr ""
 
-#: Module.php:1406
+#: Module.php:1413
 msgid "Copy access level and embargo to items and medias"
 msgstr ""
 
-#: Module.php:1407
+#: Module.php:1414
 msgid "Copy access level and embargo to medias"
 msgstr ""
 
-#: Module.php:1415
+#: Module.php:1422
 msgid "New medias only"
 msgstr ""
 
-#: Module.php:1416
+#: Module.php:1423
 msgid "All medias"
 msgstr ""
 
-#: Module.php:1743
+#: Module.php:1750
 msgid "Access: Reindex resources"
 msgstr ""
 
-#: Module.php:1751
+#: Module.php:1758
 msgid "Options to reindex accesses"
 msgstr ""
 
-#: Module.php:1784
+#: Module.php:1791
 msgid ""
 "To control access to files, you must add a rule in file .htaccess at the "
 "root of Omeka. See {link}readme{link_end}."
 msgstr ""
 
-#: Module.php:1805
+#: Module.php:1812
 msgid ""
 "According to setting, when embargo ends, the access level is set to \"free\" "
 "and the embargo dates are cleared."
 msgstr ""
 
-#: Module.php:1809
+#: Module.php:1816
 msgid ""
 "According to setting, when embargo ends, the access level is set to \"free\" "
 "and the embargo dates are kept."
 msgstr ""
 
-#: Module.php:1813
+#: Module.php:1820
 msgid ""
 "According to setting, when embargo ends, the access level is set to the "
 "level under (\"free\" for reserved, \"reserved\" for protected/forbidden) "
 "and the embargo dates are cleared."
 msgstr ""
 
-#: Module.php:1817
+#: Module.php:1824
 msgid ""
 "According to setting, when embargo ends, the access level is set to the "
 "level under (\"free\" for reserved, \"reserved\" for protected/forbidden) "
 "and the embargo dates are kept."
 msgstr ""
 
-#: Module.php:1821
+#: Module.php:1828
 msgid ""
 "According to setting, when embargo ends, the access level is kept and the "
 "embargo dates are cleared."
 msgstr ""
 
-#: Module.php:1825
+#: Module.php:1832
 msgid ""
 "According to setting, when embargo ends, the access level and the embargo "
 "dates are kept."
 msgstr ""
 
-#: Module.php:1879
+#: Module.php:1886
 msgid ""
 "A job was launched in background to update access statuses according to "
 "parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end})."
 msgstr ""
 
-#: Module.php:1923
+#: Module.php:1930
 msgid "The ip \"{ip}\" is empty or invalid."
 msgstr ""
 
-#: Module.php:1933
+#: Module.php:1940
 msgid ""
 "The item sets list \"{input}\" for ip {ip} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
 msgstr ""
 
-#: Module.php:1944
+#: Module.php:1951
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains duplicate item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:1956
+#: Module.php:1963
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains unknown item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:2097
+#: Module.php:2104
 msgid "No idps are defined. Check the config of module Single Sign-On first."
 msgstr ""
 
-#: Module.php:2114
+#: Module.php:2121
 msgid "The idp \"{idp}\" is empty or not defined in module Single Sign-On."
 msgstr ""
 
-#: Module.php:2124
+#: Module.php:2131
 msgid ""
 "The item sets list \"{input}\" for idp {idp} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
 msgstr ""
 
-#: Module.php:2135
+#: Module.php:2142
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains duplicate item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:2147
+#: Module.php:2154
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains unknown item sets "
 "({list})."
