@@ -3,7 +3,7 @@
 <phpunit
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/6.3/phpunit.xsd"
-    bootstrap="test/bootstrap.php"
+    bootstrap="tests/bootstrap.php"
     backupGlobals="false"
     colors="true"
     verbose="true"
@@ -14,7 +14,7 @@
     >
     <testsuites>
         <testsuite name="Access">
-            <directory suffix="Test.php">test/AccessTest</directory>
+            <directory suffix="Test.php">tests/AccessTest</directory>
         </testsuite>
     </testsuites>
     <filter>
