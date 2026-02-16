@@ -13,6 +13,42 @@ class ConfigForm extends Form
     {
         $this
             ->add([
+                'name' => 'access_htaccess_types',
+                'type' => CommonElement\OptionalMultiCheckbox::class,
+                'options' => [
+                    'label' => 'File types to protect via .htaccess', // @translate
+                    'label_attributes' => [
+                        'style' => 'display: block;',
+                    ],
+                    'info' => 'Select the file types that should be protected by an Apache rewrite rule in the root .htaccess. The rule redirects direct file access through the module Access controller, which checks access rights. When writable, the .htaccess is updated automatically; otherwise, the rule to copy is displayed.', // @translate
+                    'value_options' => [
+                        'original' => 'original', // @translate
+                        'large' => 'large', // @translate
+                        'medium' => 'medium', // @translate
+                        'square' => 'square', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'access_htaccess_types',
+                    'required' => false,
+                    'style' => 'display: inline-block;',
+                ],
+            ])
+
+            ->add([
+                'name' => 'access_htaccess_custom_types',
+                'type' => Element\Text::class,
+                'options' => [
+                    'label' => 'Custom file paths to protect via .htaccess', // @translate
+                    'info' => 'Additional file subdirectories to protect, for example for the module DerivativeMedia (mp3, mp4, webm, ogg, pdf, etc.). Separate paths with spaces.', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_htaccess_custom_types',
+                    'placeholder' => 'mp3 mp4 webm ogg pdf',
+                ],
+            ])
+
+            ->add([
                 'name' => 'access_full',
                 'type' => CommonElement\OptionalRadio::class,
                 'options' => [

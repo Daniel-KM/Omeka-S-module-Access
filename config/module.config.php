@@ -333,6 +333,11 @@ return [
             'access_embargo_ended_level' => 'free',
             'access_embargo_ended_date' => 'keep',
 
+            // Types of files protected via .htaccess. Empty means not managed by the module.
+            'access_htaccess_types' => [],
+            // Custom file paths to protect (for DerivativeMedia, etc.).
+            'access_htaccess_custom_types' => '',
+
             // Hidden settings automatically filled after saving config.
             // It contains the same data than "access_ip_item_sets", but
             // with numberized ip ranges (cidr) in order to do a quicker control

@@ -54,6 +54,71 @@ class Module extends AbstractModule
         require_once __DIR__ . '/data/scripts/upgrade_vocabulary.php';
     }
 
+    protected function preUninstall(): void
+    {
+        $htaccessPath = OMEKA_PATH . '/.htaccess';
+        $htaccess = @file_get_contents($htaccessPath);
+        if ($htaccess === false) {
+            return;
+        }
+
+        $accessMarker = '# Module Access: protect files.';
+        if (strpos($htaccess, $accessMarker) === false) {
+            return;
+        }
+
+        if (!is_writable($htaccessPath)) {
+            $services = $this->getServiceLocator();
+            $logger = $services->get('Omeka\Logger');
+            $logger->warn('Access module: the .htaccess is not writable; the rewrite rule was not removed during uninstall.'); // @translate
+            return;
+        }
+
+        // Extract current types from the Access rule before removing it.
+        $currentTypes = [];
+        if (preg_match('/' . preg_quote($accessMarker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"\^files\/\(([^)]+)\)\//', $htaccess, $matches)) {
+            $currentTypes = explode('|', $matches[1]);
+        }
+
+        // Remove the Access rule.
+        $htaccess = preg_replace('/' . preg_quote($accessMarker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"[^"]*"\s+"[^"]*"\s+\[[^\]]*\]\s*\n?/', '', $htaccess);
+
+        // If Statistics is active and has no rule, convert to a download rule.
+        $services = $this->getServiceLocator();
+        $moduleManager = $services->get('Omeka\ModuleManager');
+        $statisticsModule = $moduleManager->getModule('Statistics');
+        $isStatisticsActive = $statisticsModule && $statisticsModule->getState() === \Omeka\Module\Manager::STATE_ACTIVE;
+
+        $statisticsMarker = '# Module Statistics: count downloads.';
+        if ($isStatisticsActive && !empty($currentTypes) && strpos($htaccess, $statisticsMarker) === false) {
+            $typesPattern = implode('|', $currentTypes);
+            $downloadBlock = $statisticsMarker . "\n"
+                . '# This rule is automatically managed by the module.' . "\n"
+                . 'RewriteRule "^files/(' . $typesPattern . ')/(.*)$" "download/files/$1/$2" [NC,L]';
+            // Insert after RewriteEngine On.
+            if (preg_match('/RewriteEngine\s+On\s*\n/', $htaccess, $m, PREG_OFFSET_CAPTURE)) {
+                $insertPos = $m[0][1] + strlen($m[0][0]);
+                $htaccess = substr_replace($htaccess, "\n" . $downloadBlock . "\n\n", $insertPos, 0);
+            }
+            // Update Statistics settings.
+            $settings = $services->get('Omeka\Settings');
+            $knownStandardTypes = ['original', 'large', 'medium', 'square'];
+            $standardTypes = array_values(array_intersect($currentTypes, $knownStandardTypes));
+            $customTypes = array_values(array_diff($currentTypes, $knownStandardTypes));
+            $settings->set('statistics_htaccess_types', $standardTypes);
+            $settings->set('statistics_htaccess_custom_types', implode(' ', $customTypes));
+
+            $messenger = $services->get('ControllerPluginManager')->get('messenger');
+            $message = new PsrMessage(
+                'The Access rule has been converted to a Statistics download rule for file types: {types}.', // @translate
+                ['types' => implode(', ', $currentTypes)]
+            );
+            $messenger->addSuccess($message);
+        }
+
+        file_put_contents($htaccessPath, $htaccess);
+    }
+
     protected function upgradeFromAccessResource(): bool
     {
         $services = $this->getServiceLocator();
@@ -180,7 +245,9 @@ class Module extends AbstractModule
         );
         $messenger->addWarning($message);
 
-        $this->warnConfig();
+        // Set default htaccess types and try to write the rule.
+        $settings->set('access_htaccess_types', ['original', 'large']);
+        $this->manageHtaccess(['original', 'large']);
     }
 
     public function onBootstrap(MvcEvent $event): void
@@ -485,7 +552,7 @@ class Module extends AbstractModule
 
     public function getConfigForm(PhpRenderer $renderer)
     {
-        $this->warnConfig();
+        $this->manageHtaccess();
 
         $this->infoEmbargo();
 
@@ -502,12 +569,16 @@ class Module extends AbstractModule
 
     public function handleConfigForm(AbstractController $controller)
     {
-        $this->warnConfig();
-
         $result = $this->handleConfigFormAuto($controller);
         if (!$result) {
             return false;
         }
+
+        // Write the .htaccess rule according to the saved setting.
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $htaccessTypes = $settings->get('access_htaccess_types', []);
+        $this->manageHtaccess($htaccessTypes);
 
         // Message are already prepared  when issues.
         $result = $this->prepareIpItemSets();
@@ -1777,27 +1848,188 @@ class Module extends AbstractModule
     }
 
     /**
-     * @see \Access\Module::warnConfig()
-     * @see \Statistics\Module::warnConfig()
+     * Manage the .htaccess rewrite rule for file access control.
+     *
+     * In read mode ($types is null): parse the .htaccess to detect current
+     * protected types, sync the setting, and display status messages.
+     *
+     * In write mode ($types is an array): update the .htaccess rule to match
+     * the requested types. An empty array removes the rule.
+     *
+     * @param array|null $types Null for read mode, array for write mode.
      */
-    protected function warnConfig(): void
+    protected function manageHtaccess(?array $types = null): void
     {
-        $htaccess = file_get_contents(OMEKA_PATH . '/.htaccess');
-        if (strpos($htaccess, '/access/')) {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+
+        $htaccessPath = OMEKA_PATH . '/.htaccess';
+        $isWritable = is_writable($htaccessPath);
+        $htaccess = file_get_contents($htaccessPath);
+        if ($htaccess === false) {
+            $message = new PsrMessage(
+                'The file .htaccess is not readable at the root of Omeka.' // @translate
+            );
+            $messenger->addError($message);
             return;
         }
 
-        $services = $this->getServiceLocator();
-        $message = new PsrMessage(
-            'To control access to files, you must add a rule in file .htaccess at the root of Omeka. See {link}readme{link_end}.', // @translate
-            [
-                'link' => '<a href="https://gitlab.com/Daniel-KM/Omeka-S-module-Access" target="_blank" rel="noopener">',
-                'link_end' => '</a>',
-            ]
-        );
-        $message->setEscapeHtml(false);
-        $messenger = $services->get('ControllerPluginManager')->get('messenger');
-        $messenger->addError($message);
+        $marker = '# Module Access: protect files.';
+        $isWriteMode = $types !== null;
+
+        // Parse existing rule to find currently protected types.
+        $currentTypes = [];
+        $hasMarker = strpos($htaccess, $marker) !== false;
+        $hasLegacyRule = false;
+        if ($hasMarker) {
+            // Match the RewriteRule line after the marker (skip optional comment lines).
+            if (preg_match('/' . preg_quote($marker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"\^files\/\(([^)]+)\)\//', $htaccess, $matches)) {
+                $currentTypes = explode('|', $matches[1]);
+            }
+        } else {
+            // Detect legacy rules (without marker) that redirect to /access/files/.
+            // Match active (non-commented) RewriteRule lines.
+            // Two formats: grouped `(original|large)` or individual `original`.
+            $knownTypes = ['original', 'large', 'medium', 'square'];
+            // Format: files/(original|large)/
+            if (preg_match_all('/^\s*RewriteRule\s+.*files\/\(([^)]+)\).*\/access\/files\//m', $htaccess, $matches)) {
+                foreach ($matches[1] as $group) {
+                    $currentTypes = array_merge($currentTypes, explode('|', $group));
+                }
+                $hasLegacyRule = true;
+            }
+            // Format: files/original/ (individual type, no group)
+            if (preg_match_all('/^\s*RewriteRule\s+["\^]*files\/(' . implode('|', $knownTypes) . ')\/.*\/access\/files\//m', $htaccess, $matches)) {
+                $currentTypes = array_merge($currentTypes, $matches[1]);
+                $hasLegacyRule = true;
+            }
+            $currentTypes = array_values(array_unique(array_intersect($currentTypes, $knownTypes)));
+        }
+
+        $knownStandardTypes = ['original', 'large', 'medium', 'square'];
+
+        // Read mode: sync setting from .htaccess state and display info.
+        if (!$isWriteMode) {
+            // Split detected types into standard (checkboxes) and custom (text).
+            $standardCurrent = array_values(array_intersect($currentTypes, $knownStandardTypes));
+            $customCurrent = array_values(array_diff($currentTypes, $knownStandardTypes));
+            $settings->set('access_htaccess_types', $standardCurrent);
+            $settings->set('access_htaccess_custom_types', implode(' ', $customCurrent));
+
+            if ($hasLegacyRule) {
+                $message = new PsrMessage(
+                    'A legacy .htaccess rule protects file types "{types}" but is not managed by the module. Save the configuration to convert it to the managed format.', // @translate
+                    ['types' => implode(', ', $currentTypes)]
+                );
+                $messenger->addWarning($message);
+            } elseif (empty($currentTypes)) {
+                $exampleRule = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [NC,L]';
+                $message = new PsrMessage(
+                    'No .htaccess rule is set to protect files. To control access to files, add the following lines in the file .htaccess at the root of Omeka, just after "RewriteEngine On":{line_break}{rule}', // @translate
+                    [
+                        'line_break' => '<br><pre>',
+                        'rule' => htmlspecialchars($exampleRule) . '</pre>',
+                    ]
+                );
+                $message->setEscapeHtml(false);
+                $messenger->addError($message);
+            } else {
+                $message = new PsrMessage(
+                    'The .htaccess rule is managed by the module and protects file types: {types}.', // @translate
+                    ['types' => implode(', ', $currentTypes)]
+                );
+                $messenger->addSuccess($message);
+            }
+            return;
+        }
+
+        // Write mode: merge standard types with custom types from setting.
+        $customTypesStr = $settings->get('access_htaccess_custom_types', '');
+        $customTypes = array_filter(array_map('trim', preg_split('/[\s,|]+/', $customTypesStr)));
+        // Sanitize custom types: only alphanumeric and hyphens.
+        $customTypes = array_filter($customTypes, fn ($v) => preg_match('/^[a-zA-Z0-9][-a-zA-Z0-9]*$/', $v));
+        $allTypes = array_values(array_unique(array_merge($types, $customTypes)));
+
+        // Build the new block (or empty if no types).
+        $newBlock = '';
+        if (!empty($allTypes)) {
+            $typesPattern = implode('|', $allTypes);
+            $newBlock = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(' . $typesPattern . ')/(.*)$" "access/files/$1/$2" [NC,L]';
+        }
+
+        // Nothing changed: same types and already in managed format.
+        $sortedCurrent = $currentTypes;
+        $sortedAll = $allTypes;
+        sort($sortedCurrent);
+        sort($sortedAll);
+        if ($sortedCurrent === $sortedAll && !$hasLegacyRule) {
+            $settings->set('access_htaccess_types', $types);
+            return;
+        }
+
+        if (!$isWritable) {
+            // Save the setting anyway so the admin sees what they want.
+            $settings->set('access_htaccess_types', $types);
+            if (!empty($allTypes)) {
+                $message = new PsrMessage(
+                    'The file .htaccess is not writable. Add the following lines manually in the file .htaccess at the root of Omeka, just after "RewriteEngine On":{line_break}{rule}', // @translate
+                    [
+                        'line_break' => '<br><pre>',
+                        'rule' => htmlspecialchars($newBlock) . '</pre>',
+                    ]
+                );
+                $message->setEscapeHtml(false);
+                $messenger->addWarning($message);
+            } else {
+                $message = new PsrMessage(
+                    'The file .htaccess is not writable. Remove the lines starting with "{marker}" manually from the file .htaccess at the root of Omeka.', // @translate
+                    ['marker' => $marker]
+                );
+                $messenger->addWarning($message);
+            }
+            return;
+        }
+
+        // Remove existing marker block if present (marker + optional comments + rule).
+        if ($hasMarker) {
+            $htaccess = preg_replace('/' . preg_quote($marker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"[^"]*"\s+"[^"]*"\s+\[[^\]]*\]\s*\n?/', '', $htaccess);
+        }
+
+        // Remove legacy rules (without marker) that redirect to /access/files/.
+        if ($hasLegacyRule) {
+            // Remove grouped format: files/(original|large)/
+            $htaccess = preg_replace('/^\s*RewriteRule\s+.*files\/\([^)]+\).*\/access\/files\/.*\n?/m', '', $htaccess);
+            // Remove individual format: files/original/ or files/large/ etc.
+            $knownTypes = ['original', 'large', 'medium', 'square'];
+            $htaccess = preg_replace('/^\s*RewriteRule\s+.*files\/(' . implode('|', $knownTypes) . ')\/.*\/access\/files\/.*\n?/m', '', $htaccess);
+        }
+
+        // Insert new block after "RewriteEngine On" if types are selected.
+        if (!empty($newBlock)) {
+            // Use preg_match + substr_replace to avoid backreference
+            // interpretation of $1/$2 in the RewriteRule replacement.
+            if (preg_match('/RewriteEngine\s+On\s*\n/', $htaccess, $m, PREG_OFFSET_CAPTURE)) {
+                $insertPos = $m[0][1] + strlen($m[0][0]);
+                $htaccess = substr_replace($htaccess, "\n" . $newBlock . "\n\n", $insertPos, 0);
+            }
+        }
+
+        file_put_contents($htaccessPath, $htaccess);
+        $settings->set('access_htaccess_types', $types);
+
+        if (!empty($allTypes)) {
+            $message = new PsrMessage(
+                'The .htaccess rule has been updated to protect file types: {types}.', // @translate
+                ['types' => implode(', ', $allTypes)]
+            );
+            $messenger->addSuccess($message);
+        } else {
+            $message = new PsrMessage(
+                'The .htaccess rule for file protection has been removed.' // @translate
+            );
+            $messenger->addSuccess($message);
+        }
     }
 
     protected function infoEmbargo(): void
