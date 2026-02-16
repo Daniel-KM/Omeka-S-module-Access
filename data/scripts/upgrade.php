@@ -41,7 +41,8 @@ if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActi
         $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
         'Common', '3.4.79'
     );
-    throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+    $messenger->addError($message);
+    throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $translate('Missing requirement. Unable to upgrade.')); // @translate
 }
 
 if (version_compare((string) $oldVersion, '3.4.19', '<')) {
@@ -364,6 +365,74 @@ if (version_compare((string) $oldVersion, '3.4.36', '<')) {
         'The three criteria to access a media are now fully independant: visibility of item and media should be public; access level should be free (or reserved for authorized users); resource should not be under embargo.' // @translate
     );
     $messenger->addWarning($message);
+}
+
+if (version_compare((string) $oldVersion, '3.4.38', '<')) {
+    // Detect protected types from existing .htaccess rule and save as setting.
+    $htaccessPath = OMEKA_PATH . '/.htaccess';
+    $htaccess = @file_get_contents($htaccessPath);
+    $detectedTypes = [];
+    $knownTypes = ['original', 'large', 'medium', 'square'];
+    if ($htaccess !== false) {
+        $marker = '# Module Access: protect files.';
+        if (strpos($htaccess, $marker) !== false
+            && preg_match('/' . preg_quote($marker, '/') . '\s*\n\s*RewriteRule\s+"\^files\/\(([^)]+)\)\//', $htaccess, $matches)
+        ) {
+            $detectedTypes = explode('|', $matches[1]);
+        } else {
+            // Legacy rules: grouped format files/(original|large)/ or individual files/original/.
+            if (preg_match_all('/^\s*RewriteRule\s+.*files\/\(([^)]+)\).*\/access\/files\//m', $htaccess, $matches)) {
+                foreach ($matches[1] as $group) {
+                    $detectedTypes = array_merge($detectedTypes, explode('|', $group));
+                }
+            }
+            if (preg_match_all('/^\s*RewriteRule\s+["\^]*files\/(' . implode('|', $knownTypes) . ')\/.*\/access\/files\//m', $htaccess, $matches)) {
+                $detectedTypes = array_merge($detectedTypes, $matches[1]);
+            }
+            $detectedTypes = array_values(array_unique(array_intersect($detectedTypes, $knownTypes)));
+        }
+    }
+    if (empty($detectedTypes)) {
+        $detectedTypes = ['original', 'large'];
+    }
+    $settings->set('access_htaccess_types', $detectedTypes);
+    if (strpos($htaccess, $marker) !== false) {
+        $message = new PsrMessage(
+            'The .htaccess rule is managed by the module and protects file types: {types}.', // @translate
+            ['types' => implode(', ', $detectedTypes)]
+        );
+        $messenger->addSuccess($message);
+    } elseif ($htaccess !== false && preg_match('/RewriteRule.*\/access\/files\//', $htaccess)) {
+        $message = new PsrMessage(
+            'A legacy .htaccess rule was detected for file types: {types}. It is recommended to open the module configuration form and save it to convert the rule to the managed format.', // @translate
+            ['types' => implode(', ', $detectedTypes)]
+        );
+        $messenger->addWarning($message);
+    } else {
+        $message = new PsrMessage(
+            'The .htaccess rule is not yet set. Open the module configuration form to manage it. Default file types: {types}.', // @translate
+            ['types' => implode(', ', $detectedTypes)]
+        );
+        $messenger->addWarning($message);
+    }
+}
+
+if (version_compare((string) $oldVersion, '3.4.39', '<')) {
+    // The old Statistics module (before the split into Statistics + Analytics)
+    // managed .htaccess rules. Since version 3.4.12, this part has moved to
+    // module Analytics. Block upgrade if old Statistics is active.
+    $moduleManager = $services->get('Omeka\ModuleManager');
+    $statisticsModule = $moduleManager->getModule('Statistics');
+    if ($statisticsModule
+        && $statisticsModule->getState() === \Omeka\Module\Manager::STATE_ACTIVE
+        && version_compare($statisticsModule->getIni('version') ?? '', '3.4.12', '<')
+    ) {
+        $message = new PsrMessage(
+            'The module {module} should be upgraded to version {version} or later.', // @translate
+            ['module' => 'Statistics', 'version' => '3.4.12']
+        );
+        throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message->setTranslator($translator));
+    }
 }
 
 // Check for old module.
