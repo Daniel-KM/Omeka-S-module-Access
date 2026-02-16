@@ -225,6 +225,7 @@ return [
                 'label' => 'Accesses', // @translate
                 'class' => 'o-icon- fa-key',
                 'route' => 'admin/access-request',
+                'admin_section' => 'users',
                 'pages' => [
                     [
                         'label' => 'Requests', // @translate
