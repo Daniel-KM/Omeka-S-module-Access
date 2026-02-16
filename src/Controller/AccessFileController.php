@@ -127,9 +127,12 @@ class AccessFileController extends AbstractActionController
 
         $forceDownload = (bool) $this->params()->fromQuery('download');
 
+        $sourceFilename = $media->source();
+        $downloadFilename = $sourceFilename ? basename($sourceFilename) : basename($filepath);
+
         return $isAllowedMediaContent
-            ? $this->sendFile($filepath, $media, null, basename($filepath), $storageType, $forceDownload)
-            : $this->sendFakeFile($media, basename($filepath), $forceDownload);
+            ? $this->sendFile($filepath, $media, null, $downloadFilename, $storageType, $forceDownload)
+            : $this->sendFakeFile($media, $downloadFilename, $forceDownload);
     }
 
     protected function mediaFromFilename(string $filename): ?MediaRepresentation
