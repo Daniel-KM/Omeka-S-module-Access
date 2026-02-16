@@ -1145,9 +1145,10 @@ class Module extends AbstractModule
             } else {
                 $mediaAccess = $defaultAccess;
             }
+            // Comparaison with DateTime cannot use strict ===, but <=> is fine.
             if ($mediaAccess['level'] !== $access['level']
-                || $mediaAccess['embargoStart'] !== $access['embargoStart']
-                || $mediaAccess['embargoEnd'] !== $access['embargoEnd']
+                || ($mediaAccess['embargoStart'] <=> $access['embargoStart'])
+                || ($mediaAccess['embargoEnd'] <=> $access['embargoEnd'])
             ) {
                 $differentMediaIds[] = $media->getId();
             }
