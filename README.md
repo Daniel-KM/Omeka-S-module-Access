@@ -32,8 +32,11 @@ For old themes, the public part can be managed easily via the module
 [Blocks Disposition], but it is recommended to use resource page blocks for new
 themes.
 
-The module is compatible with the module [Statistics]. It is important to
-redirect download urls to the module (see below config of ".htaccess").
+The module is compatible with the module [Analytics] (and the older [Statistics])
+for download tracking. When Access is active with its own `.htaccess` rule, the
+download rule is not needed because Access calls Analytics directly. On uninstall,
+the Access rule is automatically converted to an Analytics (or Statistics)
+download rule if the module is active (see below).
 
 The module is compatible with the module [Derivative Media] that allows to use
 specific derivative files instead original (for example a standard mp4 instead
@@ -43,6 +46,9 @@ to the Apache config (htaccess).
 ### Incompatibility
 
 Until version 3.4.16, the module was not compatible with module [Group].
+
+If the module [Statistics] is installed, it must be version 3.4.12 or later. The
+version that was tracking downloads was moved to the dedicated module [Analytics].
 
 ### Installation of the module
 
@@ -71,16 +77,72 @@ vendor/bin/phpunit -c modules/Access/phpunit.xml
 
 ### Configuration of the web server
 
-Omeka does not manage the requests of the files of the web server (generally
-Apache or Nginx): they are directly served by it, without any control. To
-protect them, you have to tell the web server to redirect the users requests to
-Omeka, so it can check the rights, before returning the file or a forbidden
-response. You can adapt `routes.ini` as you wish too, but this is useless in
-most of the cases.
+Without a rewrite rule, the web server (Apache or Nginx) serves files directly,
+bypassing Omeka entirely. You **must** configure the web server to redirect file
+requests to the module so it can check access rights before serving or denying
+the file.
 
-#### Apache
+#### Automatic management of .htaccess
 
-The Apache file ".htaccess" at the root of Omeka should be updated to avoid
+The module can **automatically** manage the Apache rewrite rule in the root
+`.htaccess` file. On installation, a rule protecting `original` and `large`
+files is written automatically.
+
+The configuration form (admin > modules > Access > Configure) provides:
+
+- File type checkboxes: select which standard derivative types to protect among
+  `original`, `large`, `medium` and `square`.
+- Custom types field: add extra path segments separated by spaces, for example
+  `mp3 mp4 webm ogg pdf` when using module [Derivative Media].
+
+When you save the configuration, the module inserts or updates a managed block
+in the `.htaccess`:
+
+```apache
+# Module Access: protect files.
+# This rule is automatically managed by the module.
+RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [NC,L]
+```
+
+The block is identified by its marker comment, so the module can update or
+remove it without affecting the rest of the file.
+
+**When the `.htaccess` is not writable**, the module cannot modify it. In that
+case the rule to add or remove is displayed in the configuration form so you can
+apply it manually.
+
+**Important**: by default, files are **not** protected. Installing the module
+alone does not restrict access to files when the `.htaccess` is write-protected.
+
+##### Legacy rules
+
+If the module detects a rewrite rule that was written manually (without the
+marker comment), it is treated as a legacy rule. A warning is displayed with the
+detected file types. Saving the configuration converts the legacy rule into the
+managed format automatically.
+
+##### Uninstall and module Analytics (ex-part of module Statistics)
+
+When the module is uninstalled, the managed block is removed from the
+`.htaccess`. If the module [Analytics] is active and has no download rule of its
+own, the Access rule is automatically converted into an Analytics download rule
+so that download tracking continues to work:
+
+```apache
+# Module Analytics: count downloads.
+# This rule is automatically managed by the module.
+RewriteRule "^files/(original|large)/(.*)$" "download/files/$1/$2" [NC,L]
+```
+
+#### Manual Apache configuration
+
+If you prefer to configure Apache manually, or if the `.htaccess` is not
+writable, follow the instructions below.
+
+**WARNING**: Because the configuration of Apache is complex and infrastructures
+vary, always check access to free and restricted files from a private browser.
+
+The Apache file `.htaccess` at the root of Omeka should be updated to avoid
 direct access to files and to redirect urls to the module.
 
 For that, you have to adapt the following code to your needs in the main [.htaccess]
@@ -98,8 +160,23 @@ but it is generally useless. Anyway, it depends on the original images.
 
 Don't forget to add derivative paths if you use module [Derivative Media].
 
-If you choose the flag [L], Apache will use the module ModRewrite, that is
-already installed for Omeka. For the flag [P], you should enable the module
+You can adapt `routes.ini` as you wish too, but this is useless in most cases.
+
+##### Process of the rewrite
+
+The goal of the rewrite rule is to prevent Apache from serving files directly
+(bypassing Omeka) and to route the request through the module's controller
+(`AccessFileController`). The controller checks the user's rights before serving
+the file or a locked placeholder.
+
+The module's Laminas route (`[/access]/files/:type/:filename`) matches both
+`/files/...` and `/access/files/...`. A simple internal rewrite `[NC,L]` is
+enough: its only role is to prevent Apache from serving the static file directly
+(the `RewriteCond %{REQUEST_FILENAME} -f` rule in Omeka's default `.htaccess`
+would otherwise bypass PHP entirely). No `mod_proxy` and no external redirect
+are needed.
+
+For the flag [P], useless in most of the cases, you should enable the module
 Proxy and restart Apache:
 
 ```sh
@@ -118,18 +195,22 @@ eventually adding `|medium|square` to the list of thumbnails:
 
 ```apache
 # Set rule for original and selected derivative files (usually at least large thumbnails).
-RewriteRule "^/files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
+RewriteRule "^files/(original|large)/(.*)$" "/access/files/$1/$2" [NC,L]
 ```
 
-An alternative with flag [NC,L], without need of mod proxy:
+Alternatively, with flag [P] (requires mod_proxy):
 
 ```apache
-# Set rule for original and selected derivative files (usually at least large thumbnails).
-RewriteRule "^/files/(original|large)/(.*)$" "%{REQUEST_SCHEME}://%{HTTP_HOST}/access/files/$1/$2" [NC,L]
+RewriteRule "^files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
 ```
 
-The request scheme (http or https) is needed when you set the domain, but you can
-write it directly without the constant `%{REQUEST_SCHEME}`.
+Using a full URL to force an external redirect (302) is not recommended, as it
+adds a round-trip and may expose internal ports behind a reverse proxy:
+
+```apache
+# Not recommended.
+RewriteRule "^files/(original|large)/(.*)$" "%{REQUEST_SCHEME}://%{HTTP_HOST}/access/files/$1/$2" [NC,L]
+```
 
 ##### When Omeka S is installed in a sub-path (https://example.org/digital-library/)
 
@@ -139,58 +220,47 @@ eventually adding `|medium|square` to the list of thumbnails:
 
 ```apache
 # Set rule for original and selected derivative files (usually at least large thumbnails).
-RewriteRule "^/files/(original|large)/(.*)$" "/digital-library/access/files/$1/$2" [P]
+RewriteRule "^files/(original|large)/(.*)$" "/digital-library/access/files/$1/$2" [NC,L]
 ```
 
 ##### Common issues
 
-First, try with the alternative (flag [P] or [L]).
+- Remove the leading "/" before "files/" in `.htaccess`
 
-- Unable to redirect to a virtual proxy with https
+  In `.htaccess` context, Apache strips the leading `/` before matching `RewriteRule`
+  patterns. Use `^files/...` instead of `^/files/...`. The leading `/` form is
+  only valid inside the virtual host configuration.
 
-  The config uses flag `[P]` for an internal fake `Proxy`, so Apache rewrites
-  the path like a proxy. So if there is a redirection to a secured server
-  (https), the certificate should be running and up-to-date and the option
-  `SSLProxyEngine on` should be set in the Apache config of the web server.
+- Unable to proxy with https (flag [P] only)
 
-  Anyway, if you have access to it, you can include all rules inside it
-  directly (`ProxyPass`). If you don't have access to the Apache config, just
-  use the full unsecure url with `http://` (with real domain or `%{HTTP_HOST}`),
-  for the internal proxy. Because it is a fake proxy, it doesn't matter if the
+  If the flag `[P]` is used with a secured server (https), the certificate
+  should be running and up-to-date and the option `SSLProxyEngine on` should
+  be set in the Apache config of the web server.
+
+  If you have access to the Apache config, you can include all rules inside it
+  directly (`ProxyPass`). If you don't have access to it, just use the full
+  unsecure url with `http://` (with real domain or `%{HTTP_HOST}`), for the
+  internal proxy. Because it is a fake proxy, it doesn't matter if the
   internal redirect url is unsecure:
 
 ```apache
-# Set rule for original and selected derivative files (usually at least large thumbnails).
-RewriteRule "^/files/(original|large)/(.*)$" "http://%{HTTP_HOST}/digital-library/access/files/$1/$2" [P]
+RewriteRule "^files/(original|large)/(.*)$" "http://%{HTTP_HOST}/digital-library/access/files/$1/$2" [P]
 ```
 
-- Remove the leading "/" before "files/", for example:
+#### Compatibility with module Analytics (ex-part of module Statistics)
 
-```apache
-RewriteRule "^files/(original|large|medium|square)/(.*)$" "%{REQUEST_SCHEME}://%{HTTP_HOST}/access/files/$1/$2" [NC,L]
-```
+The module is compatible with the module [Analytics] for download tracking.
+When Access is active with its own `.htaccess` rule, only the Access rule
+(`/access/files/`) is needed: the module calls Analytics directly when serving
+files, so a separate `/download/` rule is not necessary.
 
-#### Compatibility with module Statistics
+**Important**: do not keep a `/download/` rule alongside the `/access/` rule.
+The `/download/` route does not check access rights, so a private file would
+become public.
 
-The module is compatible with the module [Statistics].
-
-Because Omeka doesn't protect files by default, **it is important to redirect the urls of the original files**
-to the routes of the module Access. If you keep the redirection with `download`,
-the check for reserved access won't be done, so **a private file will become public**,
-even if a user as a no reserved access to it. For example:
-
-```apache
-# Redirect direct access to files to the module Access.
-RewriteRule "^/files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
-
-# Redirect direct download of files to the module Access.
-RewriteRule "^/download/files/(original|large)/(.*)$" "/access/files/$1/$2" [P]
-```
-
-In fact, if not redirected, it acts the same way than a direct access to a
-private file in Omeka: they are not protected and everybody who knows the url,
-in particular Google, the well-known private life hacker, via Gmail, Chrome,
-Android, etc., will have access to it, even if it's exactly what you don't want.
+When the module Access is uninstalled, it automatically converts its `.htaccess`
+rule into an Analytics download rule if the module is active, so download
+tracking continues seamlessly (see [above](#uninstall-and-module-analytics)).
 
 #### Nginx
 
@@ -599,6 +669,7 @@ Copyright
 [Single Sign-On]: https://gitlab.com/Daniel-KM/Omeka-S-module-SingleSignOn
 [Numeric Datatypes]: https://github.com/omeka-s-modules/NumericDatatypes
 [Easy Admin]: https://gitlab.com/Daniel-KM/Omeka-S-module-EasyAdmin
+[Analytics]: https://gitlab.com/Daniel-KM/Omeka-S-module-Analytics
 [Statistics]: https://gitlab.com/Daniel-KM/Omeka-S-module-Statistics
 [installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [Common]: https://gitlab.com/Daniel-KM/Omeka-S-module-Common
