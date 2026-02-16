@@ -1,26 +1,30 @@
 {
     "name": "daniel-km/omeka-s-module-access",
-    "description": "Module for Omeka S that allows a visitor or a user to access to selected reserved resources via a request, an ip check, an authentication, or a token.",
-    "type": "library",
+    "type": "omeka-s-module",
+    "description": "Module for Omeka S: Allow a visitor or a user to access to selected reserved resources via a request, an ip check, an authentication, or a token.",
+    "keywords": [
+        "Omeka S",
+        "Omeka S module",
+        "access",
+        "protection",
+        "copyright"
+    ],
     "license": "CECILL-2.1",
+    "homepage": "https://gitlab.com/Daniel-KM/Omeka-S-module-Access",
     "authors": [
         {
             "name": "Daniel Berthereau",
             "email": "Daniel.packagist@Berthereau.net"
         }
     ],
-    "homepage": "https://gitlab.com/Daniel-KM/Omeka-S-module-Access",
     "support": {
         "issues": "https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/issues",
         "forum": "https://forum.omeka.org/"
     },
-    "keywords": [
-        "Omeka S",
-        "module",
-        "access",
-        "protection",
-        "copyright"
-    ],
+    "_require (not set until Omeka S merges PR #2412)": {
+        "omeka/omeka-s": "^4.1",
+        "daniel-km/omeka-s-module-common": "*"
+    },
     "autoload": {
         "psr-4": {
             "Access\\": "src/"
@@ -31,16 +35,8 @@
             "AccessTest\\": "tests/AccessTest/"
         }
     },
-    "config": {
-        "platform": {
-            "php": "7.4"
-        },
-        "allow-plugins": {
-            "composer/installers": true,
-            "oomphinc/composer-installers-extender": true
-        }
-    },
     "extra": {
-        "installer-name" : "Access"
+        "installer-name": "Access",
+        "configurable": true
     }
 }
