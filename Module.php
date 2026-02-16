@@ -49,6 +49,22 @@ class Module extends AbstractModule
             throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
         }
 
+        // The old Statistics module (before the split into Statistics +
+        // Analytics) managed .htaccess rules. Since version 3.4.12, this part
+        // has moved to module Analytics. Block if old Statistics is active.
+        $moduleManager = $services->get('Omeka\ModuleManager');
+        $statisticsModule = $moduleManager->getModule('Statistics');
+        if ($statisticsModule
+            && $statisticsModule->getState() === \Omeka\Module\Manager::STATE_ACTIVE
+            && version_compare($statisticsModule->getIni('version') ?? '', '3.4.12', '<')
+        ) {
+            $message = new \Omeka\Stdlib\Message(
+                $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+                'Statistics', '3.4.12'
+            );
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+        }
+
         /** @var bool $skipMessage */
         $skipMessage = true;
         require_once __DIR__ . '/data/scripts/upgrade_vocabulary.php';
@@ -83,16 +99,19 @@ class Module extends AbstractModule
         // Remove the Access rule.
         $htaccess = preg_replace('/' . preg_quote($accessMarker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"[^"]*"\s+"[^"]*"\s+\[[^\]]*\]\s*\n?/', '', $htaccess);
 
-        // If Statistics is active and has no rule, convert to a download rule.
+        // If Analytics is active and has no download rule, convert the Access
+        // rule to an Analytics download rule for download tracking.
+        // The old Statistics module (< 3.4.12) is no longer supported: the
+        // version check in preInstall() and upgrade script ensures it.
         $services = $this->getServiceLocator();
         $moduleManager = $services->get('Omeka\ModuleManager');
-        $statisticsModule = $moduleManager->getModule('Statistics');
-        $isStatisticsActive = $statisticsModule && $statisticsModule->getState() === \Omeka\Module\Manager::STATE_ACTIVE;
+        $analyticsModule = $moduleManager->getModule('Analytics');
+        $isAnalyticsActive = $analyticsModule && $analyticsModule->getState() === \Omeka\Module\Manager::STATE_ACTIVE;
 
-        $statisticsMarker = '# Module Statistics: count downloads.';
-        if ($isStatisticsActive && !empty($currentTypes) && strpos($htaccess, $statisticsMarker) === false) {
+        $analyticsMarker = '# Module Analytics: count downloads.';
+        if ($isAnalyticsActive && !empty($currentTypes) && strpos($htaccess, $analyticsMarker) === false) {
             $typesPattern = implode('|', $currentTypes);
-            $downloadBlock = $statisticsMarker . "\n"
+            $downloadBlock = $analyticsMarker . "\n"
                 . '# This rule is automatically managed by the module.' . "\n"
                 . 'RewriteRule "^files/(' . $typesPattern . ')/(.*)$" "download/files/$1/$2" [NC,L]';
             // Insert after RewriteEngine On.
@@ -100,17 +119,17 @@ class Module extends AbstractModule
                 $insertPos = $m[0][1] + strlen($m[0][0]);
                 $htaccess = substr_replace($htaccess, "\n" . $downloadBlock . "\n\n", $insertPos, 0);
             }
-            // Update Statistics settings.
+            // Update Analytics settings.
             $settings = $services->get('Omeka\Settings');
             $knownStandardTypes = ['original', 'large', 'medium', 'square'];
             $standardTypes = array_values(array_intersect($currentTypes, $knownStandardTypes));
             $customTypes = array_values(array_diff($currentTypes, $knownStandardTypes));
-            $settings->set('statistics_htaccess_types', $standardTypes);
-            $settings->set('statistics_htaccess_custom_types', implode(' ', $customTypes));
+            $settings->set('analytics_htaccess_types', $standardTypes);
+            $settings->set('analytics_htaccess_custom_types', implode(' ', $customTypes));
 
             $messenger = $services->get('ControllerPluginManager')->get('messenger');
             $message = new PsrMessage(
-                'The Access rule has been converted to a Statistics download rule for file types: {types}.', // @translate
+                'The Access rule has been converted to an Analytics download rule for file types: {types}.', // @translate
                 ['types' => implode(', ', $currentTypes)]
             );
             $messenger->addSuccess($message);

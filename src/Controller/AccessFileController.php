@@ -170,7 +170,7 @@ class AccessFileController extends AbstractActionController
      *
      * @see \Access\Controller\AccessFileController::sendFile()
      * @see \DerivativeMedia\Controller\IndexController::sendFile()
-     * @see \Statistics\Controller\DownloadController::sendFile()
+     * @see \Analytics\Controller\DownloadController::sendFile()
      * and
      * @see \ImageServer\Controller\ImageController::fetchAction()
      */
