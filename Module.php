@@ -41,10 +41,10 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $translate = $services->get('ControllerPluginManager')->get('translate');
 
-        if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.76')) {
+        if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.79')) {
             $message = new \Omeka\Stdlib\Message(
                 $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
-                'Common', '3.4.76'
+                'Common', '3.4.79'
             );
             throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
         }
@@ -577,7 +577,7 @@ class Module extends AbstractModule
 
         $assetUrl = $renderer->plugin('assetUrl');
         $renderer->headLink()
-            ->appendStylesheet($assetUrl('css/common-dialog.css', 'Common'));
+            ->appendStylesheet($assetUrl('css/common-dialog-admin.css', 'Common'));
         $renderer->headScript()
             ->appendFile($assetUrl('js/common-dialog.js', 'Common'), 'text/javascript', ['defer' => 'defer'])
             ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
@@ -1401,7 +1401,7 @@ class Module extends AbstractModule
 
         $assetUrl = $view->plugin('assetUrl');
         $view->headLink()
-            ->appendStylesheet($assetUrl('css/common-dialog.css', 'Common'))
+            ->appendStylesheet($assetUrl('css/common-dialog-admin.css', 'Common'))
             ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
 
         // Get current access if any.
@@ -1726,7 +1726,7 @@ class Module extends AbstractModule
         $view = $event->getTarget();
         $assetUrl = $view->plugin('assetUrl');
         $view->headLink()
-            ->appendStylesheet($assetUrl('css/common-dialog.css', 'Common'))
+            ->appendStylesheet($assetUrl('css/common-dialog-admin.css', 'Common'))
             ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
         $view->headScript()
             ->appendFile($assetUrl('js/common-dialog.js', 'Common'), 'text/javascript', ['defer' => 'defer'])
