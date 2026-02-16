@@ -94,7 +94,11 @@ return [
                     // Should manage module Derivative Media too.
                     // Manage module Archive repertory, that can use real names and subdirectories.
                     // For any filename, either use `:filename{?}`, or add a constraint `'filename' => '.+'`.
-                    'route' => '/access/files/:type/:filename{?}',
+                    //
+                    // Note: [/access] is an optional segment of the route: Apache may not pass the
+                    // rewritten url (with prefix /access), but the original one, so the route
+                    // matches the url with or without /access.
+                    'route' => '[/access]/files/:type/:filename{?}',
                     'constraints' => [
                         'type' => '[^/]+',
                         'filename' => '.+',
