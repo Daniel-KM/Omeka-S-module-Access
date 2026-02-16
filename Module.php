@@ -1343,7 +1343,7 @@ class Module extends AbstractModule
             }
         }
 
-        $levelElement = new \Common\Form\Element\OptionalRadio('o-access:level');
+        $levelElement = new \Common\Form\Element\OptionalRadio('access[o-access:level]');
         $levelElement
             ->setLabel('Access level') // @translate
             ->setValueOptions($valueOptions)
@@ -1357,7 +1357,7 @@ class Module extends AbstractModule
         // time, even with a pattern, so use elements date and time to avoid js.
         // TODO Create a full form element with view for standard date + time.
 
-        $embargoStartElementDate = new \Laminas\Form\Element\Date('embargo_start_date');
+        $embargoStartElementDate = new \Laminas\Form\Element\Date('access[embargo_start_date]');
         $embargoStartElementDate
             ->setLabel('Embargo start') // @translate
             ->setAttributes([
@@ -1365,7 +1365,7 @@ class Module extends AbstractModule
                 'value' => $embargoStart ? $embargoStart->format('Y-m-d') : '',
                 'disabled' => $accessViaProperty ? 'disabled' : false,
             ]);
-        $embargoStartElementTime = new \Laminas\Form\Element\Time('embargo_start_time');
+        $embargoStartElementTime = new \Laminas\Form\Element\Time('access[embargo_start_time]');
         $embargoStartElementTime
             ->setLabel(' ')
             ->setAttributes([
@@ -1374,7 +1374,7 @@ class Module extends AbstractModule
                 'disabled' => $accessViaProperty ? 'disabled' : false,
             ]);
 
-        $embargoEndElementDate = new \Laminas\Form\Element\Date('embargo_end_date');
+        $embargoEndElementDate = new \Laminas\Form\Element\Date('access[embargo_end_date]');
         $embargoEndElementDate
             ->setLabel('Embargo end') // @translate
             ->setAttributes([
@@ -1382,7 +1382,7 @@ class Module extends AbstractModule
                 'value' => $embargoEnd ? $embargoEnd->format('Y-m-d') : '',
                 'disabled' => $accessViaProperty ? 'disabled' : false,
             ]);
-        $embargoEndElementTime = new \Laminas\Form\Element\Time('embargo_end_time');
+        $embargoEndElementTime = new \Laminas\Form\Element\Time('access[embargo_end_time]');
         $embargoEndElementTime
             ->setLabel('Embargo end') // @translate
             ->setAttributes([
@@ -1408,7 +1408,7 @@ class Module extends AbstractModule
             || $resourceName === 'items'
             // Media may not be stored yet during creation.
         ) {
-            $recursiveElement = new \Common\Form\Element\OptionalRadio('access_recursive');
+            $recursiveElement = new \Common\Form\Element\OptionalRadio('access[access_recursive]');
             $recursiveElement
                 ->setLabel($resourceName === 'item_sets'
                     ? 'Copy access level and embargo to items and medias' // @translate
