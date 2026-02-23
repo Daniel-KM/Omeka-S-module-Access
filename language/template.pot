@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-16 00:00+0000\n"
+"POT-Creation-Date: 2026-02-23 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,36 +22,40 @@ msgstr ""
 msgid "This module requires module %1$s version %2$s or greater."
 msgstr ""
 
-#: data/scripts/upgrade.php:41 Module.php:46 Module.php:62
+#: data/scripts/upgrade.php:41 Module.php:48 Module.php:64
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr ""
 
-#: Module.php:178
+#: data/scripts/upgrade.php:45
+msgid "Missing requirement. Unable to upgrade."
+msgstr ""
+
+#: Module.php:180
 msgid ""
 "To be automatically upgraded and replaced by this module, the module "
 "\"Access Resource\" should be upgraded first to version 3.4.17.1. Else "
 "uninstall it first, but you will lose access statuses and requests."
 msgstr ""
 
-#: Module.php:184
+#: Module.php:186
 msgid ""
 "To be automatically upgraded and replaced by this module, the module "
 "\"Access Resource\" should be downgraded first to version 3.4.17.1. Else "
 "uninstall it first, but you will lose access statuses and requests."
 msgstr ""
 
-#: Module.php:636
+#: Module.php:638
 msgid ""
 "When properties are used, three properties should be defined for \"level\", "
 "\"embargo start\" and \"embargo end\"."
 msgstr ""
 
-#: Module.php:651
+#: Module.php:653
 msgid "Job is not launched: no option was set."
 msgstr ""
 
-#: Module.php:1687 view/access/admin/log/browse.phtml:23
+#: Module.php:1689 view/access/admin/log/browse.phtml:23
 #: view/access/admin/request/browse.phtml:32
 #: view/access/admin/request/edit.phtml:30
 #: view/access/admin/request/edit.phtml:31
@@ -59,7 +63,7 @@ msgstr ""
 msgid "Access"
 msgstr ""
 
-#: Module.php:1717 view/access/site/request/browse.phtml:38
+#: Module.php:1719 view/access/site/request/browse.phtml:38
 msgid "Access requests"
 msgstr ""
 
@@ -311,347 +315,347 @@ msgstr ""
 msgid "The vocabulary \"{vocabulary}\" was updated successfully."
 msgstr ""
 
-#: data/scripts/upgrade.php:142
+#: data/scripts/upgrade.php:143
 msgid "It is now possible to add a page block to request an access."
 msgstr ""
 
-#: data/scripts/upgrade.php:147
+#: data/scripts/upgrade.php:148
 msgid ""
 "New messages were added to make a distinction between user/visitor and "
 "accepted/rejected. Check main settings to adapt them."
 msgstr ""
 
-#: data/scripts/upgrade.php:162
+#: data/scripts/upgrade.php:163
 msgid ""
 "The module manages now http requests \"Content Range\" that allow to read "
 "files faster."
 msgstr ""
 
-#: data/scripts/upgrade.php:184
+#: data/scripts/upgrade.php:185
 msgid ""
 "A new access mode allows to limit access to medias to users with a specific "
 "email via regex."
 msgstr ""
 
-#: data/scripts/upgrade.php:259
+#: data/scripts/upgrade.php:260
 msgid ""
 "The settings \"heading\" was removed from block Access request. New blocks "
 "\"Heading\" or \"Html\" were prepended to all blocks that had a filled "
 "heading. You may check pages for styles: {json}"
 msgstr ""
 
-#: data/scripts/upgrade.php:269
+#: data/scripts/upgrade.php:270
 msgid ""
 "The setting \"template\" was moved to the new block layout settings "
 "available since Omeka S v4.1. You may check pages for styles: {json}"
 msgstr ""
 
-#: data/scripts/upgrade.php:276
+#: data/scripts/upgrade.php:277
 msgid ""
 "The template files for the block Access request should be moved from \"view/"
 "common/block-layout\" to \"view/common/block-template\" in your themes. You "
 "may check your themes for pages: {json}"
 msgstr ""
 
-#: data/scripts/upgrade.php:288
+#: data/scripts/upgrade.php:289
 msgid "It is now possible to define accesses by sso idps and item sets."
 msgstr ""
 
-#: data/scripts/upgrade.php:293
+#: data/scripts/upgrade.php:294
 msgid ""
 "It is now possible to define excluded item sets for accesses by ip and sso "
 "idp."
 msgstr ""
 
-#: data/scripts/upgrade.php:300
+#: data/scripts/upgrade.php:301
 msgid ""
 "When no time is set to an date of end of embargo, the check is now done "
 "against 23:59:59 and no more 00:00:00."
 msgstr ""
 
-#: data/scripts/upgrade.php:327
+#: data/scripts/upgrade.php:328
 msgid ""
 "A new option allows to update the status level and to remove the embargo "
 "metadata when it ends. Default option is to keep them."
 msgstr ""
 
-#: data/scripts/upgrade.php:332
+#: data/scripts/upgrade.php:333
 msgid "A job is run once a day to update accesses when embargo ends."
 msgstr ""
 
-#: data/scripts/upgrade.php:364
+#: data/scripts/upgrade.php:365
 msgid ""
 "The three criteria to access a media are now fully independant: visibility "
 "of item and media should be public; access level should be free (or reserved "
 "for authorized users); resource should not be under embargo."
 msgstr ""
 
-#: data/scripts/upgrade.php:400 Module.php:1958
+#: data/scripts/upgrade.php:401 Module.php:1960
 msgid ""
 "The .htaccess rule is managed by the module and protects file types: {types}."
 msgstr ""
 
-#: data/scripts/upgrade.php:406
+#: data/scripts/upgrade.php:407
 msgid ""
 "A legacy .htaccess rule was detected for file types: {types}. It is "
 "recommended to open the module configuration form and save it to convert the "
 "rule to the managed format."
 msgstr ""
 
-#: data/scripts/upgrade.php:412
+#: data/scripts/upgrade.php:413
 msgid ""
 "The .htaccess rule is not yet set. Open the module configuration form to "
 "manage it. Default file types: {types}."
 msgstr ""
 
-#: data/scripts/upgrade.php:430
+#: data/scripts/upgrade.php:431
 msgid "The module {module} should be upgraded to version {version} or later."
 msgstr ""
 
-#: data/scripts/upgrade.php:440
+#: data/scripts/upgrade.php:441
 msgid ""
 "The key \"accessresource\" in the file config/local.config.php at the root "
 "of Omeka can be removed."
 msgstr ""
 
-#: Module.php:89
+#: Module.php:91
 msgid ""
 "Access module: the .htaccess is not writable; the rewrite rule was not "
 "removed during uninstall."
 msgstr ""
 
-#: Module.php:132
+#: Module.php:134
 msgid ""
 "The Access rule has been converted to an Analytics download rule for file "
 "types: {types}."
 msgstr ""
 
-#: Module.php:193
+#: Module.php:195
 msgid ""
 "An error occurred during migration of module \"{module}\". Check the config "
 "and uninstall it manually."
 msgstr ""
 
-#: Module.php:233
+#: Module.php:235
 msgid ""
 "This module cannot install its tables, because they exist already. Try to "
 "remove them first."
 msgstr ""
 
-#: Module.php:263
+#: Module.php:265
 msgid ""
 "It is recommended to run the job in config form to initialize all access "
 "statuses."
 msgstr ""
 
-#: Module.php:780
+#: Module.php:782
 msgid ""
 "Cleaned params used for Access:\n"
 "{json}"
 msgstr ""
 
-#: Module.php:995
+#: Module.php:997
 msgid ""
 "The access level of the item #{item_id} is different from access level for "
 "medias {media_ids}. Update them if needed in tab \"advanced\"."
 msgstr ""
 
-#: Module.php:1322 src/Controller/Admin/RequestController.php:194
+#: Module.php:1324 src/Controller/Admin/RequestController.php:194
 msgid "You should set either a user or an email or check box for token."
 msgstr ""
 
-#: Module.php:1345 src/Controller/Admin/RequestController.php:220
+#: Module.php:1347 src/Controller/Admin/RequestController.php:220
 msgid "Access request successfully created."
 msgstr ""
 
-#: Module.php:1421 src/Form/Admin/BatchEditFieldset.php:50
+#: Module.php:1423 src/Form/Admin/BatchEditFieldset.php:50
 msgid "Free"
 msgstr ""
 
-#: Module.php:1422 src/Form/Admin/BatchEditFieldset.php:51
+#: Module.php:1424 src/Form/Admin/BatchEditFieldset.php:51
 msgid "Reserved"
 msgstr ""
 
-#: Module.php:1423 src/Form/Admin/BatchEditFieldset.php:52
+#: Module.php:1425 src/Form/Admin/BatchEditFieldset.php:52
 msgid "Protected"
 msgstr ""
 
-#: Module.php:1438 src/ColumnType/AccessLevel.php:13
+#: Module.php:1440 src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr ""
 
-#: Module.php:1452 src/Form/Admin/BatchEditFieldset.php:89
+#: Module.php:1454 src/Form/Admin/BatchEditFieldset.php:89
 msgid "Embargo start"
 msgstr ""
 
-#: Module.php:1469 Module.php:1477 src/Form/Admin/BatchEditFieldset.php:134
+#: Module.php:1471 Module.php:1479 src/Form/Admin/BatchEditFieldset.php:134
 msgid "Embargo end"
 msgstr ""
 
-#: Module.php:1487
+#: Module.php:1489
 #, php-format
 msgid "Access level (managed via property %s)"
 msgstr ""
 
-#: Module.php:1490
+#: Module.php:1492
 #, php-format
 msgid "Embargo start (managed via property %s)"
 msgstr ""
 
-#: Module.php:1493
+#: Module.php:1495
 #, php-format
 msgid "Embargo end (managed via property %s)"
 msgstr ""
 
-#: Module.php:1504
+#: Module.php:1506
 msgid "Copy access level and embargo to items and medias"
 msgstr ""
 
-#: Module.php:1505
+#: Module.php:1507
 msgid "Copy access level and embargo to medias"
 msgstr ""
 
-#: Module.php:1513
+#: Module.php:1515
 msgid "New medias only"
 msgstr ""
 
-#: Module.php:1514
+#: Module.php:1516
 msgid "All medias"
 msgstr ""
 
-#: Module.php:1841
+#: Module.php:1843
 msgid "Access: Reindex resources"
 msgstr ""
 
-#: Module.php:1849
+#: Module.php:1851
 msgid "Options to reindex accesses"
 msgstr ""
 
-#: Module.php:1891
+#: Module.php:1893
 msgid "The file .htaccess is not readable at the root of Omeka."
 msgstr ""
 
-#: Module.php:1941
+#: Module.php:1943
 msgid ""
 "A legacy .htaccess rule protects file types \"{types}\" but is not managed "
 "by the module. Save the configuration to convert it to the managed format."
 msgstr ""
 
-#: Module.php:1948
+#: Module.php:1950
 msgid ""
 "No .htaccess rule is set to protect files. To control access to files, add "
 "the following lines in the file .htaccess at the root of Omeka, just after "
 "\"RewriteEngine On\":{line_break}{rule}"
 msgstr ""
 
-#: Module.php:1995
+#: Module.php:1997
 msgid ""
 "The file .htaccess is not writable. Add the following lines manually in the "
 "file .htaccess at the root of Omeka, just after \"RewriteEngine On\":"
 "{line_break}{rule}"
 msgstr ""
 
-#: Module.php:2005
+#: Module.php:2007
 msgid ""
 "The file .htaccess is not writable. Remove the lines starting with \"{marker}"
 "\" manually from the file .htaccess at the root of Omeka."
 msgstr ""
 
-#: Module.php:2042
+#: Module.php:2044
 msgid "The .htaccess rule has been updated to protect file types: {types}."
 msgstr ""
 
-#: Module.php:2048
+#: Module.php:2050
 msgid "The .htaccess rule for file protection has been removed."
 msgstr ""
 
-#: Module.php:2064
+#: Module.php:2066
 msgid ""
 "According to setting, when embargo ends, the access level is set to \"free\" "
 "and the embargo dates are cleared."
 msgstr ""
 
-#: Module.php:2068
+#: Module.php:2070
 msgid ""
 "According to setting, when embargo ends, the access level is set to \"free\" "
 "and the embargo dates are kept."
 msgstr ""
 
-#: Module.php:2072
+#: Module.php:2074
 msgid ""
 "According to setting, when embargo ends, the access level is set to the "
 "level under (\"free\" for reserved, \"reserved\" for protected/forbidden) "
 "and the embargo dates are cleared."
 msgstr ""
 
-#: Module.php:2076
+#: Module.php:2078
 msgid ""
 "According to setting, when embargo ends, the access level is set to the "
 "level under (\"free\" for reserved, \"reserved\" for protected/forbidden) "
 "and the embargo dates are kept."
 msgstr ""
 
-#: Module.php:2080
+#: Module.php:2082
 msgid ""
 "According to setting, when embargo ends, the access level is kept and the "
 "embargo dates are cleared."
 msgstr ""
 
-#: Module.php:2084
+#: Module.php:2086
 msgid ""
 "According to setting, when embargo ends, the access level and the embargo "
 "dates are kept."
 msgstr ""
 
-#: Module.php:2138
+#: Module.php:2140
 msgid ""
 "A job was launched in background to update access statuses according to "
 "parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end})."
 msgstr ""
 
-#: Module.php:2182
+#: Module.php:2184
 msgid "The ip \"{ip}\" is empty or invalid."
 msgstr ""
 
-#: Module.php:2192
+#: Module.php:2194
 msgid ""
 "The item sets list \"{input}\" for ip {ip} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
 msgstr ""
 
-#: Module.php:2203
+#: Module.php:2205
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains duplicate item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:2215
+#: Module.php:2217
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains unknown item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:2356
+#: Module.php:2358
 msgid "No idps are defined. Check the config of module Single Sign-On first."
 msgstr ""
 
-#: Module.php:2373
+#: Module.php:2375
 msgid "The idp \"{idp}\" is empty or not defined in module Single Sign-On."
 msgstr ""
 
-#: Module.php:2383
+#: Module.php:2385
 msgid ""
 "The item sets list \"{input}\" for idp {idp} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
 msgstr ""
 
-#: Module.php:2394
+#: Module.php:2396
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains duplicate item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:2406
+#: Module.php:2408
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains unknown item sets "
 "({list})."
