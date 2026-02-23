@@ -222,7 +222,7 @@ class AccessFileController extends AbstractActionController
             $dom->strictErrorChecking = false;
             $dom->validateOnParse = false;
             $dom->recover = true;
-            $dom->loadXML($xmlContent);
+            $dom->loadXML($xmlContent, LIBXML_NONET);
             $currentXml = simplexml_import_dom($dom);
             libxml_clear_errors();
             libxml_use_internal_errors(false);
