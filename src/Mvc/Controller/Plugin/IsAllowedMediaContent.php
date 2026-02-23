@@ -317,7 +317,10 @@ class IsAllowedMediaContent extends AbstractPlugin
         // called by a different request.
 
         /** @see https://github.com/Daniel-KM/Omeka-S-module-Access/issues/1 */
-        $ipList = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? null;
+        /** @see https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/issues/6 */
+        $ipList = $_SERVER['HTTP_X_FORWARDED_FOR']
+            ?? $_SERVER['HTTP_X_REAL_IP']
+            ?? null;
         if ($ipList && $this->settings->get('access_ip_proxy')) {
             $ips = explode(',', strtr($ipList, [' ' => '']));
             $ip = reset($ips);
