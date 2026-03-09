@@ -995,10 +995,18 @@ class Module extends AbstractModule
             $mediaIds = $this->listMediaAccessDifferentThanItem($resource);
             if ($mediaIds) {
                 $messenger = $services->get('ControllerPluginManager')->get('messenger');
-                $message = new PsrMessage(
-                    'The access level of the item #{item_id} is different from access level for medias {media_ids}. Update them if needed in tab "advanced".', // @translate
-                    ['item_id' => $resource->getId(), 'media_ids' => implode(', ', $mediaIds)],
-                );
+                $accessViaProperty = (bool) $settings->get('access_property');
+                if ($accessViaProperty) {
+                    $message = new PsrMessage(
+                        'The access level of the item #{item_id} differs from the access level of its medias #{media_ids}. You can set a specific level for each media via their access property, or apply the item level to all medias via the "Advanced" tab of the item.', // @translate
+                        ['item_id' => $resource->getId(), 'media_ids' => implode(', ', $mediaIds)],
+                    );
+                } else {
+                    $message = new PsrMessage(
+                        'The access level of the item #{item_id} differs from the access level of its medias #{media_ids}. You can set a specific level in the "Advanced" tab of each media, or apply the item level to all medias via the "Advanced" tab of the item.', // @translate
+                        ['item_id' => $resource->getId(), 'media_ids' => implode(', ', $mediaIds)],
+                    );
+                }
                 $messenger->addWarning($message);
             }
         }
