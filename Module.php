@@ -2149,9 +2149,7 @@ class Module extends AbstractModule
         $message = new PsrMessage(
             'A job was launched in background to update access statuses according to parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
             [
-                'link_job' => sprintf('<a href="%s">',
-                    htmlspecialchars($urlHelper('admin/id', ['controller' => 'job', 'id' => $job->getId()]))
-                ),
+                'link_job' => sprintf('<a href="%s">', htmlspecialchars($urlHelper('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
                 'job_id' => $job->getId(),
                 'link_end' => '</a>',
                 'link_log' => class_exists('Log\Module', false)
