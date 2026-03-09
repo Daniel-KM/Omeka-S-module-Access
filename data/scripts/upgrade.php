@@ -435,6 +435,24 @@ if (version_compare((string) $oldVersion, '3.4.39', '<')) {
     }
 }
 
+if (version_compare((string) $oldVersion, '3.4.40', '<')) {
+    // A bug in previous versions caused the daily embargo job to delete all
+    // access property values (curation:access, start, end) without re-creating
+    // them. Re-sync now synchronously.
+    $accessViaProperty = (bool) $settings->get('access_property');
+    if ($accessViaProperty) {
+        $this->processUpdateStatus([
+            'sync' => 'from_accesses_to_properties',
+            'missing' => 'skip',
+            'recursive' => [],
+        ], true);
+        $message = new PsrMessage(
+            'A previous bug may have removed access property values. They have been restored from indexes.' // @translate
+        );
+        $messenger->addSuccess($message);
+    }
+}
+
 // Check for old module.
 if (!empty($config['accessresource'])) {
     $message = new PsrMessage(
