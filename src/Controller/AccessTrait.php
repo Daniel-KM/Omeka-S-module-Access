@@ -149,7 +149,7 @@ trait AccessTrait
             '{main_title}' => $this->mailer()->getInstallationTitle(),
             '{main_url}' => $url->fromRoute('top', [], ['force_canonical' => true]),
             '{site_title}' => $site ? $site->title() : null,
-            '{site_url}' => $site ? $site->siteUrl() : null,
+            '{site_url}' => $site ? $site->siteUrl(null, true) : null,
             '{email}' => $post['o:email'] ?? null,
             '{name}' => $post['o:name'] ?? null,
             '{message}' => $post['o:message'] ?? null,
