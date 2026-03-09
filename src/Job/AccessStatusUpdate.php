@@ -173,7 +173,8 @@ class AccessStatusUpdate extends AbstractJob
             'Starting indexation of access statuses of all resources.' // @translate
         );
 
-        // Warning: this is not a full sync: only existing properties and indexes are updated.
+        // Warning: this is not a full sync: only existing properties and
+        // indexes are updated.
 
         if (in_array('from_item_sets_to_items_and_media', $this->recursiveProcesses)) {
             $ids = $this->api->search('item_sets', [], ['returnScalar' => 'id'])->getContent();
@@ -233,9 +234,8 @@ class AccessStatusUpdate extends AbstractJob
         $embargoEndType = $this->hasNumericDataTypes
             ? 'numeric:timestamp' : 'literal';
 
-        // Each statement is executed separately: PDO emulated
-        // prepares does not reliably bind named parameters across
-        // multiple statements in one call.
+        // Each statement is executed separately: PDO emulated prepares does not
+        // reliably bind named params across multiple statements in one call.
 
         $this->connection->transactional(function () use ($quotedList, $intType, $strType, $embargoStartType, $embargoEndType) {
             // Remove all level and embargo values.
@@ -315,7 +315,9 @@ class AccessStatusUpdate extends AbstractJob
                     `access_status`.`id`,
                     :property_embargo_start,
                     :embargo_start_type,
-                    `access_status`.`embargo_start`,
+                    IF(TIME(`access_status`.`embargo_start`) = '00:00:00',
+                        CAST(DATE(`access_status`.`embargo_start`) AS CHAR),
+                        CAST(`access_status`.`embargo_start` AS CHAR)),
                     1
                 FROM `access_status`
                 WHERE `access_status`.`embargo_start` IS NOT NULL
@@ -337,6 +339,7 @@ class AccessStatusUpdate extends AbstractJob
                     SELECT `access_status`.`id`, :property_embargo_start, UNIX_TIMESTAMP(`access_status`.`embargo_start`)
                     FROM `access_status`
                     WHERE `access_status`.`embargo_start` IS NOT NULL
+                        AND UNIX_TIMESTAMP(`access_status`.`embargo_start`) IS NOT NULL
                     SQL,
                     ['property_embargo_start' => $this->propertyEmbargoStartId],
                     ['property_embargo_start' => $intType]
@@ -351,7 +354,9 @@ class AccessStatusUpdate extends AbstractJob
                     `access_status`.`id`,
                     :property_embargo_end,
                     :embargo_end_type,
-                    `access_status`.`embargo_end`,
+                    IF(TIME(`access_status`.`embargo_end`) = '00:00:00',
+                        CAST(DATE(`access_status`.`embargo_end`) AS CHAR),
+                        CAST(`access_status`.`embargo_end` AS CHAR)),
                     1
                 FROM `access_status`
                 WHERE `access_status`.`embargo_end` IS NOT NULL
@@ -373,11 +378,47 @@ class AccessStatusUpdate extends AbstractJob
                     SELECT `access_status`.`id`, :property_embargo_end, UNIX_TIMESTAMP(`access_status`.`embargo_end`)
                     FROM `access_status`
                     WHERE `access_status`.`embargo_end` IS NOT NULL
+                        AND UNIX_TIMESTAMP(`access_status`.`embargo_end`) IS NOT NULL
                     SQL,
                     ['property_embargo_end' => $this->propertyEmbargoEndId],
                     ['property_embargo_end' => $intType]
                 );
             }
+
+            // Strip trailing "-00-00", "-00" from partial dates produced by
+            // DATETIME columns (e.g. "2070-00-00" => "2070", "2026-09-00" => "2026-09").
+            $this->connection->executeStatement(
+                <<<'SQL'
+                UPDATE `value`
+                SET `value` = LEFT(`value`, LENGTH(`value`) - 6)
+                WHERE `property_id` IN (:property_embargo_start, :property_embargo_end)
+                    AND `value` LIKE '%-00-00'
+                SQL,
+                [
+                    'property_embargo_start' => $this->propertyEmbargoStartId,
+                    'property_embargo_end' => $this->propertyEmbargoEndId,
+                ],
+                [
+                    'property_embargo_start' => $intType,
+                    'property_embargo_end' => $intType,
+                ]
+            );
+            $this->connection->executeStatement(
+                <<<'SQL'
+                UPDATE `value`
+                SET `value` = LEFT(`value`, LENGTH(`value`) - 3)
+                WHERE `property_id` IN (:property_embargo_start, :property_embargo_end)
+                    AND `value` LIKE '%-00'
+                SQL,
+                [
+                    'property_embargo_start' => $this->propertyEmbargoStartId,
+                    'property_embargo_end' => $this->propertyEmbargoEndId,
+                ],
+                [
+                    'property_embargo_start' => $intType,
+                    'property_embargo_end' => $intType,
+                ]
+            );
         });
 
         return $this;
@@ -447,6 +488,8 @@ class AccessStatusUpdate extends AbstractJob
         // The process check for dates like "0000", that is an error, or partial
         // dates, that are completed.
 
+        // Use LENGTH to determine the date format instead of STR_TO_DATE which
+        // matches too eagerly on partial dates.
         $sql = <<<SQL
             # Set access statuses according to values.
             INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
@@ -483,10 +526,10 @@ class AccessStatusUpdate extends AbstractJob
                 CASE
                     WHEN `value`.`value` IS NULL THEN NULL
                     WHEN LENGTH(TRIM(REPLACE(REPLACE(REPLACE(`value`.`value`, '0', ''), '-', ''), ':', ''))) = 0 THEN NULL
-                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
-                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-01'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-01'), '%Y-%m-%d'), ' 00:00:00')
-                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-01-01'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-01-01'), '%Y-%m-%d'), ' 00:00:00')
+                    WHEN LENGTH(`value`.`value`) > 10 THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
+                    WHEN LENGTH(`value`.`value`) = 10 THEN CONCAT(`value`.`value`, ' 00:00:00')
+                    WHEN LENGTH(`value`.`value`) = 7 THEN CONCAT(`value`.`value`, '-01 00:00:00')
+                    WHEN LENGTH(`value`.`value`) <= 4 THEN CONCAT(`value`.`value`, '-01-01 00:00:00')
                     ELSE NULL
                 END,
                 NULL
@@ -498,10 +541,10 @@ class AccessStatusUpdate extends AbstractJob
                 `embargo_start` = CASE
                     WHEN `value`.`value` IS NULL THEN NULL
                     WHEN LENGTH(TRIM(REPLACE(REPLACE(REPLACE(`value`.`value`, '0', ''), '-', ''), ':', ''))) = 0 THEN NULL
-                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 00:00:00')
-                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-01'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-01'), '%Y-%m-%d'), ' 00:00:00')
-                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-01-01'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-01-01'), '%Y-%m-%d'), ' 00:00:00')
+                    WHEN LENGTH(`value`.`value`) > 10 THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
+                    WHEN LENGTH(`value`.`value`) = 10 THEN CONCAT(`value`.`value`, ' 00:00:00')
+                    WHEN LENGTH(`value`.`value`) = 7 THEN CONCAT(`value`.`value`, '-01 00:00:00')
+                    WHEN LENGTH(`value`.`value`) <= 4 THEN CONCAT(`value`.`value`, '-01-01 00:00:00')
                     ELSE NULL
                 END
             ;
@@ -514,10 +557,10 @@ class AccessStatusUpdate extends AbstractJob
                 CASE
                     WHEN `value`.`value` IS NULL THEN NULL
                     WHEN LENGTH(TRIM(REPLACE(REPLACE(REPLACE(`value`.`value`, '0', ''), '-', ''), ':', ''))) = 0 THEN NULL
-                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 23:59:59')
-                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-28'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-28'), '%Y-%m-%d'), ' 23:59:59')
-                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-12-31'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-12-31'), '%Y-%m-%d'), ' 23:59:59')
+                    WHEN LENGTH(`value`.`value`) > 10 THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
+                    WHEN LENGTH(`value`.`value`) = 10 THEN CONCAT(`value`.`value`, ' 23:59:59')
+                    WHEN LENGTH(`value`.`value`) = 7 THEN CONCAT(`value`.`value`, '-01 23:59:59')
+                    WHEN LENGTH(`value`.`value`) <= 4 THEN CONCAT(`value`.`value`, '-12-31 23:59:59')
                     ELSE NULL
                 END
             FROM `resource`
@@ -528,10 +571,10 @@ class AccessStatusUpdate extends AbstractJob
                 `embargo_end` = CASE
                     WHEN `value`.`value` IS NULL THEN NULL
                     WHEN LENGTH(TRIM(REPLACE(REPLACE(REPLACE(`value`.`value`, '0', ''), '-', ''), ':', ''))) = 0 THEN NULL
-                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T') THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-                    WHEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(`value`.`value`, '%Y-%m-%d'), ' 23:59:59')
-                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-28'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-28'), '%Y-%m-%d'), ' 23:59:59')
-                    WHEN STR_TO_DATE(CONCAT(`value`.`value`, '-12-31'), '%Y-%m-%d') THEN CONCAT(STR_TO_DATE(CONCAT(`value`.`value`, '-12-31'), '%Y-%m-%d'), ' 23:59:59')
+                    WHEN LENGTH(`value`.`value`) > 10 THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
+                    WHEN LENGTH(`value`.`value`) = 10 THEN CONCAT(`value`.`value`, ' 23:59:59')
+                    WHEN LENGTH(`value`.`value`) = 7 THEN CONCAT(`value`.`value`, '-01 23:59:59')
+                    WHEN LENGTH(`value`.`value`) <= 4 THEN CONCAT(`value`.`value`, '-12-31 23:59:59')
                     ELSE NULL
                 END
             ;

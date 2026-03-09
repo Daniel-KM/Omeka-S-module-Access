@@ -45,8 +45,8 @@ class AccessReindexFieldset extends Fieldset
                     'label_attributes' => ['style' => 'display: inline-block'],
                     'value_options' => [
                         'skip' => 'Skip', // @translate
-                        'from_properties_to_index' => 'Copy data from property values into indexes', // @translate
-                        'from_index_to_properties' => 'Copy data from indexes into property values', // @translate
+                        'from_properties_to_accesses' => 'Copy data from property values into indexes', // @translate
+                        'from_accesses_to_properties' => 'Copy data from indexes into property values', // @translate
                     ],
                 ],
                 'attributes' => [
