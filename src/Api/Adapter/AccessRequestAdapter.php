@@ -375,7 +375,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
             if (is_string($data['o-access:start'])) {
                 try {
                     $startDate = new DateTime($data['o-access:start']);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                 }
             } elseif ($data['o-access:start'] instanceof DateTime) {
                 $startDate = $data['o-access:start'];
@@ -388,7 +388,7 @@ class AccessRequestAdapter extends AbstractEntityAdapter
             if (is_string($data['o-access:end'])) {
                 try {
                     $endDate = new DateTime($data['o-access:end']);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                 }
             } elseif ($data['o-access:end'] instanceof DateTime) {
                 $endDate = $data['o-access:end'];

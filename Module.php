@@ -153,7 +153,7 @@ class Module extends AbstractModule
         $connection = $services->get('Omeka\Connection');
         try {
             $connection->executeQuery('SELECT id FROM access_log LIMIT 1')->fetchOne();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // Continue standard install.
             return false;
         }
@@ -190,7 +190,7 @@ class Module extends AbstractModule
         try {
             $filepath = $this->modulePath() . '/data/scripts/upgrade_from_accessresource.php';
             require_once $filepath;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $message = new PsrMessage(
                 'An error occurred during migration of module "{module}". Check the config and uninstall it manually.', // @translate
                 ['module' => 'AccessResource']
@@ -1148,7 +1148,7 @@ class Module extends AbstractModule
         if (!empty($embargoStartIsSet)) {
             try {
                 $embargoStart = empty($embargoStart) ? null : new DateTime($embargoStart);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $embargoStart = null;
             }
             $accessStatus->setEmbargoStart($embargoStart);
@@ -1157,7 +1157,7 @@ class Module extends AbstractModule
         if (!empty($embargoEndIsSet)) {
             try {
                 $embargoEnd = empty($embargoEnd) ? null : new DateTime($embargoEnd);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $embargoEnd = null;
             }
             $accessStatus->setEmbargoEnd($embargoEnd);

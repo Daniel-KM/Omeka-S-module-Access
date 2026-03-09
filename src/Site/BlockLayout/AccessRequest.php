@@ -103,7 +103,7 @@ class AccessRequest extends AbstractBlockLayout implements TemplateableBlockLayo
         if ($id) {
             try {
                 $vars['resource'] = $view->api()->read('items', ['id' => $id])->getContent();
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 // Nothing.
             }
         }

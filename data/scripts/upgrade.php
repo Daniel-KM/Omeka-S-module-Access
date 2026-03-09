@@ -68,7 +68,7 @@ if (version_compare((string) $oldVersion, '3.4.19', '<')) {
                     'property_id_1' => $propertyOld->id(),
                     'property_id_2' => $propertyNew->id(),
                 ]);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 // Already done.
             }
             $connection->executeStatement('DELETE FROM `property` WHERE id = :property_id;', [
@@ -318,7 +318,7 @@ if (version_compare((string) $oldVersion, '3.4.35', '<')) {
         SQL;
     try {
         $connection->executeStatement($sql);
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         // Already done.
     }
 

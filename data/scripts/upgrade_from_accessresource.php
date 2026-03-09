@@ -86,7 +86,7 @@ $sqls = array_filter(array_map('trim', explode(";\n", $sql)));
 foreach ($sqls as $sql) {
     try {
         $connection->executeStatement($sql);
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         $messenger->addError($e->getMessage());
     }
 }

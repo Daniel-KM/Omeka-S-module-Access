@@ -125,7 +125,7 @@ class RequestController extends AbstractActionController
         /** @var \Access\Api\Representation\AccessRequestRepresentation $accessRequest */
         try {
             $accessRequest = $id ? $this->api()->read('access_requests', ['id' => $id])->getContent() : null;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $accessRequest = null;
         }
 
@@ -325,7 +325,7 @@ class RequestController extends AbstractActionController
         /** @var \Access\Api\Representation\AccessRequestRepresentation $accessRequest */
         try {
             $accessRequest = $id ? $this->api()->read('access_requests', ['id' => $id])->getContent() : null;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $accessRequest = null;
         }
 
@@ -370,7 +370,7 @@ class RequestController extends AbstractActionController
 
         try {
             $accessRequest = $id ? $api->read('access_requests', ['id' => $id])->getContent() : null;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $accessRequest = null;
         }
 

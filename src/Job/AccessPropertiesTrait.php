@@ -175,7 +175,7 @@ trait AccessPropertiesTrait
                 // TODO Improve query to get first value that is not literal.
                 $anyLevel = $this->api->read('values', ['property' => $this->propertyLevelId], [], ['responseContent' => 'resource'])->getContent();
                 $this->levelDataType = $anyLevel->getType();
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->levelDataType = 'literal';
             }
             $message = new PsrMessage(

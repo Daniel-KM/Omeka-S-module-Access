@@ -141,7 +141,7 @@ trait AccessTrait
 
         try {
             $site = $plugins->get('currentSite')();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $site = $plugins->get('defaultSite')();
         }
 
@@ -170,7 +170,7 @@ trait AccessTrait
             /** @var \Omeka\Api\Representation\AbstractResourceEntityRepresentation $resource * /
             try {
                 $resource = $this->api()->read('resources', ['id' => $resourceId])->getContent();
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $resource = null;
             }
             if ($resource) {
