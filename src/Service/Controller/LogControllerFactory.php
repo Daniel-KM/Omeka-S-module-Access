@@ -3,7 +3,7 @@
 namespace Access\Service\Controller;
 
 use Access\Controller\Admin\LogController;
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class LogControllerFactory implements FactoryInterface

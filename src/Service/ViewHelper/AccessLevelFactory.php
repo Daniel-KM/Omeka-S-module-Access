@@ -3,7 +3,7 @@
 namespace Access\Service\ViewHelper;
 
 use Access\View\Helper\AccessLevel;
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class AccessLevelFactory implements FactoryInterface

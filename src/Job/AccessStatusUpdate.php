@@ -226,114 +226,158 @@ class AccessStatusUpdate extends AbstractJob
             $quotedList[$key] = $this->connection->quote($value);
         }
 
-        $bind = [
-            'property_level' => $this->propertyLevelId,
-            'property_embargo_start' => $this->propertyEmbargoStartId,
-            'property_embargo_end' => $this->propertyEmbargoEndId,
-            'level_type' => $this->levelDataType,
-            'embargo_start_type' => $this->hasNumericDataTypes ? 'numeric:timestamp' : 'literal',
-            'embargo_end_type' => $this->hasNumericDataTypes ? 'numeric:timestamp' : 'literal',
-        ];
-        $types = [
-            'property_level' => \Doctrine\DBAL\ParameterType::INTEGER,
-            'property_embargo_start' => \Doctrine\DBAL\ParameterType::INTEGER,
-            'property_embargo_end' => \Doctrine\DBAL\ParameterType::INTEGER,
-            'level_type' => \Doctrine\DBAL\ParameterType::STRING,
-            'embargo_start_type' => \Doctrine\DBAL\ParameterType::STRING,
-            'embargo_end_type' => \Doctrine\DBAL\ParameterType::STRING,
-        ];
+        $intType = \Doctrine\DBAL\ParameterType::INTEGER;
+        $strType = \Doctrine\DBAL\ParameterType::STRING;
+        $embargoStartType = $this->hasNumericDataTypes
+            ? 'numeric:timestamp' : 'literal';
+        $embargoEndType = $this->hasNumericDataTypes
+            ? 'numeric:timestamp' : 'literal';
 
-        $sql = <<<'SQL'
-            # Remove all level and embargo values set in statuses.
-            DELETE `value`
-            FROM `value`
-            JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
-            JOIN `access_status` ON `access_status`.`id` = `value`.`resource_id`
-            WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
-            ;
-            SQL;
+        // Each statement is executed separately: PDO emulated
+        // prepares does not reliably bind named parameters across
+        // multiple statements in one call.
 
-        if ($this->hasNumericDataTypes) {
-            $sql .= "\n" . <<<'SQL'
-                # Remove all embargo numeric timestamps set in statuses.
-                DELETE `numeric_data_types_timestamp`
-                FROM `numeric_data_types_timestamp`
+        $this->connection->transactional(function () use ($quotedList, $intType, $strType, $embargoStartType, $embargoEndType) {
+            // Remove all level and embargo values.
+            $this->connection->executeStatement(
+                <<<'SQL'
+                DELETE `value`
+                FROM `value`
                 JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
                 JOIN `access_status` ON `access_status`.`id` = `value`.`resource_id`
-                WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
-                ;
-                SQL;
-        }
+                WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+                SQL,
+                [
+                    'property_level' => $this->propertyLevelId,
+                    'property_embargo_start' => $this->propertyEmbargoStartId,
+                    'property_embargo_end' => $this->propertyEmbargoEndId,
+                ],
+                [
+                    'property_level' => $intType,
+                    'property_embargo_start' => $intType,
+                    'property_embargo_end' => $intType,
+                ]
+            );
 
-        $sql .= "\n" . <<<SQL
-            # Set all levels set in statuses.
-            INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-            SELECT
-                `access_status`.`id`,
-                :property_level,
-                :level_type,
-                CASE `access_status`.`level`
-                    WHEN "free" THEN {$quotedList['free']}
-                    WHEN "reserved" THEN {$quotedList['reserved']}
-                    WHEN "protected" THEN {$quotedList['protected']}
-                    WHEN "forbidden" THEN {$quotedList['forbidden']}
-                    ELSE {$quotedList['free']}
-                END,
-                1
-            FROM `access_status`
-            ;
-            SQL;
+            if ($this->hasNumericDataTypes) {
+                $this->connection->executeStatement(
+                    <<<'SQL'
+                    DELETE `numeric_data_types_timestamp`
+                    FROM `numeric_data_types_timestamp`
+                    JOIN `resource` ON `resource`.`id` = `numeric_data_types_timestamp`.`resource_id`
+                    JOIN `access_status` ON `access_status`.`id` = `numeric_data_types_timestamp`.`resource_id`
+                    WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
+                    SQL,
+                    [
+                        'property_embargo_start' => $this->propertyEmbargoStartId,
+                        'property_embargo_end' => $this->propertyEmbargoEndId,
+                    ],
+                    [
+                        'property_embargo_start' => $intType,
+                        'property_embargo_end' => $intType,
+                    ]
+                );
+            }
 
-        $sql .= "\n" . <<<'SQL'
-            # Set all embargo start timestamp set in statuses.
-            INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-            SELECT
-                `access_status`.`id`,
-                :property_embargo_start,
-                :embargo_start_type,
-                `access_status`.`embargo_start`,
-                1
-            FROM `access_status`
-            WHERE `access_status`.`embargo_start` IS NOT NULL
-            ;
-            SQL;
-        if ($this->hasNumericDataTypes) {
-            $sql .= "\n" . <<<'SQL'
-                INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                SELECT `access_status`.`id`, :property_embargo_start, UNIX_TIMESTAMP(`access_status`.`embargo_start`)
+            // Set all levels.
+            $this->connection->executeStatement(
+                <<<SQL
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT
+                    `access_status`.`id`,
+                    :property_level,
+                    :level_type,
+                    CASE `access_status`.`level`
+                        WHEN "free" THEN {$quotedList['free']}
+                        WHEN "reserved" THEN {$quotedList['reserved']}
+                        WHEN "protected" THEN {$quotedList['protected']}
+                        WHEN "forbidden" THEN {$quotedList['forbidden']}
+                        ELSE {$quotedList['free']}
+                    END,
+                    1
+                FROM `access_status`
+                SQL,
+                [
+                    'property_level' => $this->propertyLevelId,
+                    'level_type' => $this->levelDataType,
+                ],
+                [
+                    'property_level' => $intType,
+                    'level_type' => $strType,
+                ]
+            );
+
+            // Set embargo start.
+            $this->connection->executeStatement(
+                <<<'SQL'
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT
+                    `access_status`.`id`,
+                    :property_embargo_start,
+                    :embargo_start_type,
+                    `access_status`.`embargo_start`,
+                    1
                 FROM `access_status`
                 WHERE `access_status`.`embargo_start` IS NOT NULL
-                ;
-                SQL;
-        }
+                SQL,
+                [
+                    'property_embargo_start' => $this->propertyEmbargoStartId,
+                    'embargo_start_type' => $embargoStartType,
+                ],
+                [
+                    'property_embargo_start' => $intType,
+                    'embargo_start_type' => $strType,
+                ]
+            );
 
-        $sql .= "\n" . <<<'SQL'
-            # Set all embargo end timestamp set in statuses.
-            INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-            SELECT
-                `access_status`.`id`,
-                :property_embargo_end,
-                :embargo_end_type,
-                `access_status`.`embargo_end`,
-                1
-            FROM `access_status`
-            WHERE `access_status`.`embargo_end` IS NOT NULL
-            ;
-            SQL;
-        if ($this->hasNumericDataTypes) {
-            $sql .= "\n" . <<<'SQL'
-                INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                SELECT `access_status`.`id`, :property_embargo_end, UNIX_TIMESTAMP(`access_status`.`embargo_end`)
+            if ($this->hasNumericDataTypes) {
+                $this->connection->executeStatement(
+                    <<<'SQL'
+                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                    SELECT `access_status`.`id`, :property_embargo_start, UNIX_TIMESTAMP(`access_status`.`embargo_start`)
+                    FROM `access_status`
+                    WHERE `access_status`.`embargo_start` IS NOT NULL
+                    SQL,
+                    ['property_embargo_start' => $this->propertyEmbargoStartId],
+                    ['property_embargo_start' => $intType]
+                );
+            }
+
+            // Set embargo end.
+            $this->connection->executeStatement(
+                <<<'SQL'
+                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+                SELECT
+                    `access_status`.`id`,
+                    :property_embargo_end,
+                    :embargo_end_type,
+                    `access_status`.`embargo_end`,
+                    1
                 FROM `access_status`
                 WHERE `access_status`.`embargo_end` IS NOT NULL
-                ;
-                SQL;
-        }
+                SQL,
+                [
+                    'property_embargo_end' => $this->propertyEmbargoEndId,
+                    'embargo_end_type' => $embargoEndType,
+                ],
+                [
+                    'property_embargo_end' => $intType,
+                    'embargo_end_type' => $strType,
+                ]
+            );
 
-        // The transaction avoids to lost values when date is invalid.
-        // The exception is still thrown.
-        $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql, $bind, $types) {
-            $this->connection->executeStatement($sql, $bind, $types);
+            if ($this->hasNumericDataTypes) {
+                $this->connection->executeStatement(
+                    <<<'SQL'
+                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                    SELECT `access_status`.`id`, :property_embargo_end, UNIX_TIMESTAMP(`access_status`.`embargo_end`)
+                    FROM `access_status`
+                    WHERE `access_status`.`embargo_end` IS NOT NULL
+                    SQL,
+                    ['property_embargo_end' => $this->propertyEmbargoEndId],
+                    ['property_embargo_end' => $intType]
+                );
+            }
         });
 
         return $this;

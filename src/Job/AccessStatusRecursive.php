@@ -292,91 +292,105 @@ class AccessStatusRecursive extends AbstractJob
             ;
             SQL;
 
-        if ($this->accessViaProperty) {
-            $sql .= "\n" . $this->sqlUpdateItemProperties($bind, $types);
-        }
-
-        $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql, $bind, $types) {
+        // Each statement is executed separately: PDO emulated
+        // prepares does not reliably bind named parameters across
+        // multiple statements in one call.
+        $this->connection->transactional(function () use ($sql, $bind, $types) {
             $this->connection->executeStatement($sql, $bind, $types);
+            if ($this->accessViaProperty) {
+                $this->execUpdateItemProperties($bind, $types);
+            }
         });
     }
 
-    protected function sqlUpdateItemProperties(array $bind, array $types): string
+    protected function execUpdateItemProperties(array $bind, array $types): void
     {
-        $sql = <<<'SQL'
+        $this->connection->executeStatement(
+            <<<'SQL'
             DELETE `value`
             FROM `value`
             JOIN `media` ON `media`.`id` = `value`.`resource_id`
             WHERE `media`.`item_id` = :resource_id
                 AND `media`.`id` IN (:media_ids)
                 AND `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
-            ;
-            SQL;
+            SQL,
+            $bind, $types
+        );
 
         if ($this->hasNumericDataTypes) {
-            $sql .= "\n" . <<<'SQL'
-            DELETE `numeric_data_types_timestamp`
-            FROM `numeric_data_types_timestamp`
-            JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
-            WHERE `media`.`item_id` = :resource_id
-                AND `media`.`id` IN (:media_ids)
-                AND `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
-            ;
-            SQL;
+            $this->connection->executeStatement(
+                <<<'SQL'
+                DELETE `numeric_data_types_timestamp`
+                FROM `numeric_data_types_timestamp`
+                JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
+                WHERE `media`.`item_id` = :resource_id
+                    AND `media`.`id` IN (:media_ids)
+                    AND `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
+                SQL,
+                $bind, $types
+            );
         }
 
-        $sql .= "\n" . <<<'SQL'
+        $this->connection->executeStatement(
+            <<<'SQL'
             INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
             SELECT `media`.`id`, :property_level, :level_type, :level_value, 1
             FROM `media`
             WHERE `media`.`item_id` = :resource_id
                 AND `media`.`id` IN (:media_ids)
-            ;
-            SQL;
+            SQL,
+            $bind, $types
+        );
 
         if (!empty($bind['embargo_start_value'])) {
-            $sql .= "\n" . <<<'SQL'
+            $this->connection->executeStatement(
+                <<<'SQL'
                 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
                 SELECT `media`.`id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
                 FROM `media`
                 WHERE `media`.`item_id` = :resource_id
                     AND `media`.`id` IN (:media_ids)
-                ;
-                SQL;
+                SQL,
+                $bind, $types
+            );
             if ($this->hasNumericDataTypes) {
-                $sql .= "\n" . <<<'SQL'
+                $this->connection->executeStatement(
+                    <<<'SQL'
                     INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
                     SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
                     FROM `media`
                     WHERE `media`.`item_id` = :resource_id
                         AND `media`.`id` IN (:media_ids)
-                    ;
-                    SQL;
+                    SQL,
+                    $bind, $types
+                );
             }
         }
 
         if (!empty($bind['embargo_end_value'])) {
-            $sql .= "\n" . <<<'SQL'
+            $this->connection->executeStatement(
+                <<<'SQL'
                 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
                 SELECT `media`.`id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
                 FROM `media`
                 WHERE `media`.`item_id` = :resource_id
                     AND `media`.`id` IN (:media_ids)
-                ;
-                SQL;
+                SQL,
+                $bind, $types
+            );
             if ($this->hasNumericDataTypes) {
-                $sql .= "\n" . <<<'SQL'
+                $this->connection->executeStatement(
+                    <<<'SQL'
                     INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
                     SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
                     FROM `media`
                     WHERE `media`.`item_id` = :resource_id
                         AND `media`.`id` IN (:media_ids)
-                    ;
-                    SQL;
+                    SQL,
+                    $bind, $types
+                );
             }
         }
-
-        return $sql;
     }
 
     protected function processUpdateItemSet(array $bind, array $types): void
@@ -405,12 +419,11 @@ class AccessStatusRecursive extends AbstractJob
                 ;
                 SQL;
 
-            if ($this->accessViaProperty) {
-                $sql .= "\n" . $this->sqlUpdateItemSetPropertiesAllowed($bind, $types);
-            }
-
-            $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql, $bind, $types) {
+            $this->connection->transactional(function () use ($sql, $bind, $types) {
                 $this->connection->executeStatement($sql, $bind, $types);
+                if ($this->accessViaProperty) {
+                    $this->execUpdateItemSetPropertiesAllowed($bind, $types);
+                }
             });
             return;
         }
@@ -473,125 +486,160 @@ class AccessStatusRecursive extends AbstractJob
             ;
             SQL;
 
-        if ($this->accessViaProperty) {
-            $sql .= "\n" . $this->sqlUpdateItemSetPropertiesNotAllowed($bind, $types);
-        }
-
-        $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql, $bind, $types) {
+        $this->connection->transactional(function () use ($sql, $bind, $types) {
             $this->connection->executeStatement($sql, $bind, $types);
+            if ($this->accessViaProperty) {
+                $this->execUpdateItemSetPropertiesNotAllowed($bind, $types);
+            }
         });
     }
 
-    protected function sqlUpdateItemSetPropertiesAllowed(array $bind, array $types): string
+    protected function execUpdateItemSetPropertiesAllowed(array $bind, array $types): void
     {
-        $sql = <<<'SQL'
+        $this->connection->executeStatement(
+            <<<'SQL'
             DELETE `value`
             FROM `value`
             JOIN `item_item_set` ON `item_item_set`.`item_id` = `value`.`resource_id`
             WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
                 AND `item_item_set`.`item_set_id` = :resource_id
-            ;
+            SQL,
+            $bind, $types
+        );
+        $this->connection->executeStatement(
+            <<<'SQL'
             DELETE `value`
             FROM `value`
             JOIN `media` ON `media`.`id` = `value`.`resource_id`
             JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
             WHERE `item_item_set`.`item_set_id` = :resource_id
                 AND `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
-            ;
-            SQL;
+            SQL,
+            $bind, $types
+        );
 
         if ($this->hasNumericDataTypes) {
-            $sql .= "\n" . <<<'SQL'
+            $this->connection->executeStatement(
+                <<<'SQL'
                 DELETE `numeric_data_types_timestamp`
                 FROM `numeric_data_types_timestamp`
                 JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
                 JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
                 WHERE `item_item_set`.`item_set_id` = :resource_id
                     AND `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
-                ;
-                SQL;
+                SQL,
+                $bind, $types
+            );
         }
 
-        $sql .= "\n" . <<<'SQL'
+        $this->connection->executeStatement(
+            <<<'SQL'
             INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
             SELECT `item_item_set`.`item_id`, :property_level, :level_type, :level_value, 1
             FROM `item_item_set`
             WHERE `item_item_set`.`item_set_id` = :resource_id
-            ;
+            SQL,
+            $bind, $types
+        );
+        $this->connection->executeStatement(
+            <<<'SQL'
             INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
             SELECT `media`.`id`, :property_level, :level_type, :level_value, 1
             FROM `media`
             JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
             WHERE `item_item_set`.`item_set_id` = :resource_id
-            ;
-            SQL;
+            SQL,
+            $bind, $types
+        );
 
         if (!empty($bind['embargo_start_value'])) {
-            $sql .= "\n" . <<<'SQL'
+            $this->connection->executeStatement(
+                <<<'SQL'
                 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
                 SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
                 FROM `item_item_set`
                 WHERE `item_item_set`.`item_set_id` = :resource_id
-                ;
+                SQL,
+                $bind, $types
+            );
+            $this->connection->executeStatement(
+                <<<'SQL'
                 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
                 SELECT `media`.`id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
                 FROM `media`
                 JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
                 WHERE `item_item_set`.`item_set_id` = :resource_id
-                ;
-                SQL;
+                SQL,
+                $bind, $types
+            );
             if ($this->hasNumericDataTypes) {
-                $sql .= "\n" . <<<'SQL'
+                $this->connection->executeStatement(
+                    <<<'SQL'
                     INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
                     SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_timestamp
                     FROM `item_item_set`
                     WHERE `item_item_set`.`item_set_id` = :resource_id
-                    ;
+                    SQL,
+                    $bind, $types
+                );
+                $this->connection->executeStatement(
+                    <<<'SQL'
                     INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
                     SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
                     FROM `media`
                     JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
                     WHERE `item_item_set`.`item_set_id` = :resource_id
-                    ;
-                    SQL;
+                    SQL,
+                    $bind, $types
+                );
             }
         }
 
         if (!empty($bind['embargo_end_value'])) {
-            $sql .= "\n" . <<<'SQL'
+            $this->connection->executeStatement(
+                <<<'SQL'
                 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
                 SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
                 FROM `item_item_set`
                 WHERE `item_item_set`.`item_set_id` = :resource_id
-                ;
+                SQL,
+                $bind, $types
+            );
+            $this->connection->executeStatement(
+                <<<'SQL'
                 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
                 SELECT `media`.`id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
                 FROM `media`
                 JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
                 WHERE `item_item_set`.`item_set_id` = :resource_id
-                ;
-                SQL;
+                SQL,
+                $bind, $types
+            );
             if ($this->hasNumericDataTypes) {
-                $sql .= "\n" . <<<'SQL'
+                $this->connection->executeStatement(
+                    <<<'SQL'
                     INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
                     SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_timestamp
                     FROM `item_item_set`
                     WHERE `item_item_set`.`item_set_id` = :resource_id
-                    ;
+                    SQL,
+                    $bind, $types
+                );
+                $this->connection->executeStatement(
+                    <<<'SQL'
                     INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
                     SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
                     FROM `media`
                     JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
                     WHERE `item_item_set`.`item_set_id` = :resource_id
-                    ;
-                    SQL;
+                    SQL,
+                    $bind, $types
+                );
             }
         }
-
-        return $sql;
     }
 
-    protected function sqlUpdateItemSetPropertiesNotAllowed(array $bind, array $types): string
+    protected function execUpdateItemSetPropertiesNotAllowed(array $bind, array $types): void
     {
         if ($this->userId) {
             $orWhereUser = 'OR `resource`.`owner_id` = :user_id';
@@ -599,15 +647,19 @@ class AccessStatusRecursive extends AbstractJob
             $orWhereUser = '';
         }
 
-        $sql = <<<SQL
+        $exec = fn (string $sql) => $this->connection
+            ->executeStatement($sql, $bind, $types);
+
+        $exec(<<<SQL
             DELETE `value`
             FROM `value`
             JOIN `item_item_set` ON `item_item_set`.`item_id` = `value`.`resource_id`
-            JOIN `resource` ON `resource_item`.`id` = `item_item_set`.`item_id`
+            JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
             WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
                 AND `item_item_set`.`item_set_id` = :resource_id
                 AND (`resource`.`is_public` = 1 $orWhereUser)
-            ;
+            SQL);
+        $exec(<<<SQL
             DELETE `value`
             FROM `value`
             JOIN `media` ON `media`.`id` = `value`.`resource_id`
@@ -618,19 +670,19 @@ class AccessStatusRecursive extends AbstractJob
                 AND `item_item_set`.`item_set_id` = :resource_id
                 AND (`resource_item`.`is_public` = 1 $orWhereUser)
                 AND (`resource`.`is_public` = 1 $orWhereUser)
-            ;
-            SQL;
+            SQL);
 
         if ($this->hasNumericDataTypes) {
-            $sql .= "\n" . <<<SQL
+            $exec(<<<SQL
                 DELETE `numeric_data_types_timestamp`
                 FROM `numeric_data_types_timestamp`
                 JOIN `item_item_set` ON `item_item_set`.`item_id` = `numeric_data_types_timestamp`.`resource_id`
-                JOIN `resource` ON `resource_item`.`id` = `item_item_set`.`item_id`
+                JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
                 WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
                     AND `item_item_set`.`item_set_id` = :resource_id
                     AND (`resource`.`is_public` = 1 $orWhereUser)
-                ;
+                SQL);
+            $exec(<<<SQL
                 DELETE `numeric_data_types_timestamp`
                 FROM `numeric_data_types_timestamp`
                 JOIN `media` ON `media`.`id` = `numeric_data_types_timestamp`.`resource_id`
@@ -641,18 +693,18 @@ class AccessStatusRecursive extends AbstractJob
                     AND `item_item_set`.`item_set_id` = :resource_id
                     AND (`resource_item`.`is_public` = 1 $orWhereUser)
                     AND (`resource`.`is_public` = 1 $orWhereUser)
-                ;
-                SQL;
+                SQL);
         }
 
-        $sql .= "\n" . <<<SQL
+        $exec(<<<SQL
             INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
             SELECT `item_item_set`.`item_id`, :property_level, :level_type, :level_value, 1
             FROM `item_item_set`
             JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
             WHERE `item_item_set`.`item_set_id` = :resource_id
                 AND (`resource`.`is_public` = 1 $orWhereUser)
-            ;
+            SQL);
+        $exec(<<<SQL
             INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
             SELECT `media`.`id`, :property_level, :level_type, :level_value, 1
             FROM `media`
@@ -662,18 +714,18 @@ class AccessStatusRecursive extends AbstractJob
             WHERE `item_item_set`.`item_set_id` = :resource_id
                 AND (`resource_item`.`is_public` = 1 $orWhereUser)
                 AND (`resource`.`is_public` = 1 $orWhereUser)
-            ;
-            SQL;
+            SQL);
 
         if (!empty($bind['embargo_start_value'])) {
-            $sql .= "\n" . <<<SQL
+            $exec(<<<SQL
                 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
                 SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
                 FROM `item_item_set`
                 JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
                 WHERE `item_item_set`.`item_set_id` = :resource_id
                     AND (`resource`.`is_public` = 1 $orWhereUser)
-                ;
+                SQL);
+            $exec(<<<SQL
                 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
                 SELECT `media`.`id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
                 FROM `media`
@@ -683,17 +735,17 @@ class AccessStatusRecursive extends AbstractJob
                 WHERE `item_item_set`.`item_set_id` = :resource_id
                     AND (`resource_item`.`is_public` = 1 $orWhereUser)
                     AND (`resource`.`is_public` = 1 $orWhereUser)
-                ;
-                SQL;
+                SQL);
             if ($this->hasNumericDataTypes) {
-                $sql .= "\n" . <<<SQL
+                $exec(<<<SQL
                     INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
                     SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_timestamp
                     FROM `item_item_set`
                     JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
                     WHERE `item_item_set`.`item_set_id` = :resource_id
                         AND (`resource`.`is_public` = 1 $orWhereUser)
-                    ;
+                    SQL);
+                $exec(<<<SQL
                     INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
                     SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
                     FROM `media`
@@ -703,20 +755,20 @@ class AccessStatusRecursive extends AbstractJob
                     WHERE `item_item_set`.`item_set_id` = :resource_id
                         AND (`resource_item`.`is_public` = 1 $orWhereUser)
                         AND (`resource`.`is_public` = 1 $orWhereUser)
-                    ;
-                    SQL;
+                    SQL);
             }
         }
 
         if (!empty($bind['embargo_end_value'])) {
-            $sql .= "\n" . <<<SQL
+            $exec(<<<SQL
                 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
                 SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
                 FROM `item_item_set`
                 JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
                 WHERE `item_item_set`.`item_set_id` = :resource_id
                     AND (`resource`.`is_public` = 1 $orWhereUser)
-                ;
+                SQL);
+            $exec(<<<SQL
                 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
                 SELECT `media`.`id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
                 FROM `media`
@@ -726,17 +778,17 @@ class AccessStatusRecursive extends AbstractJob
                 WHERE `item_item_set`.`item_set_id` = :resource_id
                     AND (`resource_item`.`is_public` = 1 $orWhereUser)
                     AND (`resource`.`is_public` = 1 $orWhereUser)
-                ;
-                SQL;
+                SQL);
             if ($this->hasNumericDataTypes) {
-                $sql .= "\n" . <<<SQL
+                $exec(<<<SQL
                     INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
                     SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_timestamp
                     FROM `item_item_set`
                     JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
                     WHERE `item_item_set`.`item_set_id` = :resource_id
                         AND (`resource`.`is_public` = 1 $orWhereUser)
-                    ;
+                    SQL);
+                $exec(<<<SQL
                     INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
                     SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
                     FROM `media`
@@ -746,11 +798,8 @@ class AccessStatusRecursive extends AbstractJob
                     WHERE `item_item_set`.`item_set_id` = :resource_id
                         AND (`resource_item`.`is_public` = 1 $orWhereUser)
                         AND (`resource`.`is_public` = 1 $orWhereUser)
-                    ;
-                    SQL;
+                    SQL);
             }
         }
-
-        return $sql;
     }
 }

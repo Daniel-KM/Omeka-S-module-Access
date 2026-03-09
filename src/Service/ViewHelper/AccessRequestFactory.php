@@ -3,7 +3,7 @@
 namespace Access\Service\ViewHelper;
 
 use Access\View\Helper\AccessRequest;
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class AccessRequestFactory implements FactoryInterface

@@ -3,7 +3,7 @@
 namespace Access\Service\ControllerPlugin;
 
 use Access\Mvc\Controller\Plugin\IsExternalUser;
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class IsExternalUserFactory implements FactoryInterface
