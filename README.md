@@ -1,6 +1,11 @@
 Access (module for Omeka S)
 ===========================
 
+<a href="https://ateeducacion.github.io/omeka-s-playground/?blueprint=https%3A%2F%2Fgitlab.com%2FDaniel-KM%2FOmeka-S-module-Access%2F-%2Fraw%2Fmaster%2Fblueprint.json">
+  <img src="https://raw.githubusercontent.com/ateeducacion/omeka-s-playground/main/ogimage.png" alt="Try Access in your browser" width="220">
+</a><br>
+<small><a href="https://ateeducacion.github.io/omeka-s-playground/?blueprint=https%3A%2F%2Fgitlab.com%2FDaniel-KM%2FOmeka-S-module-Access%2F-%2Fraw%2Fmaster%2Fblueprint.json">Try in your browser</a></small>
+
 > __New versions of this module and support for Omeka S version 3.0 and above
 > are available on [GitLab], which seems to respect users and privacy better
 > than the previous repository.__

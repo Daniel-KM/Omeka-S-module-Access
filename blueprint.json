@@ -1,0 +1,125 @@
+{
+  "$schema": "https://ateeducacion.github.io/omeka-s-playground/assets/blueprints/blueprint-schema.json",
+  "meta": {
+    "title": "Access Module Playground Blueprint",
+    "author": "Daniel-KM",
+    "description": "Test blueprint for the Access module that protects media files with access levels, embargo dates, and request-based authorization."
+  },
+  "preferredVersions": {
+    "php": "8.3",
+    "omeka": "4.2.0"
+  },
+  "debug": {
+    "enabled": true
+  },
+  "landingPage": "/admin",
+  "siteOptions": {
+    "title": "Access Playground",
+    "locale": "en_US",
+    "timezone": "Europe/Paris"
+  },
+  "login": {
+    "email": "admin@example.com",
+    "password": "password"
+  },
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@example.com",
+      "password": "password",
+      "role": "global_admin",
+      "isActive": true
+    },
+    {
+      "username": "editor",
+      "email": "editor@example.com",
+      "password": "password",
+      "role": "editor",
+      "isActive": true
+    },
+    {
+      "username": "researcher",
+      "email": "researcher@example.com",
+      "password": "password",
+      "role": "researcher",
+      "isActive": true
+    }
+  ],
+  "modules": [
+    {
+      "name": "Common",
+      "state": "activate",
+      "source": {
+        "type": "url",
+        "url": "https://github.com/Daniel-KM/Omeka-S-module-Common/releases/download/3.4.81/Common-3.4.81.zip"
+      }
+    },
+    {
+      "name": "Access",
+      "state": "activate",
+      "source": {
+        "type": "url",
+        "url": "https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/archive/3.4.39/Omeka-S-module-Access-3.4.39.zip"
+      }
+    }
+  ],
+  "itemSets": [
+    {
+      "title": "Public Collection",
+      "description": "Collection with freely accessible resources for testing unrestricted access."
+    },
+    {
+      "title": "Reserved Collection",
+      "description": "Collection with reserved resources requiring authentication or request-based access."
+    }
+  ],
+  "items": [
+    {
+      "title": "The Garden of Earthly Delights",
+      "description": "Public domain painting used to test free access level. This item should be accessible by all visitors.",
+      "creator": "Hieronymus Bosch",
+      "itemSets": ["Public Collection"],
+      "media": [
+        {
+          "type": "url",
+          "url": "https://ateeducacion.github.io/omeka-s-playground/assets/samples/garden-of-earthly-delights.png",
+          "title": "The Garden of Earthly Delights"
+        }
+      ]
+    },
+    {
+      "title": "Thomas Carlyle Portrait",
+      "description": "Oil painting used to test reserved access level. Visitors should see a locked placeholder until granted access.",
+      "creator": "George Frederic Watts",
+      "itemSets": ["Reserved Collection"],
+      "media": [
+        {
+          "type": "url",
+          "url": "https://ateeducacion.github.io/omeka-s-playground/assets/samples/thomas-carlyle-oil-painting-1868.jpg",
+          "title": "Thomas Carlyle Oil Painting 1868"
+        }
+      ]
+    },
+    {
+      "title": "Beethoven Symphony Sample",
+      "description": "Audio sample used to test access control on non-image media files.",
+      "creator": "Ludwig van Beethoven",
+      "itemSets": ["Reserved Collection"],
+      "media": [
+        {
+          "type": "url",
+          "url": "https://ateeducacion.github.io/omeka-s-playground/assets/samples/beethoven-public-domain.ogg",
+          "title": "Public domain Beethoven recording"
+        }
+      ]
+    }
+  ],
+  "site": {
+    "title": "Access Demo",
+    "slug": "demo",
+    "theme": "default",
+    "summary": "Demo site for testing the Access module with free and reserved resources, multiple user roles, and access request workflows.",
+    "isPublic": true,
+    "setAsDefault": true
+  }
+}
