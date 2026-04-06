@@ -181,6 +181,19 @@ class ConfigForm extends Form
             ])
 
             ->add([
+                'name' => 'access_htaccess_skip',
+                'type' => CommonElement\OptionalCheckbox::class,
+                'options' => [
+                    'element_group' => 'files',
+                    'label' => 'Do not modify .htaccess (manage Apache redirections manually)', // @translate
+                    'info' => 'When checked, the module will not write or update the rewrite rule in the root .htaccess. Add the rules manually to redirect file requests through the Access controller.', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_htaccess_skip',
+                ],
+            ])
+
+            ->add([
                 'name' => 'access_htaccess_types',
                 'type' => CommonElement\OptionalMultiCheckbox::class,
                 'options' => [

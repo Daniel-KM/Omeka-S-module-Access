@@ -588,7 +588,16 @@ class Module extends AbstractModule
 
     public function getConfigForm(PhpRenderer $renderer)
     {
-        $this->manageHtaccess();
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        if ($settings->get('access_htaccess_skip')) {
+            $messenger = $services->get('ControllerPluginManager')->get('messenger');
+            $messenger->addWarning(new PsrMessage(
+                'The automatic management of .htaccess is disabled in config. Apache redirections must be configured manually.' // @translate
+            ));
+        } else {
+            $this->manageHtaccess();
+        }
 
         $this->infoEmbargo();
 
@@ -637,16 +646,47 @@ class Module extends AbstractModule
 
     public function handleConfigForm(AbstractController $controller)
     {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        // Snapshot values that require a reindex when changed.
+        $reindexTracked = [
+            'access_property',
+            'access_property_level',
+            'access_property_levels',
+            'access_property_level_datatype',
+            'access_property_embargo_start',
+            'access_property_embargo_end',
+        ];
+        $oldValues = [];
+        foreach ($reindexTracked as $key) {
+            $oldValues[$key] = $settings->get($key);
+        }
+
         $result = $this->handleConfigFormAuto($controller);
         if (!$result) {
             return false;
         }
 
+        // Warn about reindex when sensitive options changed.
+        $changed = [];
+        foreach ($reindexTracked as $key) {
+            if ($oldValues[$key] !== $settings->get($key)) {
+                $changed[] = $key;
+            }
+        }
+        if ($changed) {
+            $messenger = $services->get('ControllerPluginManager')->get('messenger');
+            $messenger->addWarning(new PsrMessage(
+                'Access settings affecting indexation changed. Run the reindex job in the "Tasks" tab to synchronize access statuses with properties.', // @translate
+            ));
+        }
+
         // Write the .htaccess rule according to the saved setting.
-        $services = $this->getServiceLocator();
-        $settings = $services->get('Omeka\Settings');
-        $htaccessTypes = $settings->get('access_htaccess_types', []);
-        $this->manageHtaccess($htaccessTypes);
+        if (!$settings->get('access_htaccess_skip')) {
+            $htaccessTypes = $settings->get('access_htaccess_types', []);
+            $this->manageHtaccess($htaccessTypes);
+        }
 
         // Message are already prepared  when issues.
         $result = $this->prepareIpItemSets();
@@ -2194,7 +2234,7 @@ class Module extends AbstractModule
 
         /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
-        $messenger->addNotice($message);
+        $messenger->addSuccess($message);
     }
 
     /**

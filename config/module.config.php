@@ -307,7 +307,10 @@ return [
 
             'access_property_show_in_advanced_tab' => false,
 
-            // Types of files protected via .htaccess. Empty means not managed by the module.
+            // Skip .htaccess management entirely (manual Apache configuration).
+            'access_htaccess_skip' => false,
+            // Types of files protected via .htaccess. Empty means not managed
+            // by the module.
             'access_htaccess_types' => [],
             // Custom file paths to protect (for DerivativeMedia, etc.).
             'access_htaccess_custom_types' => '',
