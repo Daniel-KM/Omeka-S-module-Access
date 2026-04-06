@@ -36,6 +36,63 @@ $entityManager = $services->get('Omeka\EntityManager');
 $config = $services->get('Config');
 $configLocal = require dirname(__DIR__, 2) . '/config/module.config.php';
 
+/**
+ * Dispatch a background job during module upgrade.
+ *
+ * During upgrade, module classes are not yet available to the background
+ * process because the module state in the database is still "needs_upgrade".
+ * This function temporarily sets the module version and active flag so the
+ * spawned process can bootstrap the module, waits for the job to start, then
+ * restores the original state. The Module Manager will set the real version
+ * and state once upgrade() returns.
+ */
+$dispatchJobDuringUpgrade = function (string $jobClass, array $args = [])
+    use ($services, $connection, $newVersion, $messenger): \Omeka\Entity\Job {
+    $moduleId = 'Access';
+
+    $shortClass = substr(strrchr('\\' . $jobClass, '\\'), 1);
+    $jobDir = dirname(__DIR__, 2) . '/src/Job/';
+    require_once $jobDir . 'AccessPropertiesTrait.php';
+    require_once $jobDir . $shortClass . '.php';
+
+    $moduleRow = $connection->executeQuery(
+        'SELECT is_active FROM module WHERE id = :id',
+        ['id' => $moduleId]
+    )->fetchAssociative();
+    $wasActive = (bool) ($moduleRow['is_active'] ?? false);
+
+    $connection->executeStatement(
+        'UPDATE module SET version = :version, is_active = 1 WHERE id = :id',
+        ['version' => $newVersion, 'id' => $moduleId]
+    );
+
+    $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
+    $job = $dispatcher->dispatch($jobClass, $args);
+
+    sleep(5);
+
+    $jobId = $job->getId();
+    $status = $connection->executeQuery(
+        'SELECT status FROM job WHERE id = :id',
+        ['id' => $jobId]
+    )->fetchOne();
+    if ($status === \Omeka\Entity\Job::STATUS_STARTING) {
+        $messenger->addWarning(new PsrMessage(
+            'The job #{job_id} is still starting after the sleep delay. It may need to be relaunched manually.', // @translate
+            ['job_id' => $jobId]
+        ));
+    }
+
+    if (!$wasActive) {
+        $connection->executeStatement(
+            'UPDATE module SET is_active = 0 WHERE id = :id',
+            ['id' => $moduleId]
+        );
+    }
+
+    return $job;
+};
+
 if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.82')) {
     $message = new \Omeka\Stdlib\Message(
         $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
@@ -441,13 +498,13 @@ if (version_compare((string) $oldVersion, '3.4.40', '<')) {
     // them. Re-sync now synchronously.
     $accessViaProperty = (bool) $settings->get('access_property');
     if ($accessViaProperty) {
-        $this->processUpdateStatus([
+        $dispatchJobDuringUpgrade(\Access\Job\AccessStatusUpdate::class, [
             'sync' => 'from_accesses_to_properties',
             'missing' => 'skip',
             'recursive' => [],
-        ], true);
+        ]);
         $message = new PsrMessage(
-            'A previous bug may have removed access property values. They have been restored from indexes.' // @translate
+            'A previous bug may have removed access property values. A background job has been launched to restore them from indexes.' // @translate
         );
         $messenger->addSuccess($message);
     }
