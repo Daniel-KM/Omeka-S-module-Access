@@ -678,7 +678,7 @@ class Module extends AbstractModule
         if ($changed) {
             $messenger = $services->get('ControllerPluginManager')->get('messenger');
             $messenger->addWarning(new PsrMessage(
-                'Access settings affecting indexation changed. Run the reindex job in the "Tasks" tab to synchronize access statuses with properties.', // @translate
+                'Access settings affecting indexation changed. You should reindex metadata via the job "Reindex database" in the tab Tasks.' // @translate
             ));
         }
 
@@ -730,18 +730,27 @@ class Module extends AbstractModule
 
         $post = $controller->getRequest()->getPost();
         if (!empty($post['access_reindex']['process_index'])) {
-            $vars = [
-                'recursive' => $post['access_reindex']['recursive'] ?? [],
-                'sync' => $post['access_reindex']['sync'] ?? 'skip',
-                'missing' => $post['access_reindex']['missing'] ?? 'skip',
-            ];
-            if ($vars === ['recursive' => [], 'sync' => 'skip', 'missing' => 'skip']) {
-                $message = new \Omeka\Stdlib\Message(
-                    $translator->translate('Job is not launched: no option was set.'), // @translate
-                );
-                $messenger->addWarning($message);
-            } else {
+            if (!empty($post['access_reindex']['auto'])) {
+                $vars = [
+                    'recursive' => ['from_item_sets_to_items_and_media', 'from_items_to_media'],
+                    'sync' => $accessViaProperty ? 'from_properties_to_accesses' : 'skip',
+                    'missing' => 'visibility_reserved',
+                ];
                 $this->processUpdateStatus($vars);
+            } else {
+                $vars = [
+                    'recursive' => $post['access_reindex']['recursive'] ?? [],
+                    'sync' => $post['access_reindex']['sync'] ?? 'skip',
+                    'missing' => $post['access_reindex']['missing'] ?? 'skip',
+                ];
+                if ($vars === ['recursive' => [], 'sync' => 'skip', 'missing' => 'skip']) {
+                    $message = new \Omeka\Stdlib\Message(
+                        $translator->translate('Job is not launched: no option was set.'), // @translate
+                    );
+                    $messenger->addWarning($message);
+                } else {
+                    $this->processUpdateStatus($vars);
+                }
             }
         }
 

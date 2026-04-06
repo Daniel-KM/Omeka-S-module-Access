@@ -29,6 +29,17 @@ class AccessReindexFieldset extends Fieldset
                 ],
             ])
             ->add([
+                'name' => 'auto',
+                'type' => CommonElement\OptionalCheckbox::class,
+                'options' => [
+                    'label' => 'Reindex database according to current settings', // @translate
+                    'info' => 'Recommended after changing the storage mode or any property used for access level or embargo.', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'auto',
+                ],
+            ])
+            ->add([
                 'name' => 'recursive',
                 'type' => CommonElement\OptionalMultiCheckbox::class,
                 'options' => [
