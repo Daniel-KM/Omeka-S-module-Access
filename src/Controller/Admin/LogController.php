@@ -69,14 +69,13 @@ class LogController extends AbstractActionController
 
         $this->paginator($logCount, $page, $perPage);
 
-        $accessModes = $this->settings()->get('access_modes');
-        if (!array_intersect($accessModes, ['user', 'email', 'token'])) {
-            $this->messenger()->addWarning('Individual access modes (single user, email, token) are not enabled.'); // @translate
-        }
+        $accessModes = $this->settings()->get('access_modes') ?: [];
+        $allowIndividualRequests = (bool) array_intersect($accessModes, ['user', 'email', 'token']);
 
         return new ViewModel([
             'accessLogs' => $accessLogs,
             'resources' => $accessLogs,
+            'allowIndividualRequests' => $allowIndividualRequests,
         ]);
     }
 }

@@ -31,6 +31,10 @@ $this->htmlElement('body')->appendAttribute('class', 'access access-requests bro
 
 <?= $this->pageTitle($translate('Requests'), 1, $translate('Access')) ?>
 
+<?php if (!$allowIndividualRequests): ?>
+<p class="messages"><span class="warning"><?= $translate('Individual access modes (single user, email, token) are not enabled.') ?></span></p>
+<?php endif; ?>
+
 <div class="browse-controls">
     <?= $this->pagination() ?>
     <?= $this->browse()->renderSortSelector('access_requests') ?>

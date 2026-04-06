@@ -69,10 +69,8 @@ class RequestController extends AbstractActionController
         $formDeleteAll
             ->get('submit')->setAttribute('disabled', true);
 
-        $accessModes = $this->settings()->get('access_modes');
-        if (!array_intersect($accessModes, ['user', 'email', 'token'])) {
-            $this->messenger()->addWarning('Individual access modes (single user, email, token) are not enabled.'); // @translate
-        }
+        $accessModes = $this->settings()->get('access_modes') ?: [];
+        $allowIndividualRequests = (bool) array_intersect($accessModes, ['user', 'email', 'token']);
 
         $accessRequests = $response->getContent();
         return new ViewModel([
@@ -81,6 +79,7 @@ class RequestController extends AbstractActionController
             'formDeleteSelected' => $formDeleteSelected,
             'formDeleteAll' => $formDeleteAll,
             'returnQuery' => $returnQuery,
+            'allowIndividualRequests' => $allowIndividualRequests,
         ]);
     }
 

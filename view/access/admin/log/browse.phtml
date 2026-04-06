@@ -22,6 +22,10 @@ $this->htmlElement('body')->appendAttribute('class', 'access access-logs browse'
 
 <?= $this->pageTitle($translate('Logs'), 1, $translate('Access')) ?>
 
+<?php if (empty($allowIndividualRequests)): ?>
+<p class="messages"><span class="warning"><?= $translate('Individual access modes (single user, email, token) are not enabled.') ?></span></p>
+<?php endif; ?>
+
 <?php if (count($accessLogs)): ?>
     <div class="browse-controls">
         <?= $this->pagination() ?>
