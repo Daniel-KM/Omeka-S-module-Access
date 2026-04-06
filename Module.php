@@ -273,6 +273,14 @@ class Module extends AbstractModule
         );
         $messenger->addWarning($message);
 
+        $messenger->addWarning(new PsrMessage(
+            'Choose the storage mode for access level and embargo in the module configuration: either as resource metadata (default) or as property values on the resource.' // @translate
+        ));
+
+        $messenger->addWarning(new PsrMessage(
+            'Files are not protected until the Apache .htaccess is configured. The module will try to write the rewrite rule automatically; otherwise edit the .htaccess at the root of Omeka manually. See the configuration form and the README for details.' // @translate
+        ));
+
         // Set default htaccess types and try to write the rule.
         $settings->set('access_htaccess_types', ['original', 'large']);
         $this->manageHtaccess(['original', 'large']);
@@ -591,8 +599,40 @@ class Module extends AbstractModule
             ->appendFile($assetUrl('js/common-dialog.js', 'Common'), 'text/javascript', ['defer' => 'defer'])
             ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
 
+        $services = $this->getServiceLocator();
+        $formManager = $services->get('FormElementManager');
+        $formClass = static::NAMESPACE . '\Form\ConfigForm';
+        if (!$formManager->has($formClass)) {
+            return null;
+        }
+
+        $renderer->ckEditor();
+
+        $settings = $services->get('Omeka\Settings');
+        $this->initDataToPopulate($settings, 'config');
+        $data = $this->prepareDataToPopulate($settings, 'config');
+        if ($data === null) {
+            return null;
+        }
+
+        $form = $formManager->get($formClass);
+        $form->init();
+        $form->setData($data);
+        $form->prepare();
+
+        $translate = $renderer->plugin('translate');
+        $tabs = [
+            'access-settings' => [
+                'label' => $translate('Settings'), // @translate
+            ],
+            'access-tasks' => [
+                'label' => $translate('Tasks'), // @translate
+                'elements' => ['access_reindex'],
+            ],
+        ];
+
         return '<style>fieldset[name=access_reindex] .inputs label {display: block;}</style>'
-            . $this->getConfigFormAuto($renderer);
+            . $renderer->configFormTabs($form, $tabs, 'access.config.section_nav');
     }
 
     public function handleConfigForm(AbstractController $controller)

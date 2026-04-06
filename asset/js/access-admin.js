@@ -160,8 +160,8 @@
         }
 
         const accessViaProperty = function() {
-            const element = $('input[type=checkbox][name=access_property]');
-            if (element.prop('checked')) {
+            const value = $('input[name=access_property]:checked').val();
+            if (value === '1') {
                 $('.access-property').closest('.field').show(300);
             } else {
                 $('.access-property').closest('.field').hide(300);

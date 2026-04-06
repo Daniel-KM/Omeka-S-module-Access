@@ -22,6 +22,13 @@ class AccessReindexFieldset extends Fieldset
             ->setLabel('Jobs to create missing access status of all resources') // @translate
 
             ->add([
+                'name' => 'access_tasks_note',
+                'type' => CommonElement\Note::class,
+                'options' => [
+                    'text' => 'Settings must be saved before running any of the following tasks.', // @translate
+                ],
+            ])
+            ->add([
                 'name' => 'recursive',
                 'type' => CommonElement\OptionalMultiCheckbox::class,
                 'options' => [

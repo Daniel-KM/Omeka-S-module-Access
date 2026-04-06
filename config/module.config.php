@@ -288,6 +288,30 @@ return [
     ],
     'access' => [
         'config' => [
+            'access_property' => false,
+
+            // The property level may be dcterms:accessRights, curation:access or anything else.
+            'access_property_level' => 'dcterms:accessRights',
+            'access_property_levels' => [
+                // \Access\Entity\AccessStatus is not available during
+                // install/update, so use strings as key.
+                'free' => 'free',
+                'reserved' => 'reserved',
+                'protected' => 'protected',
+                'forbidden' => 'forbidden',
+            ],
+            'access_property_level_datatype' => null,
+
+            'access_property_embargo_start' => 'curation:start',
+            'access_property_embargo_end' => 'curation:end',
+
+            'access_property_show_in_advanced_tab' => false,
+
+            // Types of files protected via .htaccess. Empty means not managed by the module.
+            'access_htaccess_types' => [],
+            // Custom file paths to protect (for DerivativeMedia, etc.).
+            'access_htaccess_custom_types' => '',
+
             // True means that recods are protected, not only media contents (files).
             'access_full' => false,
 
@@ -312,37 +336,14 @@ return [
 
             'access_email_regex' => '',
 
-            'access_property' => false,
-
-            // The property level may be dcterms:accessRights, curation:access or anything else.
-            'access_property_level' => 'dcterms:accessRights',
-            'access_property_levels' => [
-                // \Access\Entity\AccessStatus is not available during install/update, so use strings as key.
-                'free' => 'free',
-                'reserved' => 'reserved',
-                'protected' => 'protected',
-                'forbidden' => 'forbidden',
-            ],
-            'access_property_level_datatype' => null,
-
-            'access_property_embargo_start' => 'curation:start',
-            'access_property_embargo_end' => 'curation:end',
-
-            'access_property_show_in_advanced_tab' => false,
-
             'access_embargo_bypass' => false,
             'access_embargo_ended_level' => 'free',
             'access_embargo_ended_date' => 'keep',
 
-            // Types of files protected via .htaccess. Empty means not managed by the module.
-            'access_htaccess_types' => [],
-            // Custom file paths to protect (for DerivativeMedia, etc.).
-            'access_htaccess_custom_types' => '',
-
-            // Hidden settings automatically filled after saving config.
-            // It contains the same data than "access_ip_item_sets", but
-            // with numberized ip ranges (cidr) in order to do a quicker control
-            // of rights, and exploded item sets.
+            // Hidden settings automatically filled after saving config. It
+            // contains the same data than "access_ip_item_sets", but with
+            // numberized ip ranges (cidr) in order to do a quicker control of
+            // rights, and exploded item sets.
             'access_ip_item_sets_by_ip' => [
                 /*
                 '123.45.67.89' => [
