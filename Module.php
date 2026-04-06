@@ -1269,6 +1269,11 @@ class Module extends AbstractModule
      */
     public function addAccessTab(Event $event): void
     {
+        $settings = $this->getServiceLocator()->get('Omeka\Settings');
+        $accessModes = $settings->get('access_modes') ?: [];
+        if (!array_intersect($accessModes, ['user', 'email', 'token'])) {
+            return;
+        }
         $sectionNav = $event->getParam('section_nav');
         $sectionNav['access'] = 'Access'; // @translate
         $event->setParam('section_nav', $sectionNav);
@@ -1291,6 +1296,11 @@ class Module extends AbstractModule
         $settings = $services->get('Omeka\Settings');
         $messenger = $plugins->get('messenger');
         $accessStatusForResource = $plugins->get('accessStatus');
+
+        $accessModes = $settings->get('access_modes') ?: [];
+        if (!array_intersect($accessModes, ['user', 'email', 'token'])) {
+            return;
+        }
 
         $resource = $view->resource;
         $accessStatus = $accessStatusForResource($resource, true);
