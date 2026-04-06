@@ -1596,40 +1596,80 @@ class Module extends AbstractModule
     public function handleViewBrowseAfterItem(Event $event): void
     {
         // Note: there is no item-set show, but a special case for items browse.
+        $services = $this->getServiceLocator();
+        $currentTheme = $services->get('Omeka\Site\ThemeManager')->getCurrentTheme();
+        if (method_exists($currentTheme, 'isConfigurableResourcePageBlocks') && $currentTheme->isConfigurableResourcePageBlocks()) {
+            return;
+        }
+        $placements = $services->get('Omeka\Settings\Site')->get('access_placement', []);
+        if (!in_array('browse/items', $placements)) {
+            return;
+        }
         $view = $event->getTarget();
-        // $this->storeSingleAccess($event);
         echo $view->accessRequest($view->items);
     }
 
     public function handleViewBrowseAfterItemSet(Event $event): void
     {
+        $services = $this->getServiceLocator();
+        $currentTheme = $services->get('Omeka\Site\ThemeManager')->getCurrentTheme();
+        if (method_exists($currentTheme, 'isConfigurableResourcePageBlocks') && $currentTheme->isConfigurableResourcePageBlocks()) {
+            return;
+        }
+        $placements = $services->get('Omeka\Settings\Site')->get('access_placement', []);
+        if (!in_array('browse/item_sets', $placements)) {
+            return;
+        }
         $view = $event->getTarget();
-        // $this->storeSingleAccess($event);
         echo $view->accessRequest($view->itemSets);
     }
 
     public function handleViewShowAfterItem(Event $event): void
     {
+        $services = $this->getServiceLocator();
+        $currentTheme = $services->get('Omeka\Site\ThemeManager')->getCurrentTheme();
+        if (method_exists($currentTheme, 'isConfigurableResourcePageBlocks') && $currentTheme->isConfigurableResourcePageBlocks()) {
+            return;
+        }
+        $placements = $services->get('Omeka\Settings\Site')->get('access_placement', []);
+        if (!in_array('after/items', $placements)) {
+            return;
+        }
         $view = $event->getTarget();
         $resources = [$view->item];
         $resources += $view->item->media();
-        // $this->storeSingleAccess($event);
         echo $view->accessRequest($resources);
     }
 
     public function handleViewShowAfterMedia(Event $event): void
     {
+        $services = $this->getServiceLocator();
+        $currentTheme = $services->get('Omeka\Site\ThemeManager')->getCurrentTheme();
+        if (method_exists($currentTheme, 'isConfigurableResourcePageBlocks') && $currentTheme->isConfigurableResourcePageBlocks()) {
+            return;
+        }
+        $placements = $services->get('Omeka\Settings\Site')->get('access_placement', []);
+        if (!in_array('after/media', $placements)) {
+            return;
+        }
         $view = $event->getTarget();
         $resources = [$view->media->item(), $view->media];
-        // $this->storeSingleAccess($event);
         echo $view->accessRequest($resources);
     }
 
     public function handleViewShowAfterItemSet(Event $event): void
     {
+        $services = $this->getServiceLocator();
+        $currentTheme = $services->get('Omeka\Site\ThemeManager')->getCurrentTheme();
+        if (method_exists($currentTheme, 'isConfigurableResourcePageBlocks') && $currentTheme->isConfigurableResourcePageBlocks()) {
+            return;
+        }
+        $placements = $services->get('Omeka\Settings\Site')->get('access_placement', []);
+        if (!in_array('after/item_sets', $placements)) {
+            return;
+        }
         $view = $event->getTarget();
         $resources = [$view->itemSet];
-        // $this->storeSingleAccess($event);
         echo $view->accessRequest($resources);
     }
 

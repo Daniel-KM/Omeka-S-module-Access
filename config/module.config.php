@@ -364,6 +364,9 @@ return [
             // Hidden value.
             'access_cron_last' => 0,
         ],
+        'site_settings' => [
+            'access_placement' => [],
+        ],
         'settings' => [
             'access_message_send' => true,
             'access_message_admin_subject' => 'New request status!', //@translate
