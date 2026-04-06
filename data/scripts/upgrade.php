@@ -517,3 +517,11 @@ if (!empty($config['accessresource'])) {
     );
     $messenger->addWarning($message);
 }
+
+if (version_compare($oldVersion, '3.4.41', '<')) {
+    $siteIds = $api->search('sites', [], ['returnScalar' => 'id'])->getContent();
+    foreach ($siteIds as $siteId) {
+        $siteSettings->setTargetId($siteId);
+        $siteSettings->set('access_placement', ['after/items', 'after/media', 'after/item_sets', 'browse/items', 'browse/item_sets']);
+    }
+}

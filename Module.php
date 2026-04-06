@@ -27,7 +27,7 @@ use Omeka\Entity\Resource;
 use Omeka\Module\AbstractModule;
 
 /**
- * Access
+ * Access.
  *
  * @copyright Daniel Berthereau, 2019-2026
  * @license http://www.cecill.info/licences/Licence_CeCILL_V2.1-en.txt
@@ -41,22 +41,21 @@ class Module extends AbstractModule
     protected function preInstall(): void
     {
         $services = $this->getServiceLocator();
-        $translate = $services->get('ControllerPluginManager')->get('translate');
+        $translator = $services->get('MvcTranslator');
 
         $errors = [];
 
         if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.83')) {
             $message = new \Omeka\Stdlib\Message(
-                $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+                $translator->translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
                 'Common', '3.4.83'
             );
             $errors[] = (string) $message;
         }
 
-        // The old Statistics module (before the split into Statistics +
-        // Analytics) managed .htaccess rules. Since version 3.4.12, this
-        // part has moved to module Analytics. Block if old Statistics is
-        // active.
+        // The old Statistics module (before the split into Statistics + Analytics)
+        // managed .htaccess rules. Since version 3.4.12, this part has moved to
+        // module Analytics. Block if old Statistics is active.
         $moduleManager = $services->get('Omeka\ModuleManager');
         $statisticsModule = $moduleManager->getModule('Statistics');
         if ($statisticsModule
@@ -64,7 +63,7 @@ class Module extends AbstractModule
             && version_compare($statisticsModule->getIni('version') ?? '', '3.4.12', '<')
         ) {
             $message = new \Omeka\Stdlib\Message(
-                $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
+                $translator->translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
                 'Statistics', '3.4.12'
             );
             $errors[] = (string) $message;
