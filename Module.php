@@ -2094,7 +2094,12 @@ class Module extends AbstractModule
                 }
                 $hasLegacyRule = true;
             }
-            $currentTypes = array_values(array_unique(array_intersect($currentTypes, $knownTypes)));
+            // Keep standard types and well-formed custom types (alphanumeric
+            // with hyphens); drop anything unsafe captured from the regex.
+            $currentTypes = array_values(array_unique(array_filter(
+                $currentTypes,
+                fn ($v) => in_array($v, $knownTypes, true) || preg_match('/^[a-zA-Z0-9][-a-zA-Z0-9]*$/', $v)
+            )));
         }
 
         // Preserve the existing RewriteRule flags (e.g. "P" behind a reverse
