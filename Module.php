@@ -2055,32 +2055,54 @@ class Module extends AbstractModule
 
         // Parse existing rule to find currently protected types.
         $currentTypes = [];
+        $currentFlags = null;
         $hasMarker = strpos($htaccess, $marker) !== false;
         $hasLegacyRule = false;
         if ($hasMarker) {
-            // Match the RewriteRule line after the marker (skip optional comment lines).
-            if (preg_match('/' . preg_quote($marker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"\^files\/\(([^)]+)\)\//', $htaccess, $matches)) {
+            // Match the RewriteRule line after the marker (skip optional
+            // comment lines).
+            if (preg_match('/' . preg_quote($marker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"\^files\/\(([^)]+)\)\/[^"]*"\s+"[^"]*"\s+\[([^\]]+)\]/', $htaccess, $matches)) {
                 $currentTypes = explode('|', $matches[1]);
+                $currentFlags = $matches[2];
             }
         } else {
-            // Detect legacy rules (without marker) that redirect to /access/files/.
-            // Match active (non-commented) RewriteRule lines.
+            // Detect legacy rules (without marker) that redirect to
+            // /access/files/. Match active (non-commented) RewriteRule lines.
             // Two formats: grouped `(original|large)` or individual `original`.
             $knownTypes = ['original', 'large', 'medium', 'square'];
-            // Format: files/(original|large)/
-            if (preg_match_all('/^\s*RewriteRule\s+.*files\/\(([^)]+)\).*\/access\/files\//m', $htaccess, $matches)) {
+            // Format: files/(original|large)/ with optional flags.
+            if (preg_match_all('/^\s*RewriteRule\s+.*files\/\(([^)]+)\).*\/access\/files\/[^\n\[]*(?:\[([^\]\n]+)\])?[^\n]*$/m', $htaccess, $matches)) {
                 foreach ($matches[1] as $group) {
                     $currentTypes = array_merge($currentTypes, explode('|', $group));
                 }
+                foreach ($matches[2] as $f) {
+                    if ($f !== '') {
+                        $currentFlags = $currentFlags ?? $f;
+                        break;
+                    }
+                }
                 $hasLegacyRule = true;
             }
-            // Format: files/original/ (individual type, no group)
-            if (preg_match_all('/^\s*RewriteRule\s+["\^]*files\/(' . implode('|', $knownTypes) . ')\/.*\/access\/files\//m', $htaccess, $matches)) {
+            // Format: files/original/ (individual type, no group).
+            if (preg_match_all('/^\s*RewriteRule\s+["\^]*files\/(' . implode('|', $knownTypes) . ')\/.*\/access\/files\/[^\n\[]*(?:\[([^\]\n]+)\])?[^\n]*$/m', $htaccess, $matches)) {
                 $currentTypes = array_merge($currentTypes, $matches[1]);
+                foreach ($matches[2] as $f) {
+                    if ($f !== '') {
+                        $currentFlags = $currentFlags ?? $f;
+                        break;
+                    }
+                }
                 $hasLegacyRule = true;
             }
             $currentTypes = array_values(array_unique(array_intersect($currentTypes, $knownTypes)));
         }
+
+        // Preserve the existing RewriteRule flags (e.g. "P" behind a reverse
+        // proxy) or fall back to the saved setting, then to "NC,L".
+        if ($currentFlags !== null) {
+            $settings->set('access_htaccess_flags', $currentFlags);
+        }
+        $flags = $settings->get('access_htaccess_flags') ?: 'NC,L';
 
         $knownStandardTypes = ['original', 'large', 'medium', 'square'];
 
@@ -2099,7 +2121,7 @@ class Module extends AbstractModule
                 );
                 $messenger->addWarning($message);
             } elseif (empty($currentTypes)) {
-                $exampleRule = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [NC,L]';
+                $exampleRule = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [' . $flags . ']';
                 $message = new PsrMessage(
                     'No .htaccess rule is set to protect files. To control access to files, add the following lines in the file .htaccess at the root of Omeka, just after "RewriteEngine On":{line_break}{rule}', // @translate
                     [
@@ -2130,7 +2152,7 @@ class Module extends AbstractModule
         $newBlock = '';
         if (!empty($allTypes)) {
             $typesPattern = implode('|', $allTypes);
-            $newBlock = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(' . $typesPattern . ')/(.*)$" "access/files/$1/$2" [NC,L]';
+            $newBlock = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(' . $typesPattern . ')/(.*)$" "access/files/$1/$2" [' . $flags . ']';
         }
 
         // Nothing changed: same types and already in managed format.

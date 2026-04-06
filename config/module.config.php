@@ -309,6 +309,10 @@ return [
 
             // Skip .htaccess management entirely (manual Apache configuration).
             'access_htaccess_skip' => false,
+            // Flags used in the managed RewriteRule. Automatically synced from
+            // the existing rule when .htaccess is read. Default "NC,L". Use "P"
+            // behind a reverse proxy (requires mod_proxy).
+            'access_htaccess_flags' => 'NC,L',
             // Types of files protected via .htaccess. Empty means not managed
             // by the module.
             'access_htaccess_types' => [],
