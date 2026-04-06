@@ -84,12 +84,20 @@ the file.
 
 #### Automatic management of .htaccess
 
-The module can **automatically** manage the Apache rewrite rule in the root
+The module can automatically manage the Apache rewrite rule in the root
 `.htaccess` file. On installation, a rule protecting `original` and `large`
 files is written automatically.
 
-The configuration form (admin > modules > Access > Configure) provides:
+The configuration form is split into two tabs, Settings and Tasks. The Settings
+tab groups options by sub-sections: Access rights, Files to protect, Access modes
+and Embargo. The Tasks tab gathers three reindexing and synchronization jobs.
 
+The Files to protect sub-section provides:
+
+- Skip `.htaccess` management: when checked, the module will not write or update
+  the rewrite rule in the root `.htaccess`. Use this option when you prefer to
+  manage the Apache redirections manually (virtual host, manual `.htaccess`
+  edits, or an infrastructure where the file is not writable).
 - File type checkboxes: select which standard derivative types to protect among
   `original`, `large`, `medium` and `square`.
 - Custom types field: add extra path segments separated by spaces, for example
@@ -111,8 +119,9 @@ remove it without affecting the rest of the file.
 case the rule to add or remove is displayed in the configuration form so you can
 apply it manually.
 
-**Important**: by default, files are **not** protected. Installing the module
-alone does not restrict access to files when the `.htaccess` is write-protected.
+**Important**: by default with Omeka, files are **not** protected. Installing
+the module alone does not restrict access to files when the `.htaccess` is
+write-protected.
 
 ##### Legacy rules
 
@@ -356,6 +365,11 @@ can be managed in multiple ways:
 
 Individual modes require that an admin allow each right for each resource.
 
+When none of the individual modes (`user`, `email`, `token`) is enabled, the
+"Access" tab on the item/media/item-set show page is hidden, and the admin
+pages `/admin/access-request` and `/admin/access-log` display an inline
+warning stating that these pages only manage individual access requests.
+
 ### Identification of the reserved resources
 
 After the configuration, you should identify all resources that you want to make
@@ -364,37 +378,41 @@ so you need to allow visitors to know that they exist. That is to say you can
 keep some private resources private, and some other ones available on request,
 or globally.
 
-There are two ways to indicate which resources are reserved.
+There are two ways to indicate which resources are reserved. The storage mode is
+chosen in the sub-section Access rights of the configuration form via the
+"Storage of access level and embargo" radio button:
 
-- By default, it is a specific setting available as a radio button in the
+- Resource metadata (default): the access level and embargo are stored as
+  specific metadata of the resource, edited via a dedicated radio button in the
   advanced tab of the resource form.
-- The second way is to set a value to a specified property, for example
-  `dcterms:accessRights` or `curation:access`.
-  The default values are "free", "reserved", "protected" or "forbidden". The
-  property and the names can be translated or modified in the config. It is
-  recommended to create a custom vocab and to use it via the resource templates
-  to avoid errors in the values.
+- Property in the resource: the access level and embargo dates are stored as
+  standard property values (for example `dcterms:accessRights` or `curation:access`),
+  searchable and exportable like any other property.
+  The default labels are "free", "reserved", "protected" or "forbidden". The
+  properties and the labels can be translated or modified in the config. It
+  is recommended to create a custom vocab and to set the datatype as `customvocab:X`
+  used via the resource templates to avoid errors in the values.
 
 A private media remains private. A public media will be accessible only if its
 status is not forbidden and not during an embargo, if any.
 
-Note that a public item can have a private media and vice-versa. So, most of the
-time, the value should be set in the metadata of the media. The value can be
-specified for the item too to simplify management.
+Note that a public item can have a private media and vice-versa. So, the value
+may be set in the metadata of the media. The value can be specified for the item
+too to simplify management when all medias have the same access righs.
 
 ### Inheritance behavior
 
 When a media does not have an explicit access status set:
 
-- **At runtime**: The media inherits the access level and embargo settings from
-  its parent item. If neither the media nor the item has an access status, the
-  media content is accessible (free by default).
-- **On save with property mode**: When access is managed via properties, if a
-  media does not have the access level property set, it will inherit the value
-  from the parent item property. The same applies to embargo start and end
+- At runtime: The media inherits the access level and embargo settings from its
+  parent item. If neither the media nor the item has an access status, the media
+  content is accessible (free by default).
+- On save with property mode: When access is managed via properties, if a media
+  does not have the access level property set, it will inherit the value from
+  the parent item property. The same applies to embargo start and end
   properties.
-- **On save without property mode**: When creating new medias via an item, the
-  item access data is applied to the new medias by default. Use the "recursive"
+- On save without property mode: When creating new medias via an item, the item
+  access data is applied to the new medias by default. Use the "recursive"
   option to explicitly copy access settings to all medias.
 
 This inheritance behavior ensures that restricted items have their medias
