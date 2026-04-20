@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-06 00:00+0000\n"
+"POT-Creation-Date: 2026-04-20 00:00+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
@@ -48,11 +48,11 @@ msgstr ""
 "est aussi possible de le désinstaller, mais vous perdrez les statuts d’accès "
 "et les demandes."
 
-#: Module.php:637
+#: Module.php:683
 msgid "Tasks"
 msgstr "Tâches"
 
-#: Module.php:724
+#: Module.php:772
 msgid ""
 "When properties are used, three properties should be defined for \"level\", "
 "\"embargo start\" and \"embargo end\"."
@@ -61,19 +61,19 @@ msgstr ""
 "définies pour le « niveau », le « début de l’embargo » et la « fin de "
 "l’embargo »."
 
-#: Module.php:747
+#: Module.php:795
 msgid "Job is not launched: no option was set."
 msgstr "La tâche n’est pas lancée : aucune option n’a été définie."
 
-#: Module.php:1842 view/access/admin/log/browse.phtml:23
-#: view/access/admin/request/browse.phtml:32
+#: Module.php:1887 view/access/admin/log/browse.phtml:27
+#: view/access/admin/request/browse.phtml:35
 #: view/access/admin/request/edit.phtml:30
 #: view/access/admin/request/edit.phtml:31
 #: view/access/admin/request/show.phtml:26
 msgid "Access"
 msgstr "Accès"
 
-#: Module.php:1872 view/access/site/request/browse.phtml:38
+#: Module.php:1917 view/access/site/request/browse.phtml:38
 msgid "Access requests"
 msgstr "Demandes d’accès"
 
@@ -131,88 +131,97 @@ msgstr ""
 "Ajoute un formulaire pour que les visiteurs demandent l’accès à une "
 "ressource. L’id de la ressource doit être passée en tant qu’argument url."
 
-#: view/access/admin/log/browse.phtml:23
+#: view/access/admin/log/browse.phtml:27
 msgid "Logs"
 msgstr "Journaux"
 
-#: view/access/admin/log/browse.phtml:26
-#: view/access/admin/request/browse.phtml:35
+#: view/access/admin/log/browse.phtml:30
+#: view/access/admin/request/browse.phtml:38
 msgid "Individual access modes (single user, email, token) are not enabled."
 msgstr ""
 "Les demandes d’accès individuel (utilisateur, mail, jeton) ne sont pas "
 "activées."
 
-#: view/access/admin/log/browse.phtml:39
+#: view/access/admin/log/browse.phtml:35
+#: view/access/admin/request/browse.phtml:43
+msgid "Quick filter"
+msgstr "Filtre rapide"
+
+#: view/access/admin/log/browse.phtml:45
 msgid "Action"
 msgstr "Action"
 
-#: view/access/admin/log/browse.phtml:40
+#: view/access/admin/log/browse.phtml:46
 msgid "Record Id"
 msgstr "Id de la ressource"
 
-#: view/access/admin/log/browse.phtml:53 view/access/admin/log/browse.phtml:56
+#: view/access/admin/log/browse.phtml:59 view/access/admin/log/browse.phtml:62
 msgid "[no user]"
 msgstr "[pas d’utilisateur]"
 
-#: view/access/admin/log/browse.phtml:74
+#: view/access/admin/log/browse.phtml:80
 msgid "No access records yet."
 msgstr "Aucun enregistrement d’accès."
 
-#: view/access/admin/log/browse.phtml:74
+#: view/access/admin/log/browse.phtml:80
 #: view/access/site/request/browse.phtml:75
 msgid "Refresh page"
 msgstr "Rafraîchir la page"
 
-#: view/access/admin/request/browse.phtml:32
+#: view/access/admin/log/browse.phtml:86
+msgid "Filter access logs"
+msgstr "Filtrer les journaux d’accès"
+
+#: view/access/admin/request/browse.phtml:35
 #: view/common/access-request-list.phtml:31
 msgid "Requests"
 msgstr "Demandes"
 
-#: view/access/admin/request/browse.phtml:45
+#: view/access/admin/request/browse.phtml:49
 msgid "Add new request"
 msgstr "Ajouter une nouvelle demande"
 
-#: view/access/admin/request/browse.phtml:59
+#: view/access/admin/request/browse.phtml:63
 msgid "Id"
 msgstr "Id"
 
-#: view/access/admin/request/browse.phtml:61
+#: view/access/admin/request/browse.phtml:65
 #: view/access/admin/request/show-details.phtml:27
 #: view/access/admin/request/show.phtml:37
 msgid "Requester"
 msgstr "Demandeur"
 
-#: view/access/admin/request/browse.phtml:63
+#: view/access/admin/request/browse.phtml:67
 #: view/access/admin/request/show-details.phtml:37
 #: view/access/admin/request/show.phtml:45
 #: view/access/site/request/browse.phtml:52
 msgid "Recursive"
 msgstr "Récursif"
 
-#: view/access/admin/request/browse.phtml:65
+#: view/access/admin/request/browse.phtml:69
 #: view/access/admin/request/show-details.phtml:48
 #: view/access/admin/request/show.phtml:54
 #: view/access/site/request/browse.phtml:54
 msgid "Dates"
 msgstr "Dates"
 
-#: view/access/admin/request/browse.phtml:77
+#: view/access/admin/request/browse.phtml:81
 #, php-format
 msgid "#%s"
 msgstr "#%s"
 
-#: view/access/admin/request/browse.phtml:129
-#: view/access/admin/request/browse.phtml:147
+#: view/access/admin/request/browse.phtml:133
+#: view/access/admin/request/browse.phtml:151
 msgid "Delete access requests"
 msgstr "Supprimer les demandes d’accès"
 
-#: view/access/admin/request/browse.phtml:130
+#: view/access/admin/request/browse.phtml:134
 msgid "Are you sure you would like to delete the selected access requests?"
 msgstr ""
 "Êtes-vous sûr de vouloir supprimer les demandes d’accès sélectionnées ?"
 
-#: view/access/admin/request/browse.phtml:132
-#: view/access/admin/request/browse.phtml:150
+#: view/access/admin/request/browse.phtml:136
+#: view/access/admin/request/browse.phtml:154
 #, php-format
 msgid ""
 "%1$s: this action will permanently delete %2$s access requests and cannot be "
@@ -221,7 +230,7 @@ msgstr ""
 "%1$s : cette action supprimera définitivement %2$s demandes d’accès et ne "
 "peut pas être annulée."
 
-#: view/access/admin/request/browse.phtml:148
+#: view/access/admin/request/browse.phtml:152
 msgid ""
 "Are you sure you would like to delete all access requests on all pages of "
 "this result?"
@@ -229,9 +238,13 @@ msgstr ""
 "Êtes-vous sûr de vouloir supprimer toutes les demandes d’accès sur toutes "
 "les pages de ce résultat ?"
 
-#: view/access/admin/request/browse.phtml:188
+#: view/access/admin/request/browse.phtml:192
 msgid "No access requests."
 msgstr "Aucune demande d’accès."
+
+#: view/access/admin/request/browse.phtml:199
+msgid "Filter access requests"
+msgstr "Filtrer les demandes d’accès"
 
 #: view/access/admin/request/edit.phtml:31
 msgid "New access request"
@@ -327,7 +340,11 @@ msgstr "Supprimer la demande"
 msgid "Request access"
 msgstr "Demande d’accès"
 
-#: view/common/access-status.phtml:20
+#: view/common/access-status.phtml:18
+msgid "Free"
+msgstr "Libre"
+
+#: view/common/access-status.phtml:24
 msgid "Access status"
 msgstr "Statut d’accès"
 
@@ -461,7 +478,7 @@ msgstr ""
 "le niveau d’accès doit être libre (ou réservé pour les utilisateurs "
 "autorisés) ; la ressource ne doit pas être sous embargo."
 
-#: data/scripts/upgrade.php:458 Module.php:2140
+#: data/scripts/upgrade.php:458 Module.php:2185
 msgid ""
 "The .htaccess rule is managed by the module and protects file types: {types}."
 msgstr ""
@@ -508,6 +525,60 @@ msgid ""
 msgstr ""
 "L’index « accessresource » dans le fichier config/local.config.php à la "
 "racine d’Omeka peut être supprimé."
+
+#: data/scripts/upgrade.php:531
+msgid ""
+"The module configuration now warns when a reverse proxy is detected but no "
+"trusted proxy is configured, when private/loopback IPs are listed in access "
+"rules, or when the current request IP matches a rule. Review the Access "
+"config page to check these warnings."
+msgstr ""
+"La configuration du module affiche désormais un avertissement lorsqu’un "
+"proxy inverse est détecté mais qu’aucun n’est configuré. quand des ips "
+"privés sont indiqués dans les règles ou quand l’adresse ip de la requête en "
+"cours correspond à une règle. Consultez la page de configuration pour "
+"vérifier ces avertissements."
+
+#: data/scripts/upgrade.php:536
+msgid ""
+"A new sidebar allows to search quickly in access requests when individual "
+"mode is enabled."
+msgstr ""
+"Une nouvelle barre latérale permet d’effectuer une recherche rapide dans les "
+"demandes d’accès lorsque le mode individuel est activé."
+
+#: data/scripts/upgrade.php:541
+msgid ""
+"The access status of a resource is now displayed in the right sidebar of "
+"admin resource."
+msgstr ""
+"Le statut d’accès de la ressource est désormais affiché dans la barre de "
+"droite en admin."
+
+#: data/scripts/upgrade.php:546
+msgid ""
+"A new authorization endpoint is available at url /access/authorize for "
+"external services to check access to a media. It can be used by any third "
+"party media or image server like Cantaloupe."
+msgstr ""
+"Un nouveau point d’autorisation est disponible à l’url /access/authorize "
+"afin que les services externes puissent vérifier l’accès à un média. Cela "
+"peut être utilisés notamment par des serveurs d’images tels que Cantaloupe."
+
+#: data/scripts/upgrade.php:556
+msgid ""
+"Proxy header handling has been hardened against spoofing. The boolean option "
+"\"Use proxy to get client IP\" has been removed: fill the new setting "
+"\"Trusted proxies\" with the internal IPs of the reverse proxy to enable "
+"proxy mode. X-Forwarded-For / X-Real-IP are only honored when the request "
+"comes from a listed IP. Without it, every visitor is seen with REMOTE_ADDR."
+msgstr ""
+"Le contrôle des en-têtes de proxy a été renforcé contre le spoofing. "
+"L’option \"utiliser le proxy pour récupérer l’ip client\" a été remplacée "
+"par une liste de proxies de confiance qui permettent d’activer le mode. Les "
+"en-têtes X-Forwarded-For / X-Real-IP sont prises en compte seulement si les "
+"requêtes proviennent des ips indiquées. Sans cela, tous les visiteurs sont "
+"vus avec l’ip REMOTE_ADDR."
 
 #: Module.php:97
 msgid ""
@@ -571,7 +642,15 @@ msgstr ""
 "modifiez le manuellement. Voir la page de config et le readme pour davantage "
 "de détails."
 
-#: Module.php:595
+#: Module.php:322
+msgid ""
+"Trusted proxy automatically detected and added: {ip}. Review and adjust the "
+"list if more than one proxy is involved."
+msgstr ""
+"Proxies de confiance automatiquement détectés et ajoutés : {ip}. Vérifiez et "
+"ajustez la liste si vous utilisez plusieurs proxies."
+
+#: Module.php:640
 msgid ""
 "The automatic management of .htaccess is disabled in config. Apache "
 "redirections must be configured manually."
@@ -579,7 +658,7 @@ msgstr ""
 "La gestion automatique de .htaccess est désactivée dans la config. Les "
 "redirections Apache doivent être configurées manuellement."
 
-#: Module.php:680
+#: Module.php:726
 msgid ""
 "Access settings affecting indexation changed. You should reindex metadata "
 "via the job \"Reindex database\" in the tab Tasks."
@@ -587,7 +666,7 @@ msgstr ""
 "La configuration d’accès a été modifiée. Relancez la tâche \"Indexer la "
 "base\" dans le second onglet."
 
-#: Module.php:877
+#: Module.php:925
 msgid ""
 "Cleaned params used for Access:\n"
 "{json}"
@@ -595,7 +674,7 @@ msgstr ""
 "Paramètres utilisés pour le module Access :\n"
 "{json}"
 
-#: Module.php:1094
+#: Module.php:1142
 msgid ""
 "The access level of the item #{item_id} differs from the access level of its "
 "medias #{media_ids}. You can set a specific level for each media via their "
@@ -607,7 +686,7 @@ msgstr ""
 "média via leur propriété d’accès ou appliquer le niveau du contenu à tous "
 "ses médias via l’onglet « Avancé » du contenu."
 
-#: Module.php:1099
+#: Module.php:1147
 msgid ""
 "The access level of the item #{item_id} differs from the access level of its "
 "medias #{media_ids}. You can set a specific level in the \"Advanced\" tab of "
@@ -619,84 +698,80 @@ msgstr ""
 "« Avancé » de chaque média ou appliquer le niveau du contenu à tous ses "
 "médias via l’onglet « Avancé »."
 
-#: Module.php:1437 src/Controller/Admin/RequestController.php:193
+#: Module.php:1485 src/Controller/Admin/RequestController.php:198
 msgid "You should set either a user or an email or check box for token."
 msgstr "Vous devez définir un utilisateur, un courriel ou un jeton."
 
-#: Module.php:1460 src/Controller/Admin/RequestController.php:219
+#: Module.php:1508 src/Controller/Admin/RequestController.php:224
 msgid "Access request successfully created."
 msgstr "Demande d’accès créée avec succès."
 
-#: Module.php:1536 src/Form/Admin/BatchEditFieldset.php:50
-msgid "Free"
-msgstr "Libre"
-
-#: Module.php:1537 src/Form/Admin/BatchEditFieldset.php:51
+#: Module.php:1585 src/Form/Admin/BatchEditFieldset.php:51
 msgid "Reserved"
 msgstr "Réservé"
 
-#: Module.php:1538 src/Form/Admin/BatchEditFieldset.php:52
+#: Module.php:1586 src/Form/Admin/BatchEditFieldset.php:52
 msgid "Protected"
 msgstr "Protégé"
 
-#: Module.php:1553 src/ColumnType/AccessLevel.php:13
+#: Module.php:1601 src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr "Niveau d’accès"
 
-#: Module.php:1567 src/Form/Admin/BatchEditFieldset.php:89
+#: Module.php:1615 src/Form/Admin/BatchEditFieldset.php:89
 msgid "Embargo start"
 msgstr "Début de l’embargo"
 
-#: Module.php:1584 Module.php:1592 src/Form/Admin/BatchEditFieldset.php:134
+#: Module.php:1632 Module.php:1640 src/Form/Admin/BatchEditFieldset.php:134
 msgid "Embargo end"
 msgstr "Fin de l’embargo"
 
-#: Module.php:1602
+#: Module.php:1650
 #, php-format
 msgid "Access level (managed via property %s)"
 msgstr "Niveau d’accès (géré par la propriété %s)"
 
-#: Module.php:1605
+#: Module.php:1653
 #, php-format
 msgid "Embargo start (managed via property %s)"
 msgstr "Début de l’embargo (géré par la propriété %s)"
 
-#: Module.php:1608
+#: Module.php:1656
 #, php-format
 msgid "Embargo end (managed via property %s)"
 msgstr "Fin de l’embargo (géré par la propriété %s)"
 
-#: Module.php:1619
+#: Module.php:1667
 msgid "Copy access level and embargo to items and medias"
 msgstr ""
 "Copier le niveau d’accès et les dates d’embargo dans les contenus et les "
 "médias"
 
-#: Module.php:1620
+#: Module.php:1668
 msgid "Copy access level and embargo to medias"
 msgstr "Copier le niveau d’accès et les dates d’embargo dans les médias"
 
-#: Module.php:1628
+#: Module.php:1676
 msgid "New medias only"
 msgstr "Seulement les nouveau médias"
 
-#: Module.php:1629
+#: Module.php:1677
 msgid "All medias"
 msgstr "Tous les médias"
 
-#: Module.php:1996
+#: Module.php:2041
 msgid "Access: Reindex resources"
 msgstr "Accès : Réindexer les ressources"
 
-#: Module.php:2004
+#: Module.php:2049
 msgid "Options to reindex accesses"
 msgstr "Options pour réindexer les accès"
 
-#: Module.php:2046
+#: Module.php:2091
 msgid "The file .htaccess is not readable at the root of Omeka."
 msgstr "Le fichier .htaccess n'est pas lisible à la racine d'Omeka."
 
-#: Module.php:2123
+#: Module.php:2168
 msgid ""
 "A legacy .htaccess rule protects file types \"{types}\" but is not managed "
 "by the module. Save the configuration to convert it to the managed format."
@@ -705,7 +780,7 @@ msgstr ""
 "n'est pas gérée par le module. Enregistrez la configuration pour la "
 "convertir au format géré."
 
-#: Module.php:2130
+#: Module.php:2175
 msgid ""
 "No .htaccess rule is set to protect files. To control access to files, add "
 "the following lines in the file .htaccess at the root of Omeka, just after "
@@ -716,7 +791,7 @@ msgstr ""
 "fichier .htaccess à la racine d'Omeka, juste après \"RewriteEngine On\":"
 "{line_break}{rule}"
 
-#: Module.php:2177
+#: Module.php:2222
 msgid ""
 "The file .htaccess is not writable. Add the following lines manually in the "
 "file .htaccess at the root of Omeka, just after \"RewriteEngine On\":"
@@ -726,7 +801,7 @@ msgstr ""
 "les lignes suivantes dans le fichier .htaccess à la racine d'Omeka, juste "
 "après \"RewriteEngine On\":{line_break}{rule}"
 
-#: Module.php:2187
+#: Module.php:2232
 msgid ""
 "The file .htaccess is not writable. Remove the lines starting with \"{marker}"
 "\" manually from the file .htaccess at the root of Omeka."
@@ -735,17 +810,17 @@ msgstr ""
 "manuellement les lignes commençant par \"{marker}\" du fichier .htaccess à "
 "la racine d'Omeka."
 
-#: Module.php:2224
+#: Module.php:2269
 msgid "The .htaccess rule has been updated to protect file types: {types}."
 msgstr ""
 "La règle .htaccess a été mise à jour pour protéger les types de fichiers : "
 "{types}."
 
-#: Module.php:2230
+#: Module.php:2275
 msgid "The .htaccess rule for file protection has been removed."
 msgstr "La règle .htaccess pour la protection des fichiers a été supprimée."
 
-#: Module.php:2246
+#: Module.php:2291
 msgid ""
 "According to setting, when embargo ends, the access level is set to \"free\" "
 "and the embargo dates are cleared."
@@ -753,7 +828,7 @@ msgstr ""
 "Conformément aux paramètres, lorsqu’un embargo se termine, le niveau d’accès "
 "devient « libre » et les dates d’embargo sont supprimées."
 
-#: Module.php:2250
+#: Module.php:2295
 msgid ""
 "According to setting, when embargo ends, the access level is set to \"free\" "
 "and the embargo dates are kept."
@@ -761,7 +836,7 @@ msgstr ""
 "Conformément aux paramètres, lorsqu’un embargo se termine, le niveau d’accès "
 "devient « libre » et les dates d’embargo sont conservées."
 
-#: Module.php:2254
+#: Module.php:2299
 msgid ""
 "According to setting, when embargo ends, the access level is set to the "
 "level under (\"free\" for reserved, \"reserved\" for protected/forbidden) "
@@ -771,7 +846,7 @@ msgstr ""
 "devient le niveau inférieur (« libre » pour réservé, « réservé » pour "
 "protégé/interdit) et les dates d’embargo sont supprimées."
 
-#: Module.php:2258
+#: Module.php:2303
 msgid ""
 "According to setting, when embargo ends, the access level is set to the "
 "level under (\"free\" for reserved, \"reserved\" for protected/forbidden) "
@@ -781,7 +856,7 @@ msgstr ""
 "devient le niveau inférieur (« libre » pour réservé, « réservé » pour "
 "protégé/interdit) et les dates d’embargo sont conservées."
 
-#: Module.php:2262
+#: Module.php:2307
 msgid ""
 "According to setting, when embargo ends, the access level is kept and the "
 "embargo dates are cleared."
@@ -789,7 +864,7 @@ msgstr ""
 "Conformément aux paramètres, lorsqu’un embargo se termine, le niveau d’accès "
 "est conservé et les dates d’embargo sont supprimées."
 
-#: Module.php:2266
+#: Module.php:2311
 msgid ""
 "According to setting, when embargo ends, the access level and the embargo "
 "dates are kept."
@@ -797,7 +872,50 @@ msgstr ""
 "Conformément aux paramètres, lorsqu’un embargo se termine, le niveau d’accès "
 "et les dates d’embargo sont conservés."
 
-#: Module.php:2320
+#: Module.php:2342
+msgid ""
+"A reverse proxy is detected (header X-Forwarded-For or X-Real-IP) but no "
+"trusted proxy is configured: all visitors are seen with the proxy IP. Fill "
+"\"Trusted proxies\" with the internal IP of your reverse proxy."
+msgstr ""
+"Un proxy inverse est détecté (en-tête X-Forwarded-For ou X-Real-IP), mais "
+"aucun proxy de confiance n’est configuré : tous les visiteurs apparaissent "
+"avec l’adresse ip du proxy. Indiquez les proxies de confiance avec l’ip "
+"interne du proxy inverse."
+
+#: Module.php:2346
+msgid ""
+"Trusted proxies are configured but no reverse proxy header is detected on "
+"the current request. Clear the list or verify the proxy configuration."
+msgstr ""
+"Les proxies de confiance sont configurés, mais aucun proxy n’est présent "
+"dans l’en-tête http des requêtes. Supprimer la liste des proxies ou vérifier "
+"leur configuration."
+
+#: Module.php:2371
+msgid ""
+"The IP rules contain private or loopback addresses ({ips}). Unless used for "
+"a real intranet, they are likely a reverse-proxy/Docker bridge and grant "
+"access to every external visitor when no trusted proxy is configured."
+msgstr ""
+"Les règles ip contiennent des adresses privées ou de bouclage ({ips}). À "
+"moins qu’elles ne soient utilisées pour un véritable intranet, elles "
+"correspondent probablement à un proxy inverse ou à un pont Docker et donnent "
+"l’accès à tout visiteur externe quand aucun proxy de confiance n’est "
+"configuré."
+
+#: Module.php:2378
+msgid ""
+"The current request comes from IP {ip} which is listed in the IP rules and "
+"no trusted proxy is configured: this IP likely is the reverse proxy and "
+"grants public access to the listed item sets."
+msgstr ""
+"La requête actuelle provient de l’adresse ip {ip}, qui figure dans les "
+"règles relatives aux adresses IP, et aucun proxy de confiance n’est "
+"configuré : cette ip correspond probablement au proxy inverse et permet "
+"l’accès public aux collections protégées."
+
+#: Module.php:2441
 msgid ""
 "A job was launched in background to update access statuses according to "
 "parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end})."
@@ -806,11 +924,11 @@ msgstr ""
 "d’accès selon les paramètres : ({link_job}tâche #{job_id}{link_end}, "
 "{link_log}journaux{link_end})."
 
-#: Module.php:2362
+#: Module.php:2483
 msgid "The ip \"{ip}\" is empty or invalid."
 msgstr "L’ip « {ip} » est vide ou incorrecte."
 
-#: Module.php:2372
+#: Module.php:2493
 msgid ""
 "The item sets list \"{input}\" for ip {ip} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
@@ -818,7 +936,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » est incorrecte : ce "
 "doit être des numéros, éventuellement préfixés de « - »."
 
-#: Module.php:2383
+#: Module.php:2504
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains duplicate item sets "
 "({list})."
@@ -826,7 +944,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:2395
+#: Module.php:2516
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains unknown item sets "
 "({list})."
@@ -834,17 +952,17 @@ msgstr ""
 "La liste des collections « {input} » pour l’ip « {ip} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:2536
+#: Module.php:2657
 msgid "No idps are defined. Check the config of module Single Sign-On first."
 msgstr ""
 "Aucune idp n’est définie. Vérifiez la configuration du module Single Sign-On "
 "d’abord."
 
-#: Module.php:2553
+#: Module.php:2674
 msgid "The idp \"{idp}\" is empty or not defined in module Single Sign-On."
 msgstr "L’idp « {idp} » est vide ou non défini par le module Single Sign-On."
 
-#: Module.php:2563
+#: Module.php:2684
 msgid ""
 "The item sets list \"{input}\" for idp {idp} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
@@ -852,7 +970,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’idp « {idp} » est incorrecte : "
 "ce doit être des numéros, éventuellement préfixés de « - »."
 
-#: Module.php:2574
+#: Module.php:2695
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains duplicate item sets "
 "({list})."
@@ -860,7 +978,7 @@ msgstr ""
 "La liste des collections « {input} » pour l’idp « {idp} » contient des "
 "collections inconnues ({list})."
 
-#: Module.php:2586
+#: Module.php:2707
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains unknown item sets "
 "({list})."
@@ -1021,10 +1139,6 @@ msgstr ""
 #: src/Form/SiteSettingsFieldset.php:13
 msgid "Old themes"
 msgstr "Anciens thèmes"
-
-#: src/Form/SiteSettingsFieldset.php:26
-msgid "Access (old themes)"
-msgstr "Accès (ancien thèmes)"
 
 #: src/Form/SiteSettingsFieldset.php:28
 msgid "Item show"
@@ -1499,12 +1613,30 @@ msgstr ""
 "réservés"
 
 #: src/Form/ConfigForm.php:299
+msgid "Trusted proxies (one IP per line)"
+msgstr "Proxies de confiance (une ip par ligne)"
+
+#: src/Form/ConfigForm.php:300
+msgid ""
+"When filled, the module reads the real client IP from the proxy headers X-"
+"Forwarded-For / X-Real-IP, but only when the request comes from one of these "
+"IPs. Without this list, proxy headers are ignored and every visitor is seen "
+"with REMOTE_ADDR. Put here the internal IPs of your reverse proxy (Traefik, "
+"nginx, Docker bridge, load balancer)."
+msgstr ""
+"Si rempli, le module lit l’ip réelle du client depuis les en-têtes X-"
+"Forwarded-For et X-Real-IP, mais seulement si l’ip du proxy est dans la "
+"liste. Sans cette valeur, les en-têtes de proxy sont ignorés et tous les "
+"visiteurs on l’ip REMOTE_ADDR. Indiquez l’ip de vos proxies (Traefik, nginx, "
+"Docker bridge, load balancer)."
+
+#: src/Form/ConfigForm.php:313
 msgid "List of ips with open access, eventually limited to selected item sets"
 msgstr ""
 "Liste des ips autorisant un libre accès, éventuellement limité à des "
 "collections"
 
-#: src/Form/ConfigForm.php:300
+#: src/Form/ConfigForm.php:314
 msgid ""
 "These ips will have unrestricted access to all resources or only resources "
 "of the specified item sets. List them separated by a \"=\", one by line. "
@@ -1519,18 +1651,14 @@ msgstr ""
 "particulier quand une collection est définie globalement pour les ressources "
 "réservées."
 
-#: src/Form/ConfigForm.php:319
-msgid "Check forwarded ip first (in proxy environment)"
-msgstr "Vérifier d’abord l’ip renvoyée (dans un environnement avec proxy)"
-
-#: src/Form/ConfigForm.php:332
+#: src/Form/ConfigForm.php:333
 msgid ""
 "List of sso idp with open access, eventually limited to selected item sets"
 msgstr ""
 "Liste des idps sso autorisant un libre accès, éventuellement limité à des "
 "collections"
 
-#: src/Form/ConfigForm.php:333
+#: src/Form/ConfigForm.php:334
 msgid ""
 "These identity providers will have unrestricted access to all resources or "
 "only resources of the specified item sets. List them separated by a \"=\", "
@@ -1549,26 +1677,32 @@ msgstr ""
 "collection exclue, en particulier quand une collection est définie "
 "globalement pour les ressources réservées."
 
-#: src/Form/ConfigForm.php:352
+#: src/Form/ConfigForm.php:353
 msgid ""
 "Regex on email of users allowed to access reserved medias (option above)"
 msgstr ""
 "Regex sur l’adresse mail des utilisateurs autorisés à accéder aux médias "
 "réservés (option ci-dessus)"
 
-#: src/Form/ConfigForm.php:364
+#: src/Form/ConfigForm.php:365
+msgid "Specify what the metadata for embargo becomes when the date is reached."
+msgstr ""
+"Indiquer ce que les métadonnées d’embargo deviennent lorsque la date est "
+"atteinte."
+
+#: src/Form/ConfigForm.php:374
 msgid "Bypass embargo dates for reserved resources"
 msgstr "Ne pas tenir compte de l’embargo pour les ressources à accès réservé"
 
-#: src/Form/ConfigForm.php:375
+#: src/Form/ConfigForm.php:385
 msgid "Update access level when embargo ends"
 msgstr "Mettre à jour le niveau d’accès quand l’embargo se termine"
 
-#: src/Form/ConfigForm.php:380
+#: src/Form/ConfigForm.php:390
 msgid "Set access level to \"free\""
 msgstr "Définir le niveau d’accès à « libre »"
 
-#: src/Form/ConfigForm.php:381
+#: src/Form/ConfigForm.php:391
 msgid ""
 "Set access level to the level under (\"free\" for reserved, \"reserved\" for "
 "protected/forbidden)"
@@ -1576,27 +1710,27 @@ msgstr ""
 "Définir le niveau d’accès au niveau inférieur (« libre » pour réservé, "
 "« réservé » pour protégé/interdit)"
 
-#: src/Form/ConfigForm.php:382
+#: src/Form/ConfigForm.php:392
 msgid "Keep access level"
 msgstr "Conserver le niveau d’accès"
 
-#: src/Form/ConfigForm.php:394
+#: src/Form/ConfigForm.php:404
 msgid "Update embargo dates when embargo ends"
 msgstr "Mettre à jour les dates d’embargo quand l’embargo se termine"
 
-#: src/Form/ConfigForm.php:399
+#: src/Form/ConfigForm.php:409
 msgid "Remove embargo dates"
 msgstr "Supprimer les dates d’embargo"
 
-#: src/Form/ConfigForm.php:400
+#: src/Form/ConfigForm.php:410
 msgid "Keep embargo dates"
 msgstr "Conserver les dates d’embargo"
 
-#: src/Form/ConfigForm.php:426
+#: src/Form/ConfigForm.php:436
 msgid "Process reindexation"
 msgstr "Lancer la réindexation"
 
-#: src/Form/ConfigForm.php:430
+#: src/Form/ConfigForm.php:440
 msgid "Process"
 msgstr "Traitement"
 
@@ -1633,18 +1767,23 @@ msgid "Apply access level and embargo to medias"
 msgstr "Appliquer un niveau d’accès et un embargo aux médias"
 
 #: src/Form/Admin/AccessRequestForm.php:54
+#: src/Form/Admin/QuickSearchAccessRequestForm.php:37
 msgid "New"
 msgstr "Nouveau"
 
 #: src/Form/Admin/AccessRequestForm.php:55
+#: src/Form/Admin/QuickSearchAccessRequestForm.php:38
+#: src/Form/Admin/QuickSearchAccessLogForm.php:49
 msgid "Renew"
 msgstr "Renouveler"
 
 #: src/Form/Admin/AccessRequestForm.php:56
+#: src/Form/Admin/QuickSearchAccessRequestForm.php:39
 msgid "Accepted"
 msgstr "Accepté"
 
 #: src/Form/Admin/AccessRequestForm.php:57
+#: src/Form/Admin/QuickSearchAccessRequestForm.php:40
 msgid "Rejected"
 msgstr "Rejeté"
 
@@ -1687,6 +1826,56 @@ msgstr "Date de fin"
 #: src/Form/Admin/AccessRequestForm.php:280
 msgid "Add access"
 msgstr "Ajouter un accès"
+
+#: src/Form/Admin/QuickSearchAccessRequestForm.php:51
+msgid "Enabled"
+msgstr "Activé"
+
+#: src/Form/Admin/QuickSearchAccessRequestForm.php:70
+msgid "Temporal"
+msgstr "Période"
+
+#: src/Form/Admin/QuickSearchAccessRequestForm.php:89
+msgid "Resource by id"
+msgstr "Ressource par id"
+
+#: src/Form/Admin/QuickSearchAccessRequestForm.php:99
+#: src/Form/Admin/QuickSearchAccessLogForm.php:24
+msgid "User by id"
+msgstr "Utilisateur par id"
+
+#: src/Form/Admin/QuickSearchAccessRequestForm.php:113
+#: src/Form/Admin/QuickSearchAccessLogForm.php:80
+msgid "Set a date with optional comparator…"
+msgstr "Indiquer une date avec un signe éventuel de comparaison…"
+
+#: src/Form/Admin/QuickSearchAccessLogForm.php:34
+msgid "Access id"
+msgstr "Id accès"
+
+#: src/Form/Admin/QuickSearchAccessLogForm.php:47
+msgid "Accept"
+msgstr "Accepter"
+
+#: src/Form/Admin/QuickSearchAccessLogForm.php:48
+msgid "Reject"
+msgstr "Rejeter"
+
+#: src/Form/Admin/QuickSearchAccessLogForm.php:50
+msgid "Revoke"
+msgstr "Révoquer"
+
+#: src/Form/Admin/QuickSearchAccessLogForm.php:61
+msgid "Access type"
+msgstr "Type d’accès"
+
+#: src/Form/Admin/QuickSearchAccessLogForm.php:64
+msgid "Request"
+msgstr "Requête"
+
+#: src/Form/Admin/QuickSearchAccessLogForm.php:65
+msgid "Token"
+msgstr "Jeton"
 
 #: src/Form/AccessRequestFieldset.php:23
 msgid "Label for the consent checkbox"
@@ -1765,15 +1954,15 @@ msgstr "Est sous embargo"
 msgid "Embargo date"
 msgstr "Date de l’embargo"
 
-#: src/Controller/Admin/RequestController.php:134
+#: src/Controller/Admin/RequestController.php:139
 msgid "Access request record with id #{access_request_id} does not exist"
 msgstr ""
 "La demande d’accès pour l’identifiant #{access_request_id} n’existe pas"
 
-#: src/Controller/Admin/RequestController.php:228
-#: src/Controller/Admin/RequestController.php:248
-#: src/Controller/Admin/RequestController.php:399
-#: src/Controller/Site/RequestController.php:242
+#: src/Controller/Admin/RequestController.php:233
+#: src/Controller/Admin/RequestController.php:253
+#: src/Controller/Admin/RequestController.php:404
+#: src/Controller/Site/RequestController.php:238
 msgid ""
 "The request was sent, but an issue occurred when sending the confirmation "
 "email."
@@ -1781,26 +1970,26 @@ msgstr ""
 "La demande a été envoyée, mais un problème est survenu lors de l’envoi du "
 "mail de confirmation."
 
-#: src/Controller/Admin/RequestController.php:239
+#: src/Controller/Admin/RequestController.php:244
 msgid "Access request successfully updated."
 msgstr "Demande d’accès mise à jour avec succès."
 
-#: src/Controller/Admin/RequestController.php:278
+#: src/Controller/Admin/RequestController.php:283
 msgid "access request"
 msgstr "demande d’accès"
 
-#: src/Controller/Admin/RequestController.php:297
+#: src/Controller/Admin/RequestController.php:302
 msgid "Access request successfully deleted"
 msgstr "Demande d’accès supprimée avec succès"
 
-#: src/Controller/Admin/RequestController.php:312
-#: src/Controller/Admin/RequestController.php:358
+#: src/Controller/Admin/RequestController.php:317
+#: src/Controller/Admin/RequestController.php:363
 #: src/Controller/Site/RequestController.php:84
 msgid "Method should be post."
 msgstr "La méthode doit être un Post."
 
-#: src/Controller/Admin/RequestController.php:333
-#: src/Controller/Admin/RequestController.php:378
+#: src/Controller/Admin/RequestController.php:338
+#: src/Controller/Admin/RequestController.php:383
 msgid "The request #{access_request_id} is invalid or unavailable."
 msgstr "La demande #{access_request_id} est incorrecte ou indisponible."
 
@@ -1840,11 +2029,11 @@ msgstr "Un courriel est requis."
 msgid "A valid email is required."
 msgstr "Un courriel valide est requis."
 
-#: src/Controller/Site/RequestController.php:211
+#: src/Controller/Site/RequestController.php:209
 msgid "An error occurred when saving message."
 msgstr "Il y a eu une erreur lors de l’enregistrement du message."
 
-#: src/Controller/Site/RequestController.php:230
+#: src/Controller/Site/RequestController.php:226
 msgid "The request was submitted successfully."
 msgstr "La demande a été envoyée avec succès."
 
@@ -1868,20 +2057,20 @@ msgstr ""
 "Pour ajouter des champs, chaque ligne doit contenir un nom et un libellé "
 "séparés par un « = »."
 
-#: config/module.config.php:225
+#: config/module.config.php:239
 msgid "Accesses"
 msgstr "Accès"
 
-#: config/module.config.php:285
+#: config/module.config.php:299
 msgid "The resource or the access doesn’t exist."
 msgstr "La ressource ou l’accès n’existe pas."
 
-#: config/module.config.php:380 config/module.config.php:383
-#: config/module.config.php:387
+#: config/module.config.php:394 config/module.config.php:397
+#: config/module.config.php:401
 msgid "New request status!"
 msgstr "Nouveau statut de demande !"
 
-#: config/module.config.php:381
+#: config/module.config.php:395
 msgid ""
 "A user or visitor requested to access resource {resource}. Please, check "
 "request dashboard."
@@ -1890,7 +2079,7 @@ msgstr ""
 "Merci de vérifier le tableau de bord."
 
 # "consulter la liste des demandes."
-#: config/module.config.php:382
+#: config/module.config.php:396
 msgid ""
 "A user or visitor updated the request to access a resource {resource}. "
 "Please, check request dashboard."
@@ -1898,7 +2087,7 @@ msgstr ""
 "Un utilisateur ou un visiteur a mis à jour la demande d’accès à une "
 "ressource {resource}. Merci de consulter la liste des demandes."
 
-#: config/module.config.php:384
+#: config/module.config.php:398
 msgid ""
 "Your request to access resource {resource} is sent to administrator. You "
 "will be informed soon about it."
@@ -1906,15 +2095,15 @@ msgstr ""
 "Votre demande pour accéder à la ressource {resource} a été envoyée à "
 "l’administrateur. Nous vous répondrons très bientôt."
 
-#: config/module.config.php:385
+#: config/module.config.php:399
 msgid "Your request to access resource {resource} was accepted."
 msgstr "Votre demande d’accès à la ressource {resource} a été acceptée."
 
-#: config/module.config.php:386 config/module.config.php:390
+#: config/module.config.php:400 config/module.config.php:404
 msgid "Your request to access resource {resource} was rejected."
 msgstr "Votre demande d’accès à la ressource {resource} a été rejetée."
 
-#: config/module.config.php:388
+#: config/module.config.php:402
 msgid ""
 "Your request to access resource {resource} is sent to administrator. You "
 "will be inform when your request will change."
@@ -1922,7 +2111,7 @@ msgstr ""
 "Votre demande pour accéder à la ressource {resource} a été envoyée à "
 "l’administrateur. Vous serez informé quand elle sera prise en compte."
 
-#: config/module.config.php:389
+#: config/module.config.php:403
 msgid ""
 "Your request to access resource {resource} was accepted. You will be able to "
 "access it after clicking {session_url}."
@@ -1930,17 +2119,23 @@ msgstr ""
 "Votre demande d’accès à la ressource {resource} a été acceptée. Vous pouvez "
 "y accéder via l’url {session_url}."
 
-#: config/module.config.php:391
+#: config/module.config.php:405
 msgid "This resource is not available for now. Contact the webmaster."
 msgstr ""
 "Cette ressource n’est pas disponible pour le moment. Contacter le webmaster."
 
-#: config/module.config.php:395
+#: config/module.config.php:409
 msgid ""
 "By submitting this form, I accept the policy for processing my personal data."
 msgstr ""
 "En soumettant ce formulaire, j’accepte la politique de traitement de mes "
 "données personnelles."
+
+#~ msgid "Access (old themes)"
+#~ msgstr "Accès (ancien thèmes)"
+
+#~ msgid "Check forwarded ip first (in proxy environment)"
+#~ msgstr "Vérifier d’abord l’ip renvoyée (dans un environnement avec proxy)"
 
 #~ msgid "Set access level and embargo via a property"
 #~ msgstr "Définir le niveau d’accès et l’embargo via une propriété"
@@ -2334,21 +2529,11 @@ msgstr ""
 #~ msgid "Access request #%d"
 #~ msgstr "Demande d’accès #%d"
 
-#, php-format
-#~ msgid "Access #%d"
-#~ msgstr "Accès #%d"
-
 #~ msgid "No rights to update status."
 #~ msgstr "Pas de droits de mettre à jour le statut."
 
-#~ msgid "Enabled"
-#~ msgstr "Activé"
-
 #~ msgid "Add new access"
 #~ msgstr "Ajouter un nouvel accès"
-
-#~ msgid "Temporal"
-#~ msgstr "Période"
 
 #~ msgid "Delete records"
 #~ msgstr "Supprimer les enregistrements"
@@ -2459,9 +2644,6 @@ msgstr ""
 
 #~ msgid "File does not exist."
 #~ msgstr "Le fichier n’existe pas."
-
-#~ msgid "Resource is undefined."
-#~ msgstr "La ressource est indéfinie."
 
 #~ msgid "Access request record successfully saved"
 #~ msgstr "Demande d’accès enregistrée avec succés"
