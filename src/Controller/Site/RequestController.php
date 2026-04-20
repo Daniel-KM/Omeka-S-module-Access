@@ -181,9 +181,7 @@ class RequestController extends AbstractActionController
                 $this->messenger()->addFormErrors($form);
                 return $this->redirect()->toUrl($requestUri);
             }
-            return $this->jSend(JSend::FAIL, [
-                'access_request' => $form->getMessages(),
-            ], null, HttpResponse::STATUS_CODE_405);
+            return $this->jSend(JSend::FAIL, $this->jSend()->flattenFormMessages($form), null, HttpResponse::STATUS_CODE_405);
         }
 
         $data = $form->getData();
@@ -215,9 +213,7 @@ class RequestController extends AbstractActionController
                 return $this->redirect()->toUrl($requestUri);
             }
             // TODO This is error (check js).
-            return $this->jSend(JSend::FAIL, [
-                'access_request' => $form->getMessages(),
-            ], null, HttpResponse::STATUS_CODE_405);
+            return $this->jSend(JSend::FAIL, $this->jSend()->flattenFormMessages($form), null, HttpResponse::STATUS_CODE_405);
         }
         $accessRequest = $response->getContent();
 
