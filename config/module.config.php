@@ -72,6 +72,7 @@ return [
         ],
         'factories' => [
             Controller\AccessFileController::class => Service\Controller\AccessFileControllerFactory::class,
+            Controller\AuthorizeController::class => Service\Controller\AuthorizeControllerFactory::class,
             Controller\Admin\LogController::class => Service\Controller\LogControllerFactory::class,
             Controller\Admin\RequestController::class => Service\Controller\RequestControllerFactory::class,
         ],
@@ -87,6 +88,17 @@ return [
     ],
     'router' => [
         'routes' => [
+            'access-authorize' => [
+                'type' => \Laminas\Router\Http\Literal::class,
+                'options' => [
+                    'route' => '/access/authorize',
+                    'defaults' => [
+                        '__NAMESPACE__' => 'Access\Controller',
+                        'controller' => Controller\AuthorizeController::class,
+                        'action' => 'authorize',
+                    ],
+                ],
+            ],
             'access-file' => [
                 'type' => \Laminas\Router\Http\Segment::class,
                 'options' => [

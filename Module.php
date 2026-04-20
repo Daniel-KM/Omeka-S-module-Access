@@ -328,6 +328,10 @@ class Module extends AbstractModule
             )
             ->allow(
                 null,
+                [\Access\Controller\AuthorizeController::class]
+            )
+            ->allow(
+                null,
                 [\Access\Controller\Site\RequestController::class],
                 ['browse', 'submit']
             )
