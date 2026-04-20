@@ -318,17 +318,8 @@ class IsAllowedMediaContent extends AbstractPlugin
 
         /** @see https://github.com/Daniel-KM/Omeka-S-module-Access/issues/1 */
         /** @see https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/issues/6 */
-        $ipList = $_SERVER['HTTP_X_FORWARDED_FOR']
-            ?? $_SERVER['HTTP_X_REAL_IP']
-            ?? null;
-        if ($ipList && $this->settings->get('access_ip_proxy')) {
-            $ips = explode(',', strtr($ipList, [' ' => '']));
-            $ip = reset($ips);
-        } else {
-            $ip = $this->getClientIp();
-        }
-
-        if ($ip === '::') {
+        $ip = $this->resolveClientIp();
+        if ($ip === '::' || !filter_var($ip, FILTER_VALIDATE_IP)) {
             return null;
         }
 
@@ -375,23 +366,57 @@ class IsAllowedMediaContent extends AbstractPlugin
     }
 
     /**
-     * Get the ip of the client (ipv4 or ipv6), or empty ip ("::").
+     * Resolve the real client IP, guarding against spoofed proxy headers.
+     *
+     * Proxy headers (X-Forwarded-For, X-Real-IP) are only honored when the
+     * option "access_ip_proxy" is enabled AND the current REMOTE_ADDR is listed
+     * in the trusted proxies setting ("access_ip_proxy_trusted"). In that case,
+     * Laminas walks the X-Forwarded-For chain right-to-left and returns the
+     * first address that is not a trusted proxy — the real client. Any other
+     * configuration falls back to REMOTE_ADDR.
+     *
+     * @return string Valid IPv4/IPv6, or "::" if nothing usable.
      */
-    protected function getClientIp(): string
+    protected function resolveClientIp(): string
     {
-        // Use $_SERVER['REMOTE_ADDR'], the most reliable.
         $remoteAddress = new RemoteAddress();
-        $ip = $remoteAddress->getIpAddress();
-        if (!$ip) {
+        $remote = $remoteAddress->getIpAddress();
+        if (!$remote || !filter_var($remote, FILTER_VALIDATE_IP)) {
             return '::';
         }
 
-        // A proxy or a htaccess rule can return the server ip, so check it too.
-        // The server itself is a trusted proxy when used in htacess or config (see RemoteAddress::getIpAddressFromProxy()).
+        if (!$this->settings->get('access_ip_proxy')) {
+            return $remote;
+        }
+
+        $trusted = $this->settings->get('access_ip_proxy_trusted', []);
+        if (!is_array($trusted)) {
+            $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
+        }
+        $trusted = array_values(array_filter(
+            array_map('trim', $trusted),
+            fn ($v) => $v !== '' && filter_var(
+                strpos($v, '/') === false ? $v : strtok($v, '/'),
+                FILTER_VALIDATE_IP
+            )
+        ));
+        if (!$trusted || !in_array($remote, $trusted, true)) {
+            return $remote;
+        }
+
+        // Also try X-Real-IP when X-Forwarded-For is absent/empty.
+        if (empty($_SERVER['HTTP_X_FORWARDED_FOR'])
+            && !empty($_SERVER['HTTP_X_REAL_IP'])
+        ) {
+            $realIp = trim((string) $_SERVER['HTTP_X_REAL_IP']);
+            return filter_var($realIp, FILTER_VALIDATE_IP) ? $realIp : $remote;
+        }
+
         $remoteAddress
             ->setUseProxy(true)
-            ->setTrustedProxies([$_SERVER['SERVER_ADDR']]);
-        return $remoteAddress->getIpAddress() ?: '::';
+            ->setTrustedProxies($trusted);
+        $ip = $remoteAddress->getIpAddress();
+        return $ip && filter_var($ip, FILTER_VALIDATE_IP) ? $ip : $remote;
     }
 
     /**

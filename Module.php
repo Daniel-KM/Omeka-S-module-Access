@@ -2302,6 +2302,19 @@ class Module extends AbstractModule
             ));
         }
 
+        if ($optionProxy) {
+            $trusted = $settings->get('access_ip_proxy_trusted', []);
+            if (!is_array($trusted)) {
+                $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
+            }
+            $trusted = array_filter(array_map('trim', $trusted));
+            if (!$trusted) {
+                $messenger->addError(new PsrMessage(
+                    'The proxy option is enabled but no trusted proxy is configured. Any client can forge the header X-Forwarded-For and impersonate an allowed IP. Fill "Trusted proxies" with the internal IP of your reverse proxy.' // @translate
+                ));
+            }
+        }
+
         // Detect private/loopback IPs and the current REMOTE_ADDR in rules.
         $listIps = $settings->get('access_ip_item_sets', []);
         if (!is_array($listIps) || !$listIps) {

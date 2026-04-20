@@ -297,10 +297,25 @@ class ConfigForm extends Form
                 'options' => [
                     'element_group' => 'modes',
                     'label' => 'Check forwarded ip first (in proxy environment)', // @translate
+                    'info' => 'When enabled, the module reads the real client IP from the proxy headers X-Forwarded-For and X-Real-IP. To prevent header spoofing, fill the list of trusted proxies below: the headers are ignored if the direct REMOTE_ADDR is not one of them.', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_ip_proxy',
                     'required' => false,
+                ],
+            ])
+            ->add([
+                'name' => 'access_ip_proxy_trusted',
+                'type' => OmekaElement\ArrayTextarea::class,
+                'options' => [
+                    'element_group' => 'modes',
+                    'label' => 'Trusted proxies (one IP per line)', // @translate
+                    'info' => 'Only requests coming from one of these IPs are allowed to provide X-Forwarded-For / X-Real-IP headers. Without this list the proxy option is ignored (every visitor is seen with REMOTE_ADDR). Put here the internal IPs of your reverse proxy (Traefik, nginx, Docker bridge, load balancer).', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_ip_proxy_trusted',
+                    'rows' => 4,
+                    'placeholder' => "172.18.0.1\n10.0.0.5",
                 ],
             ])
             ->add([
