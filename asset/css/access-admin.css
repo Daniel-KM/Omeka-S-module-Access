@@ -8,6 +8,11 @@
         content:""; /* far fa-unlock-alt */
     }
 
+    .section-nav {
+        height: initial;
+        min-height: 42px;
+    }
+
     .inputs input[name=embargo_start_date],
     .inputs input[name=embargo_end_date],
     .inputs input[name="access[embargo_start_date]"],
