@@ -603,6 +603,7 @@ class Module extends AbstractModule
         }
 
         $this->infoEmbargo();
+        $this->checkIpProxySetting();
 
         $assetUrl = $renderer->plugin('assetUrl');
         $renderer->headLink()
@@ -2271,6 +2272,35 @@ class Module extends AbstractModule
         /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
         $messenger->addSuccess($message);
+    }
+
+    /**
+     * Warn when the reverse-proxy detection does not match the saved option.
+     *
+     * Checks the current admin request for standard proxy headers
+     * (X-Forwarded-For, X-Real-IP) and compares with the option
+     * "access_ip_proxy". Emits a warning when the two disagree so the admin can
+     * enable/disable the option accordingly.
+     */
+    protected function checkIpProxySetting(): void
+    {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+
+        $hasProxyHeader = !empty($_SERVER['HTTP_X_FORWARDED_FOR'])
+            || !empty($_SERVER['HTTP_X_REAL_IP']);
+        $optionProxy = (bool) $settings->get('access_ip_proxy');
+
+        if ($hasProxyHeader && !$optionProxy) {
+            $messenger->addWarning(new PsrMessage(
+                'A reverse proxy is detected (header X-Forwarded-For or X-Real-IP) but the option "Use proxy to get client IP" is disabled: all visitors are seen with the proxy IP. Enable the option to check the real client IP.' // @translate
+            ));
+        } elseif (!$hasProxyHeader && $optionProxy) {
+            $messenger->addWarning(new PsrMessage(
+                'The option "Use proxy to get client IP" is enabled but no reverse proxy header is detected on the current request. Disable the option or verify the proxy configuration.' // @translate
+            ));
+        }
     }
 
     /**

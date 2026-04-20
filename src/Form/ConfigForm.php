@@ -292,6 +292,18 @@ class ConfigForm extends Form
             ])
 
             ->add([
+                'name' => 'access_ip_proxy',
+                'type' => CommonElement\OptionalCheckbox::class,
+                'options' => [
+                    'element_group' => 'modes',
+                    'label' => 'Check forwarded ip first (in proxy environment)', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_ip_proxy',
+                    'required' => false,
+                ],
+            ])
+            ->add([
                 'name' => 'access_ip_item_sets',
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
@@ -308,19 +320,6 @@ class ConfigForm extends Form
                         124.8.16.32 = 17 89 -1940
                         65.43.21.0/24 = -2005
                         TXT,
-                ],
-            ])
-
-            ->add([
-                'name' => 'access_ip_proxy',
-                'type' => CommonElement\OptionalCheckbox::class,
-                'options' => [
-                    'element_group' => 'modes',
-                    'label' => 'Check forwarded ip first (in proxy environment)', // @translate
-                ],
-                'attributes' => [
-                    'id' => 'access_ip_proxy',
-                    'required' => false,
                 ],
             ])
 

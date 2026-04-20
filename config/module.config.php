@@ -348,8 +348,8 @@ return [
                 // 'token',
             ],
 
-            'access_ip_item_sets' => [],
             'access_ip_proxy' => false,
+            'access_ip_item_sets' => [],
 
             'access_auth_sso_idp_item_sets' => [],
 
