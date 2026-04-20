@@ -7,13 +7,17 @@
 
 // Display the access status of a resource.
 
-if (!$accessStatus) return;
-
 $plugins = $this->getHelperPluginManager();
 $translate = $plugins->get('translate');
+$escape = $plugins->get('escapeHtml');
 
-$level = $accessStatus->displayLevel();
-$embargo = $accessStatus->displayEmbargo('medium');
+if ($accessStatus) {
+    $level = $accessStatus->displayLevel();
+    $embargo = $accessStatus->displayEmbargo('medium');
+} else {
+    $level = $escape($translate('Free'));
+    $embargo = null;
+}
 ?>
 
 <div class="meta-group access-status">

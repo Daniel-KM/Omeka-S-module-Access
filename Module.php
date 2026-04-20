@@ -1665,17 +1665,14 @@ class Module extends AbstractModule
          */
         $services = $this->getServiceLocator();
         $plugins = $services->get('ControllerPluginManager');
-        $settings = $services->get('Omeka\Settings');
-
-        $accessViaProperty = (bool) $settings->get('access_property');
-        if ($accessViaProperty) {
-            return;
-        }
 
         $view = $event->getTarget();
         $vars = $view->vars();
 
         $resource = $vars->offsetGet('resource');
+        if (!$resource) {
+            return;
+        }
         $accessStatusForResource = $plugins->get('accessStatus');
         $accessStatus = $accessStatusForResource($resource, true);
 
