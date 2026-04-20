@@ -2301,6 +2301,51 @@ class Module extends AbstractModule
                 'The option "Use proxy to get client IP" is enabled but no reverse proxy header is detected on the current request. Disable the option or verify the proxy configuration.' // @translate
             ));
         }
+
+        // Detect private/loopback IPs and the current REMOTE_ADDR in rules.
+        $listIps = $settings->get('access_ip_item_sets', []);
+        if (!is_array($listIps) || !$listIps) {
+            return;
+        }
+
+        $privates = [];
+        $remoteListed = null;
+        $remote = $_SERVER['REMOTE_ADDR'] ?? null;
+        foreach (array_keys($listIps) as $entry) {
+            $ip = strpos($entry, '/') === false ? $entry : strtok($entry, '/');
+            if ($this->isPrivateOrLoopbackIp($ip)) {
+                $privates[] = $entry;
+            }
+            if ($remote && $entry === $remote) {
+                $remoteListed = $entry;
+            }
+        }
+
+        if ($privates) {
+            $messenger->addWarning(new PsrMessage(
+                'The IP rules contain private or loopback addresses ({ips}). Unless used for a real intranet, they are likely a reverse-proxy/Docker bridge and grant access to every external visitor when the proxy option is disabled.', // @translate
+                ['ips' => implode(', ', $privates)]
+            ));
+        }
+
+        if ($remoteListed && !$optionProxy) {
+            $messenger->addError(new PsrMessage(
+                'The current request comes from IP {ip} which is listed in the IP rules and the proxy option is disabled: this IP likely is the reverse proxy and grants public access to the listed item sets.', // @translate
+                ['ip' => $remoteListed]
+            ));
+        }
+    }
+
+    protected function isPrivateOrLoopbackIp(string $ip): bool
+    {
+        if ($ip === '' || filter_var($ip, FILTER_VALIDATE_IP) === false) {
+            return false;
+        }
+        return filter_var(
+            $ip,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+        ) === false;
     }
 
     /**
