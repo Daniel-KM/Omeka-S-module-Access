@@ -283,6 +283,51 @@ class Module extends AbstractModule
         // Set default htaccess types and try to write the rule.
         $settings->set('access_htaccess_types', ['original', 'large']);
         $this->manageHtaccess(['original', 'large']);
+
+        $this->autoDetectTrustedProxy();
+    }
+
+    /**
+     * Auto-fill the trusted proxy list from the current admin request when the
+     * proxy option is enabled, the list is empty, and proxy headers are
+     * present. Shared by install, upgrade and config form handling.
+     */
+    public function autoDetectTrustedProxy(): bool
+    {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+
+        if (!$settings->get('access_ip_proxy')) {
+            return false;
+        }
+
+        $trusted = $settings->get('access_ip_proxy_trusted', []);
+        if (!is_array($trusted)) {
+            $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
+        }
+        $trusted = array_values(array_filter(array_map('trim', $trusted)));
+        if ($trusted) {
+            return false;
+        }
+
+        $hasProxyHeader = !empty($_SERVER['HTTP_X_FORWARDED_FOR'])
+            || !empty($_SERVER['HTTP_X_REAL_IP']);
+        $remote = $_SERVER['REMOTE_ADDR'] ?? null;
+        if (!$hasProxyHeader
+            || !$remote
+            || !filter_var($remote, FILTER_VALIDATE_IP)
+        ) {
+            return false;
+        }
+
+        $settings->set('access_ip_proxy_trusted', [$remote]);
+        $services->get('ControllerPluginManager')->get('messenger')->addSuccess(
+            new PsrMessage(
+                'Trusted proxy automatically detected and added: {ip}. Review and adjust the list if more than one proxy is involved.', // @translate
+                ['ip' => $remote]
+            )
+        );
+        return true;
     }
 
     public function onBootstrap(MvcEvent $event): void
@@ -685,6 +730,8 @@ class Module extends AbstractModule
                 'Access settings affecting indexation changed. You should reindex metadata via the job "Reindex database" in the tab Tasks.' // @translate
             ));
         }
+
+        $this->autoDetectTrustedProxy();
 
         // Write the .htaccess rule according to the saved setting.
         if (!$settings->get('access_htaccess_skip')) {
