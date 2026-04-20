@@ -202,7 +202,7 @@ class Module extends AbstractModule
                 ['module' => 'AccessResource']
             );
             $messenger->addError($message);
-            throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $message);
+            throw new \Omeka\Module\Exception\ModuleCannotInstallException();
         }
 
         // Upgrade the database with new features since 3.4.17.1.

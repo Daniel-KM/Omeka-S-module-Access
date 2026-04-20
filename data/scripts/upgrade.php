@@ -525,3 +525,37 @@ if (version_compare($oldVersion, '3.4.41', '<')) {
         $siteSettings->set('access_placement', ['after/items', 'after/media', 'after/item_sets', 'browse/items', 'browse/item_sets']);
     }
 }
+
+if (version_compare($oldVersion, '3.4.42', '<')) {
+    $message = new PsrMessage(
+        'The module configuration now warns when a reverse proxy is detected but no trusted proxy is configured, when private/loopback IPs are listed in access rules, or when the current request IP matches a rule. Review the Access config page to check these warnings.' // @translate
+    );
+    $messenger->addWarning($message);
+
+    $message = new PsrMessage(
+        'A new sidebar allows to search quickly in access requests when individual mode is enabled.' // @translate
+    );
+    $messenger->addSuccess($message);
+
+    $message = new PsrMessage(
+        'The access status of a resource is now displayed in the right sidebar of admin resource.' // @translate
+    );
+    $messenger->addSuccess($message);
+
+    $message = new PsrMessage(
+        'A new authorization endpoint is available at url /access/authorize for external services to check access to a media. It can be used by any third party media or image server like Cantaloupe.' // @translate
+    );
+    $messenger->addSuccess($message);
+
+    // The boolean option access_ip_proxy has been replaced by the presence of
+    // entries in access_ip_proxy_trusted. A non-empty list enables the proxy
+    // mode; an empty list disables it.
+    $settings->delete('access_ip_proxy');
+
+    $message = new PsrMessage(
+        'Proxy header handling has been hardened against spoofing. The boolean option "Use proxy to get client IP" has been removed: fill the new setting "Trusted proxies" with the internal IPs of the reverse proxy to enable proxy mode. X-Forwarded-For / X-Real-IP are only honored when the request comes from a listed IP. Without it, every visitor is seen with REMOTE_ADDR.' // @translate
+    );
+    $messenger->addWarning($message);
+
+    $this->autoDetectTrustedProxy();
+}
