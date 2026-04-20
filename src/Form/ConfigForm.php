@@ -358,6 +358,15 @@ class ConfigForm extends Form
             ])
 
             ->add([
+                'name' => 'access_embargo_note',
+                'type' => CommonElement\Note::class,
+                'options' => [
+                    'element_group' => 'embargo',
+                    'text' => 'Specify what the metadata for embargo becomes when the date is reached.', // @translate
+                ],
+            ])
+
+            ->add([
                 'name' => 'access_embargo_bypass',
                 'type' => CommonElement\OptionalCheckbox::class,
                 'options' => [
