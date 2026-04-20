@@ -456,6 +456,63 @@ the user identified via the second ip has access to item sets #17 and #89, but
 not to item set #1940. The federation has access to all items, except those of
 item set 2005.
 
+#### Reverse proxy and private IPs
+
+When Omeka S is behind a reverse proxy (Traefik, nginx, Apache, Docker bridge,
+load balancer), fill the field "Trusted proxies" with the internal IPs of
+your reverse proxy. The module then reads `X-Forwarded-For` or `X-Real-IP`
+instead of the proxy socket address — but only when the request comes from
+one of these trusted IPs, to prevent header spoofing. Without this list,
+every visitor is seen with the proxy IP and, if that IP is listed in the
+rules, all visitors inherit the rights attached to it.
+
+The trusted proxy is auto-detected on install, on upgrade and on config
+form submit: if the list is empty and proxy headers are present on the
+current admin request, `REMOTE_ADDR` is added automatically. An existing
+list is never overwritten.
+
+The configuration page warns automatically when:
+- a reverse proxy header is detected but no trusted proxy is configured;
+- trusted proxies are configured but no proxy header is detected on the
+  current request;
+- a private or loopback IP (RFC1918, 127/8, fc00::/7, link-local, etc.)
+  is listed in the access rules — typical sign of a Docker bridge or
+  internal proxy leaking to external visitors;
+- the IP of the current administrator request is itself listed in the
+  access rules and no trusted proxy is configured (critical: indicates a
+  proxy bypass).
+
+#### Authorization endpoint for external services
+
+The module exposes a lightweight endpoint at `/access/authorize` returning
+the authorization result as an HTTP status code with an empty body:
+
+- `200`: access allowed
+- `403`: access denied
+- `404`: media not found
+
+Accepts one of the following query parameters:
+
+- `media=<id>`: internal media id
+- `storage=<storage_id>`: storage_id (filename without extension)
+- `filename=<storage_id.ext>`: full filename
+
+It reuses the same `isAllowedMediaContent` logic as the main controller
+(IP rules, embargo, individual requests, SSO IdP, etc.). The setting
+"Trusted proxies" applies, so the endpoint honors `X-Forwarded-For` /
+`X-Real-IP` only when the calling service (Cantaloupe, Traefik,
+nginx auth_request) is listed as a trusted proxy.
+
+Typical uses: Cantaloupe delegate script, Traefik ForwardAuth, nginx
+`auth_request`, Apache auth subrequest. Without such a check, an IIIF
+image server reverse-proxied on `/iiif/*` fully bypasses Omeka and Access.
+
+A ready-to-use Cantaloupe delegate script is provided at
+[`data/delegates/cantaloupe.rb`](data/delegates/cantaloupe.rb).
+Adjust the `OMEKA_AUTHORIZE_URL` constant and point Cantaloupe at it via
+`delegate_script.pathname`. The Cantaloupe server IP must be listed in
+"Trusted proxies" in the Omeka Access configuration.
+
 #### Example for the access mode "sso idp"
 
 ```
@@ -511,6 +568,14 @@ The job does not update the resource when the visibility is not logical, for
 example when the resource have been set public with a date of end of embargo.
 Of course, don't set a date of end of embargo if the record is not ready or when
 it should remain private.
+
+### Status display in admin sidebar
+
+The access status (level and, if any, embargo dates) is displayed in the
+right sidebar of the admin pages `item/show`, `item-set/show` and
+`media/show`, and also in the resource details sidebar (popup). When a
+resource has no row in `access_status`, the default level `free` is shown,
+matching the module runtime behavior (absence of status = free).
 
 ### Management of requests
 
