@@ -5,6 +5,7 @@ namespace Access\Controller\Admin;
 use Access\Controller\AccessTrait;
 use Access\Entity\AccessRequest;
 use Access\Form\Admin\AccessRequestForm;
+use Access\Form\Admin\QuickSearchAccessRequestForm;
 use Common\Mvc\Controller\Plugin\JSend;
 use Common\Stdlib\PsrMessage;
 use Doctrine\ORM\EntityManager;
@@ -43,8 +44,9 @@ class RequestController extends AbstractActionController
 
     public function browseAction()
     {
+        $query = $this->params()->fromQuery();
         $this->browse()->setDefaults('access_requests');
-        $response = $this->api()->search('access_requests', $this->params()->fromQuery());
+        $response = $this->api()->search('access_requests', $query);
         $this->paginator($response->getTotalResults());
 
         // Set the return query for batch actions. Note that we remove the page
@@ -57,14 +59,12 @@ class RequestController extends AbstractActionController
         $formDeleteSelected = $this->getForm(ConfirmForm::class);
         $formDeleteSelected
             ->setAttribute('action', $this->url()->fromRoute(null, ['action' => 'batch-delete'], ['query' => $returnQuery], true))
-            ->setAttribute('id', 'confirm-delete-selected')
             ->setButtonLabel('Confirm Delete'); // @translate
 
         /** @var \Omeka\Form\ConfirmForm $formDeleteAll */
         $formDeleteAll = $this->getForm(ConfirmForm::class);
         $formDeleteAll
             ->setAttribute('action', $this->url()->fromRoute(null, ['action' => 'batch-delete-all'], ['query' => $returnQuery], true))
-            ->setAttribute('id', 'confirm-delete-all')
             ->setButtonLabel('Confirm Delete'); // @translate
         $formDeleteAll
             ->get('submit')->setAttribute('disabled', true);
@@ -72,12 +72,17 @@ class RequestController extends AbstractActionController
         $accessModes = $this->settings()->get('access_modes') ?: [];
         $allowIndividualRequests = (bool) array_intersect($accessModes, ['user', 'email', 'token']);
 
+        $formSearch = $this->getForm(QuickSearchAccessRequestForm::class);
+        $formSearch->setAttribute('action', $this->url()->fromRoute(null, ['action' => 'browse'], true));
+        $formSearch->setData($query);
+
         $accessRequests = $response->getContent();
         return new ViewModel([
             'accessRequests' => $accessRequests,
             'resources' => $accessRequests,
             'formDeleteSelected' => $formDeleteSelected,
             'formDeleteAll' => $formDeleteAll,
+            'formSearch' => $formSearch,
             'returnQuery' => $returnQuery,
             'allowIndividualRequests' => $allowIndividualRequests,
         ]);

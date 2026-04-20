@@ -55,6 +55,8 @@ return [
     'form_elements' => [
         'invokables' => [
             Form\AccessRequestFieldset::class => Form\AccessRequestFieldset::class,
+            Form\Admin\QuickSearchAccessLogForm::class => Form\Admin\QuickSearchAccessLogForm::class,
+            Form\Admin\QuickSearchAccessRequestForm::class => Form\Admin\QuickSearchAccessRequestForm::class,
             Form\ConfigForm::class => Form\ConfigForm::class,
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,
         ],

@@ -2,6 +2,7 @@
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var \Access\Entity\AccessLog[] $accessLogs
+ * @var \Access\Form\Admin\QuickSearchAccessLogForm $formSearch
  */
 
 $plugins = $this->getHelperPluginManager();
@@ -15,7 +16,10 @@ $hyperlink= $plugins->get('hyperlink');
 
 $this->headLink()
     ->appendStylesheet($assetUrl('css/common-dialog-admin.css', 'Common'))
+    ->appendStylesheet($assetUrl('css/common-quick-search.css', 'Common'))
     ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
+$this->headScript()
+    ->appendFile($assetUrl('js/common-quick-search.js', 'Common'), 'text/javascript', ['defer' => 'defer']);
 
 $this->htmlElement('body')->appendAttribute('class', 'access access-logs browse');
 ?>
@@ -26,10 +30,12 @@ $this->htmlElement('body')->appendAttribute('class', 'access access-logs browse'
 <p class="messages"><span class="warning"><?= $translate('Individual access modes (single user, email, token) are not enabled.') ?></span></p>
 <?php endif; ?>
 
+<div class="browse-controls">
+    <?= $this->pagination() ?>
+    <button type="button" class="button search quick-search"><?= $escape($translate('Quick filter')) ?></button>
+</div>
+
 <?php if (count($accessLogs)): ?>
-    <div class="browse-controls">
-        <?= $this->pagination() ?>
-    </div>
     <?php $this->trigger('view.browse.before'); ?>
 
     <table class="tablesaw" data-tablesaw-mode="stack">
@@ -74,3 +80,8 @@ $this->htmlElement('body')->appendAttribute('class', 'access access-logs browse'
     <p><?= $escape($translate('No access records yet.')); ?> <a href="<?= $this->url(null, [], true); ?>"><?= $escape($translate('Refresh page')); ?></a></p>
 
 <?php endif; ?>
+
+<?= $this->partial('common/quick-search-sidebar', [
+    'formSearch' => $formSearch,
+    'title' => $translate('Filter access logs'),
+]) ?>
