@@ -289,17 +289,13 @@ class Module extends AbstractModule
 
     /**
      * Auto-fill the trusted proxy list from the current admin request when the
-     * proxy option is enabled, the list is empty, and proxy headers are
-     * present. Shared by install, upgrade and config form handling.
+     * list is empty and proxy headers are present. Shared by install, upgrade
+     * and config form handling.
      */
     public function autoDetectTrustedProxy(): bool
     {
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
-
-        if (!$settings->get('access_ip_proxy')) {
-            return false;
-        }
 
         $trusted = $settings->get('access_ip_proxy_trusted', []);
         if (!is_array($trusted)) {
@@ -2322,12 +2318,9 @@ class Module extends AbstractModule
     }
 
     /**
-     * Warn when the reverse-proxy detection does not match the saved option.
-     *
-     * Checks the current admin request for standard proxy headers
-     * (X-Forwarded-For, X-Real-IP) and compares with the option
-     * "access_ip_proxy". Emits a warning when the two disagree so the admin can
-     * enable/disable the option accordingly.
+     * Warn when the reverse-proxy detection does not match the saved trusted
+     * proxies list, when private IPs are listed in rules, or when the current
+     * request IP matches a rule (likely bypass).
      */
     protected function checkIpProxySetting(): void
     {
@@ -2337,29 +2330,21 @@ class Module extends AbstractModule
 
         $hasProxyHeader = !empty($_SERVER['HTTP_X_FORWARDED_FOR'])
             || !empty($_SERVER['HTTP_X_REAL_IP']);
-        $optionProxy = (bool) $settings->get('access_ip_proxy');
-
-        if ($hasProxyHeader && !$optionProxy) {
-            $messenger->addWarning(new PsrMessage(
-                'A reverse proxy is detected (header X-Forwarded-For or X-Real-IP) but the option "Use proxy to get client IP" is disabled: all visitors are seen with the proxy IP. Enable the option to check the real client IP.' // @translate
-            ));
-        } elseif (!$hasProxyHeader && $optionProxy) {
-            $messenger->addWarning(new PsrMessage(
-                'The option "Use proxy to get client IP" is enabled but no reverse proxy header is detected on the current request. Disable the option or verify the proxy configuration.' // @translate
-            ));
+        $trusted = $settings->get('access_ip_proxy_trusted', []);
+        if (!is_array($trusted)) {
+            $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
         }
+        $trusted = array_values(array_filter(array_map('trim', $trusted)));
+        $proxyActive = (bool) $trusted;
 
-        if ($optionProxy) {
-            $trusted = $settings->get('access_ip_proxy_trusted', []);
-            if (!is_array($trusted)) {
-                $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
-            }
-            $trusted = array_filter(array_map('trim', $trusted));
-            if (!$trusted) {
-                $messenger->addError(new PsrMessage(
-                    'The proxy option is enabled but no trusted proxy is configured. Any client can forge the header X-Forwarded-For and impersonate an allowed IP. Fill "Trusted proxies" with the internal IP of your reverse proxy.' // @translate
-                ));
-            }
+        if ($hasProxyHeader && !$proxyActive) {
+            $messenger->addWarning(new PsrMessage(
+                'A reverse proxy is detected (header X-Forwarded-For or X-Real-IP) but no trusted proxy is configured: all visitors are seen with the proxy IP. Fill "Trusted proxies" with the internal IP of your reverse proxy.' // @translate
+            ));
+        } elseif (!$hasProxyHeader && $proxyActive) {
+            $messenger->addWarning(new PsrMessage(
+                'Trusted proxies are configured but no reverse proxy header is detected on the current request. Clear the list or verify the proxy configuration.' // @translate
+            ));
         }
 
         // Detect private/loopback IPs and the current REMOTE_ADDR in rules.
@@ -2383,14 +2368,14 @@ class Module extends AbstractModule
 
         if ($privates) {
             $messenger->addWarning(new PsrMessage(
-                'The IP rules contain private or loopback addresses ({ips}). Unless used for a real intranet, they are likely a reverse-proxy/Docker bridge and grant access to every external visitor when the proxy option is disabled.', // @translate
+                'The IP rules contain private or loopback addresses ({ips}). Unless used for a real intranet, they are likely a reverse-proxy/Docker bridge and grant access to every external visitor when no trusted proxy is configured.', // @translate
                 ['ips' => implode(', ', $privates)]
             ));
         }
 
-        if ($remoteListed && !$optionProxy) {
+        if ($remoteListed && !$proxyActive) {
             $messenger->addError(new PsrMessage(
-                'The current request comes from IP {ip} which is listed in the IP rules and the proxy option is disabled: this IP likely is the reverse proxy and grants public access to the listed item sets.', // @translate
+                'The current request comes from IP {ip} which is listed in the IP rules and no trusted proxy is configured: this IP likely is the reverse proxy and grants public access to the listed item sets.', // @translate
                 ['ip' => $remoteListed]
             ));
         }

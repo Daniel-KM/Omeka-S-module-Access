@@ -350,7 +350,6 @@ return [
                 // 'token',
             ],
 
-            'access_ip_proxy' => false,
             'access_ip_proxy_trusted' => [],
             'access_ip_item_sets' => [],
 

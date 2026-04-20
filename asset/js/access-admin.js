@@ -134,10 +134,10 @@
             const element = $('input[name="access_modes[]"][value=ip]');
             if (element.prop('checked')) {
                 $('#access_ip_item_sets').closest('.field').show(300);
-                $('#access_ip_proxy').closest('.field').show(300);
+                $('#access_ip_proxy_trusted').closest('.field').show(300);
             } else {
                 $('#access_ip_item_sets').closest('.field').hide(300);
-                $('#access_ip_proxy').closest('.field').hide(300);
+                $('#access_ip_proxy_trusted').closest('.field').hide(300);
             }
         }
 

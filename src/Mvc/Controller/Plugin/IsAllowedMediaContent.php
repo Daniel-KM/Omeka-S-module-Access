@@ -369,11 +369,10 @@ class IsAllowedMediaContent extends AbstractPlugin
      * Resolve the real client IP, guarding against spoofed proxy headers.
      *
      * Proxy headers (X-Forwarded-For, X-Real-IP) are only honored when the
-     * option "access_ip_proxy" is enabled AND the current REMOTE_ADDR is listed
-     * in the trusted proxies setting ("access_ip_proxy_trusted"). In that case,
-     * Laminas walks the X-Forwarded-For chain right-to-left and returns the
-     * first address that is not a trusted proxy — the real client. Any other
-     * configuration falls back to REMOTE_ADDR.
+     * setting "access_ip_proxy_trusted" lists at least one address and the
+     * current REMOTE_ADDR is in it. In that case, Laminas walks the
+     * X-Forwarded-For chain right-to-left and returns the first address that is
+     * not a trusted proxy — the real client. Otherwise, REMOTE_ADDR.
      *
      * @return string Valid IPv4/IPv6, or "::" if nothing usable.
      */
@@ -383,10 +382,6 @@ class IsAllowedMediaContent extends AbstractPlugin
         $remote = $remoteAddress->getIpAddress();
         if (!$remote || !filter_var($remote, FILTER_VALIDATE_IP)) {
             return '::';
-        }
-
-        if (!$this->settings->get('access_ip_proxy')) {
-            return $remote;
         }
 
         $trusted = $this->settings->get('access_ip_proxy_trusted', []);
