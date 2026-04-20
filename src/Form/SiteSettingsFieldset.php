@@ -23,7 +23,7 @@ class SiteSettingsFieldset extends Fieldset
                 'type' => CommonElement\OptionalMultiCheckbox::class,
                 'options' => [
                     'element_group' => 'themes_old',
-                    'label' => 'Access (old themes)', // @translate
+                    'label' => 'Access', // @translate
                     'value_options' => [
                         'after/items' => 'Item show', // @translate
                         'after/media' => 'Media show', // @translate
