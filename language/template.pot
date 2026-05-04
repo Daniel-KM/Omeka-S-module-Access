@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-20 00:00+0000\n"
+"POT-Creation-Date: 2026-05-04 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,35 +31,35 @@ msgstr ""
 msgid "Missing requirement. Unable to upgrade."
 msgstr ""
 
-#: Module.php:186
+#: Module.php:202
 msgid ""
 "To be automatically upgraded and replaced by this module, the module "
 "\"Access Resource\" should be upgraded first to version 3.4.17.1. Else "
 "uninstall it first, but you will lose access statuses and requests."
 msgstr ""
 
-#: Module.php:192
+#: Module.php:208
 msgid ""
 "To be automatically upgraded and replaced by this module, the module "
 "\"Access Resource\" should be downgraded first to version 3.4.17.1. Else "
 "uninstall it first, but you will lose access statuses and requests."
 msgstr ""
 
-#: Module.php:683
+#: Module.php:699
 msgid "Tasks"
 msgstr ""
 
-#: Module.php:772
+#: Module.php:788
 msgid ""
 "When properties are used, three properties should be defined for \"level\", "
 "\"embargo start\" and \"embargo end\"."
 msgstr ""
 
-#: Module.php:795
+#: Module.php:811
 msgid "Job is not launched: no option was set."
 msgstr ""
 
-#: Module.php:1887 view/access/admin/log/browse.phtml:27
+#: Module.php:1903 view/access/admin/log/browse.phtml:27
 #: view/access/admin/request/browse.phtml:35
 #: view/access/admin/request/edit.phtml:30
 #: view/access/admin/request/edit.phtml:31
@@ -67,7 +67,7 @@ msgstr ""
 msgid "Access"
 msgstr ""
 
-#: Module.php:1917 view/access/site/request/browse.phtml:38
+#: Module.php:1933 view/access/site/request/browse.phtml:38
 msgid "Access requests"
 msgstr ""
 
@@ -422,7 +422,7 @@ msgid ""
 "for authorized users); resource should not be under embargo."
 msgstr ""
 
-#: data/scripts/upgrade.php:458 Module.php:2185
+#: data/scripts/upgrade.php:458 Module.php:2230
 msgid ""
 "The .htaccess rule is managed by the module and protects file types: {types}."
 msgstr ""
@@ -492,44 +492,44 @@ msgid ""
 "comes from a listed IP. Without it, every visitor is seen with REMOTE_ADDR."
 msgstr ""
 
-#: Module.php:97
+#: Module.php:98
 msgid ""
 "Access module: the .htaccess is not writable; the rewrite rule was not "
 "removed during uninstall."
 msgstr ""
 
-#: Module.php:140
+#: Module.php:156
 msgid ""
 "The Access rule has been converted to an Analytics download rule for file "
 "types: {types}."
 msgstr ""
 
-#: Module.php:201
+#: Module.php:217
 msgid ""
 "An error occurred during migration of module \"{module}\". Check the config "
 "and uninstall it manually."
 msgstr ""
 
-#: Module.php:241
+#: Module.php:257
 msgid ""
 "This module cannot install its tables, because they exist already. Try to "
 "remove them first."
 msgstr ""
 
-#: Module.php:271
+#: Module.php:287
 msgid ""
 "It is recommended to run the job in config form to initialize all access "
 "statuses."
 msgstr ""
 
-#: Module.php:276
+#: Module.php:292
 msgid ""
 "Choose the storage mode for access level and embargo in the module "
 "configuration: either as resource metadata (default) or as property values "
 "on the resource."
 msgstr ""
 
-#: Module.php:280
+#: Module.php:296
 msgid ""
 "Files are not protected until the Apache .htaccess is configured. The module "
 "will try to write the rewrite rule automatically; otherwise edit "
@@ -537,31 +537,31 @@ msgid ""
 "the README for details."
 msgstr ""
 
-#: Module.php:322
+#: Module.php:338
 msgid ""
 "Trusted proxy automatically detected and added: {ip}. Review and adjust the "
 "list if more than one proxy is involved."
 msgstr ""
 
-#: Module.php:640
+#: Module.php:656
 msgid ""
 "The automatic management of .htaccess is disabled in config. Apache "
 "redirections must be configured manually."
 msgstr ""
 
-#: Module.php:726
+#: Module.php:742
 msgid ""
 "Access settings affecting indexation changed. You should reindex metadata "
 "via the job \"Reindex database\" in the tab Tasks."
 msgstr ""
 
-#: Module.php:925
+#: Module.php:941
 msgid ""
 "Cleaned params used for Access:\n"
 "{json}"
 msgstr ""
 
-#: Module.php:1142
+#: Module.php:1158
 msgid ""
 "The access level of the item #{item_id} differs from the access level of its "
 "medias #{media_ids}. You can set a specific level for each media via their "
@@ -569,7 +569,7 @@ msgid ""
 "tab of the item."
 msgstr ""
 
-#: Module.php:1147
+#: Module.php:1163
 msgid ""
 "The access level of the item #{item_id} differs from the access level of its "
 "medias #{media_ids}. You can set a specific level in the \"Advanced\" tab of "
@@ -577,225 +577,233 @@ msgid ""
 "of the item."
 msgstr ""
 
-#: Module.php:1485 src/Controller/Admin/RequestController.php:198
+#: Module.php:1501 src/Controller/Admin/RequestController.php:198
 msgid "You should set either a user or an email or check box for token."
 msgstr ""
 
-#: Module.php:1508 src/Controller/Admin/RequestController.php:224
+#: Module.php:1524 src/Controller/Admin/RequestController.php:224
 msgid "Access request successfully created."
 msgstr ""
 
-#: Module.php:1585 src/Form/Admin/BatchEditFieldset.php:51
+#: Module.php:1601 src/Form/Admin/BatchEditFieldset.php:51
 msgid "Reserved"
 msgstr ""
 
-#: Module.php:1586 src/Form/Admin/BatchEditFieldset.php:52
+#: Module.php:1602 src/Form/Admin/BatchEditFieldset.php:52
 msgid "Protected"
 msgstr ""
 
-#: Module.php:1601 src/ColumnType/AccessLevel.php:13
+#: Module.php:1617 src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr ""
 
-#: Module.php:1615 src/Form/Admin/BatchEditFieldset.php:89
+#: Module.php:1631 src/Form/Admin/BatchEditFieldset.php:89
 msgid "Embargo start"
 msgstr ""
 
-#: Module.php:1632 Module.php:1640 src/Form/Admin/BatchEditFieldset.php:134
+#: Module.php:1648 Module.php:1656 src/Form/Admin/BatchEditFieldset.php:134
 msgid "Embargo end"
 msgstr ""
 
-#: Module.php:1650
+#: Module.php:1666
 #, php-format
 msgid "Access level (managed via property %s)"
 msgstr ""
 
-#: Module.php:1653
+#: Module.php:1669
 #, php-format
 msgid "Embargo start (managed via property %s)"
 msgstr ""
 
-#: Module.php:1656
+#: Module.php:1672
 #, php-format
 msgid "Embargo end (managed via property %s)"
 msgstr ""
 
-#: Module.php:1667
+#: Module.php:1683
 msgid "Copy access level and embargo to items and medias"
 msgstr ""
 
-#: Module.php:1668
+#: Module.php:1684
 msgid "Copy access level and embargo to medias"
 msgstr ""
 
-#: Module.php:1676
+#: Module.php:1692
 msgid "New medias only"
 msgstr ""
 
-#: Module.php:1677
+#: Module.php:1693
 msgid "All medias"
 msgstr ""
 
-#: Module.php:2041
+#: Module.php:2057
 msgid "Access: Reindex resources"
 msgstr ""
 
-#: Module.php:2049
+#: Module.php:2065
 msgid "Options to reindex accesses"
 msgstr ""
 
-#: Module.php:2091
+#: Module.php:2107
 msgid "The file .htaccess is not readable at the root of Omeka."
 msgstr ""
 
-#: Module.php:2168
+#: Module.php:2197
 msgid ""
 "A legacy .htaccess rule protects file types \"{types}\" but is not managed "
 "by the module. Save the configuration to convert it to the managed format."
 msgstr ""
 
-#: Module.php:2175
+#: Module.php:2208
+msgid ""
+"The file .htaccess is not writable, so the rule for types \"{types}\" set "
+"below could not be applied. Add the following lines manually in the "
+"file .htaccess at the root of Omeka, just after \"RewriteEngine On\":"
+"{line_break}{rule}"
+msgstr ""
+
+#: Module.php:2220
 msgid ""
 "No .htaccess rule is set to protect files. To control access to files, add "
 "the following lines in the file .htaccess at the root of Omeka, just after "
 "\"RewriteEngine On\":{line_break}{rule}"
 msgstr ""
 
-#: Module.php:2222
+#: Module.php:2272
 msgid ""
 "The file .htaccess is not writable. Add the following lines manually in the "
 "file .htaccess at the root of Omeka, just after \"RewriteEngine On\":"
 "{line_break}{rule}"
 msgstr ""
 
-#: Module.php:2232
+#: Module.php:2282
 msgid ""
 "The file .htaccess is not writable. Remove the lines starting with \"{marker}"
 "\" manually from the file .htaccess at the root of Omeka."
 msgstr ""
 
-#: Module.php:2269
+#: Module.php:2332
 msgid "The .htaccess rule has been updated to protect file types: {types}."
 msgstr ""
 
-#: Module.php:2275
+#: Module.php:2338
 msgid "The .htaccess rule for file protection has been removed."
 msgstr ""
 
-#: Module.php:2291
+#: Module.php:2354
 msgid ""
 "According to setting, when embargo ends, the access level is set to \"free\" "
 "and the embargo dates are cleared."
 msgstr ""
 
-#: Module.php:2295
+#: Module.php:2358
 msgid ""
 "According to setting, when embargo ends, the access level is set to \"free\" "
 "and the embargo dates are kept."
 msgstr ""
 
-#: Module.php:2299
+#: Module.php:2362
 msgid ""
 "According to setting, when embargo ends, the access level is set to the "
 "level under (\"free\" for reserved, \"reserved\" for protected/forbidden) "
 "and the embargo dates are cleared."
 msgstr ""
 
-#: Module.php:2303
+#: Module.php:2366
 msgid ""
 "According to setting, when embargo ends, the access level is set to the "
 "level under (\"free\" for reserved, \"reserved\" for protected/forbidden) "
 "and the embargo dates are kept."
 msgstr ""
 
-#: Module.php:2307
+#: Module.php:2370
 msgid ""
 "According to setting, when embargo ends, the access level is kept and the "
 "embargo dates are cleared."
 msgstr ""
 
-#: Module.php:2311
+#: Module.php:2374
 msgid ""
 "According to setting, when embargo ends, the access level and the embargo "
 "dates are kept."
 msgstr ""
 
-#: Module.php:2342
+#: Module.php:2405
 msgid ""
 "A reverse proxy is detected (header X-Forwarded-For or X-Real-IP) but no "
 "trusted proxy is configured: all visitors are seen with the proxy IP. Fill "
 "\"Trusted proxies\" with the internal IP of your reverse proxy."
 msgstr ""
 
-#: Module.php:2346
+#: Module.php:2409
 msgid ""
 "Trusted proxies are configured but no reverse proxy header is detected on "
 "the current request. Clear the list or verify the proxy configuration."
 msgstr ""
 
-#: Module.php:2371
+#: Module.php:2434
 msgid ""
 "The IP rules contain private or loopback addresses ({ips}). Unless used for "
 "a real intranet, they are likely a reverse-proxy/Docker bridge and grant "
 "access to every external visitor when no trusted proxy is configured."
 msgstr ""
 
-#: Module.php:2378
+#: Module.php:2441
 msgid ""
 "The current request comes from IP {ip} which is listed in the IP rules and "
 "no trusted proxy is configured: this IP likely is the reverse proxy and "
 "grants public access to the listed item sets."
 msgstr ""
 
-#: Module.php:2441
+#: Module.php:2504
 msgid ""
 "A job was launched in background to update access statuses according to "
 "parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end})."
 msgstr ""
 
-#: Module.php:2483
+#: Module.php:2546
 msgid "The ip \"{ip}\" is empty or invalid."
 msgstr ""
 
-#: Module.php:2493
+#: Module.php:2556
 msgid ""
 "The item sets list \"{input}\" for ip {ip} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
 msgstr ""
 
-#: Module.php:2504
+#: Module.php:2567
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains duplicate item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:2516
+#: Module.php:2579
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains unknown item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:2657
+#: Module.php:2720
 msgid "No idps are defined. Check the config of module Single Sign-On first."
 msgstr ""
 
-#: Module.php:2674
+#: Module.php:2737
 msgid "The idp \"{idp}\" is empty or not defined in module Single Sign-On."
 msgstr ""
 
-#: Module.php:2684
+#: Module.php:2747
 msgid ""
 "The item sets list \"{input}\" for idp {idp} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
 msgstr ""
 
-#: Module.php:2695
+#: Module.php:2758
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains duplicate item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:2707
+#: Module.php:2770
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains unknown item sets "
 "({list})."
