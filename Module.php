@@ -2157,17 +2157,45 @@ class Module extends AbstractModule
 
         // Read mode: sync setting from .htaccess state and display info.
         if (!$isWriteMode) {
-            // Split detected types into standard (checkboxes) and custom (text).
+            // Split detected types into standard (checkboxes) and custom
+            // (text).
             $standardCurrent = array_values(array_intersect($currentTypes, $knownStandardTypes));
             $customCurrent = array_values(array_diff($currentTypes, $knownStandardTypes));
-            $settings->set('access_htaccess_types', $standardCurrent);
-            $settings->set('access_htaccess_custom_types', implode(' ', $customCurrent));
+
+            // Do not overwrite saved settings from an empty .htaccess when the
+            // file is not writable: the saved value is the user's intent that
+            // the module could not apply (manual edit required).
+            $savedTypes = $settings->get('access_htaccess_types', []);
+            $savedCustom = (string) $settings->get('access_htaccess_custom_types', '');
+            $unwritableMismatch = !$isWritable
+                && empty($currentTypes)
+                && (!empty($savedTypes) || $savedCustom !== '');
+            if (!$unwritableMismatch) {
+                $settings->set('access_htaccess_types', $standardCurrent);
+                $settings->set('access_htaccess_custom_types', implode(' ', $customCurrent));
+            }
 
             if ($hasLegacyRule) {
                 $message = new PsrMessage(
                     'A legacy .htaccess rule protects file types "{types}" but is not managed by the module. Save the configuration to convert it to the managed format.', // @translate
                     ['types' => implode(', ', $currentTypes)]
                 );
+                $messenger->addWarning($message);
+            } elseif ($unwritableMismatch) {
+                $wantedTypes = array_values(array_unique(array_merge(
+                    $savedTypes,
+                    array_filter(array_map('trim', preg_split('/[\s,|]+/', $savedCustom)))
+                )));
+                $exampleRule = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(' . implode('|', $wantedTypes) . ')/(.*)$" "access/files/$1/$2" [' . $flags . ']';
+                $message = new PsrMessage(
+                    'The file .htaccess is not writable, so the rule for types "{types}" set below could not be applied. Add the following lines manually in the file .htaccess at the root of Omeka, just after "RewriteEngine On":{line_break}{rule}', // @translate
+                    [
+                        'types' => implode(', ', $wantedTypes),
+                        'line_break' => '<br><pre>',
+                        'rule' => htmlspecialchars($exampleRule) . '</pre>',
+                    ]
+                );
+                $message->setEscapeHtml(false);
                 $messenger->addWarning($message);
             } elseif (empty($currentTypes)) {
                 $exampleRule = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [' . $flags . ']';
