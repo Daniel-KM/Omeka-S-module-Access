@@ -2,6 +2,8 @@
 /**
  * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var \Access\Api\Representation\AccessRequestRepresentation[] $accessRequests
+ * @var string|null $pageTitle Optional override of the page title (used by
+ *     the personal "my requests" view).
  *
  * @see view/common/access-request-list.phtml
  */
@@ -11,9 +13,18 @@ $i18n = $plugins->get('i18n');
 $escape = $plugins->get('escapeHtml');
 $assetUrl = $plugins->get('assetUrl');
 $translate = $plugins->get('translate');
+$siteSetting = $plugins->get('siteSetting');
 $user = $plugins->get('identity')();
 $breadcrumbs = $plugins->has('breadcrumbs') ? $plugins->get('breadcrumbs') : null;
 $guestNavigation = $user && $plugins->has('guestNavigation') ? $plugins->get('guestNavigation')() : null;
+
+$title = (string) ($pageTitle ?? '');
+if ($title === '') {
+    $title = (string) $siteSetting('access_label', '');
+}
+if ($title === '') {
+    $title = $translate('Access requests'); // @translate
+}
 
 $hasGuestNav = $guestNavigation && $guestNavigation->getContainer()->count();
 
@@ -35,7 +46,7 @@ $this->htmlElement('body')->appendAttribute('class', 'access-requests browse');
 </nav>
 <?php endif; ?>
 
-<?= $this->pageTitle($translate('Access requests')) ?>
+<?= $this->pageTitle($title) ?>
 
 <?php if (count($accessRequests)): ?>
 

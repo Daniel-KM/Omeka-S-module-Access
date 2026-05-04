@@ -4,9 +4,16 @@
  * @var \Access\Api\Representation\AccessRequestRepresentation[] $accessRequests
  */
 
+$translate = $this->plugin('translate');
+$pageTitle = (string) $this->siteSetting('access_label_guest', '');
+if ($pageTitle === '') {
+    $pageTitle = $translate('My access requests'); // @translate
+}
+
 echo $this->partial('access/site/request/browse', [
     'accessRequests' => $accessRequests,
     'modes' => $this->setting('access_modes'),
     'access' => null,
     'user' => $this->identity(),
+    'pageTitle' => $pageTitle,
 ]);

@@ -387,6 +387,8 @@ return [
             'access_cron_last' => 0,
         ],
         'site_settings' => [
+            'access_label' => '',
+            'access_label_guest' => '',
             'access_placement' => [],
         ],
         'settings' => [
