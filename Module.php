@@ -87,6 +87,7 @@ class Module extends AbstractModule
         }
 
         $accessMarker = '# Module Access: protect files.';
+        $accessMarkerEnd = '# /Module Access: protect files.';
         if (strpos($htaccess, $accessMarker) === false) {
             return;
         }
@@ -104,8 +105,21 @@ class Module extends AbstractModule
             $currentTypes = explode('|', $matches[1]);
         }
 
-        // Remove the Access rule.
-        $htaccess = preg_replace('/' . preg_quote($accessMarker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"[^"]*"\s+"[^"]*"\s+\[[^\]]*\]\s*\n?/', '', $htaccess);
+        // Remove the Access rule. Bounded removal between markers when both
+        // are present, fallback otherwise.
+        $hasEndMarker = strpos($htaccess, $accessMarkerEnd) !== false;
+        if ($hasEndMarker) {
+            $htaccess = preg_replace(
+                '/' . preg_quote($accessMarker, '/')
+                . '.*?'
+                . preg_quote($accessMarkerEnd, '/')
+                . '\s*\n?/s',
+                '',
+                $htaccess
+            );
+        } else {
+            $htaccess = preg_replace('/' . preg_quote($accessMarker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"[^"]*"\s+"[^"]*"\s+\[[^\]]*\]\s*\n?/', '', $htaccess);
+        }
 
         // If Analytics is active and has no download rule, convert the Access
         // rule to an Analytics download rule for download tracking.
@@ -117,11 +131,13 @@ class Module extends AbstractModule
         $isAnalyticsActive = $analyticsModule && $analyticsModule->getState() === \Omeka\Module\Manager::STATE_ACTIVE;
 
         $analyticsMarker = '# Module Analytics: count downloads.';
+        $analyticsMarkerEnd = '# /Module Analytics: count downloads.';
         if ($isAnalyticsActive && !empty($currentTypes) && strpos($htaccess, $analyticsMarker) === false) {
             $typesPattern = implode('|', $currentTypes);
             $downloadBlock = $analyticsMarker . "\n"
                 . '# This rule is automatically managed by the module.' . "\n"
-                . 'RewriteRule "^files/(' . $typesPattern . ')/(.*)$" "download/files/$1/$2" [NC,L]';
+                . 'RewriteRule "^files/(' . $typesPattern . ')/(.*)$" "download/files/$1/$2" [NC,L]' . "\n"
+                . $analyticsMarkerEnd;
             // Insert after RewriteEngine On.
             if (preg_match('/RewriteEngine\s+On\s*\n/', $htaccess, $m, PREG_OFFSET_CAPTURE)) {
                 $insertPos = $m[0][1] + strlen($m[0][0]);
@@ -2095,6 +2111,7 @@ class Module extends AbstractModule
         }
 
         $marker = '# Module Access: protect files.';
+        $markerEnd = '# /Module Access: protect files.';
         $isWriteMode = $types !== null;
 
         // Parse existing rule to find currently protected types.
@@ -2225,11 +2242,16 @@ class Module extends AbstractModule
         $customTypes = array_filter($customTypes, fn ($v) => preg_match('/^[a-zA-Z0-9][-a-zA-Z0-9]*$/', $v));
         $allTypes = array_values(array_unique(array_merge($types, $customTypes)));
 
-        // Build the new block (or empty if no types).
+        // Build the new block (or empty if no types). The block is bounded by
+        // an explicit start and end marker so removal cannot accidentally
+        // swallow neighbouring rules.
         $newBlock = '';
         if (!empty($allTypes)) {
             $typesPattern = implode('|', $allTypes);
-            $newBlock = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(' . $typesPattern . ')/(.*)$" "access/files/$1/$2" [' . $flags . ']';
+            $newBlock = $marker . "\n"
+                . '# This rule is automatically managed by the module.' . "\n"
+                . 'RewriteRule "^files/(' . $typesPattern . ')/(.*)$" "access/files/$1/$2" [' . $flags . ']' . "\n"
+                . $markerEnd;
         }
 
         // Nothing changed: same types and already in managed format.
@@ -2265,8 +2287,21 @@ class Module extends AbstractModule
             return;
         }
 
-        // Remove existing marker block if present (marker + optional comments + rule).
-        if ($hasMarker) {
+        // Remove existing marker block. Prefer bounded removal between explicit
+        // start and end markers; fall back to the legacy "first RewriteRule
+        // after marker" heuristic for blocks written before the end marker
+        // existed.
+        $hasEndMarker = strpos($htaccess, $markerEnd) !== false;
+        if ($hasMarker && $hasEndMarker) {
+            $htaccess = preg_replace(
+                '/' . preg_quote($marker, '/')
+                . '.*?'
+                . preg_quote($markerEnd, '/')
+                . '\s*\n?/s',
+                '',
+                $htaccess
+            );
+        } elseif ($hasMarker) {
             $htaccess = preg_replace('/' . preg_quote($marker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"[^"]*"\s+"[^"]*"\s+\[[^\]]*\]\s*\n?/', '', $htaccess);
         }
 
