@@ -57,12 +57,12 @@ if ($user) {
 
 <button type="button" class="button request-access"><?= $translate('Request access') ?></button>
 
-<dialog class="access-request-form" data-uri="<?= $formSubmitUrl ?>">
+<dialog class="access-request-form" data-uri="<?= $formSubmitUrl ?>" aria-labelledby="access-request-heading">
     <div class="form-wrapper">
         <div class="form-block">
             <div class="block-title">
-                <h3><?= $translate('Request access') ?></h3>
-                <button type="button" class="block-close o-icon-close" autofocus="autofocus">
+                <h2 id="access-request-heading"><?= $translate('Request access') ?></h2>
+                <button type="button" class="block-close o-icon-close" aria-label="<?= $this->escapeHtmlAttr($translate('Close')) ?>">
                     <span class="screen-reader-text"><?= $translate('Close') ?></span>
                 </button>
             </div>
