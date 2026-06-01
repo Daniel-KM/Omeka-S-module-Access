@@ -161,7 +161,9 @@ if (version_compare((string) $oldVersion, '3.4.19', '<')) {
             AND `property`.`local_name` = 'dateEnd'
         ;
         SQL;
-    $connection->executeStatement($sql);
+    foreach (array_filter(array_map('trim', explode(";\n", $sql))) as $sql) {
+        $connection->executeStatement($sql);
+    }
 
     $levels = [
         'free' => 'free',

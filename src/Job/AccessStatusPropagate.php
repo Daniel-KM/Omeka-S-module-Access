@@ -438,8 +438,13 @@ class AccessStatusPropagate extends AbstractJob
                 ;
                 SQL;
 
+            // Each statement is executed separately: PDO emulated prepares does
+            // not reliably bind named parameters across multiple statements in
+            // one call.
             $this->connection->transactional(function () use ($sql, $bind, $types) {
-                $this->execStatement($sql, $bind, $types);
+                foreach (array_filter(array_map('trim', explode(";\n", $sql))) as $sql) {
+                    $this->execStatement($sql, $bind, $types);
+                }
                 if ($this->accessViaProperty) {
                     $this->execUpdateItemSetPropertiesAllowed($bind, $types);
                 }
@@ -499,8 +504,13 @@ class AccessStatusPropagate extends AbstractJob
             ;
             SQL;
 
+        // Each statement is executed separately: PDO emulated prepares does not
+        // reliably bind named parameters across multiple statements in one
+        // call.
         $this->connection->transactional(function () use ($sql, $bind, $types) {
-            $this->execStatement($sql, $bind, $types);
+            foreach (array_filter(array_map('trim', explode(";\n", $sql))) as $sql) {
+                $this->execStatement($sql, $bind, $types);
+            }
             if ($this->accessViaProperty) {
                 $this->execUpdateItemSetPropertiesNotAllowed($bind, $types);
             }
