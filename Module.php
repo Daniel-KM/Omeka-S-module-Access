@@ -688,6 +688,9 @@ class Module extends AbstractModule
         $form = $formManager->get($formClass);
         $form->init();
         $form->setData($data);
+        // Pre-populate the propagation mode radio with the last chosen value.
+        $form->get('access_reindex')->get('propagation_mode')
+            ->setValue($settings->get('access_propagation_mode', 'skip_if_set'));
         $form->prepare();
 
         $translate = $renderer->plugin('translate');
@@ -782,11 +785,19 @@ class Module extends AbstractModule
         // before the property-mode-specific checks below.
         $post = $controller->getRequest()->getPost();
         if (!empty($post['access_reindex']['process_index'])) {
+            $propagationMode = $post['access_reindex']['propagation_mode'] ?? null;
+            if (!in_array($propagationMode, ['skip_if_set', 'max_restrictive', 'overwrite'], true)) {
+                $propagationMode = 'skip_if_set';
+            }
+            // Persist the chosen mode so it pre-populates the form next time.
+            $settings->set('access_propagation_mode', $propagationMode);
+
             if (!empty($post['access_reindex']['auto'])) {
                 $vars = [
                     'recursive' => ['from_item_sets_to_items_and_media', 'from_items_to_media'],
                     'sync' => $accessViaProperty ? 'from_properties_to_accesses' : 'skip',
                     'missing' => 'visibility_reserved',
+                    'propagation_mode' => $propagationMode,
                 ];
                 $this->processUpdateStatus($vars);
             } else {
@@ -794,8 +805,9 @@ class Module extends AbstractModule
                     'recursive' => $post['access_reindex']['recursive'] ?? [],
                     'sync' => $post['access_reindex']['sync'] ?? 'skip',
                     'missing' => $post['access_reindex']['missing'] ?? 'skip',
+                    'propagation_mode' => $propagationMode,
                 ];
-                if ($vars === ['recursive' => [], 'sync' => 'skip', 'missing' => 'skip']) {
+                if ($vars['recursive'] === [] && $vars['sync'] === 'skip' && $vars['missing'] === 'skip') {
                     $message = new \Omeka\Stdlib\Message(
                         $translator->translate('Job is not launched: no option was set.'), // @translate
                     );
@@ -1080,7 +1092,7 @@ class Module extends AbstractModule
                 'values' => $accessStatusValues,
             ];
             $services->get(\Omeka\Job\Dispatcher::class)
-                 ->dispatch(\Access\Job\AccessStatusRecursive::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
+                 ->dispatch(\Access\Job\AccessStatusPropagate::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
         }
     }
 
@@ -1355,7 +1367,7 @@ class Module extends AbstractModule
                 'values' => $accessStatusValues,
             ];
             $services->get(\Omeka\Job\Dispatcher::class)
-                ->dispatch(\Access\Job\AccessStatusRecursive::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
+                ->dispatch(\Access\Job\AccessStatusPropagate::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
         }
     }
 

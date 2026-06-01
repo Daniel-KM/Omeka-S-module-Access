@@ -366,6 +366,12 @@ return [
             'access_embargo_ended_level' => 'free',
             'access_embargo_ended_date' => 'keep',
 
+            // Default propagation mode for the reindex job. Fresh installs use
+            // "max_restrictive" (never demote a stricter child). The upgrade
+            // script sets "overwrite" for installs predating 3.4.44 to preserve
+            // the old default behavior; admins are advised to switch.
+            'access_propagation_mode' => 'skip_if_set',
+
             // Hidden settings automatically filled after saving config. It
             // contains the same data than "access_ip_item_sets", but with
             // numberized ip ranges (cidr) in order to do a quicker control of

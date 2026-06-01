@@ -4,7 +4,7 @@ namespace Access\Job;
 
 use Omeka\Job\AbstractJob;
 
-class AccessStatusRecursive extends AbstractJob
+class AccessStatusPropagate extends AbstractJob
 {
     use AccessPropertiesTrait;
 
@@ -50,6 +50,27 @@ class AccessStatusRecursive extends AbstractJob
      */
     protected $userId;
 
+    /**
+     * @var string One of: skip_if_set, max_restrictive, overwrite.
+     */
+    protected $propagationMode = 'skip_if_set';
+
+    /**
+     * @var string Pre-computed ON DUPLICATE KEY UPDATE clause for access_status.
+     */
+    protected $onDupClause = '';
+
+    /**
+     * Numeric ordering of access levels, used to compare with GREATEST in the
+     * SQL MAX path. Higher = more restrictive.
+     */
+    protected const LEVEL_ORDER = [
+        'free' => 1,
+        'reserved' => 2,
+        'protected' => 3,
+        'forbidden' => 4,
+    ];
+
     public function perform(): void
     {
         $services = $this->getServiceLocator();
@@ -68,6 +89,15 @@ class AccessStatusRecursive extends AbstractJob
 
         $plugins = $services->get('ControllerPluginManager');
         $this->accessStatusForResource = $plugins->get('accessStatus');
+
+        $mode = $this->getArg('propagation_mode', 'skip_if_set');
+        if (in_array($mode, ['skip_if_set', 'max_restrictive', 'overwrite'], true)) {
+            $this->propagationMode = $mode;
+        }
+        // Pre-compute the access_status ON DUPLICATE KEY UPDATE clause and the
+        // property value-table sync mode. Set once per job to avoid a recompute
+        // in every executeStatement call.
+        $this->onDupClause = $this->buildOnDupClause();
 
         if ($this->accessViaProperty) {
             $result = $this->prepareProperties(true);
@@ -157,12 +187,14 @@ class AccessStatusRecursive extends AbstractJob
         $bind = [
             'resource_id' => $resourceId,
             'level' => $level,
+            'level_num' => self::LEVEL_ORDER[$level] ?? 1,
             'embargo_start' => $embargoStartStatus,
             'embargo_end' => $embargoEndStatus,
         ];
         $types = [
             'resource_id' => \Doctrine\DBAL\ParameterType::INTEGER,
             'level' => \Doctrine\DBAL\ParameterType::STRING,
+            'level_num' => \Doctrine\DBAL\ParameterType::INTEGER,
             'embargo_start' => $embargoStartStatus ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL,
             'embargo_end' => $embargoEndStatus ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL,
         ];
@@ -285,10 +317,7 @@ class AccessStatusRecursive extends AbstractJob
             FROM `media`
             WHERE `media`.`item_id` = :resource_id
                 AND `media`.`id` IN (:media_ids)
-            ON DUPLICATE KEY UPDATE
-                `level` = :level,
-                `embargo_start` = :embargo_start,
-                `embargo_end` = :embargo_end
+            ON DUPLICATE KEY UPDATE {{ON_DUP}}
             ;
             SQL;
 
@@ -296,7 +325,7 @@ class AccessStatusRecursive extends AbstractJob
         // prepares does not reliably bind named parameters across
         // multiple statements in one call.
         $this->connection->transactional(function () use ($sql, $bind, $types) {
-            $this->connection->executeStatement($sql, $bind, $types);
+            $this->execStatement($sql, $bind, $types);
             if ($this->accessViaProperty) {
                 $this->execUpdateItemProperties($bind, $types);
             }
@@ -305,6 +334,16 @@ class AccessStatusRecursive extends AbstractJob
 
     protected function execUpdateItemProperties(array $bind, array $types): void
     {
+        // skip_if_set guarantees that no existing access_status is touched, so
+        // the matching property values must remain intact too (no DELETE, no
+        // INSERT, no realign). New rows in access_status are created for
+        // children that had none, but in practice the auto-creation listener
+        // makes this case marginal, propagating property values there is not
+        // worth the cross-mode incoherence.
+        if ($this->propagationMode === 'skip_if_set') {
+            return;
+        }
+
         $this->connection->executeStatement(
             <<<'SQL'
             DELETE `value`
@@ -391,6 +430,9 @@ class AccessStatusRecursive extends AbstractJob
                 );
             }
         }
+
+        // See comment in execUpdateItemSetPropertiesAllowed.
+        $this->realignPropertyLevelsToAccessStatus('item', $bind, $types);
     }
 
     protected function processUpdateItemSet(array $bind, array $types): void
@@ -402,25 +444,19 @@ class AccessStatusRecursive extends AbstractJob
                 SELECT `item_item_set`.`item_id`, :level, :embargo_start, :embargo_end
                 FROM `item_item_set`
                 WHERE `item_item_set`.`item_set_id` = :resource_id
-                ON DUPLICATE KEY UPDATE
-                    `level` = :level,
-                    `embargo_start` = :embargo_start,
-                    `embargo_end` = :embargo_end
+                ON DUPLICATE KEY UPDATE {{ON_DUP}}
                 ;
                 INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
                 SELECT `media`.`id`, :level, :embargo_start, :embargo_end
                 FROM `media`
                 JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
                 WHERE `item_item_set`.`item_set_id` = :resource_id
-                ON DUPLICATE KEY UPDATE
-                    `level` = :level,
-                    `embargo_start` = :embargo_start,
-                    `embargo_end` = :embargo_end
+                ON DUPLICATE KEY UPDATE {{ON_DUP}}
                 ;
                 SQL;
 
             $this->connection->transactional(function () use ($sql, $bind, $types) {
-                $this->connection->executeStatement($sql, $bind, $types);
+                $this->execStatement($sql, $bind, $types);
                 if ($this->accessViaProperty) {
                     $this->execUpdateItemSetPropertiesAllowed($bind, $types);
                 }
@@ -465,10 +501,7 @@ class AccessStatusRecursive extends AbstractJob
             JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
             WHERE `item_item_set`.`item_set_id` = :resource_id
                 AND (`resource`.`is_public` = 1 $orWhereUser)
-            ON DUPLICATE KEY UPDATE
-                `level` = :level,
-                `embargo_start` = :embargo_start,
-                `embargo_end` = :embargo_end
+            ON DUPLICATE KEY UPDATE {{ON_DUP}}
             ;
             INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
             SELECT `media`.`id`, :level, :embargo_start, :embargo_end
@@ -479,15 +512,12 @@ class AccessStatusRecursive extends AbstractJob
             WHERE `item_item_set`.`item_set_id` = :resource_id
                 AND (`resource_item`.`is_public` = 1 $orWhereUser)
                 AND (`resource`.`is_public` = 1 $orWhereUser)
-            ON DUPLICATE KEY UPDATE
-                `level` = :level,
-                `embargo_start` = :embargo_start,
-                `embargo_end` = :embargo_end
+            ON DUPLICATE KEY UPDATE {{ON_DUP}}
             ;
             SQL;
 
         $this->connection->transactional(function () use ($sql, $bind, $types) {
-            $this->connection->executeStatement($sql, $bind, $types);
+            $this->execStatement($sql, $bind, $types);
             if ($this->accessViaProperty) {
                 $this->execUpdateItemSetPropertiesNotAllowed($bind, $types);
             }
@@ -496,6 +526,11 @@ class AccessStatusRecursive extends AbstractJob
 
     protected function execUpdateItemSetPropertiesAllowed(array $bind, array $types): void
     {
+        // skip_if_set: see comment in execUpdateItemProperties.
+        if ($this->propagationMode === 'skip_if_set') {
+            return;
+        }
+
         $this->connection->executeStatement(
             <<<'SQL'
             DELETE `value`
@@ -637,10 +672,23 @@ class AccessStatusRecursive extends AbstractJob
                 );
             }
         }
+
+        // Realign property level values with the actual access_status, so
+        // children preserved at a stricter level by max_restrictive (or left
+        // unchanged by skip_if_set) are not silently demoted when the next
+        // resource save mirrors property->access_status. TODO Embargo dates
+        // not yet realigned, refined in 3.4.45.
+        $this->realignPropertyLevelsToAccessStatus('item_set', $bind, $types);
+        $this->realignPropertyLevelsToAccessStatus('item_set_media', $bind, $types);
     }
 
     protected function execUpdateItemSetPropertiesNotAllowed(array $bind, array $types): void
     {
+        // skip_if_set: see comment in execUpdateItemProperties.
+        if ($this->propagationMode === 'skip_if_set') {
+            return;
+        }
+
         if ($this->userId) {
             $orWhereUser = 'OR `resource`.`owner_id` = :user_id';
         } else {
@@ -800,6 +848,119 @@ class AccessStatusRecursive extends AbstractJob
                         AND (`resource`.`is_public` = 1 $orWhereUser)
                     SQL);
             }
+        }
+
+        // See comment in execUpdateItemSetPropertiesAllowed.
+        $this->realignPropertyLevelsToAccessStatus('item_set', $bind, $types);
+        $this->realignPropertyLevelsToAccessStatus('item_set_media', $bind, $types);
+    }
+
+    /**
+     * Wrapper around connection->executeStatement that resolves the
+     * {{ON_DUP}} placeholder used by access_status INSERT ... ON DUPLICATE
+     * statements. Other SQL is passed through unchanged.
+     */
+    protected function execStatement(string $sql, array $bind = [], array $types = []): void
+    {
+        if (strpos($sql, '{{ON_DUP}}') !== false) {
+            $sql = str_replace('{{ON_DUP}}', $this->onDupClause, $sql);
+        }
+        $this->connection->executeStatement($sql, $bind, $types);
+    }
+
+    /**
+     * In non-overwrite propagation modes, the access_status row of a child may
+     * differ from the parent's level (kept stricter by max_restrictive, or left
+     * untouched by skip_if_set). The legacy property-mode sync blindly inserts
+     * the PARENT's level value into the value table, which then mirrors back to
+     * access_status the next time the resource is saved, silently demoting the
+     * stricter child. This realignment pass runs right after the legacy INSERTs
+     * and rewrites the level value column from the actual access_status of each
+     * child.
+     *
+     * Required bind keys: resource_id (the item set id), property_level,
+     * v_free, v_reserved, v_protected, v_forbidden (the property values for
+     * each level, taken from access_property_levels).
+     *
+     * Embargo dates are NOT realigned by this pass, known limitation for now.
+     */
+    protected function realignPropertyLevelsToAccessStatus(string $scope, array $bind, array $types): void
+    {
+        if ($this->propagationMode === 'overwrite') {
+            return;
+        }
+
+        $joinForScope = $scope === 'item_set' ? <<<'SQL'
+            JOIN `item_item_set` iis ON iis.item_id = `value`.resource_id
+            SQL
+            : ($scope === 'item_set_media' ? <<<'SQL'
+                JOIN `media` ON `media`.id = `value`.resource_id
+                JOIN `item_item_set` iis ON iis.item_id = `media`.item_id
+                SQL
+                : <<<'SQL'
+                    JOIN `media` ON `media`.id = `value`.resource_id
+                    SQL);
+        $whereForScope = $scope === 'item' ? '`media`.item_id = :resource_id' : 'iis.item_set_id = :resource_id';
+
+        $sql = <<<SQL
+            UPDATE `value`
+            JOIN `access_status` a ON a.id = `value`.resource_id
+            $joinForScope
+            SET `value`.`value` = CASE a.`level`
+                WHEN 'free'      THEN :v_free
+                WHEN 'reserved'  THEN :v_reserved
+                WHEN 'protected' THEN :v_protected
+                WHEN 'forbidden' THEN :v_forbidden
+                ELSE `value`.`value`
+            END
+            WHERE $whereForScope
+              AND `value`.property_id = :property_level
+            SQL;
+
+        $extraBind = [
+            'v_free'      => (string) ($this->accessLevels['free']      ?? 'free'),
+            'v_reserved'  => (string) ($this->accessLevels['reserved']  ?? 'reserved'),
+            'v_protected' => (string) ($this->accessLevels['protected'] ?? 'protected'),
+            'v_forbidden' => (string) ($this->accessLevels['forbidden'] ?? 'forbidden'),
+        ];
+        $extraTypes = [
+            'v_free'      => \Doctrine\DBAL\ParameterType::STRING,
+            'v_reserved'  => \Doctrine\DBAL\ParameterType::STRING,
+            'v_protected' => \Doctrine\DBAL\ParameterType::STRING,
+            'v_forbidden' => \Doctrine\DBAL\ParameterType::STRING,
+        ];
+
+        $this->connection->executeStatement($sql, $bind + $extraBind, $types + $extraTypes);
+    }
+
+    /**
+     * Build the SQL fragment for the access_status ON DUPLICATE KEY UPDATE
+     * clause according to the propagation mode.
+     *
+     * - overwrite: always copy the parent's value (legacy behavior).
+     * - max_restrictive: keep the strictest level, the earliest embargo_start
+     *   and the latest embargo_end (never shorten a protection window).
+     * - skip_if_set: no-op on existing rows.
+     *
+     * The MAX over the ENUM-like level column uses FIELD/ELT to compare on the
+     * documented order free < reserved < protected < forbidden, plain GREATEST
+     * on the string would compare lexicographically and corrupt the data.
+     */
+    protected function buildOnDupClause(): string
+    {
+        switch ($this->propagationMode) {
+            case 'overwrite':
+                return '`level` = :level, `embargo_start` = :embargo_start, `embargo_end` = :embargo_end';
+            case 'skip_if_set':
+                return '`id` = `id`';
+            case 'max_restrictive':
+            default:
+                return '`level` = ELT('
+                    . 'GREATEST(FIELD(`level`, "free","reserved","protected","forbidden"), :level_num),'
+                    . '"free","reserved","protected","forbidden"'
+                    . '), '
+                    . '`embargo_start` = LEAST(IFNULL(`embargo_start`, :embargo_start), IFNULL(:embargo_start, `embargo_start`)), '
+                    . '`embargo_end` = GREATEST(IFNULL(`embargo_end`, :embargo_end), IFNULL(:embargo_end, `embargo_end`))';
         }
     }
 }

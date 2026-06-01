@@ -49,7 +49,7 @@ class AccessStatusUpdate extends AbstractJob
     /**
      * @var array
      */
-    protected $recursiveProcesses = [];
+    protected $propagateProcesses = [];
 
     /**
      * @var int
@@ -132,22 +132,41 @@ class AccessStatusUpdate extends AbstractJob
             return;
         }
 
-        $this->recursiveProcesses = $this->getArg('recursive', []) ?: [];
-        $recursives = [
+        $this->propagateProcesses = $this->getArg('recursive', []) ?: [];
+        $propagates = [
             'from_item_sets_to_items_and_media',
             'from_items_to_media',
         ];
-        if ($this->recursiveProcesses && count($this->recursiveProcesses) !== count(array_intersect($this->recursiveProcesses, $recursives))) {
+        if ($this->propagateProcesses && count($this->propagateProcesses) !== count(array_intersect($this->propagateProcesses, $propagates))) {
             $this->logger->err(
                 'These recursive processes are unknown: {names}.', // @translate
-                ['names' => implode(', ', array_diff($this->recursiveProcesses, $recursives))]
+                ['names' => implode(', ', array_diff($this->propagateProcesses, $propagates))]
             );
             return;
         }
 
+        $propagationMode = $this->getArg('propagation_mode', 'max_restrictive') ?: 'max_restrictive';
+        if (!in_array($propagationMode, ['max_restrictive', 'overwrite', 'skip_if_set'], true)) {
+            $this->logger->err(
+                'Propagation mode "{mode}" is invalid; falling back to max_restrictive.', // @translate
+                ['mode' => $propagationMode]
+            );
+            $propagationMode = 'max_restrictive';
+        }
+
+        // Persist on the job args so the subjob (AccessStatusPropagate) reads
+        // the validated values and not raw user input.
+        $args = $this->job->getArgs();
+        $args['propagation_mode'] = $propagationMode;
+        $this->job->setArgs($args);
+        $this->logger->info(
+            'Propagation mode: {mode}.', // @translate
+            ['mode' => $propagationMode]
+        );
+
         if ($this->modeSync === 'skip'
             && $this->modeMissing === 'skip'
-            && $this->recursiveProcesses === []
+            && $this->propagateProcesses === []
         ) {
             $this->logger->warn(
                 'Synchronization and missing modes are set as "skip" and no recursive processes are set.' // @translate
@@ -176,25 +195,25 @@ class AccessStatusUpdate extends AbstractJob
         // Warning: this is not a full sync: only existing properties and
         // indexes are updated.
 
-        if (in_array('from_item_sets_to_items_and_media', $this->recursiveProcesses)) {
+        if (in_array('from_item_sets_to_items_and_media', $this->propagateProcesses)) {
             $ids = $this->api->search('item_sets', [], ['returnScalar' => 'id'])->getContent();
             if ($ids) {
                 $args = $this->job->getArgs();
                 $args['resource_ids'] = $ids;
                 $this->job->setArgs($args);
-                $subJob = new AccessStatusRecursive($this->job, $services);
+                $subJob = new AccessStatusPropagate($this->job, $services);
                 $subJob->perform();
             }
         }
 
         // There may be items without item sets.
-        if (in_array('from_items_to_media', $this->recursiveProcesses)) {
+        if (in_array('from_items_to_media', $this->propagateProcesses)) {
             $ids = $this->api->search('items', [], ['returnScalar' => 'id'])->getContent();
             if ($ids) {
                 $args = $this->job->getArgs();
                 $args['resource_ids'] = $ids;
                 $this->job->setArgs($args);
-                $subJob = new AccessStatusRecursive($this->job, $services);
+                $subJob = new AccessStatusPropagate($this->job, $services);
                 $subJob->perform();
             }
         }

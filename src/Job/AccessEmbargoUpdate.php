@@ -54,7 +54,7 @@ class AccessEmbargoUpdate extends AbstractJob
     /**
      * @var array
      */
-    protected $recursiveProcesses = [];
+    protected $propagateProcesses = [];
 
     /**
      * @var int
@@ -246,7 +246,7 @@ class AccessEmbargoUpdate extends AbstractJob
             ], $strategy);
             */
             // The args of the current job (none) and the job AccessStatusUpdate() are
-            // are different. The same for job AccessStatusRecursive(), that is not
+            // are different. The same for job AccessStatusPropagate(), that is not
             // called anyway.
             $args = [
                 'sync' => 'from_accesses_to_properties',

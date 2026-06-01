@@ -29,6 +29,52 @@ class AccessReindexFieldset extends Fieldset
                 ],
             ])
             ->add([
+                'name' => 'access_propagation_table_note',
+                'type' => CommonElement\Note::class,
+                'options' => [
+                    'text' => <<<'HTML'
+                        <details>
+                            <summary>
+                                Propagation modes summary
+                            </summary>
+                            <p><strong>Access level</strong></p>
+                            <table class="access-propagation-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mode</th>
+                                        <th>Child stricter than parent</th>
+                                        <th>Child more permissive</th>
+                                        <th>Child without status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th><code>skip if set</code> (default)</th>
+                                        <td>Unchanged</td>
+                                        <td>Unchanged (preserves "free preview" alongside a "forbidden" original)</td>
+                                        <td>New row created with the parent level</td>
+                                    </tr>
+                                    <tr>
+                                        <th><code>max restrictive</code></th>
+                                        <td>Kept (never demoted)</td>
+                                        <td>Promoted to the parent level (breaks a deliberately free child)</td>
+                                        <td>New row created with the parent level</td>
+                                    </tr>
+                                    <tr>
+                                        <th><code>overwrite</code></th>
+                                        <td>Demoted to the parent level</td>
+                                        <td>Promoted to the parent level</td>
+                                        <td>New row created with the parent level</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>In property mode, the level property value is also realigned from access status after the parent value is written, so a child preserved at a stricter level is never silently demoted at the next save.</p>
+                        </details>
+                        HTML, // @translate
+                    'disable_html_escape' => true,
+                ],
+            ])
+            ->add([
                 'name' => 'auto',
                 'type' => CommonElement\OptionalCheckbox::class,
                 'options' => [
@@ -53,6 +99,24 @@ class AccessReindexFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'recursive',
+                ],
+            ])
+            ->add([
+                'name' => 'propagation_mode',
+                'type' => CommonElement\OptionalRadio::class,
+                'options' => [
+                    'label' => 'Propagation mode', // @translate
+                    'label_attributes' => ['style' => 'display: inline-block'],
+                    'info' => 'Choose how the recursive copy combines an existing child level with the new parent level. If items in scope have heterogeneous media levels (e.g. a free preview alongside a forbidden high-res file), use "skip if set" or do not run the propagate option at all.', // @translate
+                    'value_options' => [
+                        'skip_if_set' => 'Skip if set (safest, recommended for items with media with different statuses)', // @translate
+                        'max_restrictive' => 'Max restrictive (keep the strictest level between parent and child)', // @translate
+                        'overwrite' => 'Overwrite (copy parent level, so a forbidden media may become free according to the status of the item or item set)', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'propagation_mode',
+                    'value' => 'skip_if_set',
                 ],
             ])
             ->add([
