@@ -182,7 +182,7 @@ class BatchEditFieldset extends Fieldset
         if (in_array($this->resourceType, ['itemSet', 'item'])) {
             $this
                 ->add([
-                    'name' => 'access_recursive',
+                    'name' => 'access_propagate',
                     'type' => Element\Checkbox::class,
                     'options' => [
                         'label' => $this->resourceType === 'itemSet'
@@ -190,7 +190,7 @@ class BatchEditFieldset extends Fieldset
                             : 'Apply access level and embargo to medias', // @translate
                     ],
                     'attributes' => [
-                        'id' => 'access_recursive',
+                        'id' => 'access_propagate',
                         'class' => 'access',
                         // This attribute is required to make "batch edit all" working.
                         'data-collection-action' => 'replace',

@@ -963,17 +963,17 @@ class Module extends AbstractModule
 
         // TODO Manage three states: boolean => batch process; null or missing => no? Useless.
         // When properties are not used, it is the only element of the fieldset.
-        $processData['access_recursive'] = !empty($rawData['access_recursive']);
+        $processData['access_propagate'] = !empty($rawData['access_propagate']);
 
         $settings = $services->get('Omeka\Settings');
         $accessViaProperty = (bool) $settings->get('access_property');
         if ($accessViaProperty) {
-            $needProcess = $processData['access_recursive'];
+            $needProcess = $processData['access_propagate'];
         } else {
             $needProcess = !empty($processData['o-access:level'])
                 || array_key_exists('o-access:embargo_start', $processData)
                 || array_key_exists('o-access:embargo_end', $processData)
-                || $processData['access_recursive'];
+                || $processData['access_propagate'];
         }
 
         if ($needProcess) {
@@ -1012,11 +1012,11 @@ class Module extends AbstractModule
         $level = array_key_exists('o-access:level', $data) ? $data['o-access:level'] : false;
         $embargoStart = array_key_exists('o-access:embargo_start', $data) ? $data['o-access:embargo_start'] : false;
         $embargoEnd = array_key_exists('o-access:embargo_end', $data) ? $data['o-access:embargo_end'] : false;
-        $accessRecursive = !empty($data['access_recursive']);
+        $accessPropagate = !empty($data['access_propagate']);
 
         // Check if a process is needed (normally already done).
         $processCurrentResource = $level !== false || $embargoStart !== false || $embargoEnd !== false;
-        if (!$processCurrentResource && !$accessRecursive) {
+        if (!$processCurrentResource && !$accessPropagate) {
             return;
         }
 
@@ -1092,7 +1092,7 @@ class Module extends AbstractModule
             $entityManager->flush();
         }
 
-        if ($accessRecursive) {
+        if ($accessPropagate) {
             $settings = $services->get('Omeka\Settings');
             $accessViaProperty = (bool) $settings->get('access_property');
             if ($accessViaProperty) {
@@ -1153,7 +1153,7 @@ class Module extends AbstractModule
             'o-access:embargo_start' => null,
             'o-access:embargo_end' => null,
             // Related to the form.
-            'access_recursive' => null,
+            'access_propagate' => null,
             'embargo_start_date' => null,
             'embargo_start_time' => null,
             'embargo_end_date' => null,
@@ -1168,9 +1168,9 @@ class Module extends AbstractModule
 
         // Create the access statuses for new medias: there is no event during
         // media creation via item.
-        // This is needed only when the option "access_recursive" is not set,
+        // This is needed only when the option "access_propagate" is not set,
         // because when set, it is already managed via manageAccessStatusForResource().
-        if ($resourceName === 'items' && empty($accessData['access_recursive'])) {
+        if ($resourceName === 'items' && empty($accessData['access_propagate'])) {
             $services = $this->getServiceLocator();
             $entityManager = $services->get('Omeka\EntityManager');
             // $settings = $services->get('Omeka\Settings');
@@ -1190,9 +1190,9 @@ class Module extends AbstractModule
 
         // Check unchanged status level of the medias when updating the status
         // level of an item in order to display a warning.
-        // This is needed only when the option "access_recursive" is not set,
+        // This is needed only when the option "access_propagate" is not set,
         // because when set, the status is copied, so running as wanted by user.
-        if ($resourceName === 'items' && empty($accessData['access_recursive'])) {
+        if ($resourceName === 'items' && empty($accessData['access_propagate'])) {
             $mediaIds = $this->listMediaAccessDifferentThanItem($resource);
             if ($mediaIds) {
                 $messenger = $services->get('ControllerPluginManager')->get('messenger');
@@ -1245,7 +1245,7 @@ class Module extends AbstractModule
         // Request "isPartial" does not check "should hydrate" for properties,
         // so properties are always managed, but not access keys.
 
-        $accessRecursive = !empty($accessData['access_recursive']);
+        $accessPropagate = !empty($accessData['access_propagate']);
 
         $accessViaProperty = (bool) $settings->get('access_property');
         if ($accessViaProperty) {
@@ -1385,7 +1385,7 @@ class Module extends AbstractModule
         }
         $entityManager->getUnitOfWork()->commit($accessStatus);
 
-        if ($accessRecursive && in_array($resourceName, ['item_sets', 'items'])) {
+        if ($accessPropagate && in_array($resourceName, ['item_sets', 'items'])) {
             // A job is required, because there may be many items in an item set
             // and many media in an item.
             // Nevertheless, the job is just a quick sql for now, and this is a
@@ -1725,7 +1725,7 @@ class Module extends AbstractModule
             || $resourceName === 'items'
             // Media may not be stored yet during creation.
         ) {
-            $recursiveElement = new \Common\Form\Element\OptionalRadio('access[access_recursive]');
+            $recursiveElement = new \Common\Form\Element\OptionalRadio('access[access_propagate]');
             $recursiveElement
                 ->setLabel($resourceName === 'item_sets'
                     ? 'Copy access level and embargo to items and medias' // @translate
