@@ -2,6 +2,7 @@
 
 namespace Access\Form;
 
+use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 use Omeka\Form\Element as OmekaElement;
@@ -29,6 +30,19 @@ class SettingsFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'access_message_send',
+                ],
+            ])
+            ->add([
+                'name' => 'access_reply_to_email',
+                'type' => CommonElement\OptionalEmail::class,
+                'options' => [
+                    'element_group' => 'access',
+                    'label' => 'Reply-to address for the emails to the requester', // @translate
+                    'info' => 'This address will be set as reply-to on emails sent to a user or visitor. If empty, the administrator email is used.', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_reply_to_email',
+                    'required' => false,
                 ],
             ])
 

@@ -94,7 +94,13 @@ trait AccessTrait
         $subject = $this->replacePlaceholders($subject, $post);
         $body = $this->replacePlaceholders($body, $post);
 
-        return $this->sendEmail($body, $subject);
+        // From stays the unique installation sender; reply-to is the requester
+        // so the admin can answer directly.
+        $replyTo = !empty($post['o:email'])
+            ? [$post['o:email'] => (string) ($post['o:name'] ?? '')]
+            : null;
+
+        return $this->sendEmail($body, $subject, null, null, null, null, $replyTo);
     }
 
     /**
@@ -129,7 +135,13 @@ trait AccessTrait
         $subject = $this->replacePlaceholders($subject, $post);
         $body = $this->replacePlaceholders($body, $post);
 
-        return $this->sendEmail($body, $subject, [$post['o:email'] => (string) $post['o:name'] ?? null]);
+        // From stays the unique installation sender; reply-to is the configured
+        // support address, else the administrator, so the requester can answer
+        // a monitored mailbox (never a no-reply).
+        $replyToEmail = $settings->get('access_reply_to_email') ?: $settings->get('administrator_email');
+        $replyTo = $replyToEmail ? [$replyToEmail => ''] : null;
+
+        return $this->sendEmail($body, $subject, [$post['o:email'] => (string) ($post['o:name'] ?? '')], null, null, null, $replyTo);
     }
 
     protected function replacePlaceholders(string $string, array $post): string

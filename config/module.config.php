@@ -397,6 +397,7 @@ return [
         ],
         'settings' => [
             'access_message_send' => true,
+            'access_reply_to_email' => '',
             'access_message_admin_subject' => 'New request status!', //@translate
             'access_message_admin_request_created' => 'A user or visitor requested to access resource {resource}. Please, check request dashboard.', //@translate
             'access_message_admin_request_updated' => 'A user or visitor updated the request to access a resource {resource}. Please, check request dashboard.', //@translate
