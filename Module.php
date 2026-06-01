@@ -771,26 +771,15 @@ class Module extends AbstractModule
         $accessLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $accessLevels), AccessStatusRepresentation::LEVELS);
         $settings->set('access_property_levels', $accessLevels);
 
-        $accessViaProperty = (bool) $settings->get('access_property');
-        if (!$accessViaProperty) {
-            return true;
-        }
-
         /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
         $translator = $services->get('MvcTranslator');
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
 
-        $levelProperty = (bool) $settings->get('access_property_level');
-        $embargoStartProperty = (bool) $settings->get('access_property_embargo_start');
-        $embargoEndProperty = (bool) $settings->get('access_property_embargo_end');
-        if (!$levelProperty || !$embargoStartProperty || !$embargoEndProperty) {
-            $message = new \Omeka\Stdlib\Message(
-                $translator->translate('When properties are used, three properties should be defined for "level", "embargo start" and "embargo end".'), // @translate
-            );
-            $messenger->addError($message);
-            return false;
-        }
+        $accessViaProperty = (bool) $settings->get('access_property');
 
+        // The reindex fieldset is always available in the config form, even
+        // when "access via property" is disabled, so process its submission
+        // before the property-mode-specific checks below.
         $post = $controller->getRequest()->getPost();
         if (!empty($post['access_reindex']['process_index'])) {
             if (!empty($post['access_reindex']['auto'])) {
@@ -815,6 +804,21 @@ class Module extends AbstractModule
                     $this->processUpdateStatus($vars);
                 }
             }
+        }
+
+        if (!$accessViaProperty) {
+            return true;
+        }
+
+        $levelProperty = (bool) $settings->get('access_property_level');
+        $embargoStartProperty = (bool) $settings->get('access_property_embargo_start');
+        $embargoEndProperty = (bool) $settings->get('access_property_embargo_end');
+        if (!$levelProperty || !$embargoStartProperty || !$embargoEndProperty) {
+            $message = new \Omeka\Stdlib\Message(
+                $translator->translate('When properties are used, three properties should be defined for "level", "embargo start" and "embargo end".'), // @translate
+            );
+            $messenger->addError($message);
+            return false;
         }
 
         return true;
