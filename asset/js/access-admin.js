@@ -14,6 +14,20 @@
          * @see Access, Comment, ContactUs, Contribute, Generate, Guest, Resa, SearchHistory, Selection, TwoFactorAuth.
          */
 
+        // Reply to the requester: the dialog is opened by Common
+        // (button-dialog-common); just avoid the anchor jumping to the top.
+        $('#content').on('click', 'a.reply-message', function(e) {
+            e.preventDefault();
+        });
+
+        // Close the reply dialog after a successful jSend send.
+        document.addEventListener('o:jsend-success', function() {
+            var dialog = document.querySelector('dialog.dialog-send-message.dialog-access');
+            if (dialog && dialog.open) {
+                dialog.close();
+            }
+        });
+
         /**
          * Direct deletion of an access.
          *
