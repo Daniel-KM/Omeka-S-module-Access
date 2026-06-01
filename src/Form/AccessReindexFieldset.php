@@ -37,6 +37,7 @@ class AccessReindexFieldset extends Fieldset
                             <summary>
                                 Propagation modes summary
                             </summary>
+                            <p><em>The two options that control the propagation of status and embargo dates are configured in the Settings tab. "Propagation mode" applies only to this reindex job; a resource saved with the "Apply recursive" option always uses "overwrite". "Propagate embargo dates" applies anytime.</em></p>
                             <p><strong>Access level</strong></p>
                             <table class="access-propagation-table">
                                 <thead>
@@ -121,24 +122,6 @@ class AccessReindexFieldset extends Fieldset
                 ],
                 'attributes' => [
                     'id' => 'recursive',
-                ],
-            ])
-            ->add([
-                'name' => 'propagation_mode',
-                'type' => CommonElement\OptionalRadio::class,
-                'options' => [
-                    'label' => 'Propagation mode', // @translate
-                    'label_attributes' => ['style' => 'display: inline-block'],
-                    'info' => 'Choose how the recursive copy combines an existing child level with the new parent level. If items in scope have heterogeneous media levels (e.g. a free preview alongside a forbidden high-res file), use "skip if set" or do not run the propagate option at all.', // @translate
-                    'value_options' => [
-                        'skip_if_set' => 'Skip if set (safest, recommended for items with media with different statuses)', // @translate
-                        'max_restrictive' => 'Max restrictive (keep the strictest level between parent and child)', // @translate
-                        'overwrite' => 'Overwrite (copy parent level, so a forbidden media may become free according to the status of the item or item set)', // @translate
-                    ],
-                ],
-                'attributes' => [
-                    'id' => 'propagation_mode',
-                    'value' => 'skip_if_set',
                 ],
             ])
             ->add([

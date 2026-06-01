@@ -688,11 +688,6 @@ class Module extends AbstractModule
         $form = $formManager->get($formClass);
         $form->init();
         $form->setData($data);
-        // Pre-populate the propagation mode radio with the last chosen value.
-        // access_propagation_embargo lives in the Embargo subsection of the
-        // Settings tab (form's standard data binding handles it).
-        $form->get('access_reindex')->get('propagation_mode')
-            ->setValue($settings->get('access_propagation_mode', 'skip_if_set'));
         $form->prepare();
 
         $translate = $renderer->plugin('translate');
@@ -707,7 +702,7 @@ class Module extends AbstractModule
         ];
 
         return '<style>fieldset[name=access_reindex] .inputs label {display: block;}</style>'
-            . $renderer->configFormTabs($form, $tabs, 'access.config.section_nav');
+            . $renderer->formTabs($form, $tabs, 'access.config.section_nav');
     }
 
     public function handleConfigForm(AbstractController $controller)
@@ -787,16 +782,15 @@ class Module extends AbstractModule
         // before the property-mode-specific checks below.
         $post = $controller->getRequest()->getPost();
         if (!empty($post['access_reindex']['process_index'])) {
-            $propagationMode = $post['access_reindex']['propagation_mode'] ?? null;
+            // Both propagation options live in the Propagation subsection of
+            // the Settings tab, read from there so the reindex job, the
+            // synchronous propagation on resource save, and any batch update
+            // share the same policy.
+            $propagationMode = $settings->get('access_propagation_mode', 'skip_if_set');
             if (!in_array($propagationMode, ['skip_if_set', 'max_restrictive', 'overwrite'], true)) {
                 $propagationMode = 'skip_if_set';
             }
-            // access_propagation_embargo is a global setting (Embargo
-            // subsection of the Settings tab), read it from there so the job
-            // and the synchronous propagation share the same policy.
             $propagationEmbargo = (bool) $settings->get('access_propagation_embargo', false);
-            // Persist the chosen mode so it pre-populates the form next time.
-            $settings->set('access_propagation_mode', $propagationMode);
 
             if (!empty($post['access_reindex']['auto'])) {
                 $vars = [
@@ -821,6 +815,22 @@ class Module extends AbstractModule
                     );
                     $messenger->addWarning($message);
                 } else {
+                    // Warn when the combination is effectively a no-op so the
+                    // admin does not interpret an empty log as a bug.
+                    // skip_if_set on recursive only creates rows for the
+                    // marginal case of resources without any access_status row
+                    // (rare since the api.create.post listener fills them). If
+                    // sync/missing are also "skip", there is nothing else to
+                    // do.
+                    if ($vars['recursive']
+                        && $vars['sync'] === 'skip'
+                        && $vars['missing'] === 'skip'
+                        && $propagationMode === 'skip_if_set'
+                    ) {
+                        $messenger->addWarning(new PsrMessage(
+                            'The job will run but is likely a no-op: propagation mode "skip if set" only fills children that have no access_status row, and every resource gets one automatically when it is created. Choose another propagation mode, enable the sync or fill-missing options, or skip the job altogether.' // @translate
+                        ));
+                    }
                     $this->processUpdateStatus($vars);
                 }
             }

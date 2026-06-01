@@ -14,6 +14,7 @@ class ConfigForm extends Form
         'files' => 'Files to protect', // @translate
         'modes' => 'Access modes', // @translate
         'embargo' => 'Embargo', // @translate
+        'propagation' => 'Propagation', // @translate
     ];
 
     public function init(): void
@@ -21,6 +22,50 @@ class ConfigForm extends Form
         $this->setOption('element_groups', $this->elementGroups);
 
         $this
+            ->add([
+                'name' => 'access_levels_table_note',
+                'type' => CommonElement\Note::class,
+                'options' => [
+                    'element_group' => 'rights',
+                    // HTML kept inline so it renders as a real <details> in the
+                    // admin form. Translators only need to translate the
+                    // human-facing strings inside cells.
+                    'text' => '<details><summary>' . 'Access levels summary' /* @translate */ . '</summary>'
+                        . '<table class="access-levels-table">'
+                        . '<thead><tr>'
+                        . '<th>' . 'Level' /* @translate */ . '</th>'
+                        . '<th>' . 'Notice (if is_public=1)' /* @translate */ . '</th>'
+                        . '<th>' . 'File' /* @translate */ . '</th>'
+                        . '<th>' . 'Admin access request' /* @translate */ . '</th>'
+                        . '<th>' . 'Author contact' /* @translate */ . '</th>'
+                        . '</tr></thead><tbody>'
+                        . '<tr><th><code>free</code></th>'
+                        . '<td>' . 'Visible' /* @translate */ . '</td>'
+                        . '<td>' . 'Downloadable by anyone' /* @translate */ . '</td>'
+                        . '<td>-</td><td>-</td></tr>'
+                        . '<tr><th><code>reserved</code></th>'
+                        . '<td>' . 'Visible' /* @translate */ . '</td>'
+                        . '<td>' . 'Blocked for anonymous; unlocked by any active bypass (IP, SSO IDP, guest, CAS, LDAP, external, email regex) or by an approved individual access request' /* @translate */ . '</td>'
+                        . '<td>' . 'Yes' /* @translate */ . '</td>'
+                        . '<td>' . 'Possible' /* @translate */ . '</td></tr>'
+                        . '<tr><th><code>protected</code></th>'
+                        . '<td>' . 'Visible' /* @translate */ . '</td>'
+                        . '<td>' . 'Blocked for everyone; unlocked ONLY by an approved individual access request. No automatic bypass applies.' /* @translate */ . '</td>'
+                        . '<td>' . 'Yes (mandatory)' /* @translate */ . '</td>'
+                        . '<td>' . 'Possible' /* @translate */ . '</td></tr>'
+                        . '<tr><th><code>forbidden</code></th>'
+                        . '<td>' . 'Visible' /* @translate */ . '</td>'
+                        . '<td>' . 'Blocked for everyone; no path through the admin access request flow' /* @translate */ . '</td>'
+                        . '<td>' . 'No' /* @translate */ . '</td>'
+                        . '<td>' . 'Sole recourse (theme-side "contact the author" feature)' /* @translate */ . '</td></tr>'
+                        . '</tbody></table>'
+                        . '<p><strong>' . 'Notice visibility' /* @translate */ . '</strong>: ' . 'follows Omeka core is_public only; the access level never hides a notice.' /* @translate */ . '</p>'
+                        . '<p><strong>' . 'Cascade' /* @translate */ . '</strong>: ' . 'applied at the moment of the propagation job (item set → items → media). At runtime, the file gating reads the media row (fallback to parent item).' /* @translate */ . '</p>'
+                        . '</details>',
+                    'disable_html_escape' => true,
+                ],
+            ])
+
             ->add([
                 'name' => 'access_rights_note',
                 'type' => CommonElement\Note::class,
@@ -271,13 +316,13 @@ class ConfigForm extends Form
                         'style' => 'display: block;',
                     ],
                     'value_options' => [
-                        'ip' => 'IP: visitors with specified ips have access to a list of reserved media by item sets', // @translate
+                        'ip' => 'IP: visitors with specified ips have access to all reserved medias, or only to those in selected item sets', // @translate
                         'guest' => 'Guest: all users, included guests, have access to all reserved medias', // @translate
                         'auth_external' => 'External: users externally authenticated (cas, ldap, sso) have access to all reserved medias', // @translate
                         'auth_cas' => 'CAS: users authenticated by cas have access to all reserved medias', // @translate
                         'auth_ldap' => 'LDAP: users authenticated by ldap have access to all reserved medias', // @translate
                         'auth_sso' => 'SSO: users authenticated by sso have access to all reserved medias', // @translate
-                        'auth_sso_idp' => 'SSO / IDP: users authenticated by specified identity providers have access to a list of reserved media by item sets', // @translate
+                        'auth_sso_idp' => 'SSO / IDP: users authenticated by specified identity providers have access to all reserved medias, or only to those in selected item sets', // @translate
                         'email_regex' => 'Users authenticated with a specific email have access to all reserved medias', // @translate
                         'user' => 'User: authenticated users should request access to specific reserved medias', // @translate
                         'email' => 'Email: A visitor identified by email should request access to specific reserved medias', // @translate
@@ -311,7 +356,12 @@ class ConfigForm extends Form
                 'options' => [
                     'element_group' => 'modes',
                     'label' => 'List of ips with open access, eventually limited to selected item sets', // @translate
-                    'info' => 'These ips will have unrestricted access to all resources or only resources of the specified item sets. List them separated by a "=", one by line. Range ip are allowed (formatted as cidr). An item set prepended with a "-" means an excluded item set, in particular when a global item set is defined to identify all reserved resources.', // @translate
+                    'info' => <<<'TXT'
+                        List the ips separated by a "=", one by line. Range ip are allowed (formatted as cidr). The value after "=" controls which item sets are reachable:
+                        - empty (no item set after "="): the ip has unrestricted access to every reserved resource, including resources that are not attached to any item set;
+                        - one or more item set ids: the ip has access only to resources attached to at least one of these item sets; resources not in any item set are denied;
+                        - an item set id prepended with "-" is an excluded item set, useful when a global item set is defined to identify all reserved resources.
+                        TXT, // @translate
                     'as_key_value' => true,
                 ],
                 'attributes' => [
@@ -331,7 +381,13 @@ class ConfigForm extends Form
                 'options' => [
                     'element_group' => 'modes',
                     'label' => 'List of sso idp with open access, eventually limited to selected item sets', // @translate
-                    'info' => 'These identity providers will have unrestricted access to all resources or only resources of the specified item sets. List them separated by a "=", one by line. The idp name is the domain name or the value used in the login form. "federation" can be used for all users authenticated via a federated idp. An item set prepended with a "-" means an excluded item set, in particular when a global item set is defined to identify all reserved resources.', // @translate
+                    'info' => <<<'TXT'
+                        List the identity providers separated by a "=", one by line. The idp name is the entity id (or the value used in the login form). "federation" can be used as fallback for all users authenticated via a federated idp not listed above. The value after "=" controls which item sets are reachable:
+                        - empty (no item set after "="): the idp has unrestricted access to every reserved resource, including resources that are not attached to any item set;
+                        - one or more item set ids: the idp has access only to resources attached to at least one of these item sets; resources not in any item set are denied;
+                        - an item set id prepended with "-" is an excluded item set, useful when a global item set is defined to identify all reserved resources.
+                        Without any matching entry (and no "federation" fallback), the user is denied.
+                        TXT, // @translate
                     'as_key_value' => true,
                 ],
                 'attributes' => [
@@ -415,10 +471,28 @@ class ConfigForm extends Form
                 ],
             ])
             ->add([
+                'name' => 'access_propagation_mode',
+                'type' => CommonElement\OptionalRadio::class,
+                'options' => [
+                    'element_group' => 'propagation',
+                    'label' => 'Propagation mode', // @translate
+                    'label_attributes' => ['style' => 'display: inline-block'],
+                    'info' => 'Choose how the recursive copy combines an existing child level with the new parent level for the reindex job in the Tasks tab. If items in scope have heterogeneous media levels (e.g. a free preview alongside a forbidden high-res file), use "skip if set" or do not run the recursive option at all. Note: a resource save with the "Apply recursive" option always forces "overwrite". That path is an explicit admin request treated as an intentional bulk propagation.', // @translate
+                    'value_options' => [
+                        'skip_if_set' => 'Skip if set (safest, recommended for items with media with different statuses)', // @translate
+                        'max_restrictive' => 'Max restrictive (keep the strictest level between parent and child)', // @translate
+                        'overwrite' => 'Overwrite (always copy the parent level, to be used when managed by item set)', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'access_propagation_mode',
+                ],
+            ])
+            ->add([
                 'name' => 'access_propagation_embargo',
                 'type' => CommonElement\OptionalCheckbox::class,
                 'options' => [
-                    'element_group' => 'embargo',
+                    'element_group' => 'propagation',
                     'label' => 'Propagate embargo dates with the access level', // @translate
                     'info' => 'Default off: embargo is per-resource. Check this box to make every propagation copy parent embargo start and end on resource save and reindex job.', // @translate
                 ],

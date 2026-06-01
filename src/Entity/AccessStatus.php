@@ -36,12 +36,24 @@ class AccessStatus extends AbstractEntity
     /**#@+
      * Access levels.
      *
-     * A resource can have four statuses from the most open to the most close.
+     * The access level applies to FILE content only, never to the notice.
+     * Notice visibility follows Omeka core resource->is_public. The access
+     * level on an item set or item carries no direct gating semantic; its only
+     * role is to act as a default propagated to children media when the admin
+     * runs the reindex job.
      *
-     * FREE: Free access to resource.
-     * RESERVED: Reserved access to media content only, not to the record.
-     * PROTECTED: Reserved access to record and content (file).
-     * FORBIDDEN: Not available.
+     * On a media, the effective level is the strictest of (media, parent item,
+     * parent item sets) after propagation, and gates the file:
+     *
+     * FREE:      file accessible to all.
+     * RESERVED:  file restricted; debloqued by any active bypass mode (IP,
+     *            SSO IDP, guest, CAS, LDAP, external, email regex) or by an
+     *            approved individual access request.
+     * PROTECTED: file restricted; ONLY an approved individual access request
+     *            grants access. No global bypass applies.
+     * FORBIDDEN: file restricted; no recourse via the access request flow.
+     *            The recommended pattern is to expose a separate "contact the author"
+     *            channel (theme-side, optional).
      */
     const FREE = 'free';
     const RESERVED = 'reserved';
