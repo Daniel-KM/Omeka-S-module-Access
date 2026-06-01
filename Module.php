@@ -476,7 +476,7 @@ class Module extends AbstractModule
             // \Annotate\Api\Adapter\AnnotationAdapter::class =>
             // \Annotate\Controller\Admin\AnnotationController::class,
         ];
-        if (class_exists(\DigitalObject\Api\Adapter\DigitalObjectAdapter::class)) {
+        if (class_exists('DigitalObject\Module', false)) {
             $adaptersAndControllers[\DigitalObject\Api\Adapter\DigitalObjectAdapter::class] = 'DigitalObject\Controller\Admin\DigitalObject';
         }
         foreach ($adaptersAndControllers as $adapter => $controller) {
@@ -2102,6 +2102,25 @@ class Module extends AbstractModule
         $valueOptions = $process->getValueOptions();
         $valueOptions['access_reindex'] = 'Access: Reindex resources'; // @translate
         $process->setValueOptions($valueOptions);
+
+        // Describe the task for the check-and-fix ui (recent EasyAdmin only).
+        if (method_exists($form, 'addTaskSubjects')) {
+            $form->addTaskSubjects([
+                'access_reindex' => [
+                    'name' => 'Access reindex', // @translate
+                    'description' => 'Reindex the access status of resources.', // @translate
+                    'actions' => [
+                        'access_reindex' => 'Reindex', // @translate
+                    ],
+                ],
+            ]);
+        }
+
+        // Flag it as dangerous (hidden until "Display dangerous tasks"):
+        // the reindex rewrites the access status of every resource.
+        if (method_exists($form, 'addDangerousTasks')) {
+            $form->addDangerousTasks(['access_reindex']);
+        }
 
         $fieldset
             ->add([
