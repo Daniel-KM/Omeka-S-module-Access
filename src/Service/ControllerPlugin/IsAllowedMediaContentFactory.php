@@ -15,6 +15,8 @@ class IsAllowedMediaContentFactory implements FactoryInterface
         // TODO Check if to prepare controller plugins is still needed in Omeka S v4, included some background tasks.
         $user = $services->get('Omeka\AuthenticationService')->getIdentity();
         $plugins = $services->get('ControllerPluginManager');
+        $settings = $services->get('Omeka\Settings');
+        $userSettings = $user ? $services->get('Omeka\Settings\User') : null;
         return new IsAllowedMediaContent(
             $plugins->get('accessStatus'),
             $services->get('Omeka\EntityManager'),
@@ -23,10 +25,11 @@ class IsAllowedMediaContentFactory implements FactoryInterface
             $plugins->has('isLdapUser') ? $plugins->get('isLdapUser') : null,
             $plugins->has('isSsoUser') ? $plugins->get('isSsoUser') : null,
             $plugins->get('params'),
-            $services->get('Omeka\Settings'),
+            $settings,
             $user,
             $plugins->get('userIsAllowed'),
-            $user ? $services->get('Omeka\Settings\User') : null
+            $userSettings,
+            new \Access\Service\BypassResolver($settings, $userSettings)
         );
     }
 }

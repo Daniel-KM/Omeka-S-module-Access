@@ -6,11 +6,11 @@ use Access\Api\Representation\AccessStatusRepresentation;
 use Access\Entity\AccessRequest;
 use Access\Entity\AccessStatus;
 use Access\Mvc\Controller\Plugin\AccessStatus as AccessStatusPlugin;
+use Access\Service\BypassResolver;
 use CAS\Mvc\Controller\Plugin\IsCasUser;
 // use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 // use Doctrine\ORM\Query\Parameter;
-use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Laminas\Mvc\Controller\Plugin\Params;
 use Ldap\Mvc\Controller\Plugin\IsLdapUser;
@@ -78,6 +78,11 @@ class IsAllowedMediaContent extends AbstractPlugin
      */
     protected $userSettings;
 
+    /**
+     * @var \Access\Service\BypassResolver
+     */
+    protected $bypassResolver;
+
     public function __construct(
         AccessStatusPlugin $accessStatus,
         EntityManager $entityManager,
@@ -89,7 +94,8 @@ class IsAllowedMediaContent extends AbstractPlugin
         Settings $settings,
         ?User $user,
         UserIsAllowed $userIsAllowed,
-        ?UserSettings $userSettings
+        ?UserSettings $userSettings,
+        ?BypassResolver $bypassResolver = null
     ) {
         $this->accessStatus = $accessStatus;
         $this->entityManager = $entityManager;
@@ -102,6 +108,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         $this->user = $user;
         $this->userIsAllowed = $userIsAllowed;
         $this->userSettings = $userSettings;
+        $this->bypassResolver = $bypassResolver ?? new BypassResolver($settings, $userSettings);
     }
 
     /**
@@ -306,146 +313,23 @@ class IsAllowedMediaContent extends AbstractPlugin
     }
 
     /**
-     * Check if the ip of the user is reserved and limited to some item sets.
+     * Delegated to BypassResolver to avoid duplication with AccessChecker.
      *
-     * @return array|null Null if the user is not listed in reserved ips, else
-     *   array of item sets, that may be empty, that means any.
+     * @return array|null
      */
     protected function definedItemSetsForClientIp(): ?array
     {
-        // This method is called one time for each file, but each file is
-        // called by a different request.
-
-        /** @see https://github.com/Daniel-KM/Omeka-S-module-Access/issues/1 */
-        /** @see https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/issues/6 */
-        $ip = $this->resolveClientIp();
-        if ($ip === '::' || !filter_var($ip, FILTER_VALIDATE_IP)) {
-            return null;
-        }
-
-        $listIps = $this->settings->get('access_ip_item_sets_by_ip', []);
-        if (empty($listIps)) {
-            return null;
-        }
-
-        // Check a single ip.
-        if (isset($listIps[$ip])) {
-            return array_intersect_key($listIps[$ip], ['allow' => null, 'forbid' => null]);
-        }
-
-        // Check an ip range.
-        // Determine if client IP is IPv4 or IPv6.
-        $isIpv6 = strpos($ip, ':') !== false;
-        if ($isIpv6) {
-            $ipBinary = inet_pton($ip);
-            if ($ipBinary === false) {
-                return null;
-            }
-            foreach ($listIps as $range) {
-                if (!empty($range['ipv6']) && isset($range['low_bin'], $range['high_bin'])) {
-                    if ($ipBinary >= $range['low_bin'] && $ipBinary <= $range['high_bin']) {
-                        return array_intersect_key($range, ['allow' => null, 'forbid' => null]);
-                    }
-                }
-            }
-        } else {
-            $ipLong = ip2long($ip);
-            if ($ipLong === false) {
-                return null;
-            }
-            foreach ($listIps as $range) {
-                if (empty($range['ipv6']) && isset($range['low'], $range['high'])) {
-                    if ($ipLong >= $range['low'] && $ipLong <= $range['high']) {
-                        return array_intersect_key($range, ['allow' => null, 'forbid' => null]);
-                    }
-                }
-            }
-        }
-
-        return null;
+        return $this->bypassResolver->definedItemSetsForClientIp();
     }
 
     /**
-     * Resolve the real client IP, guarding against spoofed proxy headers.
+     * Delegated to BypassResolver to avoid duplication with AccessChecker.
      *
-     * Proxy headers (X-Forwarded-For, X-Real-IP) are only honored when the
-     * setting "access_ip_proxy_trusted" lists at least one address and the
-     * current REMOTE_ADDR is in it. In that case, Laminas walks the
-     * X-Forwarded-For chain right-to-left and returns the first address that is
-     * not a trusted proxy — the real client. Otherwise, REMOTE_ADDR.
-     *
-     * @return string Valid IPv4/IPv6, or "::" if nothing usable.
-     */
-    protected function resolveClientIp(): string
-    {
-        $remoteAddress = new RemoteAddress();
-        $remote = $remoteAddress->getIpAddress();
-        if (!$remote || !filter_var($remote, FILTER_VALIDATE_IP)) {
-            return '::';
-        }
-
-        $trusted = $this->settings->get('access_ip_proxy_trusted', []);
-        if (!is_array($trusted)) {
-            $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
-        }
-        $trusted = array_values(array_filter(
-            array_map('trim', $trusted),
-            fn ($v) => $v !== '' && filter_var(
-                strpos($v, '/') === false ? $v : strtok($v, '/'),
-                FILTER_VALIDATE_IP
-            )
-        ));
-        if (!$trusted || !in_array($remote, $trusted, true)) {
-            return $remote;
-        }
-
-        // Also try X-Real-IP when X-Forwarded-For is absent/empty.
-        if (empty($_SERVER['HTTP_X_FORWARDED_FOR'])
-            && !empty($_SERVER['HTTP_X_REAL_IP'])
-        ) {
-            $realIp = trim((string) $_SERVER['HTTP_X_REAL_IP']);
-            return filter_var($realIp, FILTER_VALIDATE_IP) ? $realIp : $remote;
-        }
-
-        $remoteAddress
-            ->setUseProxy(true)
-            ->setTrustedProxies($trusted);
-        $ip = $remoteAddress->getIpAddress();
-        return $ip && filter_var($ip, FILTER_VALIDATE_IP) ? $ip : $remote;
-    }
-
-    /**
-     * Check if the idp of the user is reserved and limited to some item sets.
-     *
-     * @return array|null Null if the user is not listed in reserved idps, else
-     *   array of item sets, that may be empty, that means any.
+     * @return array|null
      */
     protected function definedItemSetsForAuthSsoIdp(): ?array
     {
-        // This method is called one time for each file, but each file is
-        // called by a different request.
-
-        $reservedIdps = $this->settings->get('access_auth_sso_idp_item_sets_by_idp', []);
-        if (empty($reservedIdps)) {
-            return null;
-        }
-
-        if (!$this->userSettings) {
-            return null;
-        }
-
-        $authenticator = $this->userSettings->get('connection_authenticator');
-        if ($authenticator !== 'SingleSignOn') {
-            return null;
-        }
-
-        $idpName = $this->userSettings->get('connection_idp');
-        if ($idpName && isset($reservedIdps[$idpName])) {
-            return $reservedIdps[$idpName];
-        }
-
-        return $reservedIdps['federation']
-            ?? null;
+        return $this->bypassResolver->definedItemSetsForAuthSsoIdp();
     }
 
     protected function checkEmailRegex(User $user): bool
