@@ -93,10 +93,6 @@ The module can automatically manage the Apache rewrite rule in the root
 `.htaccess` file. On installation, a rule protecting `original` and `large`
 files is written automatically.
 
-The configuration form is split into two tabs, Settings and Tasks. The Settings
-tab groups options by sub-sections: Access rights, Files to protect, Access modes
-and Embargo. The Tasks tab gathers three reindexing and synchronization jobs.
-
 The Files to protect sub-section provides:
 
 - Skip `.htaccess` management: when checked, the module will not write or update
@@ -284,57 +280,81 @@ The configuration of Apache above should be adapted for Nginx.
 Usage
 -----
 
-Omeka has two modes of visibility: public or private. This module adds a second
-check for anonymous or specific users: the right to access to a resource. This
-rights has four levels: free, reserved, protected or forbidden. These access
-levels applies on record or media files, but the current version supports only
-protection of media contents. The mode protected is not used in current version.
-Furthermore, a check is done on embargo dates, if any.
+Omeka has two modes of visibility: public or private (`resource.is_public`).
+The Access module adds a **second, orthogonal** check on **file content only**:
+the right to download a media's file. The record itself is never hidden by this
+module; it follows Omeka core visibility.
 
-So with this module, there are three conditions to make a file accessible by a
-visitor or a user:
-- visibility of the item and the media should be public;
-- access level should be free for anonymous visitor or reserved if the user has
-  some rights defined in config;
-- embargo dates should be undefined or ended.
+So in this module, three independent conditions must be satisfied for a visitor
+to download a file:
 
-So an anonymous visitor can see a public media, but can view the file only if
-the level is set to free. The user should have a permission when the level is
-reserved or protected, and cannot see it in any case when the level is
-forbidden, even if the media is public.
+- the item and the media must be public (Omeka core check);
+- the access level on the media (after cascade) must allow access for this
+  visitor;
+- the embargo dates, if any, must not block access.
 
-There is no difference between reserved or protected when the type of protection
-is limited to files, that is the only type in the current version of the module.
+A status (`free`, `reserved`, `protected`, `forbidden`) on an item set or an
+item has no direct gating semantic. Its only role is to act as a default
+propagated down to the media when the admin runs the reindex job. At runtime,
+the file gating reads the media's own row (with fallback to the parent item if
+the media has no row). The cascade is therefore applied at propagation time,
+not at every request.
 
-The permission to see a reserved content can be done via many ways: Users can be
-checked via the role guest, the authentication via an external identity provider
-(module [CAS], [LDAP] and [Single Sign-On]), by ip (v4 or v6), by email or by a
-token.
+When several levels apply (media, item, item set), the strictest wins: a `free`
+media inside a `forbidden` item set is inaccessible once the propagation job
+has cascaded the item set level down. The reindex job exposes a `propagation_mode`
+option to choose how this cascade behaves: `max_restrictive` (default, never
+demote a stricter child), `overwrite` (always copy the parent level), or `skip_if_set`
+(only fill children that have no level yet). It is strongly recommended to
+choose `max_restrictive`.
 
-One important thing to understand is to choose to define the access for each
-type of resource: item sets, items and media and to choose if the access is done
-recursively during storing or in request. If the request is set to apply
-recursively for an item set, all items and medias attached to it will be
-available. If the request is set to apply recursively for an item, all medias
-attached to it will be available. So when an item set or an item is saved and
-when a request is validated, set if the access or the request applies
-recursively.
+<details>
+<summary><strong>Access levels: semantic summary</strong></summary>
 
-Take care that for resource, the recursivity should be set each time it is
-saved, if needed, else access won't be updated to the attached resources. It
-allows to have specific access for specific items or medias. Furthermore, this
-mechanism does not apply when the access status is set via property. In that
-case, all resources are managed individually.
+| Level       | Record  | File                                                                                                  | Admin access request | Contact author       |
+|-------------|---------|-------------------------------------------------------------------------------------------------------|----------------------|----------------------|
+| `free`      | Visible | Downloadable by anyone                                                                                | Useless              | Useless              |
+| `reserved`  | Visible | Blocked for anonymous; unlocked by any active bypass mode or by an approved individual access request | Yes                  | Possible             |
+| `protected` | Visible | Blocked for everyone; unlocked only by an approved individual access request (no automatic bypass)    | Yes (mandatory)      | Possible             |
+| `forbidden` | Visible | Blocked for everyone; no path through the admin access request flow                                   | No                   | Only way to get file |
 
-Anyway, the recursivity is useful only when there are multiple medias and the
-status of some of them is different.
+`reserved` vs `protected` is the difference between *silently granted to known contexts*
+(a reader on the right IP, a logged-in SSO user, a member of the guest role) and
+*always individually validated* (the admin must approve every single download).
 
-Finally, the option applies only to existing resources: if an item is created
-after a change in an item set, it won't apply to it, so you will need to set the
-right mode or to update the item set with the recursive option set.
+`forbidden` does not deny existence (the record is still publicly visible). It
+only removes the standard request flow. If you also want the record to be
+hidden, set the resource itself to private (`is_public = 0`).
 
-When an embargo is set, it can be bypassed, or not, for the users. Only files
-can be under embargo currently.
+</details>
+
+The right to view a `reserved` file can be granted through several channels:
+the guest role, an external identity provider (module [CAS], [LDAP] or [Single Sign-On]),
+by IP (v4 or v6), by email, or by token. For `protected` files, only the
+individual access request flow (user/email/token modes) is honoured.
+
+The recursive option of the reindex job updates the existing access status of
+children when an item set or an item is saved with recursivity enabled.
+This option applies only to existing resources: if an item is created after a
+change in an item set, the new item is not retroactively updated; the reindex
+job must be re-run, or the item set must be re-saved with the recursive option.
+
+When an embargo is set, it can be bypassed (or not) per user via the `access_embargo_bypass`
+setting. Currently only files can be under embargo. Embargo dates are
+per-resource and never propagated by the reindex job: only the level cascades.
+Setting an embargo on an item set has no effect on the embargo of its items or
+media: embargo must be set on the targeted resource directly. The `access_embargo_ended_level`
+and `access_embargo_ended_date` settings control what the level becomes when an
+embargo expires.
+
+For a "forbidden" resource, the standard admin access request flow is not
+offered. The recommended recourse is the view helper `accessContactAuthor($resource)`:
+when the **ContactUs** module is installed, the helper delegates to its
+`contactUs` helper with `contact='author'`, which resolves the author email from
+a configured property (e.g. `dcterms:creator`) and renders a styled contact form
+with consent, hashcash, etc. Without ContactUs, the helper falls back to a short
+message inviting the visitor to reach the site administrator (who can then
+forward the request to the author).
 
 ### Access mode
 
@@ -423,6 +443,68 @@ When a media does not have an explicit access status set:
 This inheritance behavior ensures that restricted items have their medias
 restricted as well, even when access is not explicitly set on individual medias.
 
+### Propagation modes
+
+The reindex job (Tasks tab) cascades the parent level down the chain ItemSet → Items → Media.
+The level cascade is the primary purpose of the job; embargo dates are
+independent and opt-in.
+
+#### Level (access_status table)
+
+The mode is chosen via the **Propagation mode** radio in the reindex fieldset.
+The selected value is persisted in the `access_propagation_mode` setting and
+pre-populates the form on the next visit.
+
+| Mode                        | Child stricter than parent | Child without `access_status` row  | Child more permissive than parent |
+|-----------------------------|----------------------------|------------------------------------|-----------------------------------|
+| `max_restrictive` (default) | Kept (never demoted)       | New row created with parent level  | Receives parent level             |
+| `overwrite` (old default)   | Demoted to parent level    | New row created with parent level  | Receives parent level             |
+| `skip_if_set` (rare)        | Unchanged                  | New row created with parent level  | Unchanged                         |
+
+The old default `overwrite` mode is the only value that can silently demote a
+child explicitly marked stricter (e.g. a `forbidden` item inside a `reserved`
+item  set). For installs upgraded from < 3.4.44 it is kept as the default for
+backwards compatibility; switching to `max_restrictive` is strongly recommended.
+
+`skip_if_set` is rarely useful: every resource created while the Access module
+is active receives an `access_status` row by default, so children with no row
+only exist when the module was installed on a database that already contained
+resources, or when a row has been deleted manually.
+
+##### Property mode addendum
+
+When access via property is enabled, the level property value (in the `value`
+table) is **realigned** with the post-propagation `access_status.level` after
+the standard parent-binding INSERT. This ensures that a child preserved at a
+stricter level by `max_restrictive` (or left unchanged by `skip_if_set`) is not
+silently demoted the next time the resource is saved and the property mirrors
+back into `access_status`.
+
+#### Embargo dates
+
+By default embargo dates are **not propagated**: they are per-resource,
+time-bound and orthogonal to the level. The `access_embargo_bypass`, `access_embargo_ended_level`
+and `access_embargo_ended_date` settings handle end-of-embargo behavior
+independently.
+
+Setting an embargo on an item set therefore has no effect on the embargo of its
+items or media and the embargo must be set on the targeted resource directly.
+
+The old behavior (parent embargo copied onto every child) is kept as an opt-in
+via the Also propagate embargo dates checkbox in the reindex fieldset, persisted
+in the `access_propagation_embargo` setting. The upgrade script enables it for
+installs predating 3.4.44.
+
+| `propagation_embargo` | `access_status` (metadata mode)                                        | `value` table (property mode)                                                                                                                                 |
+|-----------------------|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Off (default)         | Embargo columns untouched on every child. Newly created rows use NULL. | Embargo property values left intact on every child.                                                                                                           |
+| On (old default)      | Parent embargo windows are copied per the chosen level mode.           | Embargo property values are rewritten from the post-propagation `access_status` columns for consistence between value and index regardless of the level mode. |
+
+The chosen level mode are :
+- `overwrite` = copied verbatim;
+- `max_restrictive` = `LEAST`/`GREATEST` merge (earliest start, latest end);
+`skip_if_set` = no-op on existing rows.
+
 ### Advanced search
 
 The advanced search form includes a multi-select filter for access levels. You
@@ -464,33 +546,32 @@ item set 2005.
 #### Reverse proxy and private IPs
 
 When Omeka S is behind a reverse proxy (Traefik, nginx, Apache, Docker bridge,
-load balancer), fill the field "Trusted proxies" with the internal IPs of
-your reverse proxy. The module then reads `X-Forwarded-For` or `X-Real-IP`
-instead of the proxy socket address — but only when the request comes from
-one of these trusted IPs, to prevent header spoofing. Without this list,
-every visitor is seen with the proxy IP and, if that IP is listed in the
-rules, all visitors inherit the rights attached to it.
+load balancer), fill the field "Trusted proxies" with the internal IPs of your
+reverse proxy. The module then reads `X-Forwarded-For` or `X-Real-IP` instead of
+the proxy socket address, but only when the request comes from one of these
+trusted IPs, to prevent header spoofing. Without this list, every visitor is
+seen with the proxy IP and, if that IP is listed in the rules, all visitors
+inherit the rights attached to it.
 
-The trusted proxy is auto-detected on install, on upgrade and on config
-form submit: if the list is empty and proxy headers are present on the
-current admin request, `REMOTE_ADDR` is added automatically. An existing
-list is never overwritten.
+The trusted proxy is auto-detected on install, on upgrade and on config form
+submit: if the list is empty and proxy headers are present on the current admin
+request, `REMOTE_ADDR` is added automatically. An existing list is never
+overwritten.
 
 The configuration page warns automatically when:
 - a reverse proxy header is detected but no trusted proxy is configured;
-- trusted proxies are configured but no proxy header is detected on the
-  current request;
-- a private or loopback IP (RFC1918, 127/8, fc00::/7, link-local, etc.)
-  is listed in the access rules — typical sign of a Docker bridge or
-  internal proxy leaking to external visitors;
-- the IP of the current administrator request is itself listed in the
-  access rules and no trusted proxy is configured (critical: indicates a
-  proxy bypass).
+- trusted proxies are configured but no proxy header is detected on the current
+  request;
+- a private or loopback IP (RFC1918, 127/8, fc00::/7, link-local, etc.) is
+  listed in the access rules, typical sign of a Docker bridge or internal proxy
+  leaking to external visitors;
+- the IP of the current administrator request is itself listed in the access
+  rules and no trusted proxy is configured (critical: indicates a proxy bypass).
 
 #### Authorization endpoint for external services
 
-The module exposes a lightweight endpoint at `/access/authorize` returning
-the authorization result as an HTTP status code with an empty body:
+The module exposes a lightweight endpoint at `/access/authorize` returning the
+authorization result as an HTTP status code with an empty body:
 
 - `200`: access allowed
 - `403`: access denied
@@ -502,21 +583,20 @@ Accepts one of the following query parameters:
 - `storage=<storage_id>`: storage_id (filename without extension)
 - `filename=<storage_id.ext>`: full filename
 
-It reuses the same `isAllowedMediaContent` logic as the main controller
-(IP rules, embargo, individual requests, SSO IdP, etc.). The setting
-"Trusted proxies" applies, so the endpoint honors `X-Forwarded-For` /
-`X-Real-IP` only when the calling service (Cantaloupe, Traefik,
-nginx auth_request) is listed as a trusted proxy.
+It reuses the same `isAllowedMediaContent` logic as the main controller (IP
+rules, embargo, individual requests, SSO IdP, etc.). The setting "Trusted proxies"
+applies, so the endpoint honors `X-Forwarded-For` / `X-Real-IP` only when the
+calling service (Cantaloupe, traefik, nginx auth_request) is listed as a trusted
+proxy.
 
-Typical uses: Cantaloupe delegate script, Traefik ForwardAuth, nginx
-`auth_request`, Apache auth subrequest. Without such a check, an IIIF
-image server reverse-proxied on `/iiif/*` fully bypasses Omeka and Access.
+Typical uses: Cantaloupe delegate script, Traefik ForwardAuth, nginx `auth_request`,
+Apache auth subrequest. Without such a check, an IIIF image server
+reverse-proxied on `/iiif/*` fully bypasses Omeka and Access.
 
-A ready-to-use Cantaloupe delegate script is provided at
-[`data/delegates/cantaloupe.rb`](data/delegates/cantaloupe.rb).
-Adjust the `OMEKA_AUTHORIZE_URL` constant and point Cantaloupe at it via
-`delegate_script.pathname`. The Cantaloupe server IP must be listed in
-"Trusted proxies" in the Omeka Access configuration.
+A ready-to-use Cantaloupe delegate script is provided at [`data/delegates/cantaloupe.rb`](data/delegates/cantaloupe.rb).
+Adjust the `OMEKA_AUTHORIZE_URL` constant and point Cantaloupe at it via `delegate_script.pathname`.
+The Cantaloupe server IP must be listed in "Trusted proxies" in the Omeka Access
+configuration.
 
 #### Example for the access mode "sso idp"
 
