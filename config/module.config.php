@@ -338,7 +338,7 @@ return [
             // Custom file paths to protect (for DerivativeMedia, etc.).
             'access_htaccess_custom_types' => '',
 
-            // True means that recods are protected, not only media contents (files).
+            // True means that records are protected, not only media contents (files).
             'access_full' => false,
 
             'access_modes' => [
