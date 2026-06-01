@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-04 00:00+0000\n"
+"POT-Creation-Date: 2026-06-01 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -45,21 +45,21 @@ msgid ""
 "uninstall it first, but you will lose access statuses and requests."
 msgstr ""
 
-#: Module.php:699
+#: Module.php:705
 msgid "Tasks"
 msgstr ""
 
-#: Module.php:788
+#: Module.php:820
+msgid "Job is not launched: no option was set."
+msgstr ""
+
+#: Module.php:854
 msgid ""
 "When properties are used, three properties should be defined for \"level\", "
 "\"embargo start\" and \"embargo end\"."
 msgstr ""
 
-#: Module.php:811
-msgid "Job is not launched: no option was set."
-msgstr ""
-
-#: Module.php:1903 view/access/admin/log/browse.phtml:27
+#: Module.php:1952 view/access/admin/log/browse.phtml:27
 #: view/access/admin/request/browse.phtml:35
 #: view/access/admin/request/edit.phtml:30
 #: view/access/admin/request/edit.phtml:31
@@ -67,7 +67,7 @@ msgstr ""
 msgid "Access"
 msgstr ""
 
-#: Module.php:1933 view/access/site/request/browse.phtml:38
+#: Module.php:1982 view/access/site/request/browse.phtml:26
 msgid "Access requests"
 msgstr ""
 
@@ -113,6 +113,34 @@ msgstr ""
 msgid "from %1$s until %2$s"
 msgstr ""
 
+#: src/Controller/Admin/RequestController.php:112
+msgid "Resource not found."
+msgstr ""
+
+#: src/Controller/Admin/RequestController.php:119
+msgid "No email defined for this request."
+msgstr ""
+
+#: src/Controller/Admin/RequestController.php:128
+msgid "Empty message."
+msgstr ""
+
+#: src/Controller/Admin/RequestController.php:131
+msgid "Too long message."
+msgstr ""
+
+#: src/Controller/Admin/RequestController.php:139
+msgid "Reply to your access request"
+msgstr ""
+
+#: src/Controller/Admin/RequestController.php:152
+msgid "Too long subject."
+msgstr ""
+
+#: src/Controller/Admin/RequestController.php:174
+msgid "Sorry, the message cannot be sent. Contact the administrator."
+msgstr ""
+
 #: src/Service/ViewHelper/IsAccessRequestableFactory.php:16
 msgid "Full access is not supported currently"
 msgstr ""
@@ -121,6 +149,10 @@ msgstr ""
 msgid ""
 "Append a form to allow visitors to access request to a resource. The id of "
 "the resource should be passed as url argument."
+msgstr ""
+
+#: src/View/Helper/AccessContactAuthor.php:38
+msgid "Contact the author"
 msgstr ""
 
 #: view/access/admin/log/browse.phtml:27
@@ -154,7 +186,7 @@ msgid "No access records yet."
 msgstr ""
 
 #: view/access/admin/log/browse.phtml:80
-#: view/access/site/request/browse.phtml:75
+#: view/access/site/request/browse.phtml:86
 msgid "Refresh page"
 msgstr ""
 
@@ -184,14 +216,14 @@ msgstr ""
 #: view/access/admin/request/browse.phtml:67
 #: view/access/admin/request/show-details.phtml:37
 #: view/access/admin/request/show.phtml:45
-#: view/access/site/request/browse.phtml:52
+#: view/access/site/request/browse.phtml:63
 msgid "Recursive"
 msgstr ""
 
 #: view/access/admin/request/browse.phtml:69
 #: view/access/admin/request/show-details.phtml:48
 #: view/access/admin/request/show.phtml:54
-#: view/access/site/request/browse.phtml:54
+#: view/access/site/request/browse.phtml:65
 msgid "Dates"
 msgstr ""
 
@@ -200,34 +232,40 @@ msgstr ""
 msgid "#%s"
 msgstr ""
 
-#: view/access/admin/request/browse.phtml:133
-#: view/access/admin/request/browse.phtml:151
+#: view/access/admin/request/browse.phtml:88
+#: view/access/admin/request/browse.phtml:89
+#: view/common/dialog/access-request-send-message.phtml:22
+msgid "Reply to the requester"
+msgstr ""
+
+#: view/access/admin/request/browse.phtml:142
+#: view/access/admin/request/browse.phtml:160
 msgid "Delete access requests"
 msgstr ""
 
-#: view/access/admin/request/browse.phtml:134
+#: view/access/admin/request/browse.phtml:143
 msgid "Are you sure you would like to delete the selected access requests?"
 msgstr ""
 
-#: view/access/admin/request/browse.phtml:136
-#: view/access/admin/request/browse.phtml:154
+#: view/access/admin/request/browse.phtml:145
+#: view/access/admin/request/browse.phtml:163
 #, php-format
 msgid ""
 "%1$s: this action will permanently delete %2$s access requests and cannot be "
 "undone."
 msgstr ""
 
-#: view/access/admin/request/browse.phtml:152
+#: view/access/admin/request/browse.phtml:161
 msgid ""
 "Are you sure you would like to delete all access requests on all pages of "
 "this result?"
 msgstr ""
 
-#: view/access/admin/request/browse.phtml:192
+#: view/access/admin/request/browse.phtml:201
 msgid "No access requests."
 msgstr ""
 
-#: view/access/admin/request/browse.phtml:199
+#: view/access/admin/request/browse.phtml:212
 msgid "Filter access requests"
 msgstr ""
 
@@ -249,7 +287,7 @@ msgstr ""
 msgid "Edit access request"
 msgstr ""
 
-#: view/access/site/request/browse.phtml:75
+#: view/access/site/request/browse.phtml:86
 msgid "No access requests yet."
 msgstr ""
 
@@ -328,6 +366,10 @@ msgstr ""
 msgid "Access Forbidden"
 msgstr ""
 
+#: view/guest/site/guest/access-requests.phtml:10
+msgid "My access requests"
+msgstr ""
+
 #: view/guest/site/guest/widget/access-requests.phtml:15
 msgid "Dashboard"
 msgstr ""
@@ -347,116 +389,116 @@ msgid ""
 "relaunched manually."
 msgstr ""
 
-#: data/scripts/upgrade.php:200
+#: data/scripts/upgrade.php:202
 msgid "It is now possible to add a page block to request an access."
 msgstr ""
 
-#: data/scripts/upgrade.php:205
+#: data/scripts/upgrade.php:207
 msgid ""
 "New messages were added to make a distinction between user/visitor and "
 "accepted/rejected. Check main settings to adapt them."
 msgstr ""
 
-#: data/scripts/upgrade.php:220
+#: data/scripts/upgrade.php:222
 msgid ""
 "The module manages now http requests \"Content Range\" that allow to read "
 "files faster."
 msgstr ""
 
-#: data/scripts/upgrade.php:242
+#: data/scripts/upgrade.php:244
 msgid ""
 "A new access mode allows to limit access to medias to users with a specific "
 "email via regex."
 msgstr ""
 
-#: data/scripts/upgrade.php:317
+#: data/scripts/upgrade.php:319
 msgid ""
 "The settings \"heading\" was removed from block Access request. New blocks "
 "\"Heading\" or \"Html\" were prepended to all blocks that had a filled "
 "heading. You may check pages for styles: {json}"
 msgstr ""
 
-#: data/scripts/upgrade.php:327
+#: data/scripts/upgrade.php:329
 msgid ""
 "The setting \"template\" was moved to the new block layout settings "
 "available since Omeka S v4.1. You may check pages for styles: {json}"
 msgstr ""
 
-#: data/scripts/upgrade.php:334
+#: data/scripts/upgrade.php:336
 msgid ""
 "The template files for the block Access request should be moved from \"view/"
 "common/block-layout\" to \"view/common/block-template\" in your themes. You "
 "may check your themes for pages: {json}"
 msgstr ""
 
-#: data/scripts/upgrade.php:346
+#: data/scripts/upgrade.php:348
 msgid "It is now possible to define accesses by sso idps and item sets."
 msgstr ""
 
-#: data/scripts/upgrade.php:351
+#: data/scripts/upgrade.php:353
 msgid ""
 "It is now possible to define excluded item sets for accesses by ip and sso "
 "idp."
 msgstr ""
 
-#: data/scripts/upgrade.php:358
+#: data/scripts/upgrade.php:360
 msgid ""
 "When no time is set to an date of end of embargo, the check is now done "
 "against 23:59:59 and no more 00:00:00."
 msgstr ""
 
-#: data/scripts/upgrade.php:385
+#: data/scripts/upgrade.php:387
 msgid ""
 "A new option allows to update the status level and to remove the embargo "
 "metadata when it ends. Default option is to keep them."
 msgstr ""
 
-#: data/scripts/upgrade.php:390
+#: data/scripts/upgrade.php:392
 msgid "A job is run once a day to update accesses when embargo ends."
 msgstr ""
 
-#: data/scripts/upgrade.php:422
+#: data/scripts/upgrade.php:424
 msgid ""
 "The three criteria to access a media are now fully independant: visibility "
 "of item and media should be public; access level should be free (or reserved "
 "for authorized users); resource should not be under embargo."
 msgstr ""
 
-#: data/scripts/upgrade.php:458 Module.php:2230
+#: data/scripts/upgrade.php:460 Module.php:2298
 msgid ""
 "The .htaccess rule is managed by the module and protects file types: {types}."
 msgstr ""
 
-#: data/scripts/upgrade.php:464
+#: data/scripts/upgrade.php:466
 msgid ""
 "A legacy .htaccess rule was detected for file types: {types}. It is "
 "recommended to open the module configuration form and save it to convert the "
 "rule to the managed format."
 msgstr ""
 
-#: data/scripts/upgrade.php:470
+#: data/scripts/upgrade.php:472
 msgid ""
 "The .htaccess rule is not yet set. Open the module configuration form to "
 "manage it. Default file types: {types}."
 msgstr ""
 
-#: data/scripts/upgrade.php:488
+#: data/scripts/upgrade.php:490
 msgid "The module {module} should be upgraded to version {version} or later."
 msgstr ""
 
-#: data/scripts/upgrade.php:507
+#: data/scripts/upgrade.php:509
 msgid ""
 "A previous bug may have removed access property values. A background job has "
 "been launched to restore them from indexes."
 msgstr ""
 
-#: data/scripts/upgrade.php:516
+#: data/scripts/upgrade.php:518
 msgid ""
 "The key \"accessresource\" in the file config/local.config.php at the root "
 "of Omeka can be removed."
 msgstr ""
 
-#: data/scripts/upgrade.php:531
+#: data/scripts/upgrade.php:533
 msgid ""
 "The module configuration now warns when a reverse proxy is detected but no "
 "trusted proxy is configured, when private/loopback IPs are listed in access "
@@ -464,32 +506,57 @@ msgid ""
 "config page to check these warnings."
 msgstr ""
 
-#: data/scripts/upgrade.php:536
+#: data/scripts/upgrade.php:538
 msgid ""
 "A new sidebar allows to search quickly in access requests when individual "
 "mode is enabled."
 msgstr ""
 
-#: data/scripts/upgrade.php:541
+#: data/scripts/upgrade.php:543
 msgid ""
 "The access status of a resource is now displayed in the right sidebar of "
 "admin resource."
 msgstr ""
 
-#: data/scripts/upgrade.php:546
+#: data/scripts/upgrade.php:548
 msgid ""
 "A new authorization endpoint is available at url /access/authorize for "
 "external services to check access to a media. It can be used by any third "
 "party media or image server like Cantaloupe."
 msgstr ""
 
-#: data/scripts/upgrade.php:556
+#: data/scripts/upgrade.php:558
 msgid ""
-"Proxy header handling has been hardened against spoofing. The boolean option "
-"\"Use proxy to get client IP\" has been removed: fill the new setting "
-"\"Trusted proxies\" with the internal IPs of the reverse proxy to enable "
-"proxy mode. X-Forwarded-For / X-Real-IP are only honored when the request "
-"comes from a listed IP. Without it, every visitor is seen with REMOTE_ADDR."
+"Proxy header handling has been hardened against spoofing. The option \"Use "
+"proxy to get client IP\" has been replaced by \"Trusted proxies\", filled "
+"with the internal IPs of the reverse proxy. It enables proxy mode, so X-"
+"Forwarded-For and X-Real-IP are only honored when the request comes from a "
+"listed IP. Without it, every visitor is seen with REMOTE_ADDR."
+msgstr ""
+
+#: data/scripts/upgrade.php:576
+msgid ""
+"A new option \"propagation mode\" was added and forced to \"skip if set\" "
+"for this upgraded install: previous saves with \"Apply recursive\" would "
+"silently overwrite per-item and per-media levels. If your workflow relies on "
+"bulk propagation from an item set to its items and medias, switch to \"max "
+"restrictive\" or \"overwrite\" in the Tasks tab of the module config, but be "
+"aware that \"overwrite\" writes the parent level onto every child "
+"unconditionally."
+msgstr ""
+
+#: data/scripts/upgrade.php:581
+msgid ""
+"A new option allows to separate propagation of the embargo dates and the "
+"status level. Embargo dates are per-resource and time-bound and checked "
+"independantly from the level."
+msgstr ""
+
+#: data/scripts/upgrade.php:587
+msgid ""
+"The status \"protected\" has been clarified: a \"reserved\" file is granted "
+"to global bypass modes, while a \"protected\" file requires an approved "
+"individual access request and no global bypass applies."
 msgstr ""
 
 #: Module.php:98
@@ -543,25 +610,33 @@ msgid ""
 "list if more than one proxy is involved."
 msgstr ""
 
-#: Module.php:656
+#: Module.php:662
 msgid ""
 "The automatic management of .htaccess is disabled in config. Apache "
 "redirections must be configured manually."
 msgstr ""
 
-#: Module.php:742
+#: Module.php:748
 msgid ""
 "Access settings affecting indexation changed. You should reindex metadata "
 "via the job \"Reindex database\" in the tab Tasks."
 msgstr ""
 
-#: Module.php:941
+#: Module.php:837
+msgid ""
+"The job will run but is likely a no-op: propagation mode \"skip if set\" "
+"only fills children that have no access_status row, and every resource gets "
+"one automatically when it is created. Choose another propagation mode, "
+"enable the sync or fill-missing options, or skip the job altogether."
+msgstr ""
+
+#: Module.php:981
 msgid ""
 "Cleaned params used for Access:\n"
 "{json}"
 msgstr ""
 
-#: Module.php:1158
+#: Module.php:1203
 msgid ""
 "The access level of the item #{item_id} differs from the access level of its "
 "medias #{media_ids}. You can set a specific level for each media via their "
@@ -569,7 +644,7 @@ msgid ""
 "tab of the item."
 msgstr ""
 
-#: Module.php:1163
+#: Module.php:1208
 msgid ""
 "The access level of the item #{item_id} differs from the access level of its "
 "medias #{media_ids}. You can set a specific level in the \"Advanced\" tab of "
@@ -577,84 +652,96 @@ msgid ""
 "of the item."
 msgstr ""
 
-#: Module.php:1501 src/Controller/Admin/RequestController.php:198
+#: Module.php:1550 src/Controller/Admin/RequestController.php:311
 msgid "You should set either a user or an email or check box for token."
 msgstr ""
 
-#: Module.php:1524 src/Controller/Admin/RequestController.php:224
+#: Module.php:1573 src/Controller/Admin/RequestController.php:337
 msgid "Access request successfully created."
 msgstr ""
 
-#: Module.php:1601 src/Form/Admin/BatchEditFieldset.php:51
+#: Module.php:1650 src/Form/Admin/BatchEditFieldset.php:51
 msgid "Reserved"
 msgstr ""
 
-#: Module.php:1602 src/Form/Admin/BatchEditFieldset.php:52
+#: Module.php:1651 src/Form/Admin/BatchEditFieldset.php:52
 msgid "Protected"
 msgstr ""
 
-#: Module.php:1617 src/ColumnType/AccessLevel.php:13
+#: Module.php:1666 src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr ""
 
-#: Module.php:1631 src/Form/Admin/BatchEditFieldset.php:89
+#: Module.php:1680 src/Form/Admin/BatchEditFieldset.php:89
 msgid "Embargo start"
 msgstr ""
 
-#: Module.php:1648 Module.php:1656 src/Form/Admin/BatchEditFieldset.php:134
+#: Module.php:1697 Module.php:1705 src/Form/Admin/BatchEditFieldset.php:134
 msgid "Embargo end"
 msgstr ""
 
-#: Module.php:1666
+#: Module.php:1715
 #, php-format
 msgid "Access level (managed via property %s)"
 msgstr ""
 
-#: Module.php:1669
+#: Module.php:1718
 #, php-format
 msgid "Embargo start (managed via property %s)"
 msgstr ""
 
-#: Module.php:1672
+#: Module.php:1721
 #, php-format
 msgid "Embargo end (managed via property %s)"
 msgstr ""
 
-#: Module.php:1683
+#: Module.php:1732
 msgid "Copy access level and embargo to items and medias"
 msgstr ""
 
-#: Module.php:1684
+#: Module.php:1733
 msgid "Copy access level and embargo to medias"
 msgstr ""
 
-#: Module.php:1692
+#: Module.php:1741
 msgid "New medias only"
 msgstr ""
 
-#: Module.php:1693
+#: Module.php:1742
 msgid "All medias"
 msgstr ""
 
-#: Module.php:2057
+#: Module.php:2106
 msgid "Access: Reindex resources"
 msgstr ""
 
-#: Module.php:2065
+#: Module.php:2113
+msgid "Access reindex"
+msgstr ""
+
+#: Module.php:2114
+msgid "Reindex the access status of resources."
+msgstr ""
+
+#: Module.php:2116
+msgid "Reindex"
+msgstr ""
+
+#: Module.php:2133
 msgid "Options to reindex accesses"
 msgstr ""
 
-#: Module.php:2107
+#: Module.php:2175
 msgid "The file .htaccess is not readable at the root of Omeka."
 msgstr ""
 
-#: Module.php:2197
+#: Module.php:2265
 msgid ""
 "A legacy .htaccess rule protects file types \"{types}\" but is not managed "
 "by the module. Save the configuration to convert it to the managed format."
 msgstr ""
 
-#: Module.php:2208
+#: Module.php:2276
 msgid ""
 "The file .htaccess is not writable, so the rule for types \"{types}\" set "
 "below could not be applied. Add the following lines manually in the "
@@ -662,148 +749,148 @@ msgid ""
 "{line_break}{rule}"
 msgstr ""
 
-#: Module.php:2220
+#: Module.php:2288
 msgid ""
 "No .htaccess rule is set to protect files. To control access to files, add "
 "the following lines in the file .htaccess at the root of Omeka, just after "
 "\"RewriteEngine On\":{line_break}{rule}"
 msgstr ""
 
-#: Module.php:2272
+#: Module.php:2340
 msgid ""
 "The file .htaccess is not writable. Add the following lines manually in the "
 "file .htaccess at the root of Omeka, just after \"RewriteEngine On\":"
 "{line_break}{rule}"
 msgstr ""
 
-#: Module.php:2282
+#: Module.php:2350
 msgid ""
 "The file .htaccess is not writable. Remove the lines starting with \"{marker}"
 "\" manually from the file .htaccess at the root of Omeka."
 msgstr ""
 
-#: Module.php:2332
+#: Module.php:2400
 msgid "The .htaccess rule has been updated to protect file types: {types}."
 msgstr ""
 
-#: Module.php:2338
+#: Module.php:2406
 msgid "The .htaccess rule for file protection has been removed."
 msgstr ""
 
-#: Module.php:2354
+#: Module.php:2422
 msgid ""
 "According to setting, when embargo ends, the access level is set to \"free\" "
 "and the embargo dates are cleared."
 msgstr ""
 
-#: Module.php:2358
+#: Module.php:2426
 msgid ""
 "According to setting, when embargo ends, the access level is set to \"free\" "
 "and the embargo dates are kept."
 msgstr ""
 
-#: Module.php:2362
+#: Module.php:2430
 msgid ""
 "According to setting, when embargo ends, the access level is set to the "
 "level under (\"free\" for reserved, \"reserved\" for protected/forbidden) "
 "and the embargo dates are cleared."
 msgstr ""
 
-#: Module.php:2366
+#: Module.php:2434
 msgid ""
 "According to setting, when embargo ends, the access level is set to the "
 "level under (\"free\" for reserved, \"reserved\" for protected/forbidden) "
 "and the embargo dates are kept."
 msgstr ""
 
-#: Module.php:2370
+#: Module.php:2438
 msgid ""
 "According to setting, when embargo ends, the access level is kept and the "
 "embargo dates are cleared."
 msgstr ""
 
-#: Module.php:2374
+#: Module.php:2442
 msgid ""
 "According to setting, when embargo ends, the access level and the embargo "
 "dates are kept."
 msgstr ""
 
-#: Module.php:2405
+#: Module.php:2473
 msgid ""
 "A reverse proxy is detected (header X-Forwarded-For or X-Real-IP) but no "
 "trusted proxy is configured: all visitors are seen with the proxy IP. Fill "
 "\"Trusted proxies\" with the internal IP of your reverse proxy."
 msgstr ""
 
-#: Module.php:2409
+#: Module.php:2477
 msgid ""
 "Trusted proxies are configured but no reverse proxy header is detected on "
 "the current request. Clear the list or verify the proxy configuration."
 msgstr ""
 
-#: Module.php:2434
+#: Module.php:2502
 msgid ""
 "The IP rules contain private or loopback addresses ({ips}). Unless used for "
 "a real intranet, they are likely a reverse-proxy/Docker bridge and grant "
 "access to every external visitor when no trusted proxy is configured."
 msgstr ""
 
-#: Module.php:2441
+#: Module.php:2509
 msgid ""
 "The current request comes from IP {ip} which is listed in the IP rules and "
 "no trusted proxy is configured: this IP likely is the reverse proxy and "
 "grants public access to the listed item sets."
 msgstr ""
 
-#: Module.php:2504
+#: Module.php:2572
 msgid ""
 "A job was launched in background to update access statuses according to "
 "parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end})."
 msgstr ""
 
-#: Module.php:2546
+#: Module.php:2614
 msgid "The ip \"{ip}\" is empty or invalid."
 msgstr ""
 
-#: Module.php:2556
+#: Module.php:2624
 msgid ""
 "The item sets list \"{input}\" for ip {ip} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
 msgstr ""
 
-#: Module.php:2567
+#: Module.php:2635
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains duplicate item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:2579
+#: Module.php:2647
 msgid ""
 "The item sets list \"{input}\" for ip {ip} contains unknown item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:2720
+#: Module.php:2788
 msgid "No idps are defined. Check the config of module Single Sign-On first."
 msgstr ""
 
-#: Module.php:2737
+#: Module.php:2805
 msgid "The idp \"{idp}\" is empty or not defined in module Single Sign-On."
 msgstr ""
 
-#: Module.php:2747
+#: Module.php:2815
 msgid ""
 "The item sets list \"{input}\" for idp {idp} is invalid: they should be "
 "numeric ids, optionaly prepended with a \"-\"."
 msgstr ""
 
-#: Module.php:2758
+#: Module.php:2826
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains duplicate item sets "
 "({list})."
 msgstr ""
 
-#: Module.php:2770
+#: Module.php:2838
 msgid ""
 "The item sets list \"{input}\" for idp {idp} contains unknown item sets "
 "({list})."
@@ -821,44 +908,32 @@ msgstr ""
 msgid "These recursive processes are unknown: {names}."
 msgstr ""
 
-#: src/Job/AccessStatusUpdate.php:153
+#: src/Job/AccessStatusUpdate.php:151
+msgid "Propagation mode \"{mode}\" is invalid; falling back to skip_if_set."
+msgstr ""
+
+#: src/Job/AccessStatusUpdate.php:165
+msgid "Propagation mode: {mode}; embargo propagation: {embargo}."
+msgstr ""
+
+#: src/Job/AccessStatusUpdate.php:174
 msgid ""
 "Synchronization and missing modes are set as \"skip\" and no recursive "
 "processes are set."
 msgstr ""
 
-#: src/Job/AccessStatusUpdate.php:161
+#: src/Job/AccessStatusUpdate.php:182
 msgid ""
 "Synchronization of property values and index is set, but the config for "
 "access mode does not use properties."
 msgstr ""
 
-#: src/Job/AccessStatusUpdate.php:173
+#: src/Job/AccessStatusUpdate.php:194
 msgid "Starting indexation of access statuses of all resources."
 msgstr ""
 
-#: src/Job/AccessStatusUpdate.php:219
+#: src/Job/AccessStatusUpdate.php:240
 msgid "End of indexation."
-msgstr ""
-
-#: src/Job/AccessStatusRecursive.php:83
-msgid "No resource to process."
-msgstr ""
-
-#: src/Job/AccessStatusRecursive.php:116
-msgid "End of indexation of access statuses in properties."
-msgstr ""
-
-#: src/Job/AccessStatusRecursive.php:126
-msgid "No resource \"{resource_id}\" to process."
-msgstr ""
-
-#: src/Job/AccessStatusRecursive.php:135
-msgid "Resource #{resource_id} is not an item or an item set."
-msgstr ""
-
-#: src/Job/AccessStatusRecursive.php:145
-msgid "No access status for resource #{resource_id}."
 msgstr ""
 
 #: src/Job/AccessEmbargoUpdate.php:112
@@ -937,31 +1012,77 @@ msgid ""
 "default when it is not set in metadata."
 msgstr ""
 
-#: src/Form/SiteSettingsFieldset.php:13
+#: src/Job/AccessStatusPropagate.php:111
+msgid ""
+"Embargo propagation enabled: parent embargo dates will be copied onto "
+"children."
+msgstr ""
+
+#: src/Job/AccessStatusPropagate.php:126
+msgid "No resource to process."
+msgstr ""
+
+#: src/Job/AccessStatusPropagate.php:159
+msgid "End of indexation of access statuses in properties."
+msgstr ""
+
+#: src/Job/AccessStatusPropagate.php:169
+msgid "No resource \"{resource_id}\" to process."
+msgstr ""
+
+#: src/Job/AccessStatusPropagate.php:178
+msgid "Resource #{resource_id} is not an item or an item set."
+msgstr ""
+
+#: src/Job/AccessStatusPropagate.php:188
+msgid "No access status for resource #{resource_id}."
+msgstr ""
+
+#: src/Form/SiteSettingsFieldset.php:15
 msgid "Old themes"
 msgstr ""
 
 #: src/Form/SiteSettingsFieldset.php:28
-msgid "Item show"
+msgid "Label for access requests"
 msgstr ""
 
 #: src/Form/SiteSettingsFieldset.php:29
+msgid ""
+"The label used in breadcrumbs and navigation for the public access requests "
+"page. Let empty to use the default one."
+msgstr ""
+
+#: src/Form/SiteSettingsFieldset.php:41
+msgid "Label for personal access requests"
+msgstr ""
+
+#: src/Form/SiteSettingsFieldset.php:42
+msgid ""
+"The label used in breadcrumbs and navigation for the personal \"my access "
+"requests\" page. Let empty to use the default one."
+msgstr ""
+
+#: src/Form/SiteSettingsFieldset.php:56
+msgid "Item show"
+msgstr ""
+
+#: src/Form/SiteSettingsFieldset.php:57
 msgid "Media show"
 msgstr ""
 
-#: src/Form/SiteSettingsFieldset.php:30
+#: src/Form/SiteSettingsFieldset.php:58
 msgid "Item set show"
 msgstr ""
 
-#: src/Form/SiteSettingsFieldset.php:31
+#: src/Form/SiteSettingsFieldset.php:59
 msgid "Item browse"
 msgstr ""
 
-#: src/Form/SiteSettingsFieldset.php:32
+#: src/Form/SiteSettingsFieldset.php:60
 msgid "Media browse"
 msgstr ""
 
-#: src/Form/SiteSettingsFieldset.php:33
+#: src/Form/SiteSettingsFieldset.php:61
 msgid "Item set browse"
 msgstr ""
 
@@ -974,145 +1095,246 @@ msgid "Settings must be saved before running any of the following tasks."
 msgstr ""
 
 #: src/Form/AccessReindexFieldset.php:35
+msgid ""
+"<details>\n"
+"    <summary>\n"
+"        Propagation modes summary\n"
+"    </summary>\n"
+"    <p><em>The two options that control the propagation of status and "
+"embargo dates are configured in the Settings tab. \"Propagation mode\" "
+"applies only to this reindex job; a resource saved with the \"Apply "
+"recursive\" option always uses \"overwrite\". \"Propagate embargo dates\" "
+"applies anytime.</em></p>\n"
+"    <p><strong>Access level</strong></p>\n"
+"    <table class=\"access-propagation-table\">\n"
+"        <thead>\n"
+"            <tr>\n"
+"                <th>Mode</th>\n"
+"                <th>Child stricter than parent</th>\n"
+"                <th>Child more permissive</th>\n"
+"                <th>Child without status</th>\n"
+"            </tr>\n"
+"        </thead>\n"
+"        <tbody>\n"
+"            <tr>\n"
+"                <th><code>skip if set</code> (default)</th>\n"
+"                <td>Unchanged</td>\n"
+"                <td>Unchanged (preserves \"free preview\" alongside a "
+"\"forbidden\" original)</td>\n"
+"                <td>New row created with the parent level</td>\n"
+"            </tr>\n"
+"            <tr>\n"
+"                <th><code>max restrictive</code></th>\n"
+"                <td>Kept (never demoted)</td>\n"
+"                <td>Promoted to the parent level (breaks a deliberately free "
+"child)</td>\n"
+"                <td>New row created with the parent level</td>\n"
+"            </tr>\n"
+"            <tr>\n"
+"                <th><code>overwrite</code></th>\n"
+"                <td>Demoted to the parent level</td>\n"
+"                <td>Promoted to the parent level</td>\n"
+"                <td>New row created with the parent level</td>\n"
+"            </tr>\n"
+"        </tbody>\n"
+"    </table>\n"
+"    <p>In property mode, the level property value is also realigned from "
+"access status after the parent value is written, so a child preserved at a "
+"stricter level is never silently demoted at the next save.</p>\n"
+"    <p><strong>Embargo dates</strong></p>\n"
+"    <table class=\"access-propagation-table\">\n"
+"        <thead>\n"
+"            <tr>\n"
+"                <th>Propagation embargo</th>\n"
+"                <th>metadata mode</th>\n"
+"                <th>property mode</th>\n"
+"            </tr>\n"
+"        </thead>\n"
+"        <tbody>\n"
+"            <tr>\n"
+"                <th>Off</th>\n"
+"                <td>Embargo columns untouched on every child. New rows get "
+"null.</td>\n"
+"                <td>Embargo property values left intact on every child.</"
+"td>\n"
+"            </tr>\n"
+"            <tr>\n"
+"                <th>On</th>\n"
+"                <td>Parent embargo start/end copied per the chosen level "
+"mode (skip if set, overwrite, max restrictive).</td>\n"
+"                <td>Embargo property values rewritten from the post-"
+"propagation access status.</td>\n"
+"            </tr>\n"
+"        </tbody>\n"
+"    </table>\n"
+"</details>"
+msgstr ""
+
+#: src/Form/AccessReindexFieldset.php:104
 msgid "Reindex database according to current settings"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:36
+#: src/Form/AccessReindexFieldset.php:105
 msgid ""
 "Recommended after changing the storage mode or any property used for access "
 "level or embargo."
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:46
+#: src/Form/AccessReindexFieldset.php:115
 msgid "Copy level and embargo"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:49
+#: src/Form/AccessReindexFieldset.php:118
 msgid "From item sets to items and medias"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:50
+#: src/Form/AccessReindexFieldset.php:119
 msgid "From items to medias"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:62
+#: src/Form/AccessReindexFieldset.php:131
 msgid "Copy access level and embargo"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:65 src/Form/AccessReindexFieldset.php:82
+#: src/Form/AccessReindexFieldset.php:134
+#: src/Form/AccessReindexFieldset.php:151
 msgid "Skip"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:66
+#: src/Form/AccessReindexFieldset.php:135
 msgid "Copy data from property values into indexes"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:67
+#: src/Form/AccessReindexFieldset.php:136
 msgid "Copy data from indexes into property values"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:79
+#: src/Form/AccessReindexFieldset.php:148
 msgid "Fill missing statuses"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:83
+#: src/Form/AccessReindexFieldset.php:152
 msgid "Set access level free for all resources without status"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:84
+#: src/Form/AccessReindexFieldset.php:153
 msgid "Set access level reserved for all resources without status"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:85
+#: src/Form/AccessReindexFieldset.php:154
 msgid "Set access level protected for all resources without status"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:86
+#: src/Form/AccessReindexFieldset.php:155
 msgid "Set access level forbidden for all resources without status"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:87
+#: src/Form/AccessReindexFieldset.php:156
 msgid "Set access level free when public and reserved when private"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:88
+#: src/Form/AccessReindexFieldset.php:157
 msgid "Set access level free when public and protected when private"
 msgstr ""
 
-#: src/Form/AccessReindexFieldset.php:89
+#: src/Form/AccessReindexFieldset.php:158
 msgid "Set access level free when public and forbidden when private"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:28
+#: src/Form/SettingsFieldset.php:29
 msgid "Send email to admin and user or visitor on access request or update"
 msgstr ""
 
 #: src/Form/SettingsFieldset.php:40
+msgid "Reply-to address for the emails to the requester"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:41
+msgid ""
+"This address will be set as reply-to on emails sent to a user or visitor. If "
+"empty, the administrator email is used."
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:53
+msgid "Default subject when answering a requester"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:54 src/Form/SettingsFieldset.php:67
+msgid ""
+"Placeholders: {name}, {email}, {main_title}, {main_url}, {site_title}, "
+"{site_url}, {resource}, {resources}."
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:66
+msgid "Default message when answering a requester"
+msgstr ""
+
+#: src/Form/SettingsFieldset.php:81
 msgid "Admin email subject"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:51
+#: src/Form/SettingsFieldset.php:92
 msgid "Message to admin for new request"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:52 src/Form/SettingsFieldset.php:64
+#: src/Form/SettingsFieldset.php:93 src/Form/SettingsFieldset.php:105
 msgid ""
 "{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, "
 "{message}, {resource} , {resources} and specific fields wrapped with \"{}\"."
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:63
+#: src/Form/SettingsFieldset.php:104
 msgid "Message to admin for updated request"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:76
+#: src/Form/SettingsFieldset.php:117
 msgid "User email subject"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:87
+#: src/Form/SettingsFieldset.php:128
 msgid "Message to user for new request"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:88 src/Form/SettingsFieldset.php:100
-#: src/Form/SettingsFieldset.php:112
+#: src/Form/SettingsFieldset.php:129 src/Form/SettingsFieldset.php:141
+#: src/Form/SettingsFieldset.php:153
 msgid ""
 "{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, "
 "{message}, {resource}, {resources} and specific fields wrapped with \"{}\"."
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:99
+#: src/Form/SettingsFieldset.php:140
 msgid "Message to user for request accepted"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:111
+#: src/Form/SettingsFieldset.php:152
 msgid "Message to user for request rejected"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:124
+#: src/Form/SettingsFieldset.php:165
 msgid "Visitor email subject"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:135
+#: src/Form/SettingsFieldset.php:176
 msgid "Message to visitor for new request"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:136 src/Form/SettingsFieldset.php:148
-#: src/Form/SettingsFieldset.php:160
+#: src/Form/SettingsFieldset.php:177 src/Form/SettingsFieldset.php:189
+#: src/Form/SettingsFieldset.php:201
 msgid ""
 "{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, "
 "{message}, {resource}, {resources}, {session_url} and specific fields "
 "wrapped with \"{}\"."
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:147
+#: src/Form/SettingsFieldset.php:188
 msgid "Message to visitor for request accepted"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:159
+#: src/Form/SettingsFieldset.php:200
 msgid "Message to visitor for request rejected"
 msgstr ""
 
-#: src/Form/SettingsFieldset.php:172
+#: src/Form/SettingsFieldset.php:213
 msgid ""
 "Message for the block \"Access request text\" when a resource is not "
 "available"
@@ -1126,7 +1348,7 @@ msgstr ""
 msgid "Files to protect"
 msgstr ""
 
-#: src/Form/ConfigForm.php:15 src/Form/ConfigForm.php:269
+#: src/Form/ConfigForm.php:15 src/Form/ConfigForm.php:314
 msgid "Access modes"
 msgstr ""
 
@@ -1134,42 +1356,122 @@ msgstr ""
 msgid "Embargo"
 msgstr ""
 
-#: src/Form/ConfigForm.php:29
+#: src/Form/ConfigForm.php:17
+msgid "Propagation"
+msgstr ""
+
+#: src/Form/ConfigForm.php:33
+msgid "Access levels summary"
+msgstr ""
+
+#: src/Form/ConfigForm.php:36
+msgid "Level"
+msgstr ""
+
+#: src/Form/ConfigForm.php:37
+msgid "Notice (if is_public=1)"
+msgstr ""
+
+#: src/Form/ConfigForm.php:39
+msgid "Admin access request"
+msgstr ""
+
+#: src/Form/ConfigForm.php:40
+msgid "Author contact"
+msgstr ""
+
+#: src/Form/ConfigForm.php:43 src/Form/ConfigForm.php:47
+#: src/Form/ConfigForm.php:52 src/Form/ConfigForm.php:57
+msgid "Visible"
+msgstr ""
+
+#: src/Form/ConfigForm.php:44
+msgid "Downloadable by anyone"
+msgstr ""
+
+#: src/Form/ConfigForm.php:48
+msgid ""
+"Blocked for anonymous; unlocked by any active bypass (IP, SSO IDP, guest, "
+"CAS, LDAP, external, email regex) or by an approved individual access request"
+msgstr ""
+
+#: src/Form/ConfigForm.php:50 src/Form/ConfigForm.php:55
+msgid "Possible"
+msgstr ""
+
+#: src/Form/ConfigForm.php:53
+msgid ""
+"Blocked for everyone; unlocked ONLY by an approved individual access "
+"request. No automatic bypass applies."
+msgstr ""
+
+#: src/Form/ConfigForm.php:54
+msgid "Yes (mandatory)"
+msgstr ""
+
+#: src/Form/ConfigForm.php:58
+msgid "Blocked for everyone; no path through the admin access request flow"
+msgstr ""
+
+#: src/Form/ConfigForm.php:60
+msgid "Sole recourse (theme-side \"contact the author\" feature)"
+msgstr ""
+
+#: src/Form/ConfigForm.php:62
+msgid "Notice visibility"
+msgstr ""
+
+#: src/Form/ConfigForm.php:62
+msgid ""
+"follows Omeka core is_public only; the access level never hides a notice."
+msgstr ""
+
+#: src/Form/ConfigForm.php:63
+msgid "Cascade"
+msgstr ""
+
+#: src/Form/ConfigForm.php:63
+msgid ""
+"applied at the moment of the propagation job (item set → items → media). At "
+"runtime, the file gating reads the media row (fallback to parent item)."
+msgstr ""
+
+#: src/Form/ConfigForm.php:74
 msgid ""
 "Access level and embargo dates can be managed either separately as specific "
 "metadata of each resource set via a tab in the resource edit page, or as "
 "standard property values of the resource."
 msgstr ""
 
-#: src/Form/ConfigForm.php:38
+#: src/Form/ConfigForm.php:83
 msgid "Storage of access level and embargo"
 msgstr ""
 
-#: src/Form/ConfigForm.php:40
+#: src/Form/ConfigForm.php:85
 msgid "Resource metadata"
 msgstr ""
 
-#: src/Form/ConfigForm.php:41
+#: src/Form/ConfigForm.php:86
 msgid "Property in the resource"
 msgstr ""
 
-#: src/Form/ConfigForm.php:47
+#: src/Form/ConfigForm.php:92
 msgid "display: inline;"
 msgstr ""
 
-#: src/Form/ConfigForm.php:80
+#: src/Form/ConfigForm.php:125
 msgid "Set property when access uses property"
 msgstr ""
 
-#: src/Form/ConfigForm.php:81
+#: src/Form/ConfigForm.php:126
 msgid "Warning: a full reindexation is needed when changing the property."
 msgstr ""
 
-#: src/Form/ConfigForm.php:97
+#: src/Form/ConfigForm.php:142
 msgid "Labels for access levels (\"protected\" is not used currently)"
 msgstr ""
 
-#: src/Form/ConfigForm.php:98
+#: src/Form/ConfigForm.php:143
 msgid ""
 "One level by line, formatted as \"key = label\". The keys (\"free\", "
 "\"reserved\", \"protected\", \"forbidden\") are fixed; only the labels can "
@@ -1177,52 +1479,52 @@ msgid ""
 "(typically a custom vocab) and must match the allowed terms."
 msgstr ""
 
-#: src/Form/ConfigForm.php:118
+#: src/Form/ConfigForm.php:163
 msgid "Data type to use for the level"
 msgstr ""
 
-#: src/Form/ConfigForm.php:119
+#: src/Form/ConfigForm.php:164
 msgid ""
 "A data type like \"literal\" (default) or \"customvocab:X\" (recommended), "
 "where X is the custom vocab id to set. This value is used for batch "
 "processes."
 msgstr ""
 
-#: src/Form/ConfigForm.php:133
+#: src/Form/ConfigForm.php:178
 msgid "Set property to use for embargo start"
 msgstr ""
 
-#: src/Form/ConfigForm.php:149
+#: src/Form/ConfigForm.php:194
 msgid "Set property to use for embargo end"
 msgstr ""
 
-#: src/Form/ConfigForm.php:166
+#: src/Form/ConfigForm.php:211
 msgid "Show the access status in advanced tab of resource form"
 msgstr ""
 
-#: src/Form/ConfigForm.php:179
+#: src/Form/ConfigForm.php:224
 msgid ""
 "Determine if you want to protect only original files or derivative "
 "thumbnails too. This option must be set in the file .htaccess of the server. "
 "It can be done automatically only if the web server has access to it."
 msgstr ""
 
-#: src/Form/ConfigForm.php:188
+#: src/Form/ConfigForm.php:233
 msgid "Do not modify .htaccess (manage Apache redirections manually)"
 msgstr ""
 
-#: src/Form/ConfigForm.php:189
+#: src/Form/ConfigForm.php:234
 msgid ""
 "When checked, the module will not write or update the rewrite rule in the "
 "root .htaccess. Add the rules manually to redirect file requests through the "
 "Access controller."
 msgstr ""
 
-#: src/Form/ConfigForm.php:201
+#: src/Form/ConfigForm.php:246
 msgid "File types to protect via .htaccess"
 msgstr ""
 
-#: src/Form/ConfigForm.php:205
+#: src/Form/ConfigForm.php:250
 msgid ""
 "Select the file types that should be protected by an Apache rewrite rule in "
 "the root .htaccess. The rule redirects direct file access through the module "
@@ -1230,108 +1532,108 @@ msgid ""
 "is updated automatically; otherwise, the rule to copy is displayed."
 msgstr ""
 
-#: src/Form/ConfigForm.php:208
+#: src/Form/ConfigForm.php:253
 msgid "large (derivative: 800px)"
 msgstr ""
 
-#: src/Form/ConfigForm.php:209
+#: src/Form/ConfigForm.php:254
 msgid "medium (derivative: 200px)"
 msgstr ""
 
-#: src/Form/ConfigForm.php:210
+#: src/Form/ConfigForm.php:255
 msgid "square (derivative: 200px)"
 msgstr ""
 
-#: src/Form/ConfigForm.php:225
+#: src/Form/ConfigForm.php:270
 msgid "Custom directory paths to protect via .htaccess"
 msgstr ""
 
-#: src/Form/ConfigForm.php:226
+#: src/Form/ConfigForm.php:271
 msgid ""
 "Additional file subdirectories to protect, for example for the module "
 "Derivative Media (mp3, mp4, webm, ogg, pdf, etc.). Separate paths with "
 "spaces."
 msgstr ""
 
-#: src/Form/ConfigForm.php:239
+#: src/Form/ConfigForm.php:284
 msgid "Protection"
 msgstr ""
 
-#: src/Form/ConfigForm.php:244
+#: src/Form/ConfigForm.php:289
 msgid "Protect media content only (files)"
 msgstr ""
 
-#: src/Form/ConfigForm.php:245
+#: src/Form/ConfigForm.php:290
 msgid "Protect records and content (not supported currently)"
 msgstr ""
 
-#: src/Form/ConfigForm.php:260
+#: src/Form/ConfigForm.php:305
 msgid ""
 "Two approaches can be combined: global rules (ip, guest, authentication…) "
 "grant access to a whole audience, while individual requests (user, email, "
 "token) let a visitor request access to a specific resource."
 msgstr ""
 
-#: src/Form/ConfigForm.php:274
+#: src/Form/ConfigForm.php:319
 msgid ""
-"IP: visitors with specified ips have access to a list of reserved media by "
-"item sets"
+"IP: visitors with specified ips have access to all reserved medias, or only "
+"to those in selected item sets"
 msgstr ""
 
-#: src/Form/ConfigForm.php:275
+#: src/Form/ConfigForm.php:320
 msgid "Guest: all users, included guests, have access to all reserved medias"
 msgstr ""
 
-#: src/Form/ConfigForm.php:276
+#: src/Form/ConfigForm.php:321
 msgid ""
 "External: users externally authenticated (cas, ldap, sso) have access to all "
 "reserved medias"
 msgstr ""
 
-#: src/Form/ConfigForm.php:277
+#: src/Form/ConfigForm.php:322
 msgid "CAS: users authenticated by cas have access to all reserved medias"
 msgstr ""
 
-#: src/Form/ConfigForm.php:278
+#: src/Form/ConfigForm.php:323
 msgid "LDAP: users authenticated by ldap have access to all reserved medias"
 msgstr ""
 
-#: src/Form/ConfigForm.php:279
+#: src/Form/ConfigForm.php:324
 msgid "SSO: users authenticated by sso have access to all reserved medias"
 msgstr ""
 
-#: src/Form/ConfigForm.php:280
+#: src/Form/ConfigForm.php:325
 msgid ""
 "SSO / IDP: users authenticated by specified identity providers have access "
-"to a list of reserved media by item sets"
+"to all reserved medias, or only to those in selected item sets"
 msgstr ""
 
-#: src/Form/ConfigForm.php:281
+#: src/Form/ConfigForm.php:326
 msgid ""
 "Users authenticated with a specific email have access to all reserved medias"
 msgstr ""
 
-#: src/Form/ConfigForm.php:282
+#: src/Form/ConfigForm.php:327
 msgid ""
 "User: authenticated users should request access to specific reserved medias"
 msgstr ""
 
-#: src/Form/ConfigForm.php:283
+#: src/Form/ConfigForm.php:328
 msgid ""
 "Email: A visitor identified by email should request access to specific "
 "reserved medias"
 msgstr ""
 
-#: src/Form/ConfigForm.php:284
+#: src/Form/ConfigForm.php:329
 msgid ""
 "Token: A user or visitor with a token have access to specific reserved medias"
 msgstr ""
 
-#: src/Form/ConfigForm.php:299
+#: src/Form/ConfigForm.php:344
 msgid "Trusted proxies (one IP per line)"
 msgstr ""
 
-#: src/Form/ConfigForm.php:300
+#: src/Form/ConfigForm.php:345
 msgid ""
 "When filled, the module reads the real client IP from the proxy headers X-"
 "Forwarded-For / X-Real-IP, but only when the request comes from one of these "
@@ -1340,83 +1642,135 @@ msgid ""
 "nginx, Docker bridge, load balancer)."
 msgstr ""
 
-#: src/Form/ConfigForm.php:313
+#: src/Form/ConfigForm.php:358
 msgid "List of ips with open access, eventually limited to selected item sets"
 msgstr ""
 
-#: src/Form/ConfigForm.php:314
+#: src/Form/ConfigForm.php:359
 msgid ""
-"These ips will have unrestricted access to all resources or only resources "
-"of the specified item sets. List them separated by a \"=\", one by line. "
-"Range ip are allowed (formatted as cidr). An item set prepended with a \"-\" "
-"means an excluded item set, in particular when a global item set is defined "
-"to identify all reserved resources."
+"List the ips separated by a \"=\", one by line. Range ip are allowed "
+"(formatted as cidr). The value after \"=\" controls which item sets are "
+"reachable:\n"
+"- empty (no item set after \"=\"): the ip has unrestricted access to every "
+"reserved resource, including resources that are not attached to any item "
+"set;\n"
+"- one or more item set ids: the ip has access only to resources attached to "
+"at least one of these item sets; resources not in any item set are denied;\n"
+"- an item set id prepended with \"-\" is an excluded item set, useful when a "
+"global item set is defined to identify all reserved resources."
 msgstr ""
 
-#: src/Form/ConfigForm.php:333
+#: src/Form/ConfigForm.php:383
 msgid ""
 "List of sso idp with open access, eventually limited to selected item sets"
 msgstr ""
 
-#: src/Form/ConfigForm.php:334
+#: src/Form/ConfigForm.php:384
 msgid ""
-"These identity providers will have unrestricted access to all resources or "
-"only resources of the specified item sets. List them separated by a \"=\", "
-"one by line. The idp name is the domain name or the value used in the login "
-"form. \"federation\" can be used for all users authenticated via a federated "
-"idp. An item set prepended with a \"-\" means an excluded item set, in "
-"particular when a global item set is defined to identify all reserved "
-"resources."
+"List the identity providers separated by a \"=\", one by line. The idp name "
+"is the entity id (or the value used in the login form). \"federation\" can "
+"be used as fallback for all users authenticated via a federated idp not "
+"listed above. The value after \"=\" controls which item sets are reachable:\n"
+"- empty (no item set after \"=\"): the idp has unrestricted access to every "
+"reserved resource, including resources that are not attached to any item "
+"set;\n"
+"- one or more item set ids: the idp has access only to resources attached to "
+"at least one of these item sets; resources not in any item set are denied;\n"
+"- an item set id prepended with \"-\" is an excluded item set, useful when a "
+"global item set is defined to identify all reserved resources.\n"
+"Without any matching entry (and no \"federation\" fallback), the user is "
+"denied."
 msgstr ""
 
-#: src/Form/ConfigForm.php:353
+#: src/Form/ConfigForm.php:409
 msgid ""
 "Regex on email of users allowed to access reserved medias (option above)"
 msgstr ""
 
-#: src/Form/ConfigForm.php:365
+#: src/Form/ConfigForm.php:421
 msgid "Specify what the metadata for embargo becomes when the date is reached."
 msgstr ""
 
-#: src/Form/ConfigForm.php:374
+#: src/Form/ConfigForm.php:430
 msgid "Bypass embargo dates for reserved resources"
 msgstr ""
 
-#: src/Form/ConfigForm.php:385
+#: src/Form/ConfigForm.php:441
 msgid "Update access level when embargo ends"
 msgstr ""
 
-#: src/Form/ConfigForm.php:390
+#: src/Form/ConfigForm.php:446
 msgid "Set access level to \"free\""
 msgstr ""
 
-#: src/Form/ConfigForm.php:391
+#: src/Form/ConfigForm.php:447
 msgid ""
 "Set access level to the level under (\"free\" for reserved, \"reserved\" for "
 "protected/forbidden)"
 msgstr ""
 
-#: src/Form/ConfigForm.php:392
+#: src/Form/ConfigForm.php:448
 msgid "Keep access level"
 msgstr ""
 
-#: src/Form/ConfigForm.php:404
+#: src/Form/ConfigForm.php:460
 msgid "Update embargo dates when embargo ends"
 msgstr ""
 
-#: src/Form/ConfigForm.php:409
+#: src/Form/ConfigForm.php:465
 msgid "Remove embargo dates"
 msgstr ""
 
-#: src/Form/ConfigForm.php:410
+#: src/Form/ConfigForm.php:466
 msgid "Keep embargo dates"
 msgstr ""
 
-#: src/Form/ConfigForm.php:436
+#: src/Form/ConfigForm.php:478
+msgid "Propagation mode"
+msgstr ""
+
+#: src/Form/ConfigForm.php:480
+msgid ""
+"Choose how the recursive copy combines an existing child level with the new "
+"parent level for the reindex job in the Tasks tab. If items in scope have "
+"heterogeneous media levels (e.g. a free preview alongside a forbidden high-"
+"res file), use \"skip if set\" or do not run the recursive option at all. "
+"Note: a resource save with the \"Apply recursive\" option always forces "
+"\"overwrite\". That path is an explicit admin request treated as an "
+"intentional bulk propagation."
+msgstr ""
+
+#: src/Form/ConfigForm.php:482
+msgid ""
+"Skip if set (safest, recommended for items with media with different "
+"statuses)"
+msgstr ""
+
+#: src/Form/ConfigForm.php:483
+msgid "Max restrictive (keep the strictest level between parent and child)"
+msgstr ""
+
+#: src/Form/ConfigForm.php:484
+msgid ""
+"Overwrite (always copy the parent level, to be used when managed by item set)"
+msgstr ""
+
+#: src/Form/ConfigForm.php:496
+msgid "Propagate embargo dates with the access level"
+msgstr ""
+
+#: src/Form/ConfigForm.php:497
+msgid ""
+"Default off: embargo is per-resource. Check this box to make every "
+"propagation copy parent embargo start and end on resource save and reindex "
+"job."
+msgstr ""
+
+#: src/Form/ConfigForm.php:522
 msgid "Process reindexation"
 msgstr ""
 
-#: src/Form/ConfigForm.php:440
+#: src/Form/ConfigForm.php:526
 msgid "Process"
 msgstr ""
 
@@ -1580,6 +1934,26 @@ msgstr ""
 msgid "phone = Phone"
 msgstr ""
 
+#: src/Form/SendMessageForm.php:46
+msgid "Copy to me"
+msgstr ""
+
+#: src/Form/SendMessageForm.php:48
+msgid "No copy"
+msgstr ""
+
+#: src/Form/SendMessageForm.php:49
+msgid "Copy (cc)"
+msgstr ""
+
+#: src/Form/SendMessageForm.php:50
+msgid "Hidden copy (bcc)"
+msgstr ""
+
+#: src/Form/SendMessageForm.php:62
+msgid "Send message"
+msgstr ""
+
 #: src/Form/Site/AccessRequestForm.php:211
 msgid "Send"
 msgstr ""
@@ -1637,53 +2011,57 @@ msgstr ""
 msgid "Embargo date"
 msgstr ""
 
-#: src/Controller/Admin/RequestController.php:139
+#: src/Controller/Admin/RequestController.php:179
+msgid "Message successfully sent to {email}."
+msgstr ""
+
+#: src/Controller/Admin/RequestController.php:252
 msgid "Access request record with id #{access_request_id} does not exist"
 msgstr ""
 
-#: src/Controller/Admin/RequestController.php:233
-#: src/Controller/Admin/RequestController.php:253
-#: src/Controller/Admin/RequestController.php:404
+#: src/Controller/Admin/RequestController.php:346
+#: src/Controller/Admin/RequestController.php:366
+#: src/Controller/Admin/RequestController.php:517
 #: src/Controller/Site/RequestController.php:238
 msgid ""
 "The request was sent, but an issue occurred when sending the confirmation "
 "email."
 msgstr ""
 
-#: src/Controller/Admin/RequestController.php:244
+#: src/Controller/Admin/RequestController.php:357
 msgid "Access request successfully updated."
 msgstr ""
 
-#: src/Controller/Admin/RequestController.php:283
+#: src/Controller/Admin/RequestController.php:396
 msgid "access request"
 msgstr ""
 
-#: src/Controller/Admin/RequestController.php:302
+#: src/Controller/Admin/RequestController.php:415
 msgid "Access request successfully deleted"
 msgstr ""
 
-#: src/Controller/Admin/RequestController.php:317
-#: src/Controller/Admin/RequestController.php:363
+#: src/Controller/Admin/RequestController.php:430
+#: src/Controller/Admin/RequestController.php:476
 #: src/Controller/Site/RequestController.php:84
 msgid "Method should be post."
 msgstr ""
 
-#: src/Controller/Admin/RequestController.php:338
-#: src/Controller/Admin/RequestController.php:383
+#: src/Controller/Admin/RequestController.php:451
+#: src/Controller/Admin/RequestController.php:496
 msgid "The request #{access_request_id} is invalid or unavailable."
 msgstr ""
 
-#: src/Controller/AccessFileController.php:78
+#: src/Controller/AccessFileController.php:79
 msgid "The file {file} (derivative: {derivative}) is invalid or not available."
 msgstr ""
 
-#: src/Controller/AccessFileController.php:91
+#: src/Controller/AccessFileController.php:92
 msgid ""
 "The user #{user_id} ({user_email}) has no rights to get the file {file} or "
 "the file is invalid."
 msgstr ""
 
-#: src/Controller/AccessFileController.php:96
+#: src/Controller/AccessFileController.php:97
 msgid ""
 "The visitor has no rights to get the file {file} or the file is invalid."
 msgstr ""
@@ -1730,62 +2108,78 @@ msgid ""
 "\"=\"."
 msgstr ""
 
-#: config/module.config.php:239
+#: config/module.config.php:244
 msgid "Accesses"
 msgstr ""
 
-#: config/module.config.php:299
+#: config/module.config.php:304
 msgid "The resource or the access doesn’t exist."
 msgstr ""
 
-#: config/module.config.php:394 config/module.config.php:397
-#: config/module.config.php:401
+#: config/module.config.php:410
+msgid "Reply to your access request on {main_title}"
+msgstr ""
+
+#: config/module.config.php:411
+msgid ""
+"Hi {name},\n"
+"\n"
+"\n"
+"\n"
+"Sincerely,\n"
+"\n"
+"{main_title}\n"
+"{main_url}"
+msgstr ""
+
+#: config/module.config.php:421 config/module.config.php:424
+#: config/module.config.php:428
 msgid "New request status!"
 msgstr ""
 
-#: config/module.config.php:395
+#: config/module.config.php:422
 msgid ""
 "A user or visitor requested to access resource {resource}. Please, check "
 "request dashboard."
 msgstr ""
 
-#: config/module.config.php:396
+#: config/module.config.php:423
 msgid ""
 "A user or visitor updated the request to access a resource {resource}. "
 "Please, check request dashboard."
 msgstr ""
 
-#: config/module.config.php:398
+#: config/module.config.php:425
 msgid ""
 "Your request to access resource {resource} is sent to administrator. You "
 "will be informed soon about it."
 msgstr ""
 
-#: config/module.config.php:399
+#: config/module.config.php:426
 msgid "Your request to access resource {resource} was accepted."
 msgstr ""
 
-#: config/module.config.php:400 config/module.config.php:404
+#: config/module.config.php:427 config/module.config.php:431
 msgid "Your request to access resource {resource} was rejected."
 msgstr ""
 
-#: config/module.config.php:402
+#: config/module.config.php:429
 msgid ""
 "Your request to access resource {resource} is sent to administrator. You "
 "will be inform when your request will change."
 msgstr ""
 
-#: config/module.config.php:403
+#: config/module.config.php:430
 msgid ""
 "Your request to access resource {resource} was accepted. You will be able to "
 "access it after clicking {session_url}."
 msgstr ""
 
-#: config/module.config.php:405
+#: config/module.config.php:432
 msgid "This resource is not available for now. Contact the webmaster."
 msgstr ""
 
-#: config/module.config.php:409
+#: config/module.config.php:436
 msgid ""
 "By submitting this form, I accept the policy for processing my personal data."
 msgstr ""
