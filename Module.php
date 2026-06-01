@@ -638,9 +638,10 @@ class Module extends AbstractModule
         );
 
         // Add a job to update item sets.
+        // TODO Config form fieldset does not adapt well to EasyAdmin check-and-fix sidebar. Disabled until a dedicated fieldset is built, but probably useless anyway.
+        /*
         $sharedEventManager->attach(
-            \EasyAdmin\Form\CheckAndFixForm::class,
-            'form.add_elements',
+            \EasyAdmin\Form\CheckAndFixForm::class, 'form.add_elements',
             [$this, 'handleEasyAdminJobsForm']
         );
         $sharedEventManager->attach(
@@ -648,6 +649,7 @@ class Module extends AbstractModule
             'easyadmin.job',
             [$this, 'handleEasyAdminJobs']
         );
+        */
     }
 
     public function getConfigForm(PhpRenderer $renderer)
