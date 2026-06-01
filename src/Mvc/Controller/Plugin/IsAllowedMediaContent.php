@@ -181,12 +181,25 @@ class IsAllowedMediaContent extends AbstractPlugin
             return true;
         }
 
-        // Here, the mode is reserved or protected, so check media content.
-
         $modes = $this->settings->get('access_modes');
         if (empty($modes)) {
             return true;
         }
+
+        // Protected: stricter than reserved. No global bypass modes (IP, SSO
+        // IDP, guest, CAS, LDAP, external, email regex) apply. The only way to
+        // grant access is an approved individual access request. This
+        // distinguishes "protected" from "reserved" semantically: a reader
+        // wandering the site with the right context (IP, SSO) can read a
+        // "reserved" file silently, but a "protected" file always requires an
+        // explicit, admin-validated request.
+        if ($level === AccessStatus::PROTECTED) {
+            $individualModes = array_intersect(['user', 'email', 'token'], $modes);
+            return $individualModes
+                && $this->checkIndividualAccesses($media, $individualModes, $this->user);
+        }
+
+        // Here, the level is reserved: all bypass modes apply.
 
         $modeIp = in_array('ip', $modes);
         if ($modeIp && $this->isMediaInReservedItemSets($media, 'ip')) {
