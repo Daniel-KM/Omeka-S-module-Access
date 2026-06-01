@@ -69,10 +69,11 @@ class IsAccessRequestable extends AbstractHelper
         }
 
         $resourceName = $resource->resourceName();
-        if ($resourceName === 'media') {
-            // The level itself is enough for the media case: forbidden short
-            // circuits, and reserved/protected are requestable when the file is
-            // not granted. Embargo is folded inside isAllowedMediaContent.
+        // Terminal resources carrying a file (media and digital_objects) share
+        // the same logic: forbidden short circuits, and reserved/protected are
+        // requestable when the file is not granted. Embargo is folded inside
+        // isAllowedMediaContent.
+        if ($resourceName === 'media' || $resourceName === 'digital_objects') {
             $level = $this->accessLevel->__invoke($resource);
             return in_array($level, [AccessStatus::RESERVED, AccessStatus::PROTECTED])
                 && !$this->isAllowedMediaContent->__invoke($resource);
@@ -106,8 +107,40 @@ class IsAccessRequestable extends AbstractHelper
             )
             SQL;
 
+        // Attached digital objects qualify too: museums that moved from media
+        // to digital objects keep the request flow working. The branch is added
+        // only when the module DigitalObject is active, so a site without it
+        // (no "digital_object" table) is not broken.
+        $doClauseItem = '';
+        $doClauseItemSet = '';
+        if (class_exists('DigitalObject\Module', false)) {
+            $attachedDoSubquery = <<<'SQL'
+                SELECT `value`.`value_resource_id`
+                FROM `value`
+                JOIN `digital_object` ON `digital_object`.`id` = `value`.`value_resource_id`
+                WHERE (`value`.`type` = "resource" OR `value`.`type` LIKE "resource:%")
+                SQL;
+            $doClauseItem = <<<SQL
+                OR `access_status`.`id` IN (
+                    $attachedDoSubquery
+                    AND `value`.`resource_id` = :resource_id
+                )
+                SQL;
+            $doClauseItemSet = <<<SQL
+                OR `access_status`.`id` IN (
+                    $attachedDoSubquery
+                    AND `value`.`resource_id` IN (
+                        SELECT `item_item_set_do`.`item_id`
+                        FROM `item_item_set` AS `item_item_set_do`
+                        WHERE `item_item_set_do`.`item_set_id` = :resource_id
+                    )
+                )
+                SQL;
+        }
+
         if ($resourceName === 'items') {
-            // Either the item itself, or any of its media, qualifies.
+            // The item itself, any media of the item, or any digital object
+            // attached to the item qualifies.
             $sql = <<<SQL
                 SELECT 1
                 FROM `access_status`
@@ -116,6 +149,7 @@ class IsAccessRequestable extends AbstractHelper
                 WHERE (
                     `access_status`.`id` = :resource_id
                     OR `media`.`item_id` = :resource_id
+                    $doClauseItem
                 )
                 AND (`resource`.`is_public` = 1 $orWhereUser)
                 AND ($restrictedClause)
@@ -125,8 +159,9 @@ class IsAccessRequestable extends AbstractHelper
                 ->executeQuery($sql, $bind, $types)->fetchOne();
         }
 
-        // item_sets: the set itself, the items it contains, and the media of
-        // those items are all candidates.
+        // item_sets: the set itself, the items it contains, the media of those
+        // items, and any digital object attached to one of those items all
+        // qualify.
         $sql = <<<SQL
             SELECT 1
             FROM `access_status`
@@ -138,6 +173,7 @@ class IsAccessRequestable extends AbstractHelper
             WHERE (
                 `access_status`.`id` = :resource_id
                 OR `item_item_set`.`item_set_id` = :resource_id
+                $doClauseItemSet
             )
             AND (`resource`.`is_public` = 1 $orWhereUser)
             AND ($restrictedClause)

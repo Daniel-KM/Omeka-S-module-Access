@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\Plugin\AbstractPlugin;
 use Laminas\Mvc\Controller\Plugin\Params;
 use Ldap\Mvc\Controller\Plugin\IsLdapUser;
+use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 use Omeka\Api\Representation\MediaRepresentation;
 use Omeka\Entity\User;
 use Omeka\Mvc\Controller\Plugin\UserIsAllowed;
@@ -139,7 +140,7 @@ class IsAllowedMediaContent extends AbstractPlugin
      *
      * @todo Check embargo via a new column in accessStatus?
      */
-    public function __invoke(?MediaRepresentation $media): bool
+    public function __invoke(?AbstractResourceEntityRepresentation $media): bool
     {
         if (!$media) {
             return false;
@@ -156,11 +157,12 @@ class IsAllowedMediaContent extends AbstractPlugin
 
         /** @var \Access\Entity\AccessStatus $accessStatus */
         $accessStatus = $this->accessStatus->__invoke($media);
-        // If media has no access status, inherit from item.
-        if (!$accessStatus) {
+        // If media has no access status, inherit from item (Media only).
+        if (!$accessStatus && $media instanceof MediaRepresentation) {
             $accessStatus = $this->accessStatus->__invoke($media->item());
         }
-        // If neither media nor item has access status, allow access (free by default).
+        // If neither resource nor item has access status, allow access (free by
+        // default).
         if (!$accessStatus) {
             return true;
         }
@@ -202,7 +204,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         // Here, the level is reserved: all bypass modes apply.
 
         $modeIp = in_array('ip', $modes);
-        if ($modeIp && $this->isMediaInReservedItemSets($media, 'ip')) {
+        if ($modeIp && $this->isResourceInReservedItemSets($media, 'ip')) {
             return true;
         }
 
@@ -236,7 +238,7 @@ class IsAllowedMediaContent extends AbstractPlugin
             if ($modeSsoIdp
                 && $this->isSsoUser
                 && $this->isSsoUser->__invoke($this->user)
-                && $this->isMediaInReservedItemSets($media, 'auth_sso_idp')
+                && $this->isResourceInReservedItemSets($media, 'auth_sso_idp')
             ) {
                 return true;
             }
@@ -266,8 +268,11 @@ class IsAllowedMediaContent extends AbstractPlugin
         return (bool) $accessStatus->isUnderEmbargo();
     }
 
-    protected function isMediaInReservedItemSets(MediaRepresentation $media, string $mode): bool
+    protected function isResourceInReservedItemSets(?AbstractResourceEntityRepresentation $resource, string $mode): bool
     {
+        if (!$resource) {
+            return false;
+        }
         if ($mode === 'ip') {
             $definedItemSets = $this->definedItemSetsForClientIp();
         } elseif ($mode === 'auth_sso_idp') {
@@ -287,42 +292,88 @@ class IsAllowedMediaContent extends AbstractPlugin
         if (!count($allow) && !count($forbid)) {
             return true;
         } elseif (count($allow) && !count($forbid)) {
-            return $this->isMediaInItemSets($media, $allow);
+            return $this->isResourceInItemSets($resource, $allow);
         } elseif (!count($allow) && count($forbid)) {
-            return !$this->isMediaInItemSets($media, $forbid);
+            return !$this->isResourceInItemSets($resource, $forbid);
         } else {
-            return $this->isMediaInItemSets($media, $allow)
-                && !$this->isMediaInItemSets($media, $forbid);
+            return $this->isResourceInItemSets($resource, $allow)
+                && !$this->isResourceInItemSets($resource, $forbid);
         }
     }
 
-    protected function isMediaInItemSets(?MediaRepresentation $media, ?array $itemSetIds): bool
+    protected function isResourceInItemSets(?AbstractResourceEntityRepresentation $resource, ?array $itemSetIds): bool
     {
-        if (!$media || !$itemSetIds) {
+        if (!$resource || !$itemSetIds) {
             return false;
         }
-        $mediaItemSetIds = $this->mediaItemSetIds($media);
-        return (bool) array_intersect($mediaItemSetIds, $itemSetIds);
+        return (bool) array_intersect($this->resourceItemSetIds($resource), $itemSetIds);
     }
 
+    /**
+     * Item set ids related to the given resource:
+     *   - Media: parent item's item sets.
+     *   - DigitalObject: item sets of every item attaching the DO through a
+     *     property value of type resource.
+     *   - Item: item sets the item belongs to.
+     */
+    protected function resourceItemSetIds(AbstractResourceEntityRepresentation $resource): array
+    {
+        static $cache = [];
+        $resourceName = $resource->resourceName();
+        $cacheKey = $resourceName . ':' . $resource->id();
+        if (isset($cache[$cacheKey])) {
+            return $cache[$cacheKey];
+        }
+
+        $connection = $this->entityManager->getConnection();
+        if ($resourceName === 'media') {
+            $sql = 'SELECT item_set_id FROM item_item_set WHERE item_id = :id ORDER BY item_set_id';
+            $itemId = $resource instanceof MediaRepresentation ? $resource->item()->id() : null;
+            $itemSetIds = $itemId
+                ? $connection->executeQuery($sql, ['id' => $itemId], ['id' => \Doctrine\DBAL\ParameterType::INTEGER])->fetchFirstColumn()
+                : [];
+        } elseif ($resourceName === 'items') {
+            $sql = 'SELECT item_set_id FROM item_item_set WHERE item_id = :id ORDER BY item_set_id';
+            $itemSetIds = $connection->executeQuery($sql, ['id' => $resource->id()], ['id' => \Doctrine\DBAL\ParameterType::INTEGER])->fetchFirstColumn();
+        } elseif ($resourceName === 'digital_objects') {
+            $sql = <<<'SQL'
+                SELECT DISTINCT item_item_set.item_set_id
+                FROM value
+                JOIN item_item_set ON item_item_set.item_id = value.resource_id
+                WHERE value.value_resource_id = :id
+                AND (value.type = 'resource' OR value.type LIKE 'resource:%')
+                SQL;
+            $itemSetIds = $connection->executeQuery($sql, ['id' => $resource->id()], ['id' => \Doctrine\DBAL\ParameterType::INTEGER])->fetchFirstColumn();
+        } else {
+            $itemSetIds = [];
+        }
+
+        $cache[$cacheKey] = array_map('intval', $itemSetIds);
+        return $cache[$cacheKey];
+    }
+
+    /**
+     * @deprecated Kept as a thin wrapper for backwards compatibility.
+     */
+    protected function isMediaInReservedItemSets(MediaRepresentation $media, string $mode): bool
+    {
+        return $this->isResourceInReservedItemSets($media, $mode);
+    }
+
+    /**
+     * @deprecated Kept as a thin wrapper for backwards compatibility.
+     */
+    protected function isMediaInItemSets(?MediaRepresentation $media, ?array $itemSetIds): bool
+    {
+        return $this->isResourceInItemSets($media, $itemSetIds);
+    }
+
+    /**
+     * @deprecated Kept as a thin wrapper for backwards compatibility.
+     */
     protected function mediaItemSetIds(MediaRepresentation $media): array
     {
-        static $mediaItemSetIds = [];
-        $mediaId = $media->id();
-        if (!isset($mediaItemSetIds[$mediaId])) {
-            // Use a sql query because the item sets may be private.
-            $sql = <<<'SQL'
-                SELECT `item_set_id`
-                FROM `item_item_set`
-                WHERE `item_id` = :item_id
-                ORDER BY `item_set_id` ASC;
-                SQL;
-            $itemSetIds = $this->entityManager->getConnection()
-                ->executeQuery($sql, ['item_id' => $media->item()->id()], ['item_id' => \Doctrine\DBAL\ParameterType::INTEGER])
-                ->fetchFirstColumn();
-            $mediaItemSetIds[$mediaId] = $itemSetIds;
-        }
-        return $mediaItemSetIds[$mediaId];
+        return $this->resourceItemSetIds($media);
     }
 
     /**
@@ -351,7 +402,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         return $pattern && preg_match($pattern, $user->getEmail());
     }
 
-    protected function checkIndividualAccesses(MediaRepresentation $media, array $individualModes, ?User $user = null): bool
+    protected function checkIndividualAccesses(AbstractResourceEntityRepresentation $media, array $individualModes, ?User $user = null): bool
     {
         $bind = [];
         $types = [];
@@ -404,11 +455,11 @@ class IsAllowedMediaContent extends AbstractPlugin
         $sqlModesString = implode("\n        OR ", $sqlModes);
 
         $bind['media_id'] = $media->id();
-        $bind['item_id'] = $media->item()->id();
+        $bind['item_id'] = $media instanceof MediaRepresentation ? $media->item()->id() : 0;
         $types['media_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
         $types['item_id'] = \Doctrine\DBAL\ParameterType::INTEGER;
 
-        $mediaItemSetIds = $this->mediaItemSetIds($media);
+        $mediaItemSetIds = $media instanceof MediaRepresentation ? $this->mediaItemSetIds($media) : [];
         $orInItemSets = '';
         if ($mediaItemSetIds) {
             $orInItemSets = 'OR (ar.recursive = 1 AND r.resource_id IN (:item_set_ids))';

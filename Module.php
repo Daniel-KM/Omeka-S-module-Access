@@ -473,8 +473,12 @@ class Module extends AbstractModule
             \Omeka\Api\Adapter\ItemAdapter::class => 'Omeka\Controller\Admin\Item',
             \Omeka\Api\Adapter\MediaAdapter::class => 'Omeka\Controller\Admin\Media',
             \Omeka\Api\Adapter\ItemSetAdapter::class => 'Omeka\Controller\Admin\ItemSet',
-            // \Annotate\Api\Adapter\AnnotationAdapter::class => \Annotate\Controller\Admin\AnnotationController::class,
+            // \Annotate\Api\Adapter\AnnotationAdapter::class =>
+            // \Annotate\Controller\Admin\AnnotationController::class,
         ];
+        if (class_exists(\DigitalObject\Api\Adapter\DigitalObjectAdapter::class)) {
+            $adaptersAndControllers[\DigitalObject\Api\Adapter\DigitalObjectAdapter::class] = 'DigitalObject\Controller\Admin\DigitalObject';
+        }
         foreach ($adaptersAndControllers as $adapter => $controller) {
             // Store status.
             $sharedEventManager->attach(

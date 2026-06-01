@@ -7,6 +7,7 @@ use Common\Stdlib\PsrMessage;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Omeka\Api\Adapter\MediaAdapter;
+use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 use Omeka\Api\Representation\MediaRepresentation;
 use Omeka\Mvc\Exception;
 use Omeka\Permissions\Acl;
@@ -104,7 +105,9 @@ class AccessFileController extends AbstractActionController
 
         // Here, the media exists and is readable by the user (public/private).
 
-        // Only mode "media only" is managed for now.
+        // Only mode "media only" is managed for now. The check is generic on
+        // AbstractResourceEntityRepresentation, so both Media and DigitalObject
+        // are handled (Media-specific paths short-circuit inside the plugin).
         $isAllowedMediaContent = $this->isAllowedMediaContent($media);
 
         // Log only non-admin individual access to original records.
@@ -135,11 +138,11 @@ class AccessFileController extends AbstractActionController
             : $this->sendFakeFile($media, $downloadFilename, $forceDownload);
     }
 
-    protected function mediaFromFilename(string $filename): ?MediaRepresentation
+    protected function mediaFromFilename(string $filename): ?AbstractResourceEntityRepresentation
     {
         // For compatibility with module ArchiveRepertory, don't take the
-        // filename, but remove the extension.
-        // $storageId = pathinfo($filename, PATHINFO_FILENAME);
+        // filename, but remove the extension. $storageId = pathinfo($filename,
+        // PATHINFO_FILENAME);
         $extension = pathinfo($filename, PATHINFO_EXTENSION);
         $storageId = mb_strlen($extension)
             ? mb_substr($filename, 0, -mb_strlen($extension) - 1)
@@ -155,13 +158,26 @@ class AccessFileController extends AbstractActionController
         $media = $this->entityManager
             ->getRepository(\Omeka\Entity\Media::class)
             ->findOneBy(['storageId' => $storageId]);
-        if (!$media) {
-            return null;
+        if ($media) {
+            // Rights are automatically checked, so an exception may be thrown.
+            $media = $this->api()->read('media', ['id' => $media->getId()], [], ['initialize' => false, 'finalize' => false])->getContent();
+            return $this->mediaAdapter->getRepresentation($media);
         }
 
-        // Rights are automatically checked, so an exception may be thrown.
-        $media = $this->api()->read('media', ['id' => $media->getId()], [], ['initialize' => false, 'finalize' => false])->getContent();
-        return $this->mediaAdapter->getRepresentation($media);
+        // Fallback: module DigitalObject. Same storage layout, same rights
+        // model based on the AbstractResourceEntity ACL.
+        if (class_exists('DigitalObject\Module', false)) {
+            $do = $this->entityManager
+                ->getRepository(\DigitalObject\Entity\DigitalObject::class)
+                ->findOneBy(['storageId' => $storageId]);
+            if ($do) {
+                $doEntity = $this->api()->read('digital_objects', ['id' => $do->getId()], [], ['initialize' => false, 'finalize' => false])->getContent();
+                $adapterManager = $this->getEvent()->getApplication()->getServiceManager()->get('Omeka\ApiAdapterManager');
+                return $adapterManager->get('digital_objects')->getRepresentation($doEntity);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -176,7 +192,7 @@ class AccessFileController extends AbstractActionController
      */
     protected function sendFile(
         string $filepath,
-        ?MediaRepresentation $media = null,
+        ?AbstractResourceEntityRepresentation $media = null,
         ?string $mediaType = null,
         ?string $filename = null,
         ?string $storageType = null,
@@ -313,7 +329,7 @@ class AccessFileController extends AbstractActionController
      * the given file without rights.
      */
     protected function sendFakeFile(
-        ?MediaRepresentation $media,
+        ?AbstractResourceEntityRepresentation $media,
         ?string $filename = null,
         bool $forceDownload = false
     ) {
