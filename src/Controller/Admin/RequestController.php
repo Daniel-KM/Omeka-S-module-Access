@@ -5,6 +5,7 @@ namespace Access\Controller\Admin;
 use Access\Controller\AccessTrait;
 use Access\Entity\AccessRequest;
 use Access\Form\Admin\AccessRequestForm;
+use Access\Form\SendMessageForm;
 use Access\Form\Admin\QuickSearchAccessRequestForm;
 use Common\Mvc\Controller\Plugin\JSend;
 use Common\Stdlib\PsrMessage;
@@ -76,6 +77,15 @@ class RequestController extends AbstractActionController
         $formSearch->setAttribute('action', $this->url()->fromRoute(null, ['action' => 'browse'], true));
         $formSearch->setData($query);
 
+        $settings = $this->settings();
+        $formSendMessage = $this->getForm(SendMessageForm::class);
+        $formSendMessage->get('subject')->setValue((string) $settings->get('access_reply_subject'));
+        $formSendMessage->get('body')->setValue((string) $settings->get('access_reply_body'));
+        // When a support reply-to is set, the answering admin is no longer the
+        // reply-to, so default to a discreet copy (bcc); else the admin is the
+        // reply-to and needs no copy.
+        $formSendMessage->get('myself')->setValue($settings->get('access_reply_to_email') ? 'bcc' : '');
+
         $accessRequests = $response->getContent();
         return new ViewModel([
             'accessRequests' => $accessRequests,
@@ -83,9 +93,112 @@ class RequestController extends AbstractActionController
             'formDeleteSelected' => $formDeleteSelected,
             'formDeleteAll' => $formDeleteAll,
             'formSearch' => $formSearch,
+            'formSendMessage' => $formSendMessage,
             'returnQuery' => $returnQuery,
             'allowIndividualRequests' => $allowIndividualRequests,
         ]);
+    }
+
+    public function sendMessageAction()
+    {
+        if (!$this->getRequest()->isPost()) {
+            throw new \Omeka\Mvc\Exception\NotFoundException;
+        }
+
+        $id = $this->params('id');
+        try {
+            $accessRequest = $this->api()->read('access_requests', ['id' => $id])->getContent();
+        } catch (\Throwable $e) {
+            return $this->jSend()->fail(null, $this->translate('Resource not found.')); // @translate
+        }
+
+        $user = $accessRequest->user();
+        $toEmail = $user ? $user->email() : $accessRequest->email();
+        if (!$toEmail) {
+            return $this->jSend()->fail(null, $this->translate(
+                'No email defined for this request.' // @translate
+            ));
+        }
+        $toName = $user ? $user->name() : ($accessRequest->name() ?: '');
+
+        $params = $this->params();
+
+        $body = trim((string) $params->fromPost('body'));
+        if (!strlen($body)) {
+            return $this->jSend()->fail(null, $this->translate('Empty message.')); // @translate
+        }
+        if (mb_strlen($body) > 10000) {
+            return $this->jSend()->fail(null, $this->translate('Too long message.')); // @translate
+        }
+
+        $settings = $this->settings();
+
+        $subject = trim((string) $params->fromPost('subject'));
+        if (!strlen($subject)) {
+            $subject = $settings->get('access_reply_subject')
+                ?: $this->translate('Reply to your access request'); // @translate
+        }
+
+        $post = [
+            'o:email' => $toEmail,
+            'o:name' => $toName,
+            'o:resource' => array_map(fn ($r) => $r->id(), $accessRequest->resources()),
+            'access_request' => $accessRequest,
+        ];
+        $subject = $this->replacePlaceholders($subject, $post);
+        $body = $this->replacePlaceholders($body, $post);
+
+        if (mb_strlen($subject) > 190) {
+            return $this->jSend()->fail(null, $this->translate('Too long subject.')); // @translate
+        }
+
+        $to = [$toEmail => (string) $toName];
+        $replyTo = $this->replyToAddress();
+
+        // From stays the unique installation sender; copies to the answering
+        // admin are optional, exclusive (cc or bcc), via the form radio.
+        $cc = null;
+        $bcc = null;
+        $myself = $params->fromPost('myself');
+        $admin = $this->identity();
+        if ($admin && $myself === 'cc') {
+            $cc = [$admin->getEmail() => (string) $admin->getName()];
+        } elseif ($admin && $myself === 'bcc') {
+            $bcc = [$admin->getEmail() => (string) $admin->getName()];
+        }
+
+        /** @see \Common\Mvc\Controller\Plugin\SendEmail */
+        $result = $this->sendEmail($body, $subject, $to, null, $cc, $bcc, $replyTo);
+        if (!$result) {
+            return $this->jSend()->error(null, $this->translate(
+                'Sorry, the message cannot be sent. Contact the administrator.' // @translate
+            ));
+        }
+
+        $message = new PsrMessage(
+            'Message successfully sent to {email}.', // @translate
+            ['email' => $toEmail]
+        );
+        return $this->jSend()->success([
+            'access_request' => ['o:id' => $id],
+        ], $message->setTranslator($this->translator()));
+    }
+
+    /**
+     * Resolve the reply-to address: the configured support address, else the
+     * connected admin. The sender (from) is the unique installation address.
+     */
+    protected function replyToAddress(): ?array
+    {
+        $email = $this->settings()->get('access_reply_to_email');
+        if ($email) {
+            return [$email => ''];
+        }
+        $user = $this->identity();
+        if ($user) {
+            return [$user->getEmail() => (string) $user->getName()];
+        }
+        return null;
     }
 
     public function showAction()

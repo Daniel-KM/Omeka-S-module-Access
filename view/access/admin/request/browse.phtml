@@ -80,6 +80,15 @@ $this->htmlElement('body')->appendAttribute('class', 'access access-requests bro
                 */ ?>
                 <?= sprintf($translate('#%s'), $accessRequest->id()) ?>
                 <ul class="actions">
+                    <?php if ($accessRequest->userIsAllowed('update') && ($accessRequest->user() || $accessRequest->email())): ?>
+                    <li><?= $hyperlink('', '#', [
+                        'class' => 'button-dialog-common reply-message fas fa-envelope',
+                        'data-dialog-selector' => 'dialog.dialog-send-message.dialog-access',
+                        'data-url' => $accessRequest->url('send-message'),
+                        'title' => $translate('Reply to the requester'),
+                        'aria-label' => $translate('Reply to the requester'),
+                    ]) ?></li>
+                    <?php endif; ?>
                     <?php if ($allowIndividualRequests && $accessRequest->userIsAllowed('update')): ?>
                     <li><?= $accessRequest->link('', 'edit', [
                         'class' => 'o-icon-edit',
@@ -193,6 +202,10 @@ $('#sidebar-delete-all').on('click', 'input[name="confirm-delete-all-check"]', f
 </div>
 
 <?php endif; ?>
+
+<?= $this->partial('common/dialog/access-request-send-message', [
+    'form' => $formSendMessage,
+]) ?>
 
 <?= $this->partial('common/quick-search-sidebar', [
     'formSearch' => $formSearch,

@@ -62,6 +62,7 @@ return [
             Form\Admin\QuickSearchAccessLogForm::class => Form\Admin\QuickSearchAccessLogForm::class,
             Form\Admin\QuickSearchAccessRequestForm::class => Form\Admin\QuickSearchAccessRequestForm::class,
             Form\ConfigForm::class => Form\ConfigForm::class,
+            Form\SendMessageForm::class => Form\SendMessageForm::class,
             Form\SettingsFieldset::class => Form\SettingsFieldset::class,
         ],
         // TODO In Omeka, forms with options should be passed as factory to avoid a warning for now.
@@ -398,6 +399,17 @@ return [
         'settings' => [
             'access_message_send' => true,
             'access_reply_to_email' => '',
+            'access_reply_subject' => 'Reply to your access request on {main_title}', // @translate
+            'access_reply_body' => <<<'MAIL'
+                Hi {name},
+
+
+
+                Sincerely,
+
+                {main_title}
+                {main_url}
+                MAIL, // @translate
             'access_message_admin_subject' => 'New request status!', //@translate
             'access_message_admin_request_created' => 'A user or visitor requested to access resource {resource}. Please, check request dashboard.', //@translate
             'access_message_admin_request_updated' => 'A user or visitor updated the request to access a resource {resource}. Please, check request dashboard.', //@translate

@@ -45,6 +45,33 @@ class SettingsFieldset extends Fieldset
                     'required' => false,
                 ],
             ])
+            ->add([
+                'name' => 'access_reply_subject',
+                'type' => Element\Text::class,
+                'options' => [
+                    'element_group' => 'access',
+                    'label' => 'Default subject when answering a requester', // @translate
+                    'info' => 'Placeholders: {name}, {email}, {main_title}, {main_url}, {site_title}, {site_url}, {resource}, {resources}.', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_reply_subject',
+                    'required' => false,
+                ],
+            ])
+            ->add([
+                'name' => 'access_reply_body',
+                'type' => Element\Textarea::class,
+                'options' => [
+                    'element_group' => 'access',
+                    'label' => 'Default message when answering a requester', // @translate
+                    'info' => 'Placeholders: {name}, {email}, {main_title}, {main_url}, {site_title}, {site_url}, {resource}, {resources}.', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_reply_body',
+                    'required' => false,
+                    'rows' => 5,
+                ],
+            ])
 
             ->add([
                 'name' => 'access_message_admin_subject',
