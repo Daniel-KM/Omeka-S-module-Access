@@ -111,15 +111,15 @@
     }
     .access-request .o-icon-accepted::before,
     .access-request .o-icon-approved::before {
-        color: #00FF00;
+        color: #2A7D2A;
         content: "";
     }
     .access-request .o-icon-rejected::before {
-        color: #FF0000;
+        color: #A91919;
         content: "";
     }
     .access-request .o-icon-undefined::before {
-        color: #FF0000;
+        color: #A91919;
         content: "";
     }
     .access-request .o-icon-none::before {
