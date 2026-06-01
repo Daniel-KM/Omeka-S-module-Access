@@ -706,9 +706,9 @@ class AccessStatusPropagate extends AbstractJob
     /**
      * In non-overwrite propagation modes, the access_status row of a child may
      * differ from the parent's level (kept stricter by max_restrictive, or left
-     * untouched by skip_if_set). The legacy property-mode sync blindly inserts
-     * the PARENT's level value into the value table, which then mirrors back to
-     * access_status the next time the resource is saved, silently demoting the
+     * untouched by skip_if_set). The old property-mode sync blindly inserts the
+     * PARENT level value into the value table, which then mirrors back to
+     * access_status the next time the resource is saved silently demoting the
      * stricter child. This realignment pass runs right after the old INSERTs
      * and rewrites the level value column from the actual access_status of each
      * child.
@@ -718,8 +718,8 @@ class AccessStatusPropagate extends AbstractJob
      * each level, taken from access_property_levels).
      *
      * Embargo dates are intentionally NOT touched: they are per-resource and
-     * are not propagated by this job — neither in access_status nor in the
-     * value table — so there is nothing to realign.
+     * are not propagated by this job, neither in access_status nor in the value
+     * table, so there is nothing to realign.
      */
     protected function realignPropertyLevelsToAccessStatus(string $scope, array $bind, array $types): void
     {
@@ -790,7 +790,7 @@ class AccessStatusPropagate extends AbstractJob
      * embargo property rows for the children of the scope.
      *
      * Reads from access_status (post-update) so the row count matches the
-     * children that actually carry an embargo at this point — regardless of
+     * children that actually carry an embargo at this point, regardless of
      * propagation_mode (overwrite / max_restrictive / skip_if_set).
      *
      * Format of the property value matches the formatter used in

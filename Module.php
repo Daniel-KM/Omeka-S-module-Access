@@ -1098,7 +1098,9 @@ class Module extends AbstractModule
             $args = [
                 'resource_ids' => $ids,
                 'values' => $accessStatusValues,
-                'propagation_mode' => $settings->get('access_propagation_mode', 'skip_if_set'),
+                // Explicit propagation requested in batch edit: medias status
+                // is overwritten whatever the setting for access_propagation_mode.
+                'propagation_mode' => 'overwrite',
                 'propagation_embargo' => (bool) $settings->get('access_propagation_embargo', false),
             ];
             $services->get(\Omeka\Job\Dispatcher::class)
@@ -1375,7 +1377,9 @@ class Module extends AbstractModule
             $args = [
                 'resource_id' => $resourceId,
                 'values' => $accessStatusValues,
-                'propagation_mode' => $settings->get('access_propagation_mode', 'skip_if_set'),
+                // Explicit propagation requested in batch edit: medias status
+                // is overwritten whatever the setting for access_propagation_mode.
+                'propagation_mode' => 'overwrite',
                 'propagation_embargo' => (bool) $settings->get('access_propagation_embargo', false),
             ];
             $services->get(\Omeka\Job\Dispatcher::class)
