@@ -56,6 +56,13 @@ class AccessStatusPropagate extends AbstractJob
     protected $propagationMode = 'skip_if_set';
 
     /**
+     * Whether to also propagate embargo dates.
+     *
+     * @var bool
+     */
+    protected $propagateEmbargo = false;
+
+    /**
      * @var string Pre-computed ON DUPLICATE KEY UPDATE clause for access_status.
      */
     protected $onDupClause = '';
@@ -94,10 +101,16 @@ class AccessStatusPropagate extends AbstractJob
         if (in_array($mode, ['skip_if_set', 'max_restrictive', 'overwrite'], true)) {
             $this->propagationMode = $mode;
         }
+        $this->propagateEmbargo = (bool) $this->getArg('propagation_embargo', false);
         // Pre-compute the access_status ON DUPLICATE KEY UPDATE clause and the
         // property value-table sync mode. Set once per job to avoid a recompute
         // in every executeStatement call.
         $this->onDupClause = $this->buildOnDupClause();
+        if ($this->propagateEmbargo) {
+            $this->logger->info(
+                'Embargo propagation enabled: parent embargo dates will be copied onto children.' // @translate
+            );
+        }
 
         if ($this->accessViaProperty) {
             $result = $this->prepareProperties(true);
@@ -178,26 +191,33 @@ class AccessStatusPropagate extends AbstractJob
             return null;
         }
 
+        // Only the level is bound by default.
+        // Embargo dates are per-resource and not propagated unless the opt-in
+        // propagation embargo is set, in which case the parent embargo values
+        // are added below.
         $level = $accessStatus->getLevel();
-        $embargoStart = $accessStatus->getEmbargoStart();
-        $embargoEnd = $accessStatus->getEmbargoEnd();
-        $embargoStartStatus = $embargoStart ? $embargoStart->format('Y-m-d H:i:s') : null;
-        $embargoEndStatus = $embargoEnd ? $embargoEnd->format('Y-m-d H:i:s') : null;
 
         $bind = [
             'resource_id' => $resourceId,
             'level' => $level,
             'level_num' => self::LEVEL_ORDER[$level] ?? 1,
-            'embargo_start' => $embargoStartStatus,
-            'embargo_end' => $embargoEndStatus,
         ];
         $types = [
             'resource_id' => \Doctrine\DBAL\ParameterType::INTEGER,
             'level' => \Doctrine\DBAL\ParameterType::STRING,
             'level_num' => \Doctrine\DBAL\ParameterType::INTEGER,
-            'embargo_start' => $embargoStartStatus ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL,
-            'embargo_end' => $embargoEndStatus ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL,
         ];
+
+        if ($this->propagateEmbargo) {
+            $embargoStart = $accessStatus->getEmbargoStart();
+            $embargoEnd = $accessStatus->getEmbargoEnd();
+            $embargoStartStatus = $embargoStart ? $embargoStart->format('Y-m-d H:i:s') : null;
+            $embargoEndStatus = $embargoEnd ? $embargoEnd->format('Y-m-d H:i:s') : null;
+            $bind['embargo_start'] = $embargoStartStatus;
+            $bind['embargo_end'] = $embargoEndStatus;
+            $types['embargo_start'] = $embargoStartStatus ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL;
+            $types['embargo_end'] = $embargoEndStatus ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL;
+        }
 
         if (!$this->accessViaProperty) {
             return [
@@ -207,66 +227,67 @@ class AccessStatusPropagate extends AbstractJob
             ];
         }
 
-        // Level values.
         $levelVal = $this->accessLevels[$level] ?? $level;
         $levelType = empty($accessStatusValues['o-access:level']['type']) ? $this->levelDataType : $accessStatusValues['o-access:level']['type'];
 
         $bind += [
             'property_level' => $this->propertyLevelId,
-            'property_embargo_start' => $this->propertyEmbargoStartId,
-            'property_embargo_end' => $this->propertyEmbargoEndId,
             'level_value' => $levelVal,
             'level_type' => $levelType,
         ];
         $types += [
             'property_level' => \Doctrine\DBAL\ParameterType::INTEGER,
-            'property_embargo_start' => \Doctrine\DBAL\ParameterType::INTEGER,
-            'property_embargo_end' => \Doctrine\DBAL\ParameterType::INTEGER,
             'level_value' => \Doctrine\DBAL\ParameterType::STRING,
             'level_type' => \Doctrine\DBAL\ParameterType::STRING,
         ];
 
-        // Embargo start values.
-        $embargoStartVal = empty($accessStatusValues['o-access:embargo_start']['value'])
-            ? ($embargoStartStatus && substr($embargoStartStatus, -8) === '00:00:00' ? substr($embargoStartStatus, 0, 10) : $embargoStartStatus)
-            : $accessStatusValues['o-access:embargo_start']['value'];
-        if ($embargoStartVal) {
-            $embargoStartType = empty($accessStatusValues['o-access:embargo_start']['type'])
-                ? ($this->hasNumericDataTypes ? 'numeric:timestamp' : 'literal')
-                : $accessStatusValues['o-access:embargo_start']['type'];
+        if ($this->propagateEmbargo) {
             $bind += [
-                'embargo_start_value' => $embargoStartVal,
-                'embargo_start_type' => $embargoStartType,
+                'property_embargo_start' => $this->propertyEmbargoStartId,
+                'property_embargo_end' => $this->propertyEmbargoEndId,
             ];
             $types += [
-                'embargo_start_value' => \Doctrine\DBAL\ParameterType::STRING,
-                'embargo_start_type' => \Doctrine\DBAL\ParameterType::STRING,
+                'property_embargo_start' => \Doctrine\DBAL\ParameterType::INTEGER,
+                'property_embargo_end' => \Doctrine\DBAL\ParameterType::INTEGER,
             ];
-            if ($this->hasNumericDataTypes) {
-                $bind['embargo_start_timestamp'] = $embargoStart->getTimestamp();
-                $types['embargo_start_timestamp'] = \Doctrine\DBAL\ParameterType::INTEGER;
-            }
-        }
 
-        // Embargo end values.
-        $embargoEndVal = empty($accessStatusValues['o-access:embargo_end']['value'])
-            ? ($embargoEndStatus && substr($embargoEndStatus, -8) === '00:00:00' ? substr($embargoEndStatus, 0, 10) : $embargoEndStatus)
-            : $accessStatusValues['o-access:embargo_end']['value'];
-        if ($embargoEndVal) {
-            $embargoEndType = empty($accessStatusValues['o-access:embargo_end']['type'])
-                ? ($this->hasNumericDataTypes ? 'numeric:timestamp' : 'literal')
-                : $accessStatusValues['o-access:embargo_end']['type'];
-            $bind += [
-                'embargo_end_value' => $embargoEndVal,
-                'embargo_end_type' => $embargoEndType,
-            ];
-            $types += [
-                'embargo_end_value' => \Doctrine\DBAL\ParameterType::STRING,
-                'embargo_end_type' => \Doctrine\DBAL\ParameterType::STRING,
-            ];
-            if ($this->hasNumericDataTypes) {
-                $bind['embargo_end_timestamp'] = $embargoEnd->getTimestamp();
-                $types['embargo_end_timestamp'] = \Doctrine\DBAL\ParameterType::INTEGER;
+            $embargoStart = $accessStatus->getEmbargoStart();
+            $embargoEnd = $accessStatus->getEmbargoEnd();
+            $embargoStartStatus = $embargoStart ? $embargoStart->format('Y-m-d H:i:s') : null;
+            $embargoEndStatus = $embargoEnd ? $embargoEnd->format('Y-m-d H:i:s') : null;
+
+            // Embargo property values (legacy format: date-only when time is
+            // midnight, otherwise full datetime).
+            $embargoStartVal = empty($accessStatusValues['o-access:embargo_start']['value'])
+                ? ($embargoStartStatus && substr($embargoStartStatus, -8) === '00:00:00' ? substr($embargoStartStatus, 0, 10) : $embargoStartStatus)
+                : $accessStatusValues['o-access:embargo_start']['value'];
+            if ($embargoStartVal) {
+                $bind['embargo_start_value'] = $embargoStartVal;
+                $bind['embargo_start_type'] = empty($accessStatusValues['o-access:embargo_start']['type'])
+                    ? ($this->hasNumericDataTypes ? 'numeric:timestamp' : 'literal')
+                    : $accessStatusValues['o-access:embargo_start']['type'];
+                $types['embargo_start_value'] = \Doctrine\DBAL\ParameterType::STRING;
+                $types['embargo_start_type'] = \Doctrine\DBAL\ParameterType::STRING;
+                if ($this->hasNumericDataTypes) {
+                    $bind['embargo_start_timestamp'] = $embargoStart->getTimestamp();
+                    $types['embargo_start_timestamp'] = \Doctrine\DBAL\ParameterType::INTEGER;
+                }
+            }
+
+            $embargoEndVal = empty($accessStatusValues['o-access:embargo_end']['value'])
+                ? ($embargoEndStatus && substr($embargoEndStatus, -8) === '00:00:00' ? substr($embargoEndStatus, 0, 10) : $embargoEndStatus)
+                : $accessStatusValues['o-access:embargo_end']['value'];
+            if ($embargoEndVal) {
+                $bind['embargo_end_value'] = $embargoEndVal;
+                $bind['embargo_end_type'] = empty($accessStatusValues['o-access:embargo_end']['type'])
+                    ? ($this->hasNumericDataTypes ? 'numeric:timestamp' : 'literal')
+                    : $accessStatusValues['o-access:embargo_end']['type'];
+                $types['embargo_end_value'] = \Doctrine\DBAL\ParameterType::STRING;
+                $types['embargo_end_type'] = \Doctrine\DBAL\ParameterType::STRING;
+                if ($this->hasNumericDataTypes) {
+                    $bind['embargo_end_timestamp'] = $embargoEnd->getTimestamp();
+                    $types['embargo_end_timestamp'] = \Doctrine\DBAL\ParameterType::INTEGER;
+                }
             }
         }
 
@@ -312,8 +333,8 @@ class AccessStatusPropagate extends AbstractJob
         // Use insert into instead of update, because the access statuses may
         // not exist yet.
         $sql = <<<'SQL'
-            INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-            SELECT `media`.`id`, :level, :embargo_start, :embargo_end
+            INSERT INTO `access_status` (`id`, `level`{{EMBARGO_COLS}})
+            SELECT `media`.`id`, :level{{EMBARGO_VALS}}
             FROM `media`
             WHERE `media`.`item_id` = :resource_id
                 AND `media`.`id` IN (:media_ids)
@@ -344,19 +365,26 @@ class AccessStatusPropagate extends AbstractJob
             return;
         }
 
+        // Level property is always touched.
+        // Embargo property values are touched only when the propagation embargo
+        // opt-in is set.
+        $propertyIds = $this->propagateEmbargo
+            ? '(:property_level, :property_embargo_start, :property_embargo_end)'
+            : '(:property_level)';
+
         $this->connection->executeStatement(
-            <<<'SQL'
+            <<<SQL
             DELETE `value`
             FROM `value`
             JOIN `media` ON `media`.`id` = `value`.`resource_id`
             WHERE `media`.`item_id` = :resource_id
                 AND `media`.`id` IN (:media_ids)
-                AND `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+                AND `value`.`property_id` IN $propertyIds
             SQL,
             $bind, $types
         );
 
-        if ($this->hasNumericDataTypes) {
+        if ($this->propagateEmbargo && $this->hasNumericDataTypes) {
             $this->connection->executeStatement(
                 <<<'SQL'
                 DELETE `numeric_data_types_timestamp`
@@ -381,57 +409,12 @@ class AccessStatusPropagate extends AbstractJob
             $bind, $types
         );
 
-        if (!empty($bind['embargo_start_value'])) {
-            $this->connection->executeStatement(
-                <<<'SQL'
-                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-                SELECT `media`.`id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
-                FROM `media`
-                WHERE `media`.`item_id` = :resource_id
-                    AND `media`.`id` IN (:media_ids)
-                SQL,
-                $bind, $types
-            );
-            if ($this->hasNumericDataTypes) {
-                $this->connection->executeStatement(
-                    <<<'SQL'
-                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                    SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
-                    FROM `media`
-                    WHERE `media`.`item_id` = :resource_id
-                        AND `media`.`id` IN (:media_ids)
-                    SQL,
-                    $bind, $types
-                );
-            }
+        if ($this->propagateEmbargo) {
+            $this->realignPropertyEmbargoFromAccessStatus('item', $bind, $types);
         }
 
-        if (!empty($bind['embargo_end_value'])) {
-            $this->connection->executeStatement(
-                <<<'SQL'
-                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-                SELECT `media`.`id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
-                FROM `media`
-                WHERE `media`.`item_id` = :resource_id
-                    AND `media`.`id` IN (:media_ids)
-                SQL,
-                $bind, $types
-            );
-            if ($this->hasNumericDataTypes) {
-                $this->connection->executeStatement(
-                    <<<'SQL'
-                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                    SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
-                    FROM `media`
-                    WHERE `media`.`item_id` = :resource_id
-                        AND `media`.`id` IN (:media_ids)
-                    SQL,
-                    $bind, $types
-                );
-            }
-        }
-
-        // See comment in execUpdateItemSetPropertiesAllowed.
+        // Realign the inserted level value with the actual access_status of
+        // each child (max_restrictive may have kept a child stricter).
         $this->realignPropertyLevelsToAccessStatus('item', $bind, $types);
     }
 
@@ -440,14 +423,14 @@ class AccessStatusPropagate extends AbstractJob
         if ($this->isAdminRole) {
             // Update resources without check when user can view all resources.
             $sql = <<<'SQL'
-                INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-                SELECT `item_item_set`.`item_id`, :level, :embargo_start, :embargo_end
+                INSERT INTO `access_status` (`id`, `level`{{EMBARGO_COLS}})
+                SELECT `item_item_set`.`item_id`, :level{{EMBARGO_VALS}}
                 FROM `item_item_set`
                 WHERE `item_item_set`.`item_set_id` = :resource_id
                 ON DUPLICATE KEY UPDATE {{ON_DUP}}
                 ;
-                INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-                SELECT `media`.`id`, :level, :embargo_start, :embargo_end
+                INSERT INTO `access_status` (`id`, `level`{{EMBARGO_COLS}})
+                SELECT `media`.`id`, :level{{EMBARGO_VALS}}
                 FROM `media`
                 JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
                 WHERE `item_item_set`.`item_set_id` = :resource_id
@@ -495,16 +478,16 @@ class AccessStatusPropagate extends AbstractJob
         }
 
         $sql = <<<SQL
-            INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-            SELECT `item_item_set`.`item_id`, :level, :embargo_start, :embargo_end
+            INSERT INTO `access_status` (`id`, `level`{{EMBARGO_COLS}})
+            SELECT `item_item_set`.`item_id`, :level{{EMBARGO_VALS}}
             FROM `item_item_set`
             JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
             WHERE `item_item_set`.`item_set_id` = :resource_id
                 AND (`resource`.`is_public` = 1 $orWhereUser)
             ON DUPLICATE KEY UPDATE {{ON_DUP}}
             ;
-            INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-            SELECT `media`.`id`, :level, :embargo_start, :embargo_end
+            INSERT INTO `access_status` (`id`, `level`{{EMBARGO_COLS}})
+            SELECT `media`.`id`, :level{{EMBARGO_VALS}}
             FROM `media`
             JOIN `resource` ON `resource`.`id` = `media`.`id`
             JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
@@ -531,29 +514,35 @@ class AccessStatusPropagate extends AbstractJob
             return;
         }
 
+        // Level property is always touched.
+        // Embargo property values are touched only when the propagation embargo
+        // opt-in is set.
+        $propertyIds = $this->propagateEmbargo
+            ? '(:property_level, :property_embargo_start, :property_embargo_end)'
+            : '(:property_level)';
+
         $this->connection->executeStatement(
-            <<<'SQL'
+            <<<SQL
             DELETE `value`
             FROM `value`
             JOIN `item_item_set` ON `item_item_set`.`item_id` = `value`.`resource_id`
-            WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+            WHERE `value`.`property_id` IN $propertyIds
                 AND `item_item_set`.`item_set_id` = :resource_id
             SQL,
             $bind, $types
         );
         $this->connection->executeStatement(
-            <<<'SQL'
+            <<<SQL
             DELETE `value`
             FROM `value`
             JOIN `media` ON `media`.`id` = `value`.`resource_id`
             JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
             WHERE `item_item_set`.`item_set_id` = :resource_id
-                AND `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+                AND `value`.`property_id` IN $propertyIds
             SQL,
             $bind, $types
         );
-
-        if ($this->hasNumericDataTypes) {
+        if ($this->propagateEmbargo && $this->hasNumericDataTypes) {
             $this->connection->executeStatement(
                 <<<'SQL'
                 DELETE `numeric_data_types_timestamp`
@@ -587,100 +576,19 @@ class AccessStatusPropagate extends AbstractJob
             $bind, $types
         );
 
-        if (!empty($bind['embargo_start_value'])) {
-            $this->connection->executeStatement(
-                <<<'SQL'
-                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-                SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
-                FROM `item_item_set`
-                WHERE `item_item_set`.`item_set_id` = :resource_id
-                SQL,
-                $bind, $types
-            );
-            $this->connection->executeStatement(
-                <<<'SQL'
-                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-                SELECT `media`.`id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
-                FROM `media`
-                JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-                WHERE `item_item_set`.`item_set_id` = :resource_id
-                SQL,
-                $bind, $types
-            );
-            if ($this->hasNumericDataTypes) {
-                $this->connection->executeStatement(
-                    <<<'SQL'
-                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                    SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_timestamp
-                    FROM `item_item_set`
-                    WHERE `item_item_set`.`item_set_id` = :resource_id
-                    SQL,
-                    $bind, $types
-                );
-                $this->connection->executeStatement(
-                    <<<'SQL'
-                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                    SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
-                    FROM `media`
-                    JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-                    WHERE `item_item_set`.`item_set_id` = :resource_id
-                    SQL,
-                    $bind, $types
-                );
-            }
-        }
-
-        if (!empty($bind['embargo_end_value'])) {
-            $this->connection->executeStatement(
-                <<<'SQL'
-                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-                SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
-                FROM `item_item_set`
-                WHERE `item_item_set`.`item_set_id` = :resource_id
-                SQL,
-                $bind, $types
-            );
-            $this->connection->executeStatement(
-                <<<'SQL'
-                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-                SELECT `media`.`id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
-                FROM `media`
-                JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-                WHERE `item_item_set`.`item_set_id` = :resource_id
-                SQL,
-                $bind, $types
-            );
-            if ($this->hasNumericDataTypes) {
-                $this->connection->executeStatement(
-                    <<<'SQL'
-                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                    SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_timestamp
-                    FROM `item_item_set`
-                    WHERE `item_item_set`.`item_set_id` = :resource_id
-                    SQL,
-                    $bind, $types
-                );
-                $this->connection->executeStatement(
-                    <<<'SQL'
-                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                    SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
-                    FROM `media`
-                    JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-                    WHERE `item_item_set`.`item_set_id` = :resource_id
-                    SQL,
-                    $bind, $types
-                );
-            }
+        if ($this->propagateEmbargo) {
+            $this->realignPropertyEmbargoFromAccessStatus('item_set', $bind, $types);
+            $this->realignPropertyEmbargoFromAccessStatus('item_set_media', $bind, $types);
         }
 
         // Realign property level values with the actual access_status, so
         // children preserved at a stricter level by max_restrictive (or left
         // unchanged by skip_if_set) are not silently demoted when the next
-        // resource save mirrors property->access_status. TODO Embargo dates
-        // not yet realigned, refined in 3.4.45.
+        // resource save mirrors property->access_status.
         $this->realignPropertyLevelsToAccessStatus('item_set', $bind, $types);
         $this->realignPropertyLevelsToAccessStatus('item_set_media', $bind, $types);
     }
+
 
     protected function execUpdateItemSetPropertiesNotAllowed(array $bind, array $types): void
     {
@@ -698,12 +606,19 @@ class AccessStatusPropagate extends AbstractJob
         $exec = fn (string $sql) => $this->connection
             ->executeStatement($sql, $bind, $types);
 
+        // Level property is always touched.
+        // Embargo property values are touched only when the propagation embargo
+        // opt-in is set.
+        $propertyIds = $this->propagateEmbargo
+            ? '(:property_level, :property_embargo_start, :property_embargo_end)'
+            : '(:property_level)';
+
         $exec(<<<SQL
             DELETE `value`
             FROM `value`
             JOIN `item_item_set` ON `item_item_set`.`item_id` = `value`.`resource_id`
             JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-            WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+            WHERE `value`.`property_id` IN $propertyIds
                 AND `item_item_set`.`item_set_id` = :resource_id
                 AND (`resource`.`is_public` = 1 $orWhereUser)
             SQL);
@@ -714,22 +629,12 @@ class AccessStatusPropagate extends AbstractJob
             JOIN `resource` ON `resource`.`id` = `media`.`id`
             JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
             JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-            WHERE `value`.`property_id` IN (:property_level, :property_embargo_start, :property_embargo_end)
+            WHERE `value`.`property_id` IN $propertyIds
                 AND `item_item_set`.`item_set_id` = :resource_id
                 AND (`resource_item`.`is_public` = 1 $orWhereUser)
                 AND (`resource`.`is_public` = 1 $orWhereUser)
             SQL);
-
-        if ($this->hasNumericDataTypes) {
-            $exec(<<<SQL
-                DELETE `numeric_data_types_timestamp`
-                FROM `numeric_data_types_timestamp`
-                JOIN `item_item_set` ON `item_item_set`.`item_id` = `numeric_data_types_timestamp`.`resource_id`
-                JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-                WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
-                    AND `item_item_set`.`item_set_id` = :resource_id
-                    AND (`resource`.`is_public` = 1 $orWhereUser)
-                SQL);
+        if ($this->propagateEmbargo && $this->hasNumericDataTypes) {
             $exec(<<<SQL
                 DELETE `numeric_data_types_timestamp`
                 FROM `numeric_data_types_timestamp`
@@ -737,8 +642,8 @@ class AccessStatusPropagate extends AbstractJob
                 JOIN `resource` ON `resource`.`id` = `media`.`id`
                 JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
                 JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-                WHERE `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
-                    AND `item_item_set`.`item_set_id` = :resource_id
+                WHERE `item_item_set`.`item_set_id` = :resource_id
+                    AND `numeric_data_types_timestamp`.`property_id` IN (:property_embargo_start, :property_embargo_end)
                     AND (`resource_item`.`is_public` = 1 $orWhereUser)
                     AND (`resource`.`is_public` = 1 $orWhereUser)
                 SQL);
@@ -764,90 +669,9 @@ class AccessStatusPropagate extends AbstractJob
                 AND (`resource`.`is_public` = 1 $orWhereUser)
             SQL);
 
-        if (!empty($bind['embargo_start_value'])) {
-            $exec(<<<SQL
-                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-                SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
-                FROM `item_item_set`
-                JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-                WHERE `item_item_set`.`item_set_id` = :resource_id
-                    AND (`resource`.`is_public` = 1 $orWhereUser)
-                SQL);
-            $exec(<<<SQL
-                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-                SELECT `media`.`id`, :property_embargo_start, :embargo_start_type, :embargo_start_value, 1
-                FROM `media`
-                JOIN `resource` ON `resource`.`id` = `media`.`id`
-                JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-                JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-                WHERE `item_item_set`.`item_set_id` = :resource_id
-                    AND (`resource_item`.`is_public` = 1 $orWhereUser)
-                    AND (`resource`.`is_public` = 1 $orWhereUser)
-                SQL);
-            if ($this->hasNumericDataTypes) {
-                $exec(<<<SQL
-                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                    SELECT `item_item_set`.`item_id`, :property_embargo_start, :embargo_start_timestamp
-                    FROM `item_item_set`
-                    JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-                    WHERE `item_item_set`.`item_set_id` = :resource_id
-                        AND (`resource`.`is_public` = 1 $orWhereUser)
-                    SQL);
-                $exec(<<<SQL
-                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                    SELECT `media`.`id`, :property_embargo_start, :embargo_start_timestamp
-                    FROM `media`
-                    JOIN `resource` ON `resource`.`id` = `media`.`id`
-                    JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-                    JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-                    WHERE `item_item_set`.`item_set_id` = :resource_id
-                        AND (`resource_item`.`is_public` = 1 $orWhereUser)
-                        AND (`resource`.`is_public` = 1 $orWhereUser)
-                    SQL);
-            }
-        }
-
-        if (!empty($bind['embargo_end_value'])) {
-            $exec(<<<SQL
-                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-                SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
-                FROM `item_item_set`
-                JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-                WHERE `item_item_set`.`item_set_id` = :resource_id
-                    AND (`resource`.`is_public` = 1 $orWhereUser)
-                SQL);
-            $exec(<<<SQL
-                INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
-                SELECT `media`.`id`, :property_embargo_end, :embargo_end_type, :embargo_end_value, 1
-                FROM `media`
-                JOIN `resource` ON `resource`.`id` = `media`.`id`
-                JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-                JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-                WHERE `item_item_set`.`item_set_id` = :resource_id
-                    AND (`resource_item`.`is_public` = 1 $orWhereUser)
-                    AND (`resource`.`is_public` = 1 $orWhereUser)
-                SQL);
-            if ($this->hasNumericDataTypes) {
-                $exec(<<<SQL
-                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                    SELECT `item_item_set`.`item_id`, :property_embargo_end, :embargo_end_timestamp
-                    FROM `item_item_set`
-                    JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`
-                    WHERE `item_item_set`.`item_set_id` = :resource_id
-                        AND (`resource`.`is_public` = 1 $orWhereUser)
-                    SQL);
-                $exec(<<<SQL
-                    INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                    SELECT `media`.`id`, :property_embargo_end, :embargo_end_timestamp
-                    FROM `media`
-                    JOIN `resource` ON `resource`.`id` = `media`.`id`
-                    JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`
-                    JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`
-                    WHERE `item_item_set`.`item_set_id` = :resource_id
-                        AND (`resource_item`.`is_public` = 1 $orWhereUser)
-                        AND (`resource`.`is_public` = 1 $orWhereUser)
-                    SQL);
-            }
+        if ($this->propagateEmbargo) {
+            $this->realignPropertyEmbargoFromAccessStatus('item_set', $bind, $types, $orWhereUser);
+            $this->realignPropertyEmbargoFromAccessStatus('item_set_media', $bind, $types, $orWhereUser);
         }
 
         // See comment in execUpdateItemSetPropertiesAllowed.
@@ -855,15 +679,26 @@ class AccessStatusPropagate extends AbstractJob
         $this->realignPropertyLevelsToAccessStatus('item_set_media', $bind, $types);
     }
 
+
     /**
      * Wrapper around connection->executeStatement that resolves the
-     * {{ON_DUP}} placeholder used by access_status INSERT ... ON DUPLICATE
-     * statements. Other SQL is passed through unchanged.
+     * {{ON_DUP}}, {{EMBARGO_COLS}} and {{EMBARGO_VALS}} placeholders used by
+     * the access_status INSERT statements. Other SQL is passed through
+     * unchanged.
      */
     protected function execStatement(string $sql, array $bind = [], array $types = []): void
     {
         if (strpos($sql, '{{ON_DUP}}') !== false) {
             $sql = str_replace('{{ON_DUP}}', $this->onDupClause, $sql);
+        }
+        if (strpos($sql, '{{EMBARGO_COLS}}') !== false) {
+            $sql = str_replace(
+                ['{{EMBARGO_COLS}}', '{{EMBARGO_VALS}}'],
+                $this->propagateEmbargo
+                    ? [', `embargo_start`, `embargo_end`', ', :embargo_start, :embargo_end']
+                    : ['', ''],
+                $sql
+            );
         }
         $this->connection->executeStatement($sql, $bind, $types);
     }
@@ -874,7 +709,7 @@ class AccessStatusPropagate extends AbstractJob
      * untouched by skip_if_set). The legacy property-mode sync blindly inserts
      * the PARENT's level value into the value table, which then mirrors back to
      * access_status the next time the resource is saved, silently demoting the
-     * stricter child. This realignment pass runs right after the legacy INSERTs
+     * stricter child. This realignment pass runs right after the old INSERTs
      * and rewrites the level value column from the actual access_status of each
      * child.
      *
@@ -882,7 +717,9 @@ class AccessStatusPropagate extends AbstractJob
      * v_free, v_reserved, v_protected, v_forbidden (the property values for
      * each level, taken from access_property_levels).
      *
-     * Embargo dates are NOT realigned by this pass, known limitation for now.
+     * Embargo dates are intentionally NOT touched: they are per-resource and
+     * are not propagated by this job — neither in access_status nor in the
+     * value table — so there is nothing to realign.
      */
     protected function realignPropertyLevelsToAccessStatus(string $scope, array $bind, array $types): void
     {
@@ -937,30 +774,158 @@ class AccessStatusPropagate extends AbstractJob
      * Build the SQL fragment for the access_status ON DUPLICATE KEY UPDATE
      * clause according to the propagation mode.
      *
-     * - overwrite: always copy the parent's value (legacy behavior).
-     * - max_restrictive: keep the strictest level, the earliest embargo_start
-     *   and the latest embargo_end (never shorten a protection window).
-     * - skip_if_set: no-op on existing rows.
+     * - skip_if_set: no-op on existing rows, needed for heterogeneous media.
+     * - max_restrictive: keep the strictest level on the child (never demote
+     *   a stricter explicit child level to the parent value).
+     * - overwrite: always copy the parent's value.
      *
      * The MAX over the ENUM-like level column uses FIELD/ELT to compare on the
      * documented order free < reserved < protected < forbidden, plain GREATEST
      * on the string would compare lexicographically and corrupt the data.
      */
+    /**
+     * Realign embargo property values with access_status, in the value table
+     * and the optional numeric_data_types_timestamp index. Called only when
+     * propagation_embargo is set, after the standard DELETE step removed
+     * embargo property rows for the children of the scope.
+     *
+     * Reads from access_status (post-update) so the row count matches the
+     * children that actually carry an embargo at this point — regardless of
+     * propagation_mode (overwrite / max_restrictive / skip_if_set).
+     *
+     * Format of the property value matches the formatter used in
+     * Module::manageAccessStatusForResource: "Y-m-d" when the time hits a
+     * sentinel midnight (start) or end of day 23:59:59 (end), full
+     * "Y-m-dTH:i:s" otherwise.
+     *
+     * Scope:
+     *   - "item": item → media (binding `media_ids` required).
+     *   - "item_set": item_set → items.
+     *   - "item_set_media": item_set → media.
+     *
+     * For the non-admin path, the caller passes the visibility/ownership
+     * orWhereUser fragment; the matching joins are inserted accordingly.
+     */
+    protected function realignPropertyEmbargoFromAccessStatus(string $scope, array $bind, array $types, string $orWhereUser = ''): void
+    {
+        switch ($scope) {
+            case 'item':
+                $childTable = '`media`';
+                $childJoin = '';
+                $childIdExpr = '`media`.`id`';
+                $childWhere = '`media`.`item_id` = :resource_id AND `media`.`id` IN (:media_ids)';
+                $visibilityJoin = '';
+                break;
+            case 'item_set':
+                $childTable = '`item_item_set`';
+                $childJoin = '';
+                $childIdExpr = '`item_item_set`.`item_id`';
+                $childWhere = '`item_item_set`.`item_set_id` = :resource_id';
+                $visibilityJoin = '';
+                if ($orWhereUser !== '') {
+                    $visibilityJoin = 'JOIN `resource` ON `resource`.`id` = `item_item_set`.`item_id`';
+                    $childWhere .= " AND (`resource`.`is_public` = 1 $orWhereUser)";
+                }
+                break;
+            case 'item_set_media':
+                $childTable = '`media`';
+                $childJoin = 'JOIN `item_item_set` ON `item_item_set`.`item_id` = `media`.`item_id`';
+                $childIdExpr = '`media`.`id`';
+                $childWhere = '`item_item_set`.`item_set_id` = :resource_id';
+                $visibilityJoin = '';
+                if ($orWhereUser !== '') {
+                    $visibilityJoin = 'JOIN `resource` ON `resource`.`id` = `media`.`id` '
+                        . 'JOIN `resource` AS `resource_item` ON `resource_item`.`id` = `item_item_set`.`item_id`';
+                    $childWhere .= " AND (`resource_item`.`is_public` = 1 $orWhereUser)"
+                        . " AND (`resource`.`is_public` = 1 $orWhereUser)";
+                }
+                break;
+            default:
+                return;
+        }
+
+        $formatStart = "CASE WHEN DATE_FORMAT(`access_status`.`embargo_start`, '%H:%i:%s') = '00:00:00' "
+            . "THEN DATE_FORMAT(`access_status`.`embargo_start`, '%Y-%m-%d') "
+            . "ELSE DATE_FORMAT(`access_status`.`embargo_start`, '%Y-%m-%dT%H:%i:%s') END";
+        $formatEnd = "CASE WHEN DATE_FORMAT(`access_status`.`embargo_end`, '%H:%i:%s') = '23:59:59' "
+            . "THEN DATE_FORMAT(`access_status`.`embargo_end`, '%Y-%m-%d') "
+            . "ELSE DATE_FORMAT(`access_status`.`embargo_end`, '%Y-%m-%dT%H:%i:%s') END";
+
+        $this->connection->executeStatement(
+            "INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+             SELECT $childIdExpr, :property_embargo_start, :embargo_start_type, $formatStart, 1
+             FROM $childTable
+             $childJoin
+             $visibilityJoin
+             JOIN `access_status` ON `access_status`.`id` = $childIdExpr
+             WHERE $childWhere
+               AND `access_status`.`embargo_start` IS NOT NULL",
+            $bind, $types
+        );
+        $this->connection->executeStatement(
+            "INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
+             SELECT $childIdExpr, :property_embargo_end, :embargo_end_type, $formatEnd, 1
+             FROM $childTable
+             $childJoin
+             $visibilityJoin
+             JOIN `access_status` ON `access_status`.`id` = $childIdExpr
+             WHERE $childWhere
+               AND `access_status`.`embargo_end` IS NOT NULL",
+            $bind, $types
+        );
+
+        if ($this->hasNumericDataTypes) {
+            $this->connection->executeStatement(
+                "INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                 SELECT $childIdExpr, :property_embargo_start, UNIX_TIMESTAMP(`access_status`.`embargo_start`)
+                 FROM $childTable
+                 $childJoin
+                 $visibilityJoin
+                 JOIN `access_status` ON `access_status`.`id` = $childIdExpr
+                 WHERE $childWhere
+                   AND `access_status`.`embargo_start` IS NOT NULL",
+                $bind, $types
+            );
+            $this->connection->executeStatement(
+                "INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
+                 SELECT $childIdExpr, :property_embargo_end, UNIX_TIMESTAMP(`access_status`.`embargo_end`)
+                 FROM $childTable
+                 $childJoin
+                 $visibilityJoin
+                 JOIN `access_status` ON `access_status`.`id` = $childIdExpr
+                 WHERE $childWhere
+                   AND `access_status`.`embargo_end` IS NOT NULL",
+                $bind, $types
+            );
+        }
+    }
+
     protected function buildOnDupClause(): string
     {
+        // Embargo dates are propagated only when the opt-in propagation embargo
+        // is set. Otherwise embargo stays per resource.
+        // The existing access_embargo_* settings (ended_level, bypass,
+        // ended_date) handle the end-of-embargo behavior independently.
         switch ($this->propagationMode) {
             case 'overwrite':
-                return '`level` = :level, `embargo_start` = :embargo_start, `embargo_end` = :embargo_end';
+                $clause = '`level` = :level';
+                if ($this->propagateEmbargo) {
+                    $clause .= ', `embargo_start` = :embargo_start, `embargo_end` = :embargo_end';
+                }
+                return $clause;
             case 'skip_if_set':
                 return '`id` = `id`';
             case 'max_restrictive':
             default:
-                return '`level` = ELT('
+                $clause = '`level` = ELT('
                     . 'GREATEST(FIELD(`level`, "free","reserved","protected","forbidden"), :level_num),'
                     . '"free","reserved","protected","forbidden"'
-                    . '), '
-                    . '`embargo_start` = LEAST(IFNULL(`embargo_start`, :embargo_start), IFNULL(:embargo_start, `embargo_start`)), '
-                    . '`embargo_end` = GREATEST(IFNULL(`embargo_end`, :embargo_end), IFNULL(:embargo_end, `embargo_end`))';
+                    . ')';
+                if ($this->propagateEmbargo) {
+                    $clause .= ', `embargo_start` = LEAST(IFNULL(`embargo_start`, :embargo_start), IFNULL(:embargo_start, `embargo_start`))';
+                    $clause .= ', `embargo_end` = GREATEST(IFNULL(`embargo_end`, :embargo_end), IFNULL(:embargo_end, `embargo_end`))';
+                }
+                return $clause;
         }
     }
 }

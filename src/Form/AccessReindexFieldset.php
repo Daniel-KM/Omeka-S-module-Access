@@ -69,6 +69,28 @@ class AccessReindexFieldset extends Fieldset
                                 </tbody>
                             </table>
                             <p>In property mode, the level property value is also realigned from access status after the parent value is written, so a child preserved at a stricter level is never silently demoted at the next save.</p>
+                            <p><strong>Embargo dates</strong></p>
+                            <table class="access-propagation-table">
+                                <thead>
+                                    <tr>
+                                        <th>Propagation embargo</th>
+                                        <th>metadata mode</th>
+                                        <th>property mode</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th>Off</th>
+                                        <td>Embargo columns untouched on every child. New rows get null.</td>
+                                        <td>Embargo property values left intact on every child.</td>
+                                    </tr>
+                                    <tr>
+                                        <th>On</th>
+                                        <td>Parent embargo start/end copied per the chosen level mode (skip if set, overwrite, max restrictive).</td>
+                                        <td>Embargo property values rewritten from the post-propagation access status.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </details>
                         HTML, // @translate
                     'disable_html_escape' => true,

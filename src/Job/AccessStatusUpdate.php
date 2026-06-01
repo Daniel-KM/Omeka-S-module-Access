@@ -145,23 +145,25 @@ class AccessStatusUpdate extends AbstractJob
             return;
         }
 
-        $propagationMode = $this->getArg('propagation_mode', 'max_restrictive') ?: 'max_restrictive';
-        if (!in_array($propagationMode, ['max_restrictive', 'overwrite', 'skip_if_set'], true)) {
+        $propagationMode = $this->getArg('propagation_mode', 'skip_if_set') ?: 'skip_if_set';
+        if (!in_array($propagationMode, ['skip_if_set', 'max_restrictive', 'overwrite'], true)) {
             $this->logger->err(
-                'Propagation mode "{mode}" is invalid; falling back to max_restrictive.', // @translate
+                'Propagation mode "{mode}" is invalid; falling back to skip_if_set.', // @translate
                 ['mode' => $propagationMode]
             );
-            $propagationMode = 'max_restrictive';
+            $propagationMode = 'skip_if_set';
         }
 
+        $propagateEmbargo = (bool) $this->getArg('propagation_embargo', false);
         // Persist on the job args so the subjob (AccessStatusPropagate) reads
         // the validated values and not raw user input.
         $args = $this->job->getArgs();
         $args['propagation_mode'] = $propagationMode;
+        $args['propagation_embargo'] = $propagateEmbargo;
         $this->job->setArgs($args);
         $this->logger->info(
-            'Propagation mode: {mode}.', // @translate
-            ['mode' => $propagationMode]
+            'Propagation mode: {mode}; embargo propagation: {embargo}.', // @translate
+            ['mode' => $propagationMode, 'embargo' => $propagateEmbargo ? 'yes' : 'no']
         );
 
         if ($this->modeSync === 'skip'

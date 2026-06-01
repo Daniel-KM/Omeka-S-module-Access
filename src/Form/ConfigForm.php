@@ -414,6 +414,18 @@ class ConfigForm extends Form
                     'id' => 'access_embargo_ended_date',
                 ],
             ])
+            ->add([
+                'name' => 'access_propagation_embargo',
+                'type' => CommonElement\OptionalCheckbox::class,
+                'options' => [
+                    'element_group' => 'embargo',
+                    'label' => 'Propagate embargo dates with the access level', // @translate
+                    'info' => 'Default off: embargo is per-resource. Check this box to make every propagation copy parent embargo start and end on resource save and reindex job.', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_propagation_embargo',
+                ],
+            ])
         ;
 
         // Process indexation of missing access levels for items and medias.

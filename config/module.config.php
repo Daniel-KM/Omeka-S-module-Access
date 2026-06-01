@@ -366,11 +366,13 @@ return [
             'access_embargo_ended_level' => 'free',
             'access_embargo_ended_date' => 'keep',
 
-            // Default propagation mode for the reindex job. Fresh installs use
-            // "max_restrictive" (never demote a stricter child). The upgrade
-            // script sets "overwrite" for installs predating 3.4.44 to preserve
-            // the old default behavior; admins are advised to switch.
+            // Default propagation mode for the reindex job.
             'access_propagation_mode' => 'skip_if_set',
+
+            // Off by default: embargo is per resource and not propagated.
+            // Set to true to restore old default behavior before 3.4.44, that
+            // copied parent embargo dates onto every child.
+            'access_propagation_embargo' => false,
 
             // Hidden settings automatically filled after saving config. It
             // contains the same data than "access_ip_item_sets", but with

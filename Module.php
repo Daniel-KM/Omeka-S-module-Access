@@ -689,6 +689,8 @@ class Module extends AbstractModule
         $form->init();
         $form->setData($data);
         // Pre-populate the propagation mode radio with the last chosen value.
+        // access_propagation_embargo lives in the Embargo subsection of the
+        // Settings tab (form's standard data binding handles it).
         $form->get('access_reindex')->get('propagation_mode')
             ->setValue($settings->get('access_propagation_mode', 'skip_if_set'));
         $form->prepare();
@@ -789,6 +791,10 @@ class Module extends AbstractModule
             if (!in_array($propagationMode, ['skip_if_set', 'max_restrictive', 'overwrite'], true)) {
                 $propagationMode = 'skip_if_set';
             }
+            // access_propagation_embargo is a global setting (Embargo
+            // subsection of the Settings tab), read it from there so the job
+            // and the synchronous propagation share the same policy.
+            $propagationEmbargo = (bool) $settings->get('access_propagation_embargo', false);
             // Persist the chosen mode so it pre-populates the form next time.
             $settings->set('access_propagation_mode', $propagationMode);
 
@@ -798,6 +804,7 @@ class Module extends AbstractModule
                     'sync' => $accessViaProperty ? 'from_properties_to_accesses' : 'skip',
                     'missing' => 'visibility_reserved',
                     'propagation_mode' => $propagationMode,
+                    'propagation_embargo' => $propagationEmbargo,
                 ];
                 $this->processUpdateStatus($vars);
             } else {
@@ -806,6 +813,7 @@ class Module extends AbstractModule
                     'sync' => $post['access_reindex']['sync'] ?? 'skip',
                     'missing' => $post['access_reindex']['missing'] ?? 'skip',
                     'propagation_mode' => $propagationMode,
+                    'propagation_embargo' => $propagationEmbargo,
                 ];
                 if ($vars['recursive'] === [] && $vars['sync'] === 'skip' && $vars['missing'] === 'skip') {
                     $message = new \Omeka\Stdlib\Message(
@@ -1090,6 +1098,8 @@ class Module extends AbstractModule
             $args = [
                 'resource_ids' => $ids,
                 'values' => $accessStatusValues,
+                'propagation_mode' => $settings->get('access_propagation_mode', 'skip_if_set'),
+                'propagation_embargo' => (bool) $settings->get('access_propagation_embargo', false),
             ];
             $services->get(\Omeka\Job\Dispatcher::class)
                  ->dispatch(\Access\Job\AccessStatusPropagate::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
@@ -1365,6 +1375,8 @@ class Module extends AbstractModule
             $args = [
                 'resource_id' => $resourceId,
                 'values' => $accessStatusValues,
+                'propagation_mode' => $settings->get('access_propagation_mode', 'skip_if_set'),
+                'propagation_embargo' => (bool) $settings->get('access_propagation_embargo', false),
             ];
             $services->get(\Omeka\Job\Dispatcher::class)
                 ->dispatch(\Access\Job\AccessStatusPropagate::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
