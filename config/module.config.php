@@ -31,6 +31,9 @@ return [
         ],
     ],
     'view_helpers' => [
+        'invokables' => [
+            'accessContactAuthor' => View\Helper\AccessContactAuthor::class,
+        ],
         'factories' => [
             'accessLevel' => Service\ViewHelper\AccessLevelFactory::class,
             'accessibleMedia' => Service\ViewHelper\AccessibleMediaFactory::class,
