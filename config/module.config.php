@@ -33,6 +33,7 @@ return [
     'view_helpers' => [
         'factories' => [
             'accessLevel' => Service\ViewHelper\AccessLevelFactory::class,
+            'accessibleMedia' => Service\ViewHelper\AccessibleMediaFactory::class,
             'accessRequest' => Service\ViewHelper\AccessRequestFactory::class,
             'accessStatus' => Service\ViewHelper\AccessStatusFactory::class,
             'isAccessRequestable' => Service\ViewHelper\IsAccessRequestableFactory::class,
