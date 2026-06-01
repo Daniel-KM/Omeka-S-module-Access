@@ -555,9 +555,36 @@ if (version_compare($oldVersion, '3.4.42', '<')) {
     $settings->delete('access_ip_proxy');
 
     $message = new PsrMessage(
-        'Proxy header handling has been hardened against spoofing. The boolean option "Use proxy to get client IP" has been removed: fill the new setting "Trusted proxies" with the internal IPs of the reverse proxy to enable proxy mode. X-Forwarded-For / X-Real-IP are only honored when the request comes from a listed IP. Without it, every visitor is seen with REMOTE_ADDR.' // @translate
+        'Proxy header handling has been hardened against spoofing. The option "Use proxy to get client IP" has been replaced by "Trusted proxies", filled with the internal IPs of the reverse proxy. It enables proxy mode, so X-Forwarded-For and X-Real-IP are only honored when the request comes from a listed IP. Without it, every visitor is seen with REMOTE_ADDR.' // @translate
     );
     $messenger->addWarning($message);
 
     $this->autoDetectTrustedProxy();
+}
+
+if (version_compare($oldVersion, '3.4.44', '<')) {
+    // Force skip_if_set on upgrade to prevent silent data loss: the legacy
+    // "overwrite" behavior copies parent levels onto every child, so an item or
+    // a media that was manually set to a stricter or specific level would be
+    // silently rewritten on the first "Apply recursive" save. Admins who relied
+    // on bulk propagation can opt back into "overwrite" or "max_restrictive"
+    // explicitly in the Tasks tab.
+    $settings->set('access_propagation_mode', 'skip_if_set');
+    $settings->set('access_propagation_embargo', false);
+
+    $message = new PsrMessage(
+        'A new option "propagation mode" was added and forced to "skip if set" for this upgraded install: previous saves with "Apply recursive" would silently overwrite per-item and per-media levels. If your workflow relies on bulk propagation from an item set to its items and medias, switch to "max restrictive" or "overwrite" in the Tasks tab of the module config, but be aware that "overwrite" writes the parent level onto every child unconditionally.' // @translate
+    );
+    $messenger->addWarning($message);
+
+    $message = new PsrMessage(
+        'A new option allows to separate propagation of the embargo dates and the status level. Embargo dates are per-resource and time-bound and checked independantly from the level.' // @translate
+    );
+    $messenger->addWarning($message);
+
+
+    $message = new PsrMessage(
+        'The status "protected" has been clarified: a "reserved" file is granted to global bypass modes, while a "protected" file requires an approved individual access request and no global bypass applies.' // @translate
+    );
+    $messenger->addSuccess($message);
 }
