@@ -180,26 +180,59 @@ class AccessCascade
             );
         }
 
-        // Embargo start/end: copy the property value as a datetime (the stored
-        // value uses an ISO string, possibly with a "T" separator).
+        // Embargo start/end: the property value is an ISO string that may be
+        // partial (year, year-month) and use a "T" separator. Normalize it to a
+        // datetime (floor for the start, ceil for the end); an unrecognized
+        // format becomes NULL, so a stray value neither crashes the migration
+        // nor sets a bogus embargo.
         foreach ([
-            'embargo_start_set' => $embargoStartPropertyId,
-            'embargo_end_set' => $embargoEndPropertyId,
-        ] as $column => $propertyId) {
+            'embargo_start_set' => [$embargoStartPropertyId, false],
+            'embargo_end_set' => [$embargoEndPropertyId, true],
+        ] as $column => [$propertyId, $isEnd]) {
             if (!$propertyId) {
                 continue;
             }
+            $value = $this->normalizeIsoDateSql("REPLACE(`value`.`value`, 'T', ' ')", $isEnd);
             $this->connection->executeStatement(
                 <<<SQL
                 UPDATE `access_status`
                 JOIN `value` ON `value`.`resource_id` = `access_status`.`id`
                     AND `value`.`property_id` = :prop
-                SET `access_status`.`$column` = REPLACE(`value`.`value`, 'T', ' ')
+                SET `access_status`.`$column` = $value
                 WHERE `value`.`value` IS NOT NULL AND `value`.`value` <> ''
                 SQL,
                 ['prop' => $propertyId]
             );
         }
+    }
+
+    /**
+     * Build a SQL expression normalizing an ISO date value (possibly partial)
+     * to a datetime, or NULL when the format is not recognized.
+     *
+     * A year is padded to its first/last day, a year-month to its first/last
+     * day of the month: floor when $isEnd is false (embargo start), ceil when
+     * true (embargo end). A full datetime is kept as is.
+     *
+     * @param string $v SQL expression yielding the value, "T" already replaced.
+     */
+    protected function normalizeIsoDateSql(string $v, bool $isEnd): string
+    {
+        if ($isEnd) {
+            $day = 'CONCAT(' . $v . ", ' 23:59:59')";
+            $month = 'CONCAT(LAST_DAY(CONCAT(' . $v . ", '-01')), ' 23:59:59')";
+            $year = 'CONCAT(' . $v . ", '-12-31 23:59:59')";
+        } else {
+            $day = 'CONCAT(' . $v . ", ' 00:00:00')";
+            $month = 'CONCAT(' . $v . ", '-01 00:00:00')";
+            $year = 'CONCAT(' . $v . ", '-01-01 00:00:00')";
+        }
+        return 'CASE'
+            . ' WHEN ' . $v . " REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}' THEN " . $v
+            . ' WHEN ' . $v . " REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN " . $day
+            . ' WHEN ' . $v . " REGEXP '^[0-9]{4}-[0-9]{2}$' THEN " . $month
+            . ' WHEN ' . $v . " REGEXP '^[0-9]{4}$' THEN " . $year
+            . ' ELSE NULL END';
     }
 
     /**

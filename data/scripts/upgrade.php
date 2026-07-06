@@ -594,13 +594,13 @@ if (version_compare($oldVersion, '3.4.45', '<')) {
     // inheritance) and an effective level (the materialized cascade item set >
     // item > media). The effective columns keep their names so every existing
     // reader (file gating, facets in Reference / Solr, custom SQL) keeps
-    // working and now reads the cascaded value. The new "_own" columns hold the
+    // working and now reads the cascaded value. The new "_set" columns hold the
     // admin decision and feed the recompute of the effective columns.
     $sql = <<<'SQL'
         ALTER TABLE `access_status`
-            ADD COLUMN `level_own` VARCHAR(15) NOT NULL DEFAULT 'free' AFTER `level`,
-            ADD COLUMN `embargo_start_own` DATETIME DEFAULT NULL AFTER `embargo_start`,
-            ADD COLUMN `embargo_end_own` DATETIME DEFAULT NULL AFTER `embargo_end`
+            ADD COLUMN `level_set` VARCHAR(15) NOT NULL DEFAULT 'free' AFTER `level`,
+            ADD COLUMN `embargo_start_set` DATETIME DEFAULT NULL AFTER `embargo_start`,
+            ADD COLUMN `embargo_end_set` DATETIME DEFAULT NULL AFTER `embargo_end`
         SQL;
     try {
         $connection->executeStatement($sql);
@@ -612,9 +612,9 @@ if (version_compare($oldVersion, '3.4.45', '<')) {
     // runtime cascade existed before: copy them into the "own" columns.
     $connection->executeStatement(<<<'SQL'
         UPDATE `access_status`
-        SET `level_own` = `level`,
-            `embargo_start_own` = `embargo_start`,
-            `embargo_end_own` = `embargo_end`
+        SET `level_set` = `level`,
+            `embargo_start_set` = `embargo_start`,
+            `embargo_end_set` = `embargo_end`
         SQL);
 
     // Embargo cascade is opt-in and independent of the level. Off by default:
