@@ -126,8 +126,8 @@ class AccessEmbargoUpdate extends AbstractJob
         $sql = <<<'SQL'
             SELECT COUNT(`id`)
             FROM `access_status`
-            WHERE `embargo_start` IS NOT NULL
-                OR `embargo_end` IS NOT NULL;
+            WHERE `embargo_start_set` IS NOT NULL
+                OR `embargo_end_set` IS NOT NULL;
             SQL;
         $totalWithEmbargo = (int) $this->connection->executeQuery($sql)->fetchOne();
         if (!$totalWithEmbargo) {
@@ -156,9 +156,9 @@ class AccessEmbargoUpdate extends AbstractJob
         $sql = <<<'SQL'
             SELECT COUNT(`id`)
             FROM `access_status`
-            WHERE `embargo_start` IS NOT NULL
-                AND `embargo_end` IS NULL
-                AND NOW() >= `embargo_start`;
+            WHERE `embargo_start_set` IS NOT NULL
+                AND `embargo_end_set` IS NULL
+                AND NOW() >= `embargo_start_set`;
             SQL;
         $totalWithEmbargoToUpdate['start_after'] = in_array($this->modeLevel, ['free', 'under'], true)
             ? (int) $this->connection->executeQuery($sql)->fetchOne()
@@ -167,19 +167,19 @@ class AccessEmbargoUpdate extends AbstractJob
         $sql = <<<'SQL'
             SELECT COUNT(`id`)
             FROM `access_status`
-            WHERE `embargo_start` IS NULL
-                AND `embargo_end` IS NOT NULL
-                AND NOW() > `embargo_end`;
+            WHERE `embargo_start_set` IS NULL
+                AND `embargo_end_set` IS NOT NULL
+                AND NOW() > `embargo_end_set`;
             SQL;
         $totalWithEmbargoToUpdate['end_after'] = (int) $this->connection->executeQuery($sql)->fetchOne();
 
         $sql = <<<'SQL'
             SELECT COUNT(`id`)
             FROM `access_status`
-            WHERE `embargo_start` IS NOT NULL
-                AND `embargo_end` IS NOT NULL
-                AND NOW() >= `embargo_start`
-                AND NOW() <= `embargo_end`;
+            WHERE `embargo_start_set` IS NOT NULL
+                AND `embargo_end_set` IS NOT NULL
+                AND NOW() >= `embargo_start_set`
+                AND NOW() <= `embargo_end_set`;
             SQL;
         $totalWithEmbargoToUpdate['both_during'] = in_array($this->modeLevel, ['free', 'under'], true)
             ? 0 // During embargo: no change (user should set the right level).
@@ -188,10 +188,10 @@ class AccessEmbargoUpdate extends AbstractJob
         $sql = <<<'SQL'
             SELECT COUNT(`id`)
             FROM `access_status`
-            WHERE `embargo_start` IS NOT NULL
-                AND `embargo_end` IS NOT NULL
-                AND NOW() >= `embargo_start`
-                AND NOW() > `embargo_end`;
+            WHERE `embargo_start_set` IS NOT NULL
+                AND `embargo_end_set` IS NOT NULL
+                AND NOW() >= `embargo_start_set`
+                AND NOW() > `embargo_end_set`;
             SQL;
         $totalWithEmbargoToUpdate['both_after'] = (int) $this->connection->executeQuery($sql)->fetchOne();
 
@@ -230,32 +230,79 @@ class AccessEmbargoUpdate extends AbstractJob
             return;
         }
 
+        // Transition the "set" level and clear/keep the "set" embargo of the
+        // resources whose embargo ended.
         $this->updateAccessEmbargo();
 
-        // When the properties are used, simply use job AccesStatusUpdate().
+        // In property-storage mode, the property values are the source of
+        // truth, so the transitioned level and the cleared embargo must be
+        // written back into them, else the next resync would revert the
+        // transition. Update the value table directly for the affected rows.
         if ($this->accessViaProperty) {
-            // To use a sub-job avoids to create an entry in the list of jobs.
-            /*
-            $services = $this->getServiceLocator();
-            $strategy = $services->get(\Omeka\Job\DispatchStrategy\Synchronous::class);
-            $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
-            $dispatcher->dispatch(\Access\Job\AccessStatusUpdate::class, [
-                'sync' => 'from_accesses_to_properties',
-                'missing' => 'skip',
-                'recursive' => [],
-            ], $strategy);
-            */
-            // The args of the current job (none) and the job AccessStatusUpdate() are
-            // are different. The same for job AccessStatusPropagate(), that is not
-            // called anyway.
-            $args = [
-                'sync' => 'from_accesses_to_properties',
-                'missing' => 'skip',
-                'recursive' => [],
-            ] + $this->job->getArgs();
-            $this->job->setArgs($args);
-            $subJob = new AccessStatusUpdate($this->job, $services);
-            $subJob->perform();
+            $this->updateAccessEmbargoProperties();
+        }
+
+        // Materialize the effective columns from the updated "set" columns and
+        // the hierarchy, so facets and file gating reflect the transition.
+        /** @var \Access\Stdlib\AccessCascade $cascade */
+        $cascade = $services->get(\Access\Stdlib\AccessCascade::class);
+        $cascade->recomputeAll();
+    }
+
+    /**
+     * Write back the transitioned level and cleared embargo into the property
+     * values, for the resources whose embargo just ended. Property mode only.
+     *
+     * The level value is mapped through access_property_levels. When the date
+     * mode is "clear", the embargo property values are removed.
+     */
+    protected function updateAccessEmbargoProperties(): void
+    {
+        $settings = $this->getServiceLocator()->get('Omeka\Settings');
+        $levels = ['free' => 'free', 'reserved' => 'reserved', 'protected' => 'protected', 'forbidden' => 'forbidden'];
+        $labels = array_intersect_key(array_replace($levels, $settings->get('access_property_levels', [])), $levels);
+
+        // Rewrite the level property value from the (already transitioned)
+        // level_set of every access_status row that carries the level property.
+        if ($this->propertyLevelId) {
+            $cases = '';
+            $params = ['prop' => $this->propertyLevelId];
+            $i = 0;
+            foreach ($labels as $level => $label) {
+                $cases .= " WHEN :lvl$i THEN :lab$i";
+                $params["lvl$i"] = $level;
+                $params["lab$i"] = (string) $label;
+                ++$i;
+            }
+            $this->connection->executeStatement(
+                <<<SQL
+                UPDATE `value`
+                JOIN `access_status` ON `access_status`.`id` = `value`.`resource_id`
+                SET `value`.`value` = CASE `access_status`.`level_set`$cases ELSE `value`.`value` END
+                WHERE `value`.`property_id` = :prop
+                SQL,
+                $params
+            );
+        }
+
+        // When the date mode clears the embargo, remove the embargo property
+        // values of the rows whose set embargo was cleared (now null).
+        if ($this->modeDate === 'clear') {
+            $propertyIds = array_values(array_filter([$this->propertyEmbargoStartId, $this->propertyEmbargoEndId]));
+            if ($propertyIds) {
+                $this->connection->executeStatement(
+                    <<<'SQL'
+                    DELETE `value`
+                    FROM `value`
+                    JOIN `access_status` ON `access_status`.`id` = `value`.`resource_id`
+                    WHERE `value`.`property_id` IN (:props)
+                        AND `access_status`.`embargo_start_set` IS NULL
+                        AND `access_status`.`embargo_end_set` IS NULL
+                    SQL,
+                    ['props' => $propertyIds],
+                    ['props' => \Doctrine\DBAL\Connection::PARAM_INT_ARRAY]
+                );
+            }
         }
     }
 
@@ -264,44 +311,44 @@ class AccessEmbargoUpdate extends AbstractJob
         if ($this->modeLevel === 'free' && $this->modeDate === 'clear') {
             $sql = <<<'SQL'
                 UPDATE `access_status`
-                SET `level` = 'free',
-                    `embargo_start` = NULL,
-                    `embargo_end` = NULL
+                SET `level_set` = 'free',
+                    `embargo_start_set` = NULL,
+                    `embargo_end_set` = NULL
                 SQL;
         } elseif ($this->modeLevel === 'free' && $this->modeDate === 'keep') {
             $sql = <<<'SQL'
                 UPDATE `access_status`
-                SET `level` = 'free'
+                SET `level_set` = 'free'
                 SQL;
         } elseif ($this->modeLevel === 'under' && $this->modeDate === 'clear') {
             // "under" means: reserved -> free, protected -> reserved, forbidden -> reserved
             $sql = <<<'SQL'
                 UPDATE `access_status`
-                SET `level` = CASE
-                        WHEN `level` = 'reserved' THEN 'free'
-                        WHEN `level` = 'protected' THEN 'reserved'
-                        WHEN `level` = 'forbidden' THEN 'reserved'
-                        ELSE `level`
+                SET `level_set` = CASE
+                        WHEN `level_set` = 'reserved' THEN 'free'
+                        WHEN `level_set` = 'protected' THEN 'reserved'
+                        WHEN `level_set` = 'forbidden' THEN 'reserved'
+                        ELSE `level_set`
                     END,
-                    `embargo_start` = NULL,
-                    `embargo_end` = NULL
+                    `embargo_start_set` = NULL,
+                    `embargo_end_set` = NULL
                 SQL;
         } elseif ($this->modeLevel === 'under' && $this->modeDate === 'keep') {
             // "under" means: reserved -> free, protected -> reserved, forbidden -> reserved
             $sql = <<<'SQL'
                 UPDATE `access_status`
-                SET `level` = CASE
-                        WHEN `level` = 'reserved' THEN 'free'
-                        WHEN `level` = 'protected' THEN 'reserved'
-                        WHEN `level` = 'forbidden' THEN 'reserved'
-                        ELSE `level`
+                SET `level_set` = CASE
+                        WHEN `level_set` = 'reserved' THEN 'free'
+                        WHEN `level_set` = 'protected' THEN 'reserved'
+                        WHEN `level_set` = 'forbidden' THEN 'reserved'
+                        ELSE `level_set`
                     END
                 SQL;
         } elseif ($this->modeLevel === 'keep' && $this->modeDate === 'clear') {
             $sql = <<<'SQL'
                 UPDATE `access_status`
-                SET `embargo_start` = NULL,
-                    `embargo_end` = NULL
+                SET `embargo_start_set` = NULL,
+                    `embargo_end_set` = NULL
                 SQL;
         } else {
             return;
@@ -309,9 +356,9 @@ class AccessEmbargoUpdate extends AbstractJob
 
         $sql .= "\n" . <<<'SQL'
             WHERE
-                (`embargo_start` IS NOT NULL AND `embargo_end` IS NULL AND NOW() >= `embargo_start`)
-                OR (`embargo_start` IS NULL AND `embargo_end` IS NOT NULL AND NOW() > `embargo_end`)
-                OR (`embargo_start` IS NOT NULL AND `embargo_end` IS NOT NULL AND NOW() >= `embargo_start` AND NOW() > `embargo_end`);
+                (`embargo_start_set` IS NOT NULL AND `embargo_end_set` IS NULL AND NOW() >= `embargo_start_set`)
+                OR (`embargo_start_set` IS NULL AND `embargo_end_set` IS NOT NULL AND NOW() > `embargo_end_set`)
+                OR (`embargo_start_set` IS NOT NULL AND `embargo_end_set` IS NOT NULL AND NOW() >= `embargo_start_set` AND NOW() > `embargo_end_set`);
             SQL;
 
         $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql) {
