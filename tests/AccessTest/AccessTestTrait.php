@@ -452,6 +452,20 @@ trait AccessTestTrait
     }
 
     /**
+     * Build a fresh isAllowedMediaContent plugin, reading the current identity,
+     * settings and client IP. Use this when a test changes the access modes,
+     * the item-set bypass maps or the client IP between assertions, since the
+     * shared plugin instance captures them at construction.
+     */
+    protected function isAllowedMediaContentFresh(MediaRepresentation $media): bool
+    {
+        $plugin = $this->getServiceLocator()
+            ->get('ControllerPluginManager')
+            ->build('isAllowedMediaContent');
+        return $plugin($media);
+    }
+
+    /**
      * Get a property ID by term.
      *
      * @param string $term Property term (e.g., 'dcterms:title').
