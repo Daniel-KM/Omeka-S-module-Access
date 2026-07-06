@@ -9,12 +9,28 @@ use Omeka\Entity\Resource;
 /**
  * Access status of resources.
  *
- * To store all levels (free, reserved, protected, forbidden) for all selected
- * resources (item sets, items and media), and not only "reserved", allows to
- * get it directly for any mode and any param (with or without item/media…) and
- * without php processing.
+ * Two levels are stored per resource, both for the access level and the embargo
+ * dates:
  *
- * The indexes on dates allow to update accesses quicker when embargo ends.
+ * - The "effective" columns (level, embargo_start, embargo_end) hold the
+ *   materialized result of the cascade item set > item > media. They are
+ *   maintained by events and by the rebuild job, never edited directly by the
+ *   admin. Every reader (file gating, facets in Reference / Solr, and the
+ *   future notice filter) reads these columns: a single indexed read, no
+ *   runtime JOIN.
+ * - The "set" columns (level_set, embargo_start_set, embargo_end_set) hold
+ *   the admin decision on this resource, before inheritance. They are the only
+ *   columns edited via the form or the API, and the only source used to
+ *   recompute the effective columns.
+ *
+ * The cascade is: item_set.level = level_set; item.level = MAX(item.level_set,
+ * item_sets.level); media.level = MAX(media.level_set, item.level), on the
+ * order free < reserved < protected < forbidden. Embargo cascades the same way
+ * (earliest start, latest end) only when the setting access_embargo_cascade is
+ * enabled; otherwise the effective embargo equals the set embargo.
+ *
+ * The indexes on the effective columns allow fast faceting and to update
+ * accesses quicker when embargo ends.
  *
  * @Entity
  * @Table(
@@ -37,13 +53,13 @@ class AccessStatus extends AbstractEntity
      * Access levels.
      *
      * The access level applies to FILE content only, never to the notice.
-     * Notice visibility follows Omeka core resource->is_public. The access
-     * level on an item set or item carries no direct gating semantic; its only
-     * role is to act as a default propagated to children media when the admin
-     * runs the reindex job.
+     * Notice visibility follows Omeka core resource->is_public. A level set on
+     * an item set or an item cascades automatically to the effective level of
+     * its children (materialized in the "level" column), so it gates their
+     * files without any propagation step.
      *
      * On a media, the effective level is the strictest of (media, parent item,
-     * parent item sets) after propagation, and gates the file:
+     * parent item sets), and gates the file:
      *
      * FREE:      file accessible to all.
      * RESERVED:  file restricted; debloqued by any active bypass mode (IP,
@@ -80,7 +96,11 @@ class AccessStatus extends AbstractEntity
     protected $id;
 
     /**
-     * One of the constants free/reserved/protected/forbidden above.
+     * Effective access level: the materialized cascade over the resource, its
+     * parent item (for media) and its item sets. One of the constants
+     * free/reserved/protected/forbidden. Read by file gating, facets and the
+     * future notice filter; maintained by events and the rebuild job, never
+     * edited directly.
      *
      * @var string
      *
@@ -93,7 +113,24 @@ class AccessStatus extends AbstractEntity
     protected $level;
 
     /**
-     * The embargo starts at this date.
+     * Set access level: the admin decision on this resource before inheritance.
+     * Edited via the form or the API; used to recompute $level.
+     *
+     * @var string
+     *
+     * @Column(
+     *     type="string",
+     *     length=15,
+     *     nullable=false,
+     *     options={"default":"free"}
+     * )
+     */
+    protected $levelSet = self::FREE;
+
+    /**
+     * Effective embargo start (materialized). Equal to $embargoStartSet unless
+     * the setting access_embargo_cascade is enabled, in which case it is the
+     * earliest start of the cascade.
      *
      * @var DateTime
      *
@@ -105,7 +142,22 @@ class AccessStatus extends AbstractEntity
     protected $embargoStart;
 
     /**
-     * The embargo ends at this date.
+     * Set embargo start: the admin decision on this resource before
+     * inheritance.
+     *
+     * @var DateTime
+     *
+     * @Column(
+     *     type="datetime",
+     *     nullable=true
+     * )
+     */
+    protected $embargoStartSet;
+
+    /**
+     * Effective embargo end (materialized). Equal to $embargoEndSet unless the
+     * setting access_embargo_cascade is enabled, in which case it is the latest
+     * end of the cascade.
      *
      * @var DateTime
      *
@@ -115,6 +167,18 @@ class AccessStatus extends AbstractEntity
      * )
      */
     protected $embargoEnd;
+
+    /**
+     * Set embargo end: the admin decision on this resource before inheritance.
+     *
+     * @var DateTime
+     *
+     * @Column(
+     *     type="datetime",
+     *     nullable=true
+     * )
+     */
+    protected $embargoEndSet;
 
     public function setId(Resource $resource): self
     {
@@ -143,6 +207,17 @@ class AccessStatus extends AbstractEntity
         return $this->level;
     }
 
+    public function setLevelSet(string $levelSet): self
+    {
+        $this->levelSet = $levelSet;
+        return $this;
+    }
+
+    public function getLevelSet(): string
+    {
+        return $this->levelSet;
+    }
+
     public function setEmbargoStart(?DateTime $embargoStart): self
     {
         $this->embargoStart = $embargoStart;
@@ -154,10 +229,32 @@ class AccessStatus extends AbstractEntity
         return $this->embargoStart;
     }
 
+    public function setEmbargoStartSet(?DateTime $embargoStartSet): self
+    {
+        $this->embargoStartSet = $embargoStartSet;
+        return $this;
+    }
+
+    public function getEmbargoStartSet(): ?DateTime
+    {
+        return $this->embargoStartSet;
+    }
+
     public function setEmbargoEnd(?DateTime $embargoEnd): self
     {
         $this->embargoEnd = $embargoEnd;
         return $this;
+    }
+
+    public function setEmbargoEndSet(?DateTime $embargoEndSet): self
+    {
+        $this->embargoEndSet = $embargoEndSet;
+        return $this;
+    }
+
+    public function getEmbargoEndSet(): ?DateTime
+    {
+        return $this->embargoEndSet;
     }
 
     public function getEmbargoEnd(): ?DateTime

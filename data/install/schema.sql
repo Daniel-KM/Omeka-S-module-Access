@@ -40,8 +40,11 @@ CREATE TABLE `access_log` (
 CREATE TABLE `access_status` (
     `id` INT NOT NULL,
     `level` VARCHAR(15) NOT NULL,
+    `level_set` VARCHAR(15) NOT NULL DEFAULT 'free',
     `embargo_start` DATETIME DEFAULT NULL,
+    `embargo_start_set` DATETIME DEFAULT NULL,
     `embargo_end` DATETIME DEFAULT NULL,
+    `embargo_end_set` DATETIME DEFAULT NULL,
     INDEX `IDX_898BF02E9AEACC13` (`level`),
     INDEX `IDX_898BF02E41CE64D3` (`embargo_start`),
     INDEX `IDX_898BF02E197EE67A` (`embargo_end`),

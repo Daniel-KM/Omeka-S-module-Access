@@ -588,3 +588,57 @@ if (version_compare($oldVersion, '3.4.44', '<')) {
     );
     $messenger->addSuccess($message);
 }
+
+if (version_compare($oldVersion, '3.4.45', '<')) {
+    // Split the access status into an "own" level (the admin decision, before
+    // inheritance) and an effective level (the materialized cascade item set >
+    // item > media). The effective columns keep their names so every existing
+    // reader (file gating, facets in Reference / Solr, custom SQL) keeps
+    // working and now reads the cascaded value. The new "_own" columns hold the
+    // admin decision and feed the recompute of the effective columns.
+    $sql = <<<'SQL'
+        ALTER TABLE `access_status`
+            ADD COLUMN `level_own` VARCHAR(15) NOT NULL DEFAULT 'free' AFTER `level`,
+            ADD COLUMN `embargo_start_own` DATETIME DEFAULT NULL AFTER `embargo_start`,
+            ADD COLUMN `embargo_end_own` DATETIME DEFAULT NULL AFTER `embargo_end`
+        SQL;
+    try {
+        $connection->executeStatement($sql);
+    } catch (\Exception $e) {
+        // Columns already added (re-run of a partial upgrade).
+    }
+
+    // The current level and embargo columns hold the admin decision, because no
+    // runtime cascade existed before: copy them into the "own" columns.
+    $connection->executeStatement(<<<'SQL'
+        UPDATE `access_status`
+        SET `level_own` = `level`,
+            `embargo_start_own` = `embargo_start`,
+            `embargo_end_own` = `embargo_end`
+        SQL);
+
+    // Embargo cascade is opt-in and independent of the level. Off by default:
+    // an embargo stays per-resource unless the admin turns the cascade on.
+    $settings->set('access_embargo_cascade', false);
+
+    // Recompute the effective columns from the own columns and the item set /
+    // item / media hierarchy. Dispatched as a background job because the
+    // recompute walks the whole hierarchy and may be heavy on large bases.
+    $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusRebuild::class);
+
+    $message = new PsrMessage(
+        'The access status now stores the admin decision ("own" level and embargo) separately from the effective value materialized by the cascade item set > item > media. The effective columns are read by file access, facets and search; they are recomputed automatically on every resource save and by the rebuild job. Setting an access level on an item set now protects its items and medias without any propagation step.' // @translate
+    );
+    $messenger->addSuccess($message);
+
+    $message = new PsrMessage(
+        'A background job #{job_id} was dispatched to materialize the effective access levels of all resources. Facets and file access reflect the cascade once it completes. Watch its status in the Jobs list.', // @translate
+        ['job_id' => $job->getId()]
+    );
+    $messenger->addSuccess($message);
+
+    $message = new PsrMessage(
+        'The former "propagation mode" options are gone: the cascade is now computed and materialized automatically, so there is no destructive bulk copy anymore. A new setting "Cascade embargo dates" (off by default) makes the embargo inherit the same way as the level, still checked independently.' // @translate
+    );
+    $messenger->addWarning($message);
+}
