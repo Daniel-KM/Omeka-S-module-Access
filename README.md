@@ -280,10 +280,10 @@ The configuration of Apache above should be adapted for Nginx.
 Usage
 -----
 
-Omeka has two modes of visibility: public or private (`resource.is_public`).
-The Access module adds a **second, orthogonal** check on **file content only**:
-the right to download a media's file. The record itself is never hidden by this
-module; it follows Omeka core visibility.
+Omeka has two modes of visibility: public or private. The Access module adds a
+second, independant check on file content only: the right to download a media
+file. The record itself is never hidden by this module: it follows Omeka core
+visibility.
 
 So in this module, three independent conditions must be satisfied for a visitor
 to download a file:
@@ -293,20 +293,37 @@ to download a file:
   visitor;
 - the embargo dates, if any, must not block access.
 
-A status (`free`, `reserved`, `protected`, `forbidden`) on an item set or an
-item has no direct gating semantic. Its only role is to act as a default
-propagated down to the media when the admin runs the reindex job. At runtime,
-the file gating reads the media's own row (with fallback to the parent item if
-the media has no row). The cascade is therefore applied at propagation time,
-not at every request.
+A level set on an item set cascades automatically to its items and medias.
+A level set on an item cascades automatically to its medias.
 
-When several levels apply (media, item, item set), the strictest wins: a `free`
-media inside a `forbidden` item set is inaccessible once the propagation job
-has cascaded the item set level down. The reindex job exposes a `propagation_mode`
-option to choose how this cascade behaves: `max_restrictive` (default, never
-demote a stricter child), `overwrite` (always copy the parent level), or `skip_if_set`
-(only fill children that have no level yet). It is strongly recommended to
-choose `max_restrictive`.
+The access and the embargo are stored in the database, even if they are set via
+a property value. The computed effective rights are stored too for quicker
+access: it is the result of the cascade item set > item > media. This level is
+the strictest along the chain, on the order `free < reserved < protected < forbidden`,
+taking the maximum over the own level of the resource, its parent item and all
+its item sets:
+
+- set a level on an item set: all its items and media inherit it (they can still
+  be set stricter individually, never looser);
+- set a level per media or per item: the collection is left neutral (`free`) and
+  does not interfere;
+- an item in several item sets with contradictory levels takes the strictest
+  of them (a cataloguing error can only make a resource more restricted, never
+  more open).
+
+There is no more "propagation mode" and no more "apply recursive" option: the
+cascade is permanent and non destructive. The value set by the admin is never
+overwritten and only the effective column is recomputed. A media is thus always
+at least as restricted as its item and item sets, but a `free` media in a
+`reserved` collection cannot be made public: the cascade is one-way (an ancestor
+can only tighten a descendant). To keep a document public, leave its collections
+neutral.
+
+A Rebuild access index task recomputes the effective columns for the whole base.
+It is normally not needed (the recompute is automatic on each save) but repairs
+the index after a bulk import, a direct database edit, a bulk edit of the access
+property values (in property-storage mode), or a change of the option for the
+"Cascade embargo dates".
 
 <details>
 <summary><strong>Access levels: semantic summary</strong></summary>
@@ -333,19 +350,22 @@ the guest role, an external identity provider (module [CAS], [LDAP] or [Single S
 by IP (v4 or v6), by email, or by token. For `protected` files, only the
 individual access request flow (user/email/token modes) is honoured.
 
-The recursive option of the reindex job updates the existing access status of
-children when an item set or an item is saved with recursivity enabled.
-This option applies only to existing resources: if an item is created after a
-change in an item set, the new item is not retroactively updated; the reindex
-job must be re-run, or the item set must be re-saved with the recursive option.
+The cascade is applied automatically and retroactively: adding an item to an
+item set, or a media to an item, immediately recomputes the effective level of
+the new resource from the hierarchy. No manual step is needed.
 
 When an embargo is set, it can be bypassed (or not) per user via the `access_embargo_bypass`
-setting. Currently only files can be under embargo. Embargo dates are
-per-resource and never propagated by the reindex job: only the level cascades.
-Setting an embargo on an item set has no effect on the embargo of its items or
-media: embargo must be set on the targeted resource directly. The `access_embargo_ended_level`
-and `access_embargo_ended_date` settings control what the level becomes when an
-embargo expires.
+setting. Currently only files can be under embargo. The embargo is checked
+**independently** from the level: a file may be free but under embargo, or
+reserved without embargo. By default an embargo is **per-resource** and only
+gates the resource it is set on. The `access_embargo_cascade` setting (off by
+default) makes an embargo set on an item set or an item cascade to its items
+and media too (widest window: earliest start, latest end), the same way the
+level does; run the Rebuild access index task after changing it. The
+`access_embargo_ended_level` and `access_embargo_ended_date` settings control
+what the level becomes when an embargo expires: `keep` leaves the document at
+its level (e.g. still university-only), while `free` / `under` drop it so a
+facet can show "restricted" during the embargo and "free" afterwards.
 
 For a "forbidden" resource, the standard admin access request flow is not
 offered. The recommended recourse is the view helper `accessContactAuthor($resource)`:
@@ -425,86 +445,72 @@ Note that a public item can have a private media and vice-versa. So, the value
 may be set in the metadata of the media. The value can be specified for the item
 too to simplify management when all medias have the same access righs.
 
-### Inheritance behavior
+### Inheritance and cascade
 
-When a media does not have an explicit access status set:
+Access levels and embargo cascade **automatically** down the hierarchy
+item set > item > media. Two values are stored per resource in the
+`access_status` table:
 
-- At runtime: The media inherits the access level and embargo settings from its
-  parent item. If neither the media nor the item has an access status, the media
-  content is accessible (free by default).
-- On save with property mode: When access is managed via properties, if a media
-  does not have the access level property set, it will inherit the value from
-  the parent item property. The same applies to embargo start and end
-  properties.
-- On save without property mode: When creating new medias via an item, the item
-  access data is applied to the new medias by default. Use the "recursive"
-  option to explicitly copy access settings to all medias.
+- `level_set` (and `embargo_*_set`): the decision made by the admin on this
+  resource, before inheritance. This is what the edit form and the API edit.
+- `level` (and `embargo_start`, `embargo_end`): the effective value, the
+  materialized cascade. This is what the file gating, the facets and the search
+  read. It is recomputed on every save and never edited directly.
 
-This inheritance behavior ensures that restricted items have their medias
-restricted as well, even when access is not explicitly set on individual medias.
+The effective level is the strictest (`free < reserved < protected < forbidden`)
+of the resource own level, its parent item and all its item sets. The effective
+embargo equals the set embargo, unless `access_embargo_cascade` is on, in which
+case it is the widest window (earliest start, latest end) of the chain.
 
-### Propagation modes
+Consequences:
 
-The reindex job (Tasks tab) cascades the parent level down the chain ItemSet → Items → Media.
-The level cascade is the primary purpose of the job; embargo dates are
-independent and opt-in.
+- A restricted item set restricts all its items and media, with no manual step.
+- A media or an item may be set stricter than its ancestors, never looser (the
+  cascade is one-way: an ancestor can only tighten a descendant).
+- An item in several item sets takes the strictest of their levels, so a
+  cataloguing error can only make a resource more restricted, never more open.
+- A media without its own level follows its item dynamically: if the item level
+  later changes, the media effective level follows.
 
-#### Level (access_status table)
+There is no propagation mode and no "apply recursive" option: the cascade is
+permanent and non destructive. The **Rebuild access index** task only rebuilds
+the effective columns after a bulk operation that bypassed the save events. In
+property-storage mode, the rebuild first resyncs the set columns from the
+property values, then recomputes the effective columns.
 
-The mode is chosen via the **Propagation mode** radio in the reindex fieldset.
-The selected value is persisted in the `access_propagation_mode` setting and
-pre-populates the form on the next visit.
+The Tasks tab also offers a **Reset the access status** action, to align an
+existing base with a chosen management logic after the upgrade (the upgrade
+itself is neutral: it keeps the current effective levels for every install).
+Check the resource types to neutralize, then the task clears their level and
+embargo decisions and rebuilds the effective index:
 
-| Mode                        | Child stricter than parent | Child without `access_status` row  | Child more permissive than parent |
-|-----------------------------|----------------------------|------------------------------------|-----------------------------------|
-| `max_restrictive` (default) | Kept (never demoted)       | New row created with parent level  | Receives parent level             |
-| `overwrite` (old default)   | Demoted to parent level    | New row created with parent level  | Receives parent level             |
-| `skip_if_set` (rare)        | Unchanged                  | New row created with parent level  | Unchanged                         |
+- check **item sets** to switch to a "by document" logic (the access is driven
+  by items and medias; the collections stop restricting);
+- check **items** and **medias** to switch to a "by collection" logic (the
+  access is driven by the item sets; the documents inherit).
 
-The old default `overwrite` mode is the only value that can silently demote a
-child explicitly marked stricter (e.g. a `forbidden` item inside a `reserved`
-item  set). For installs upgraded from < 3.4.44 it is kept as the default for
-backwards compatibility; switching to `max_restrictive` is strongly recommended.
+For example, a base that used the former propagation to push a collection
+level down onto every item and media should reset items and medias, so those
+inherited levels become neutral again and follow their collections. This is a
+one-time, irreversible operation. In property-storage mode, it also deletes the
+corresponding property values of the reset resources.
 
-`skip_if_set` is rarely useful: every resource created while the Access module
-is active receives an `access_status` row by default, so children with no row
-only exist when the module was installed on a database that already contained
-resources, or when a row has been deleted manually.
+### Embargo expiry
 
-##### Property mode addendum
+The embargo is checked independently from the level. When an embargo ends, the
+`access_embargo_ended_level` setting controls the transition of the resource own
+level:
 
-When access via property is enabled, the level property value (in the `value`
-table) is **realigned** with the post-propagation `access_status.level` after
-the standard parent-binding INSERT. This ensures that a child preserved at a
-stricter level by `max_restrictive` (or left unchanged by `skip_if_set`) is not
-silently demoted the next time the resource is saved and the property mirrors
-back into `access_status`.
+- `keep`: the level is unchanged, so a document stays restricted after its
+  embargo (e.g. still university-only);
+- `free`: the level drops to free;
+- `under`: the level drops one step (reserved → free, protected/forbidden →
+  reserved).
 
-#### Embargo dates
-
-By default embargo dates are **not propagated**: they are per-resource,
-time-bound and orthogonal to the level. The `access_embargo_bypass`, `access_embargo_ended_level`
-and `access_embargo_ended_date` settings handle end-of-embargo behavior
-independently.
-
-Setting an embargo on an item set therefore has no effect on the embargo of its
-items or media and the embargo must be set on the targeted resource directly.
-
-The old behavior (parent embargo copied onto every child) is kept as an opt-in
-via the Also propagate embargo dates checkbox in the reindex fieldset, persisted
-in the `access_propagation_embargo` setting. The upgrade script enables it for
-installs predating 3.4.44.
-
-| `propagation_embargo` | `access_status` (metadata mode)                                        | `value` table (property mode)                                                                                                                                 |
-|-----------------------|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Off (default)         | Embargo columns untouched on every child. Newly created rows use NULL. | Embargo property values left intact on every child.                                                                                                           |
-| On (old default)      | Parent embargo windows are copied per the chosen level mode.           | Embargo property values are rewritten from the post-propagation `access_status` columns for consistence between value and index regardless of the level mode. |
-
-The chosen level mode are :
-- `overwrite` = copied verbatim;
-- `max_restrictive` = `LEAST`/`GREATEST` merge (earliest start, latest end);
-`skip_if_set` = no-op on existing rows.
-
+Combined with `access_embargo_ended_date` (`keep` or `clear` the dates), this
+lets a facet show a "restricted" status while a document is under embargo and
+"free" once the embargo has passed. In property-storage mode, the transition is
+also written back into the property values.
 ### Advanced search
 
 The advanced search form includes a multi-select filter for access levels. You
