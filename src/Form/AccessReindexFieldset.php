@@ -26,7 +26,7 @@ class AccessReindexFieldset extends Fieldset
                 'name' => 'rebuild_note',
                 'type' => CommonElement\Note::class,
                 'options' => [
-                    'text' => 'The effective access level of every resource is materialized automatically on each save, so this task is normally not needed. Run it to repair the index after a bulk import, a direct database edit, or a bulk edit of the access property values (in property-storage mode), or after changing the "Cascade embargo dates" option. In property-storage mode, the task first resyncs the set columns from the property values, then recomputes the effective columns from the hierarchy item set > item > media. Settings must be saved before running the task.', // @translate
+                    'text' => 'Access levels are updated automatically on each save, so this task is normally not needed. Run it to repair the access levels after a bulk import, a direct database edit, a bulk edit of the access property values, or after changing the "Cascade embargo dates" option. Save the settings before running the task.', // @translate
                 ],
             ])
             ->add([
@@ -45,7 +45,7 @@ class AccessReindexFieldset extends Fieldset
                 'name' => 'reset_note',
                 'type' => CommonElement\Note::class,
                 'options' => [
-                    'text' => 'Neutralize the access status (level and embargo) of whole resource types, then rebuild the effective index. Check "item sets" to switch to a "by document" logic (the access is driven by items and medias). Check "items" and "medias" to switch to a "by collection" logic (the access is driven by the item sets). This is a one-time operation to align an existing base with the chosen management logic; it clears the checked decisions and cannot be undone.', // @translate
+                    'text' => 'Clear the access levels and embargoes set on whole resource types, then update the access. Check "item sets" to manage access by document (the access is set on items and medias). Check "items" and "medias" to manage access by collection (the access is set on the item sets). This clears the checked levels and cannot be undone.', // @translate
                 ],
             ])
             ->add([

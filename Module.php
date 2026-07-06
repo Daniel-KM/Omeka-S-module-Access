@@ -809,8 +809,8 @@ class Module extends AbstractModule
             $urlHelper = $services->get('ViewHelperManager')->get('url');
             $message = new PsrMessage(
                 $isReset
-                    ? 'Resetting and rebuilding the access index in a background job ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).' // @translate
-                    : 'Rebuilding the access index in a background job ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+                    ? 'Resetting and updating the access levels in a background job ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).' // @translate
+                    : 'Updating the access levels in a background job ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
                 [
                     'link_job' => sprintf('<a href="%s">', htmlspecialchars($urlHelper('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
                     'job_id' => $job->getId(),

@@ -89,7 +89,7 @@ class AccessStatusRebuild extends AbstractJob
                     $easyMeta->propertyId($settings->get('access_property_embargo_end'))
                 );
                 $logger->info(
-                    'Resynced the set access columns from the property values.' // @translate
+                    'Updated the access levels from the property values.' // @translate
                 );
             }
         }
@@ -118,19 +118,19 @@ class AccessStatusRebuild extends AbstractJob
 
         if ($moreRestrictive) {
             $logger->warn(
-                '{count} resources now have a more restrictive effective access level (e.g. free files inside a reserved item set that now inherit its level). Their files are no longer downloadable by visitors who could reach them before. Use the "reset item sets" task to switch to a by-document logic if this is not wanted.', // @translate
+                '{count} resources are now more restricted than before (for example free files inside a reserved item set now follow its level), so their files can no longer be downloaded by visitors who could reach them before. If this is not wanted, run the "reset item sets" task to manage access by document.', // @translate
                 ['count' => $moreRestrictive]
             );
         }
         if ($lessRestrictive) {
             $logger->notice(
-                '{count} resources now have a less restrictive effective access level.', // @translate
+                '{count} resources are now less restricted than before.', // @translate
                 ['count' => $lessRestrictive]
             );
         }
 
         $logger->info(
-            'End of rebuild of the effective access levels.' // @translate
+            'End of the access rebuild.' // @translate
         );
     }
 }

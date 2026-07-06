@@ -627,18 +627,18 @@ if (version_compare($oldVersion, '3.4.45', '<')) {
     $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusRebuild::class);
 
     $message = new PsrMessage(
-        'The access status now stores the admin decision ("own" level and embargo) separately from the effective value materialized by the cascade item set > item > media. The effective columns are read by file access, facets and search; they are recomputed automatically on every resource save and by the rebuild job. Setting an access level on an item set now protects its items and medias without any propagation step.' // @translate
+        'An access level set on an item set or an item now applies automatically to its items and medias, without any propagation step to run.' // @translate
     );
     $messenger->addSuccess($message);
 
     $message = new PsrMessage(
-        'A background job #{job_id} was dispatched to materialize the effective access levels of all resources. Facets and file access reflect the cascade once it completes. Watch its status in the Jobs list.', // @translate
+        'A background job #{job_id} was started to apply the access levels to all resources. Watch its progress in the Jobs list.', // @translate
         ['job_id' => $job->getId()]
     );
     $messenger->addSuccess($message);
 
     $message = new PsrMessage(
-        'The former "propagation mode" options are gone: the cascade is now computed and materialized automatically, so there is no destructive bulk copy anymore. A new setting "Cascade embargo dates" (off by default) makes the embargo inherit the same way as the level, still checked independently.' // @translate
+        'The old "propagation mode" options have been removed: they are no longer needed. A new option "Cascade embargo dates" (off by default) makes an embargo set on an item set or an item apply to its items and medias too, like the access level. The embargo is still checked separately.' // @translate
     );
     $messenger->addWarning($message);
 }

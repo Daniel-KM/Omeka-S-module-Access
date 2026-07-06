@@ -60,7 +60,7 @@ class ConfigForm extends Form
                         . '<td>' . 'Sole recourse (theme-side "contact the author" feature)' /* @translate */ . '</td></tr>'
                         . '</tbody></table>'
                         . '<p><strong>' . 'Notice visibility' /* @translate */ . '</strong>: ' . 'follows Omeka core is_public only; the access level never hides a notice.' /* @translate */ . '</p>'
-                        . '<p><strong>' . 'Cascade' /* @translate */ . '</strong>: ' . 'a level set on an item set or an item cascades automatically to the effective level of its items and medias (item set → items → media, strictest wins). File gating reads the effective level, materialized on every save.' /* @translate */ . '</p>'
+                        . '<p><strong>' . 'Cascade' /* @translate */ . '</strong>: ' . 'a level set on an item set or an item applies automatically to its items and medias. When several levels apply, the strictest wins.' /* @translate */ . '</p>'
                         . '</details>',
                     'disable_html_escape' => true,
                 ],
@@ -476,7 +476,7 @@ class ConfigForm extends Form
                 'options' => [
                     'element_group' => 'propagation',
                     'label' => 'Cascade embargo dates', // @translate
-                    'info' => 'Off by default: an embargo is per-resource and only gates the resource it is set on. Check this box to make an embargo set on an item set or an item apply to its items and medias too (widest window: earliest start, latest end), the same way the access level cascades. The embargo is always checked independently from the level. After changing this option, run the "Rebuild access index" task so the effective embargo is recomputed.', // @translate
+                    'info' => 'Off by default: an embargo applies only to the resource it is set on. Check this box to make an embargo set on an item set or an item also apply to its items and medias, like the access level. The embargo is always checked separately from the level. After changing this option, run the "Rebuild access index" task.', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_embargo_cascade',
