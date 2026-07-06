@@ -43,20 +43,37 @@ class AccessStatusRebuild extends AbstractJob
             . ' AS SELECT `id`, `level` FROM `access_status`'
         );
 
-        $logger->info(
-            'Rebuilding the effective access levels of all resources.' // @translate
-        );
+        // Optional reset: neutralize the admin decision of whole resource
+        // types, to switch an install to a "by collection" logic (reset items
+        // and media) or a "by document" logic (reset item sets). In property
+        // mode, also delete the corresponding property values so the reset is
+        // not reverted on the next save.
+        $reset = array_values(array_intersect(
+            ['item_sets', 'items', 'media'],
+            (array) $this->getArg('reset', [])
+        ));
 
-        // In property-storage mode, resync the "set" columns from the property
-        // values first, so a bulk edit of the properties that bypassed the
-        // resource save events is taken into account.
-        if ($settings->get('access_property')) {
-            $api = $services->get('Omeka\ApiManager');
-            $levelTerm = $settings->get('access_property_level');
-            $levelProperty = $levelTerm
-                ? $api->searchOne('properties', ['term' => $levelTerm])->getContent()
-                : null;
-            if ($levelProperty) {
+        if ($reset) {
+            $cascade->resetSetColumns($reset);
+            $logger->info(
+                'Reset the access status of: {types}.', // @translate
+                ['types' => implode(', ', $reset)]
+            );
+            if ($settings->get('access_property')) {
+                $easyMeta = $services->get('Common\EasyMeta');
+                $propertyIds = array_values(array_filter(array_map(
+                    fn ($key) => $easyMeta->propertyId($settings->get($key)),
+                    ['access_property_level', 'access_property_embargo_start', 'access_property_embargo_end']
+                )));
+                $cascade->clearPropertyValues($reset, $propertyIds);
+            }
+        } elseif ($settings->get('access_property')) {
+            // In property-storage mode, resync the "set" columns from the
+            // property values first, so a bulk edit of the properties that
+            // bypassed the resource save events is taken into account.
+            $easyMeta = $services->get('Common\EasyMeta');
+            $levelPropertyId = $easyMeta->propertyId($settings->get('access_property_level'));
+            if ($levelPropertyId) {
                 // access_property_levels maps the canonical level to its label
                 // used as the property value; invert it to value => level.
                 $levels = ['free' => 'free', 'reserved' => 'reserved', 'protected' => 'protected', 'forbidden' => 'forbidden'];
@@ -65,19 +82,11 @@ class AccessStatusRebuild extends AbstractJob
                 foreach ($labels as $level => $label) {
                     $valueToLevel[(string) $label] = $level;
                 }
-                $embargoStartTerm = $settings->get('access_property_embargo_start');
-                $embargoEndTerm = $settings->get('access_property_embargo_end');
-                $embargoStartProperty = $embargoStartTerm
-                    ? $api->searchOne('properties', ['term' => $embargoStartTerm])->getContent()
-                    : null;
-                $embargoEndProperty = $embargoEndTerm
-                    ? $api->searchOne('properties', ['term' => $embargoEndTerm])->getContent()
-                    : null;
                 $cascade->resyncSetFromProperties(
-                    $levelProperty->id(),
+                    $levelPropertyId,
                     $valueToLevel,
-                    $embargoStartProperty ? $embargoStartProperty->id() : null,
-                    $embargoEndProperty ? $embargoEndProperty->id() : null
+                    $easyMeta->propertyId($settings->get('access_property_embargo_start')),
+                    $easyMeta->propertyId($settings->get('access_property_embargo_end'))
                 );
                 $logger->info(
                     'Resynced the set access columns from the property values.' // @translate

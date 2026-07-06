@@ -59,6 +59,79 @@ class AccessCascade
     }
 
     /**
+     * Neutralize the admin decision (set columns) of whole resource types, so
+     * their access is driven only by the other levels of the hierarchy.
+     *
+     * Reset item sets to make the access driven by items and media ("by
+     * document"); reset items and media to make it driven by item sets ("by
+     * collection"). Call recomputeAll() afterwards to materialize the result.
+     *
+     * @param string[] $resourceTypes Any of 'item_sets', 'items', 'media'.
+     */
+    public function resetSetColumns(array $resourceTypes): void
+    {
+        $map = [
+            'item_sets' => 'Omeka\\Entity\\ItemSet',
+            'items' => 'Omeka\\Entity\\Item',
+            'media' => 'Omeka\\Entity\\Media',
+        ];
+        $types = array_values(array_intersect_key($map, array_flip($resourceTypes)));
+        if (!$types) {
+            return;
+        }
+        $this->connection->executeStatement(
+            <<<'SQL'
+            UPDATE `access_status`
+            JOIN `resource` ON `resource`.`id` = `access_status`.`id`
+            SET `access_status`.`level_set` = 'free',
+                `access_status`.`embargo_start_set` = NULL,
+                `access_status`.`embargo_end_set` = NULL
+            WHERE `resource`.`resource_type` IN (:types)
+            SQL,
+            ['types' => $types],
+            ['types' => \Doctrine\DBAL\Connection::PARAM_STR_ARRAY]
+        );
+    }
+
+    /**
+     * Delete the access property values of whole resource types.
+     *
+     * Property-storage mode only, used with resetSetColumns() so the reset is
+     * not reverted the next time a reset resource is saved and its property
+     * value mirrors back into the set columns.
+     *
+     * @param string[] $resourceTypes Any of 'item_sets', 'items', 'media'.
+     * @param int[] $propertyIds Level and embargo property ids.
+     */
+    public function clearPropertyValues(array $resourceTypes, array $propertyIds): void
+    {
+        $map = [
+            'item_sets' => 'Omeka\\Entity\\ItemSet',
+            'items' => 'Omeka\\Entity\\Item',
+            'media' => 'Omeka\\Entity\\Media',
+        ];
+        $types = array_values(array_intersect_key($map, array_flip($resourceTypes)));
+        $propertyIds = array_values(array_filter(array_map('intval', $propertyIds)));
+        if (!$types || !$propertyIds) {
+            return;
+        }
+        $this->connection->executeStatement(
+            <<<'SQL'
+            DELETE `value`
+            FROM `value`
+            JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
+            WHERE `resource`.`resource_type` IN (:types)
+                AND `value`.`property_id` IN (:props)
+            SQL,
+            ['types' => $types, 'props' => $propertyIds],
+            [
+                'types' => \Doctrine\DBAL\Connection::PARAM_STR_ARRAY,
+                'props' => \Doctrine\DBAL\Connection::PARAM_INT_ARRAY,
+            ]
+        );
+    }
+
+    /**
      * Resync the "set" columns from the property values, for the whole base.
      *
      * Only used in property-storage mode, before recomputeAll(), so a bulk edit

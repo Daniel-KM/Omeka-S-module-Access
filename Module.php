@@ -782,18 +782,35 @@ class Module extends AbstractModule
 
         $accessViaProperty = (bool) $settings->get('access_property');
 
-        // The Tasks tab offers a single action: rebuild the access index. The
-        // effective columns are otherwise materialized automatically on every
-        // save, so this is only needed to repair the index after a bulk import,
-        // a direct database edit, a bulk property edit, or a change of the
-        // "Cascade embargo dates" option.
+        // The Tasks tab offers two actions, both dispatched as the same
+        // background job: rebuild the access index (repair the materialization)
+        // and reset the access status of whole resource types (to align an
+        // existing base with a "by collection" or "by document" logic). The
+        // effective columns are otherwise materialized automatically on save.
         $post = $controller->getRequest()->getPost();
-        if (!empty($post['access_reindex']['process_rebuild'])) {
+        $isRebuild = !empty($post['access_reindex']['process_rebuild']);
+        $isReset = !empty($post['access_reindex']['process_reset']);
+        if ($isRebuild || $isReset) {
+            $args = [];
+            if ($isReset) {
+                $args['reset'] = array_values(array_intersect(
+                    ['item_sets', 'items', 'media'],
+                    (array) ($post['access_reindex']['reset'] ?? [])
+                ));
+                if (!$args['reset']) {
+                    $messenger->addWarning(new PsrMessage(
+                        'No resource type was selected to reset.' // @translate
+                    ));
+                    return true;
+                }
+            }
             $job = $services->get(\Omeka\Job\Dispatcher::class)
-                ->dispatch(\Access\Job\AccessStatusRebuild::class);
+                ->dispatch(\Access\Job\AccessStatusRebuild::class, $args);
             $urlHelper = $services->get('ViewHelperManager')->get('url');
             $message = new PsrMessage(
-                'Rebuilding the access index in a background job ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+                $isReset
+                    ? 'Resetting and rebuilding the access index in a background job ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).' // @translate
+                    : 'Rebuilding the access index in a background job ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
                 [
                     'link_job' => sprintf('<a href="%s">', htmlspecialchars($urlHelper('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
                     'job_id' => $job->getId(),

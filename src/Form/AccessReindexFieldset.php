@@ -40,6 +40,40 @@ class AccessReindexFieldset extends Fieldset
                     'value' => 'Rebuild access index', // @translate
                 ],
             ])
+
+            ->add([
+                'name' => 'reset_note',
+                'type' => CommonElement\Note::class,
+                'options' => [
+                    'text' => 'Neutralize the access status (level and embargo) of whole resource types, then rebuild the effective index. Check "item sets" to switch to a "by document" logic (the access is driven by items and medias). Check "items" and "medias" to switch to a "by collection" logic (the access is driven by the item sets). This is a one-time operation to align an existing base with the chosen management logic; it clears the checked decisions and cannot be undone.', // @translate
+                ],
+            ])
+            ->add([
+                'name' => 'reset',
+                'type' => CommonElement\OptionalMultiCheckbox::class,
+                'options' => [
+                    'label' => 'Reset the access status of', // @translate
+                    'value_options' => [
+                        'item_sets' => 'Item sets (to manage access by document)', // @translate
+                        'items' => 'Items (to manage access by collection)', // @translate
+                        'media' => 'Medias (to manage access by collection)', // @translate
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'access_reset',
+                ],
+            ])
+            ->add([
+                'name' => 'process_reset',
+                'type' => Element\Submit::class,
+                'options' => [
+                    'label' => 'Reset and rebuild', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'process_reset',
+                    'value' => 'Reset and rebuild', // @translate
+                ],
+            ])
         ;
     }
 }
