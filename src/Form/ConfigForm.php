@@ -14,7 +14,6 @@ class ConfigForm extends Form
         'files' => 'Files to protect', // @translate
         'modes' => 'Access modes', // @translate
         'embargo' => 'Embargo', // @translate
-        'propagation' => 'Propagation', // @translate
     ];
 
     public function init(): void
@@ -474,7 +473,7 @@ class ConfigForm extends Form
                 'name' => 'access_embargo_cascade',
                 'type' => CommonElement\OptionalCheckbox::class,
                 'options' => [
-                    'element_group' => 'propagation',
+                    'element_group' => 'embargo',
                     'label' => 'Cascade embargo dates', // @translate
                     'info' => 'Off by default: an embargo applies only to the resource it is set on. Check this box to make an embargo set on an item set or an item also apply to its items and medias, like the access level. The embargo is always checked separately from the level. After changing this option, run the "Rebuild access index" task.', // @translate
                 ],
@@ -484,9 +483,8 @@ class ConfigForm extends Form
             ])
         ;
 
-        // Process indexation of missing access levels for items and medias.
-        // Used in EasyAdmin too.
-
+        // Tasks fieldset (rebuild / reset). It provides its own submit buttons;
+        // also used in EasyAdmin.
         $this
             ->add([
                 'name' => 'access_reindex',
@@ -495,19 +493,5 @@ class ConfigForm extends Form
                     'use_as_base_fieldset' => false,
                 ],
             ]);
-        $fieldset = $this->get('access_reindex');
-        $fieldset
-            ->add([
-                'name' => 'process_index',
-                'type' => Element\Submit::class,
-                'options' => [
-                    'label' => 'Process reindexation', // @translate
-                ],
-                'attributes' => [
-                    'id' => 'process_index',
-                    'value' => 'Process', // @translate
-                ],
-            ])
-        ;
     }
 }
