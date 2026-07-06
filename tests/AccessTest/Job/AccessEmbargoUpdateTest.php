@@ -589,9 +589,12 @@ class AccessEmbargoUpdateTest extends AbstractHttpControllerTestCase
      */
     public function testContentAccessibleAfterEmbargoEndsAndJobRuns(): void
     {
+        // The item is left free so the media is not held reserved by its parent
+        // through the cascade: this isolates the embargo-expiry effect on the
+        // media itself.
         $item = $this->createItem([
             'is_public' => true,
-            'access_level' => AccessStatus::RESERVED,
+            'access_level' => AccessStatus::FREE,
         ]);
 
         $media = $this->createMedia($item, [
@@ -603,8 +606,8 @@ class AccessEmbargoUpdateTest extends AbstractHttpControllerTestCase
 
         $mediaId = $media->id();
 
-        // Before job: media should be denied (RESERVED with ended embargo
-        // but status not yet updated by job).
+        // Before job: media should be denied (RESERVED with ended embargo but
+        // status not yet updated by job).
         $this->logout();
         $this->assertMediaContentDenied($media, 'RESERVED media should be denied before job (status still RESERVED)');
 

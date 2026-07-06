@@ -156,8 +156,9 @@ class IsAllowedMediaContentTest extends AbstractHttpControllerTestCase
     /**
      * Data provider for collection/item/media combinations.
      *
-     * The Access module checks ONLY the media's own access status.
-     * If media has no access status, it's allowed (no inheritance from item or collection).
+     * These cases set the effective level directly on each resource; the gating
+     * reads the materialized effective level as-is (the cascade that fills it
+     * is applied on save, not recomputed at read time).
      *
      * @return array
      */
@@ -180,8 +181,8 @@ class IsAllowedMediaContentTest extends AbstractHttpControllerTestCase
             [$p, $f, $f, true, 'Collection PROTECTED, Item/Media FREE'],
             [$x, $f, $f, true, 'Collection FORBIDDEN, Item/Media FREE'],
 
-            // Item restricted, Media free or none.
-            // Note: Media access is independent - item status doesn't cascade.
+            // Item restricted, Media free or none. Effective levels set
+            // directly; the gating reads them as-is.
             [$f, $r, $f, true, 'Item RESERVED, Media FREE (media status applies)'],
             [$f, $r, null, true, 'Item RESERVED, Media none (allowed - no inheritance)'],
             [$f, $p, $f, true, 'Item PROTECTED, Media FREE (media status applies)'],

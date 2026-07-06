@@ -742,16 +742,17 @@ HTACCESS;
     }
 
     /**
-     * Write mode: the block ends with a trailing blank line.
+     * Write mode: the block ends with its end marker followed by a trailing
+     * blank line, separating it from the next section.
      */
     public function testWriteModeTrailingBlankLine(): void
     {
         $this->writeFixtureAndManage($this->fixtureNoRule(), ['original']);
 
         $htaccess = $this->readHtaccess();
-        // After the RewriteRule line, there should be blank lines before the
-        // next section (the RewriteCond block).
-        $this->assertMatchesRegularExpression('/\[NC,L\]\s*\n\n/', $htaccess);
+        // The managed block is bounded by an end marker; a blank line follows
+        // it before the next section (the RewriteCond block).
+        $this->assertMatchesRegularExpression('/# \/Module Access: protect files\.\n\n/', $htaccess);
     }
 
     // ==================================================================

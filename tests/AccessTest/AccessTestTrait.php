@@ -385,22 +385,51 @@ trait AccessTestTrait
             ->getRepository(AccessStatus::class)
             ->find($resourceId);
 
-        if ($accessStatus) {
-            // Update existing record.
-            $accessStatus->setLevel($level);
-            $accessStatus->setEmbargoStart($embargoStart);
-            $accessStatus->setEmbargoEnd($embargoEnd);
-        } else {
-            // Create new access status.
+        if (!$accessStatus) {
             $accessStatus = new AccessStatus();
             $accessStatus->setId($resourceEntity);
-            $accessStatus->setLevel($level);
-            $accessStatus->setEmbargoStart($embargoStart);
-            $accessStatus->setEmbargoEnd($embargoEnd);
             $entityManager->persist($accessStatus);
         }
+        // Set both the admin decision (the "set" columns) and the effective
+        // columns to the same value, so the fixture is a consistent state (as
+        // if the resource had just been saved with no ancestor restriction).
+        $accessStatus->setLevelSet($level);
+        $accessStatus->setLevel($level);
+        $accessStatus->setEmbargoStartSet($embargoStart);
+        $accessStatus->setEmbargoStart($embargoStart);
+        $accessStatus->setEmbargoEndSet($embargoEnd);
+        $accessStatus->setEmbargoEnd($embargoEnd);
 
         $entityManager->flush();
+    }
+
+    /**
+     * Set the admin decision (level_set) for a resource, without recomputing
+     * the effective level. Call rebuildAccessCascade() afterwards to
+     * materialize the effective columns.
+     */
+    protected function setAccessLevelSet(int $resourceId, string $level): void
+    {
+        $entityManager = $this->getEntityManager();
+        $accessStatus = $entityManager->getRepository(AccessStatus::class)->find($resourceId);
+        if (!$accessStatus) {
+            $resourceEntity = $entityManager->find(\Omeka\Entity\Resource::class, $resourceId);
+            $accessStatus = new AccessStatus();
+            $accessStatus->setId($resourceEntity)->setLevel($level);
+            $entityManager->persist($accessStatus);
+        }
+        $accessStatus->setLevelSet($level);
+        $entityManager->flush();
+    }
+
+    /**
+     * Materialize the effective columns from the set columns and the hierarchy,
+     * then clear the entity cache so re-reads hit the database.
+     */
+    protected function rebuildAccessCascade(): void
+    {
+        $this->getServiceLocator()->get(\Access\Stdlib\AccessCascade::class)->recomputeAll();
+        $this->getEntityManager()->clear(AccessStatus::class);
     }
 
     /**

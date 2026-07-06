@@ -94,16 +94,17 @@ class AccessStatusInheritanceTest extends AbstractHttpControllerTestCase
     /**
      * Data provider for restrictiveness tests.
      *
-     * The Access module checks ONLY the media's own access status.
-     * If media has no access status, it's allowed (no inheritance from item).
-     * Item access status doesn't cascade to media automatically.
+     * These cases set the effective level directly on each resource. The gating
+     * reads the materialized effective level as-is; the cascade that fills it
+     * is applied on save, not recomputed at read time.
      *
      * @return array Test cases: [itemLevel, mediaLevel, expectedResult, description]
      */
     public function restrictivenessCasesProvider(): array
     {
-        // Format: [item_level, media_level, should_be_allowed_for_anonymous, description]
-        // Note: Media access is checked independently - no inheritance from item.
+        // Format: [item_level, media_level, should_be_allowed_for_anonymous,
+        // description] The effective levels are set directly; the gating reads
+        // them as-is.
         return [
             // Item FREE + various media levels.
             [AccessStatus::FREE, null, true, 'FREE item, no media status (allowed - no inheritance)'],
@@ -371,8 +372,8 @@ class AccessStatusInheritanceTest extends AbstractHttpControllerTestCase
 
         $this->logout();
 
-        // Media should follow item's FREE status (not item set's RESERVED).
-        // Note: Item set status doesn't cascade to items automatically.
+        // The effective levels are set directly here; the gating reads them
+        // as-is (the cascade is materialized on save, not at read time).
         $this->assertMediaContentAllowed($media, 'Media should follow item FREE status');
     }
 
@@ -380,7 +381,8 @@ class AccessStatusInheritanceTest extends AbstractHttpControllerTestCase
      * Test item inheriting no restrictions when item set is restricted.
      *
      * Item sets restrict access differently - they control which items are in the set,
-     * but don't automatically cascade access restrictions to items.
+     * The effective levels are set directly, so the gating reads them as-is;
+     * the item set > item cascade is materialized on save, not at read time.
      */
     public function testItemNotAffectedByItemSetRestriction(): void
     {
