@@ -30,10 +30,49 @@ class AccessStatusRebuild extends AbstractJob
 
         /** @var \Access\Stdlib\AccessCascade $cascade */
         $cascade = $services->get(AccessCascade::class);
+        $settings = $services->get('Omeka\Settings');
 
         $logger->info(
             'Rebuilding the effective access levels of all resources.' // @translate
         );
+
+        // In property-storage mode, resync the "set" columns from the property
+        // values first, so a bulk edit of the properties that bypassed the
+        // resource save events is taken into account.
+        if ($settings->get('access_property')) {
+            $api = $services->get('Omeka\ApiManager');
+            $levelTerm = $settings->get('access_property_level');
+            $levelProperty = $levelTerm
+                ? $api->searchOne('properties', ['term' => $levelTerm])->getContent()
+                : null;
+            if ($levelProperty) {
+                // access_property_levels maps the canonical level to its label
+                // used as the property value; invert it to value => level.
+                $levels = ['free' => 'free', 'reserved' => 'reserved', 'protected' => 'protected', 'forbidden' => 'forbidden'];
+                $labels = array_intersect_key(array_replace($levels, $settings->get('access_property_levels', [])), $levels);
+                $valueToLevel = [];
+                foreach ($labels as $level => $label) {
+                    $valueToLevel[(string) $label] = $level;
+                }
+                $embargoStartTerm = $settings->get('access_property_embargo_start');
+                $embargoEndTerm = $settings->get('access_property_embargo_end');
+                $embargoStartProperty = $embargoStartTerm
+                    ? $api->searchOne('properties', ['term' => $embargoStartTerm])->getContent()
+                    : null;
+                $embargoEndProperty = $embargoEndTerm
+                    ? $api->searchOne('properties', ['term' => $embargoEndTerm])->getContent()
+                    : null;
+                $cascade->resyncSetFromProperties(
+                    $levelProperty->id(),
+                    $valueToLevel,
+                    $embargoStartProperty ? $embargoStartProperty->id() : null,
+                    $embargoEndProperty ? $embargoEndProperty->id() : null
+                );
+                $logger->info(
+                    'Resynced the set access columns from the property values.' // @translate
+                );
+            }
+        }
 
         $cascade->recomputeAll();
 

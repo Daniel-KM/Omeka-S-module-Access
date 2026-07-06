@@ -52,17 +52,25 @@ class AccessStatusRepresentation extends AbstractEntityRepresentation
                 : null;
         };
 
+        // "level" is the effective level (materialized cascade), for reading.
+        // "level_set" is the admin decision on this resource, for editing.
         $jsonLd = [
             'level' => $this->level(),
+            'level_set' => $this->levelSet(),
         ];
 
-        // Append the start and the end if there is at least one of them.
+        // Append the start and the end if there is at least one of them, both
+        // effective and set.
         $embargoStart = $getDateTimeJsonLd($this->embargoStart());
         $embargoEnd = $getDateTimeJsonLd($this->embargoEnd());
-        if ($embargoStart || $embargoEnd) {
+        $embargoStartSet = $getDateTimeJsonLd($this->embargoStartSet());
+        $embargoEndSet = $getDateTimeJsonLd($this->embargoEndSet());
+        if ($embargoStart || $embargoEnd || $embargoStartSet || $embargoEndSet) {
             $jsonLd += [
-                'embargoStart ' => $embargoStart,
+                'embargoStart' => $embargoStart,
                 'embargoEnd' => $embargoEnd,
+                'embargoStart_set' => $embargoStartSet,
+                'embargoEnd_set' => $embargoEndSet,
             ];
         }
         return $jsonLd;
@@ -95,9 +103,22 @@ class AccessStatusRepresentation extends AbstractEntityRepresentation
             ->getRepresentation($this->resource->getId());
     }
 
+    /**
+     * Effective access level (materialized cascade). Use this for gating and
+     * display.
+     */
     public function level(): string
     {
         return $this->resource->getLevel();
+    }
+
+    /**
+     * Access level set by the admin on this resource, before inheritance. Use
+     * this to pre-fill the edit form.
+     */
+    public function levelSet(): string
+    {
+        return $this->resource->getLevelSet();
     }
 
     public function embargoStart(): ?DateTime
@@ -108,6 +129,16 @@ class AccessStatusRepresentation extends AbstractEntityRepresentation
     public function embargoEnd(): ?DateTime
     {
         return $this->resource->getEmbargoEnd();
+    }
+
+    public function embargoStartSet(): ?DateTime
+    {
+        return $this->resource->getEmbargoStartSet();
+    }
+
+    public function embargoEndSet(): ?DateTime
+    {
+        return $this->resource->getEmbargoEndSet();
     }
 
     /**

@@ -22,7 +22,6 @@ use Laminas\Mvc\Controller\AbstractController;
 use Laminas\Mvc\MvcEvent;
 use Laminas\ServiceManager\ServiceLocatorInterface;
 use Laminas\View\Renderer\PhpRenderer;
-use Omeka\Entity\Item;
 use Omeka\Entity\Resource;
 use Omeka\Module\AbstractModule;
 
@@ -961,19 +960,17 @@ class Module extends AbstractModule
             $processData['o-access:embargo_end'] = $embargoEnd;
         }
 
-        // TODO Manage three states: boolean => batch process; null or missing => no? Useless.
-        // When properties are not used, it is the only element of the fieldset.
-        $processData['access_propagate'] = !empty($rawData['access_propagate']);
-
         $settings = $services->get('Omeka\Settings');
         $accessViaProperty = (bool) $settings->get('access_property');
         if ($accessViaProperty) {
-            $needProcess = $processData['access_propagate'];
+            // In property mode, the batch access fieldset does nothing: the
+            // level and embargo are edited as property values, whose save
+            // triggers the recompute through the normal resource events.
+            $needProcess = false;
         } else {
             $needProcess = !empty($processData['o-access:level'])
                 || array_key_exists('o-access:embargo_start', $processData)
-                || array_key_exists('o-access:embargo_end', $processData)
-                || $processData['access_propagate'];
+                || array_key_exists('o-access:embargo_end', $processData);
         }
 
         if ($needProcess) {
@@ -1140,7 +1137,6 @@ class Module extends AbstractModule
             'o-access:embargo_start' => null,
             'o-access:embargo_end' => null,
             // Related to the form.
-            'access_propagate' => null,
             'embargo_start_date' => null,
             'embargo_start_time' => null,
             'embargo_end_date' => null,
@@ -1149,54 +1145,26 @@ class Module extends AbstractModule
             'is_batch_process' => null,
         ]);
 
-        // For item sets and items, the access is managed recursively when set.
-        // Of course for medias, there is no recursivity.
+        // Manage the resource own status, then recompute its subtree (done
+        // inside manageAccessStatusForResource).
         $this->manageAccessStatusForResource($resource, $accessData);
 
-        // Create the access statuses for new medias: there is no event during
-        // media creation via item.
-        // This is needed only when the option "access_propagate" is not set,
-        // because when set, it is already managed via manageAccessStatusForResource().
-        if ($resourceName === 'items' && empty($accessData['access_propagate'])) {
+        // Create the access statuses for new medias: there is no api event
+        // during media creation via item. Each new media gets a free own status
+        // and its effective level is recomputed from the item, so it inherits a
+        // stricter item/item set level automatically.
+        if ($resourceName === 'items') {
             $services = $this->getServiceLocator();
             $entityManager = $services->get('Omeka\EntityManager');
-            // $settings = $services->get('Omeka\Settings');
             $isUpdate = $event->getName() === 'api.update.post';
-            // $accessViaProperty = (bool) $settings->get('access_property');
             foreach ($resource->getMedia() as $media) {
-                // Don't modify media with an existing status during update.
-                // TODO Except when managed with property? Not sure. Not for now.
+                // Don't touch a media that already has a status during update.
                 // Use find, not getReference(), because getReference() may
                 // return a proxy, so the check is always true with it.
                 if ($isUpdate && $entityManager->find(AccessStatus::class, $media->getId())) {
                     continue;
                 }
                 $this->manageAccessStatusForResource($media, $accessData);
-            }
-        }
-
-        // Check unchanged status level of the medias when updating the status
-        // level of an item in order to display a warning.
-        // This is needed only when the option "access_propagate" is not set,
-        // because when set, the status is copied, so running as wanted by user.
-        if ($resourceName === 'items' && empty($accessData['access_propagate'])) {
-            $mediaIds = $this->listMediaAccessDifferentThanItem($resource);
-            if ($mediaIds) {
-                $settings = $services->get('Omeka\Settings');
-                $messenger = $services->get('ControllerPluginManager')->get('messenger');
-                $accessViaProperty = (bool) $settings->get('access_property');
-                if ($accessViaProperty) {
-                    $message = new PsrMessage(
-                        'The access level of the item #{item_id} differs from the access level of its medias #{media_ids}. You can set a specific level for each media via their access property, or apply the item level to all medias via the "Advanced" tab of the item.', // @translate
-                        ['item_id' => $resource->getId(), 'media_ids' => implode(', ', $mediaIds)],
-                    );
-                } else {
-                    $message = new PsrMessage(
-                        'The access level of the item #{item_id} differs from the access level of its medias #{media_ids}. You can set a specific level in the "Advanced" tab of each media, or apply the item level to all medias via the "Advanced" tab of the item.', // @translate
-                        ['item_id' => $resource->getId(), 'media_ids' => implode(', ', $mediaIds)],
-                    );
-                }
-                $messenger->addWarning($message);
             }
         }
     }
@@ -1236,8 +1204,6 @@ class Module extends AbstractModule
         // Request "isPartial" does not check "should hydrate" for properties,
         // so properties are always managed, but not access keys.
 
-        $accessPropagate = !empty($accessData['access_propagate']);
-
         $accessViaProperty = (bool) $settings->get('access_property');
         if ($accessViaProperty) {
             // Always update access resource, whatever property is new or not,
@@ -1249,19 +1215,18 @@ class Module extends AbstractModule
              */
             $adapter = $services->get('Omeka\ApiAdapterManager')->get($resource->getResourceName());
             $representation = $adapter->getRepresentation($resource);
+            // In property mode, the property value is the admin decision on
+            // THIS resource: it maps to the "set" columns. Inheritance is no
+            // longer read manually from the parent item here; the cascade
+            // materializes the effective level dynamically, so a media without
+            // its own property follows its item automatically and keeps
+            // following it when the item level changes.
             $levelProperty = $accessViaProperty ? $settings->get('access_property_level') : null;
             if ($levelProperty) {
                 $levelIsSet = true;
                 $accessLevels = array_intersect_key(array_replace(AccessStatusRepresentation::LEVELS, $settings->get('access_property_levels', [])), AccessStatusRepresentation::LEVELS);
                 $levelValue = $representation->value($levelProperty);
                 $levelVal = $levelValue ? array_search((string) $levelValue->value(), $accessLevels) : null;
-                // If media has no level property, inherit from parent item.
-                if (!$levelVal && $resourceName === 'media') {
-                    $itemAdapter = $services->get('Omeka\ApiAdapterManager')->get('items');
-                    $itemRepresentation = $itemAdapter->getRepresentation($resource->getItem());
-                    $itemLevelValue = $itemRepresentation->value($levelProperty);
-                    $levelVal = $itemLevelValue ? array_search((string) $itemLevelValue->value(), $accessLevels) : null;
-                }
                 $level = $levelVal ?: AccessStatus::FREE;
                 $levelType = $levelValue ? $levelValue->type() : null;
             }
@@ -1270,15 +1235,6 @@ class Module extends AbstractModule
                 $embargoStartIsSet = true;
                 $embargoStartValue = $representation->value($embargoStartProperty);
                 $embargoStartVal = $embargoStartValue ? (string) $embargoStartValue->value() : null;
-                // If media has no embargo start property, inherit from parent item.
-                if (!$embargoStartVal && $resourceName === 'media') {
-                    if (!isset($itemRepresentation)) {
-                        $itemAdapter = $services->get('Omeka\ApiAdapterManager')->get('items');
-                        $itemRepresentation = $itemAdapter->getRepresentation($resource->getItem());
-                    }
-                    $itemEmbargoStartValue = $itemRepresentation->value($embargoStartProperty);
-                    $embargoStartVal = $itemEmbargoStartValue ? (string) $itemEmbargoStartValue->value() : null;
-                }
                 $embargoStart = $embargoStartVal ?: null;
                 $embargoStartType = $embargoStartValue ? $embargoStartValue->type() : null;
             }
@@ -1287,15 +1243,6 @@ class Module extends AbstractModule
                 $embargoEndIsSet = true;
                 $embargoEndValue = $representation->value($embargoEndProperty);
                 $embargoEndVal = $embargoEndValue ? (string) $embargoEndValue->value() : null;
-                // If media has no embargo end property, inherit from parent item.
-                if (!$embargoEndVal && $resourceName === 'media') {
-                    if (!isset($itemRepresentation)) {
-                        $itemAdapter = $services->get('Omeka\ApiAdapterManager')->get('items');
-                        $itemRepresentation = $itemAdapter->getRepresentation($resource->getItem());
-                    }
-                    $itemEmbargoEndValue = $itemRepresentation->value($embargoEndProperty);
-                    $embargoEndVal = $itemEmbargoEndValue ? (string) $itemEmbargoEndValue->value() : null;
-                }
                 $embargoEnd = $embargoEndVal ?: null;
                 $embargoEndType = $embargoEndValue ? $embargoEndValue->type() : null;
             }
@@ -1392,67 +1339,6 @@ class Module extends AbstractModule
         } else {
             $cascade->recomputeMedia($resourceId);
         }
-    }
-
-    /**
-     * List media ids that have a different level and embargo values than item.
-     */
-    protected function listMediaAccessDifferentThanItem(Item $item): array
-    {
-        /**
-         * @var \Omeka\Entity\Item $item
-         * @var \Access\Entity\AccessStatus $accessStatus
-         */
-        $medias = $item->getMedia();
-        if (!$medias->count()) {
-            return [];
-        }
-
-        $differentMediaIds = [];
-        $services = $this->getServiceLocator();
-        $entityManager = $services->get('Omeka\EntityManager');
-
-        // Normally not possible.
-        $defaultAccess = $access = [
-            'level' => null,
-            'embargoStart' => null,
-            'embargoEnd' => null,
-        ];
-
-        // Use find, not getReference(), because getReference() may return a
-        // proxy, so the check is always true with it.
-        $accessStatus = $entityManager->find(AccessStatus::class, $item->getId());
-        if ($accessStatus) {
-            $access = [
-                'level' => $accessStatus->getLevel(),
-                'embargoStart' => $accessStatus->getEmbargoStart(),
-                'embargoEnd' => $accessStatus->getEmbargoEnd(),
-            ];
-        } else {
-            $access = $defaultAccess;
-        }
-
-        foreach ($medias as $media) {
-            $mediaAccessStatus = $entityManager->find(AccessStatus::class, $media->getId());
-            if ($mediaAccessStatus) {
-                $mediaAccess = [
-                    'level' => $mediaAccessStatus->getLevel(),
-                    'embargoStart' => $mediaAccessStatus->getEmbargoStart(),
-                    'embargoEnd' => $mediaAccessStatus->getEmbargoEnd()
-                ];
-            } else {
-                $mediaAccess = $defaultAccess;
-            }
-            // Comparaison with DateTime cannot use strict ===, but <=> is fine.
-            if ($mediaAccess['level'] !== $access['level']
-                || ($mediaAccess['embargoStart'] <=> $access['embargoStart'])
-                || ($mediaAccess['embargoEnd'] <=> $access['embargoEnd'])
-            ) {
-                $differentMediaIds[] = $media->getId();
-            }
-        }
-
-        return $differentMediaIds;
     }
 
     /**
@@ -1622,13 +1508,17 @@ class Module extends AbstractModule
             ->appendStylesheet($assetUrl('css/common-dialog-admin.css', 'Common'))
             ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
 
-        // Get current access if any.
+        // Get current access if any. The form edits the admin decision, so it
+        // is pre-filled from the "set" columns, not from the effective ones: an
+        // item that is reserved only because its item set is reserved shows its
+        // own level (free), not the inherited one, so saving it does not freeze
+        // an inherited level into an explicit decision.
         $resource = $view->vars()->offsetGet('resource');
         $accessStatus = $accessStatusForResource($resource);
         if ($accessStatus) {
-            $level = $accessStatus->getLevel();
-            $embargoStart = $accessStatus->getEmbargoStart();
-            $embargoEnd = $accessStatus->getEmbargoEnd();
+            $level = $accessStatus->getLevelSet();
+            $embargoStart = $accessStatus->getEmbargoStartSet();
+            $embargoEnd = $accessStatus->getEmbargoEndSet();
         } else {
             $level = null;
             $embargoStart = null;
@@ -1711,44 +1601,15 @@ class Module extends AbstractModule
                 ->setLabel(sprintf('Embargo end (managed via property %s)', $embargoEndProperty)); // @translate
         }
 
-        $resourceName = $resource ? $resource->resourceName() : $this->resourceNameFromRoute();
-        if (($resourceName === 'item_sets' && $resource && $resource->itemCount())
-            || $resourceName === 'items'
-            // Media may not be stored yet during creation.
-        ) {
-            $recursiveElement = new \Common\Form\Element\OptionalRadio('access[access_propagate]');
-            $recursiveElement
-                ->setLabel($resourceName === 'item_sets'
-                    ? 'Copy access level and embargo to items and medias' // @translate
-                    : 'Copy access level and embargo to medias' // @translate
-                )
-                ->setValueOptions($resourceName === 'item_sets'
-                    ? [
-                        '0' => 'No', // @translate
-                        '1' => 'Yes', // @translate
-                    ]
-                    : [
-                        '0' => 'New medias only', // @translate
-                        '1' => 'All medias', // @translate
-                    ]
-                )
-                ->setAttributes([
-                    'id' => 'o-access-recursive',
-                    // The status is recursive only when creating items to
-                    // avoid to override individual statuses of related
-                    // resources.
-                    'value' => (string) (int) ($resourceName === 'items'
-                        && $event->getName() === 'view.add.form.advanced'),
-                ]);
-        }
+        // No "copy to items/medias" control anymore: the level set on an item
+        // set or an item cascades automatically to the effective level of its
+        // children, so there is nothing to copy. A media keeps its own level
+        // and still inherits a stricter ancestor level dynamically.
 
         if ($showInAdvancedTab) {
             echo $view->formRow($levelElement);
             echo preg_replace('~<div class="inputs">(\s*.*\s*)</div>~mU', '<div class="inputs">$1' . $view->formTime($embargoStartElementTime) . '</div>', $view->formRow($embargoStartElementDate));
             echo preg_replace('~<div class="inputs">(\s*.*\s*)</div>~mU', '<div class="inputs">$1' . $view->formTime($embargoEndElementTime) . '</div>', $view->formRow($embargoEndElementDate));
-        }
-        if (isset($recursiveElement)) {
-            echo $view->formRow($recursiveElement);
         }
     }
 

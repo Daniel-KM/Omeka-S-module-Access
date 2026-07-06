@@ -59,6 +59,77 @@ class AccessCascade
     }
 
     /**
+     * Resync the "set" columns from the property values, for the whole base.
+     *
+     * Only used in property-storage mode, before recomputeAll(), so a bulk edit
+     * of the property values that bypassed the resource save events is
+     * reflected into the set columns and then into the effective ones.
+     *
+     * @param int $levelPropertyId Property id holding the access level value.
+     * @param array $valueToLevel Map of the property text value to the
+     *   canonical level (free/reserved/protected/forbidden).
+     * @param int|null $embargoStartPropertyId Property id of the embargo start.
+     * @param int|null $embargoEndPropertyId Property id of the embargo end.
+     */
+    public function resyncSetFromProperties(
+        int $levelPropertyId,
+        array $valueToLevel,
+        ?int $embargoStartPropertyId,
+        ?int $embargoEndPropertyId
+    ): void {
+        // Reset the set columns, then fill them from the property values.
+        $this->connection->executeStatement(
+            'UPDATE `access_status` SET `level_set` = \'free\', `embargo_start_set` = NULL, `embargo_end_set` = NULL'
+        );
+
+        // Level: one CASE mapping every configured value to its level.
+        $cases = '';
+        $params = ['prop' => $levelPropertyId];
+        $i = 0;
+        foreach ($valueToLevel as $value => $level) {
+            if (!in_array($level, ['free', 'reserved', 'protected', 'forbidden'], true)) {
+                continue;
+            }
+            $cases .= " WHEN :val$i THEN :lvl$i";
+            $params["val$i"] = (string) $value;
+            $params["lvl$i"] = $level;
+            ++$i;
+        }
+        if ($cases !== '') {
+            $this->connection->executeStatement(
+                <<<SQL
+                UPDATE `access_status`
+                JOIN `value` ON `value`.`resource_id` = `access_status`.`id`
+                    AND `value`.`property_id` = :prop
+                SET `access_status`.`level_set` = CASE `value`.`value`$cases ELSE 'free' END
+                SQL,
+                $params
+            );
+        }
+
+        // Embargo start/end: copy the property value as a datetime (the stored
+        // value uses an ISO string, possibly with a "T" separator).
+        foreach ([
+            'embargo_start_set' => $embargoStartPropertyId,
+            'embargo_end_set' => $embargoEndPropertyId,
+        ] as $column => $propertyId) {
+            if (!$propertyId) {
+                continue;
+            }
+            $this->connection->executeStatement(
+                <<<SQL
+                UPDATE `access_status`
+                JOIN `value` ON `value`.`resource_id` = `access_status`.`id`
+                    AND `value`.`property_id` = :prop
+                SET `access_status`.`$column` = REPLACE(`value`.`value`, 'T', ' ')
+                WHERE `value`.`value` IS NOT NULL AND `value`.`value` <> ''
+                SQL,
+                ['prop' => $propertyId]
+            );
+        }
+    }
+
+    /**
      * Recompute an item set, its items and their media.
      */
     public function recomputeItemSet(int $itemSetId): void
