@@ -3,6 +3,11 @@
 namespace Access;
 
 return [
+    'service_manager' => [
+        'factories' => [
+            Stdlib\AccessCascade::class => Service\Stdlib\AccessCascadeFactory::class,
+        ],
+    ],
     'api_adapters' => [
         'invokables' => [
             'access_requests' => Api\Adapter\AccessRequestAdapter::class,
