@@ -2,10 +2,14 @@
 
 namespace Access;
 
-if (!class_exists('Common\TraitModule', false)) {
-    require_once file_exists(dirname(__DIR__) . '/Common/src/TraitModule.php')
-        ? dirname(__DIR__) . '/Common/src/TraitModule.php'
-        : dirname(__DIR__) . '/Common/TraitModule.php';
+if (!trait_exists(\Common\TraitModule::class, false)) {
+    if (file_exists(OMEKA_PATH . '/modules/Common/src/TraitModule.php')) {
+        require_once OMEKA_PATH . '/modules/Common/src/TraitModule.php';
+    } elseif (file_exists(OMEKA_PATH . '/composer-addons/modules/Common/src/TraitModule.php')) {
+        require_once OMEKA_PATH . '/composer-addons/modules/Common/src/TraitModule.php';
+    } elseif (file_exists(dirname(__DIR__) . '/Common/src/TraitModule.php')) {
+        require_once dirname(__DIR__) . '/Common/src/TraitModule.php';
+    }
 }
 
 use Access\Api\Representation\AccessStatusRepresentation;
@@ -44,10 +48,10 @@ class Module extends AbstractModule
 
         $errors = [];
 
-        if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.86')) {
+        if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.87')) {
             $message = new \Omeka\Stdlib\Message(
                 $translator->translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
-                'Common', '3.4.86'
+                'Common', '3.4.87'
             );
             $errors[] = (string) $message;
         }
