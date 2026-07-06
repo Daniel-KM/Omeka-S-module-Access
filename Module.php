@@ -1012,11 +1012,10 @@ class Module extends AbstractModule
         $level = array_key_exists('o-access:level', $data) ? $data['o-access:level'] : false;
         $embargoStart = array_key_exists('o-access:embargo_start', $data) ? $data['o-access:embargo_start'] : false;
         $embargoEnd = array_key_exists('o-access:embargo_end', $data) ? $data['o-access:embargo_end'] : false;
-        $accessPropagate = !empty($data['access_propagate']);
 
         // Check if a process is needed (normally already done).
         $processCurrentResource = $level !== false || $embargoStart !== false || $embargoEnd !== false;
-        if (!$processCurrentResource && !$accessPropagate) {
+        if (!$processCurrentResource) {
             return;
         }
 
@@ -1048,6 +1047,8 @@ class Module extends AbstractModule
                 $existingIds[] = $accessStatus->getIdResource();
             }
             if ($processCurrentResource) {
+                // The batch edit writes the admin decision to the "set"
+                // columns; the effective columns are recomputed below.
                 $qb = $entityManager->createQueryBuilder();
                 $expr = $qb->expr();
                 $qb
@@ -1055,17 +1056,17 @@ class Module extends AbstractModule
                     ->where($expr->in('access_status.id', $existingIds));
                 if ($level !== false) {
                     $qb
-                        ->set('access_status.level', ':level')
+                        ->set('access_status.levelSet', ':level')
                         ->setParameter('level', $level, \Doctrine\DBAL\ParameterType::STRING);
                 }
                 if ($embargoStart !== false) {
                     $qb
-                        ->set('access_status.embargoStart', ':embargo_start')
+                        ->set('access_status.embargoStartSet', ':embargo_start')
                         ->setParameter('embargo_start', $embargoStart, $embargoStart ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL);
                 }
                 if ($embargoEnd !== false) {
                     $qb
-                        ->set('access_status.embargoEnd', ':embargo_end')
+                        ->set('access_status.embargoEndSet', ':embargo_end')
                         ->setParameter('embargo_end', $embargoEnd, $embargoEnd ? \Doctrine\DBAL\ParameterType::STRING : \Doctrine\DBAL\ParameterType::NULL);
                 }
                 $qb->getQuery()->execute();
@@ -1083,44 +1084,30 @@ class Module extends AbstractModule
                 $accessStatus = new AccessStatus();
                 $accessStatus
                     ->setId($resource)
+                    ->setLevelSet($level ?: AccessStatus::FREE)
                     ->setLevel($level ?: AccessStatus::FREE)
-                    ->setEmbargoStart($embargoStart ?: null)
-                    ->setEmbargoEnd($embargoEnd ?: null);
+                    ->setEmbargoStartSet($embargoStart ?: null)
+                    ->setEmbargoEndSet($embargoEnd ?: null);
                 $entityManager->persist($accessStatus);
             }
             // In post, the flush is possible and required anyway.
             $entityManager->flush();
         }
 
-        if ($accessPropagate) {
-            $settings = $services->get('Omeka\Settings');
-            $accessViaProperty = (bool) $settings->get('access_property');
-            if ($accessViaProperty) {
-                $accessStatusValues = [
-                    'o-access:level' => ['value' => $level, 'type' => null],
-                    'o-access:embargo_start' => ['value' => $embargoStart && substr($embargoStart, -8) === '00:00:00' ? substr($embargoStart, 0, 10) : $embargoStart, 'type' => null],
-                    'o-access:embargo_end' => ['value' => $embargoEnd && substr($embargoEnd, -8) === '23:59:59' ? substr($embargoEnd, 0, 10) : $embargoEnd, 'type' => null],
-                ];
+        // Recompute the effective columns of every edited resource and its
+        // subtree, so the cascade is applied immediately. Non destructive
+        // (the "set" columns are never touched by the recompute).
+        /** @var \Access\Stdlib\AccessCascade $cascade */
+        $cascade = $services->get(\Access\Stdlib\AccessCascade::class);
+        foreach ($resources as $resource) {
+            $resourceName = $resource->getResourceName();
+            if ($resourceName === 'item_sets') {
+                $cascade->recomputeItemSet($resource->getId());
+            } elseif ($resourceName === 'items') {
+                $cascade->recomputeItem($resource->getId());
             } else {
-                $accessStatusValues = [];
+                $cascade->recomputeMedia($resource->getId());
             }
-            // A job is required, because there may be many items in an item set and
-            // many media in an item.
-
-            // Nevertheless, the job is just a quick sql for now, and this is a
-            // post event, so use a synchronous job.
-            // TODO Here, this is already a job, so don't prepare a new job, but run it directly. How to get the running job id?
-
-            $args = [
-                'resource_ids' => $ids,
-                'values' => $accessStatusValues,
-                // Explicit propagation requested in batch edit: medias status
-                // is overwritten whatever the setting for access_propagation_mode.
-                'propagation_mode' => 'overwrite',
-                'propagation_embargo' => (bool) $settings->get('access_propagation_embargo', false),
-            ];
-            $services->get(\Omeka\Job\Dispatcher::class)
-                 ->dispatch(\Access\Job\AccessStatusPropagate::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
         }
     }
 
@@ -1232,9 +1219,12 @@ class Module extends AbstractModule
         $accessStatus = $resourceId ? $entityManager->find(AccessStatus::class, $resourceId) : null;
         if (!$accessStatus) {
             $accessStatus = new AccessStatus();
-            // A level is required.
+            // Both the set (admin decision) and the effective (materialized
+            // cascade) levels are required. They start free; the effective one
+            // is recomputed below from the hierarchy.
             $accessStatus
                 ->setId($resource)
+                ->setLevelSet(AccessStatus::FREE)
                 ->setLevel(AccessStatus::FREE);
             // The persist may be needed early when adding a media to an item
             // via a backgrund process (see BulkImport).
@@ -1347,14 +1337,16 @@ class Module extends AbstractModule
         // Keep the database consistent instead of filling a bad value.
         // Update access level and embargo only when the keys are set.
 
+        // The admin decision is written to the "set" columns. The effective
+        // columns (level, embargo) are recomputed from the hierarchy below.
+
         if (!empty($levelIsSet)) {
             // Default level is free.
-            // TODO Create access level "unknown" or "undefined"? Probably better, but complexify later.
             if (!in_array($level, AccessStatusRepresentation::LEVELS)) {
                 $level = AccessStatus::FREE;
             }
             // FIXME An issue occurred when storing text content in a property of pdf media in module ExtractOcr not in front-end job: the media does not exist yet, so cannot be updated.
-            $accessStatus->setLevel($level);
+            $accessStatus->setLevelSet($level);
         }
 
         if (!empty($embargoStartIsSet)) {
@@ -1363,7 +1355,7 @@ class Module extends AbstractModule
             } catch (\Throwable $e) {
                 $embargoStart = null;
             }
-            $accessStatus->setEmbargoStart($embargoStart);
+            $accessStatus->setEmbargoStartSet($embargoStart);
         }
 
         if (!empty($embargoEndIsSet)) {
@@ -1372,7 +1364,7 @@ class Module extends AbstractModule
             } catch (\Throwable $e) {
                 $embargoEnd = null;
             }
-            $accessStatus->setEmbargoEnd($embargoEnd);
+            $accessStatus->setEmbargoEndSet($embargoEnd);
         }
 
         $entityManager->persist($accessStatus);
@@ -1386,21 +1378,19 @@ class Module extends AbstractModule
         }
         $entityManager->getUnitOfWork()->commit($accessStatus);
 
-        if ($accessPropagate && in_array($resourceName, ['item_sets', 'items'])) {
-            // A job is required, because there may be many items in an item set
-            // and many media in an item.
-            // Nevertheless, the job is just a quick sql for now, and this is a
-            // post event, so use a synchronous job.
-            $args = [
-                'resource_id' => $resourceId,
-                'values' => $accessStatusValues,
-                // Explicit propagation requested in batch edit: medias status
-                // is overwritten whatever the setting for access_propagation_mode.
-                'propagation_mode' => 'overwrite',
-                'propagation_embargo' => (bool) $settings->get('access_propagation_embargo', false),
-            ];
-            $services->get(\Omeka\Job\Dispatcher::class)
-                ->dispatch(\Access\Job\AccessStatusPropagate::class, $args, $services->get('Omeka\Job\DispatchStrategy\Synchronous'));
+        // Recompute the effective columns of this resource and everything it
+        // contains, so the inheritance item set > item > media is applied
+        // immediately. This replaces the former "apply recursive" propagation:
+        // the cascade is now automatic and non destructive (it never touches
+        // the "set" columns). The recompute is a quick set-based SQL.
+        /** @var \Access\Stdlib\AccessCascade $cascade */
+        $cascade = $services->get(\Access\Stdlib\AccessCascade::class);
+        if ($resourceName === 'item_sets') {
+            $cascade->recomputeItemSet($resourceId);
+        } elseif ($resourceName === 'items') {
+            $cascade->recomputeItem($resourceId);
+        } else {
+            $cascade->recomputeMedia($resourceId);
         }
     }
 
