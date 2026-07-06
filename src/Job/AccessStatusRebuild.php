@@ -31,6 +31,17 @@ class AccessStatusRebuild extends AbstractJob
         /** @var \Access\Stdlib\AccessCascade $cascade */
         $cascade = $services->get(AccessCascade::class);
         $settings = $services->get('Omeka\Settings');
+        $connection = $services->get('Omeka\Connection');
+
+        // Snapshot the current effective level, to report afterwards how many
+        // resources become more or less restrictive. On the 3.4.45 upgrade,
+        // this reveals for instance the free files inside a reserved item set
+        // that now inherit its level.
+        $connection->executeStatement('DROP TEMPORARY TABLE IF EXISTS `access_level_before`');
+        $connection->executeStatement(
+            'CREATE TEMPORARY TABLE `access_level_before` (INDEX `idx_id` (`id`))'
+            . ' AS SELECT `id`, `level` FROM `access_status`'
+        );
 
         $logger->info(
             'Rebuilding the effective access levels of all resources.' // @translate
@@ -75,6 +86,39 @@ class AccessStatusRebuild extends AbstractJob
         }
 
         $cascade->recomputeAll();
+
+        // Report how the effective access levels moved. A file that becomes
+        // more restrictive is no longer downloadable by visitors who could
+        // reach it before (e.g. a free file inside a reserved item set); the
+        // reset task can switch the base to a by-document logic if needed.
+        $rankBefore = "FIELD(`b`.`level`, 'free', 'reserved', 'protected', 'forbidden')";
+        $rankAfter = "FIELD(`access_status`.`level`, 'free', 'reserved', 'protected', 'forbidden')";
+        $counts = $connection->executeQuery(
+            <<<SQL
+            SELECT
+                SUM($rankAfter > $rankBefore) AS more_restrictive,
+                SUM($rankAfter < $rankBefore) AS less_restrictive
+            FROM `access_status`
+            JOIN `access_level_before` `b` ON `b`.`id` = `access_status`.`id`
+            SQL
+        )->fetchAssociative();
+        $connection->executeStatement('DROP TEMPORARY TABLE IF EXISTS `access_level_before`');
+
+        $moreRestrictive = (int) ($counts['more_restrictive'] ?? 0);
+        $lessRestrictive = (int) ($counts['less_restrictive'] ?? 0);
+
+        if ($moreRestrictive) {
+            $logger->warn(
+                '{count} resources now have a more restrictive effective access level (e.g. free files inside a reserved item set that now inherit its level). Their files are no longer downloadable by visitors who could reach them before. Use the "reset item sets" task to switch to a by-document logic if this is not wanted.', // @translate
+                ['count' => $moreRestrictive]
+            );
+        }
+        if ($lessRestrictive) {
+            $logger->notice(
+                '{count} resources now have a less restrictive effective access level.', // @translate
+                ['count' => $lessRestrictive]
+            );
+        }
 
         $logger->info(
             'End of rebuild of the effective access levels.' // @translate

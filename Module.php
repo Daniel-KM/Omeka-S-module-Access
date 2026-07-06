@@ -782,63 +782,29 @@ class Module extends AbstractModule
 
         $accessViaProperty = (bool) $settings->get('access_property');
 
-        // The reindex fieldset is always available in the config form, even
-        // when "access via property" is disabled, so process its submission
-        // before the property-mode-specific checks below.
+        // The Tasks tab offers a single action: rebuild the access index. The
+        // effective columns are otherwise materialized automatically on every
+        // save, so this is only needed to repair the index after a bulk import,
+        // a direct database edit, a bulk property edit, or a change of the
+        // "Cascade embargo dates" option.
         $post = $controller->getRequest()->getPost();
-        if (!empty($post['access_reindex']['process_index'])) {
-            // Both propagation options live in the Propagation subsection of
-            // the Settings tab, read from there so the reindex job, the
-            // synchronous propagation on resource save, and any batch update
-            // share the same policy.
-            $propagationMode = $settings->get('access_propagation_mode', 'skip_if_set');
-            if (!in_array($propagationMode, ['skip_if_set', 'max_restrictive', 'overwrite'], true)) {
-                $propagationMode = 'skip_if_set';
-            }
-            $propagationEmbargo = (bool) $settings->get('access_propagation_embargo', false);
-
-            if (!empty($post['access_reindex']['auto'])) {
-                $vars = [
-                    'recursive' => ['from_item_sets_to_items_and_media', 'from_items_to_media'],
-                    'sync' => $accessViaProperty ? 'from_properties_to_accesses' : 'skip',
-                    'missing' => 'visibility_reserved',
-                    'propagation_mode' => $propagationMode,
-                    'propagation_embargo' => $propagationEmbargo,
-                ];
-                $this->processUpdateStatus($vars);
-            } else {
-                $vars = [
-                    'recursive' => $post['access_reindex']['recursive'] ?? [],
-                    'sync' => $post['access_reindex']['sync'] ?? 'skip',
-                    'missing' => $post['access_reindex']['missing'] ?? 'skip',
-                    'propagation_mode' => $propagationMode,
-                    'propagation_embargo' => $propagationEmbargo,
-                ];
-                if ($vars['recursive'] === [] && $vars['sync'] === 'skip' && $vars['missing'] === 'skip') {
-                    $message = new \Omeka\Stdlib\Message(
-                        $translator->translate('Job is not launched: no option was set.'), // @translate
-                    );
-                    $messenger->addWarning($message);
-                } else {
-                    // Warn when the combination is effectively a no-op so the
-                    // admin does not interpret an empty log as a bug.
-                    // skip_if_set on recursive only creates rows for the
-                    // marginal case of resources without any access_status row
-                    // (rare since the api.create.post listener fills them). If
-                    // sync/missing are also "skip", there is nothing else to
-                    // do.
-                    if ($vars['recursive']
-                        && $vars['sync'] === 'skip'
-                        && $vars['missing'] === 'skip'
-                        && $propagationMode === 'skip_if_set'
-                    ) {
-                        $messenger->addWarning(new PsrMessage(
-                            'The job will run but is likely a no-op: propagation mode "skip if set" only fills children that have no access_status row, and every resource gets one automatically when it is created. Choose another propagation mode, enable the sync or fill-missing options, or skip the job altogether.' // @translate
-                        ));
-                    }
-                    $this->processUpdateStatus($vars);
-                }
-            }
+        if (!empty($post['access_reindex']['process_rebuild'])) {
+            $job = $services->get(\Omeka\Job\Dispatcher::class)
+                ->dispatch(\Access\Job\AccessStatusRebuild::class);
+            $urlHelper = $services->get('ViewHelperManager')->get('url');
+            $message = new PsrMessage(
+                'Rebuilding the access index in a background job ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+                [
+                    'link_job' => sprintf('<a href="%s">', htmlspecialchars($urlHelper('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
+                    'job_id' => $job->getId(),
+                    'link_end' => '</a>',
+                    'link_log' => class_exists('Log\Module', false)
+                        ? sprintf('<a href="%1$s">', htmlspecialchars($urlHelper('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
+                        : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($urlHelper('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
+                ]
+            );
+            $message->setEscapeHtml(false);
+            $messenger->addSuccess($message);
         }
 
         if (!$accessViaProperty) {
@@ -1994,10 +1960,8 @@ class Module extends AbstractModule
     {
         $process = $event->getParam('process');
         if ($process === 'access_reindex') {
-            $params = $event->getParam('params');
-            $event->setParam('job', \Access\Job\AccessStatusUpdate::class);
-            $args = $params['module_tasks']['access_reindex_settings'] ?? [];
-            $event->setParam('args', $args);
+            $event->setParam('job', \Access\Job\AccessStatusRebuild::class);
+            $event->setParam('args', []);
         }
     }
 
@@ -2407,32 +2371,6 @@ class Module extends AbstractModule
         $session->offsetSet('access', $access);
     }
     */
-
-    protected function processUpdateStatus(array $args, bool $useForeground = false): void
-    {
-        $services = $this->getServiceLocator();
-        $messenger = $services->get('ControllerPluginManager')->get('messenger');
-        $urlHelper = $services->get('ViewHelperManager')->get('url');
-
-        /** @var \Omeka\Job\Dispatcher $dispatcher */
-        $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
-        $job = $useForeground
-            ? $dispatcher->dispatch(\Access\Job\AccessStatusUpdate::class, $args, $services->get(\Omeka\Job\DispatchStrategy\Synchronous::class))
-            : $dispatcher->dispatch(\Access\Job\AccessStatusUpdate::class, $args);
-        $message = new PsrMessage(
-            'A job was launched in background to update access statuses according to parameters: ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
-            [
-                'link_job' => sprintf('<a href="%s">', htmlspecialchars($urlHelper('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
-                'job_id' => $job->getId(),
-                'link_end' => '</a>',
-                'link_log' => class_exists('Log\Module', false)
-                    ? sprintf('<a href="%1$s">', htmlspecialchars($urlHelper('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
-                    : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($urlHelper('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
-            ]
-        );
-        $message->setEscapeHtml(false);
-        $messenger->addSuccess($message);
-    }
 
     /**
      * Check ips and item sets and prepare the quick hidden setting.

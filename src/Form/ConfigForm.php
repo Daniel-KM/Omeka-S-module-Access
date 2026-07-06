@@ -60,7 +60,7 @@ class ConfigForm extends Form
                         . '<td>' . 'Sole recourse (theme-side "contact the author" feature)' /* @translate */ . '</td></tr>'
                         . '</tbody></table>'
                         . '<p><strong>' . 'Notice visibility' /* @translate */ . '</strong>: ' . 'follows Omeka core is_public only; the access level never hides a notice.' /* @translate */ . '</p>'
-                        . '<p><strong>' . 'Cascade' /* @translate */ . '</strong>: ' . 'applied at the moment of the propagation job (item set → items → media). At runtime, the file gating reads the media row (fallback to parent item).' /* @translate */ . '</p>'
+                        . '<p><strong>' . 'Cascade' /* @translate */ . '</strong>: ' . 'a level set on an item set or an item cascades automatically to the effective level of its items and medias (item set → items → media, strictest wins). File gating reads the effective level, materialized on every save.' /* @translate */ . '</p>'
                         . '</details>',
                     'disable_html_escape' => true,
                 ],
@@ -471,33 +471,15 @@ class ConfigForm extends Form
                 ],
             ])
             ->add([
-                'name' => 'access_propagation_mode',
-                'type' => CommonElement\OptionalRadio::class,
-                'options' => [
-                    'element_group' => 'propagation',
-                    'label' => 'Propagation mode', // @translate
-                    'label_attributes' => ['style' => 'display: inline-block'],
-                    'info' => 'Choose how the recursive copy combines an existing child level with the new parent level for the reindex job in the Tasks tab. If items in scope have heterogeneous media levels (e.g. a free preview alongside a forbidden high-res file), use "skip if set" or do not run the recursive option at all. Note: a resource save with the "Apply recursive" option always forces "overwrite". That path is an explicit admin request treated as an intentional bulk propagation.', // @translate
-                    'value_options' => [
-                        'skip_if_set' => 'Skip if set (safest, recommended for items with media with different statuses)', // @translate
-                        'max_restrictive' => 'Max restrictive (keep the strictest level between parent and child)', // @translate
-                        'overwrite' => 'Overwrite (always copy the parent level, to be used when managed by item set)', // @translate
-                    ],
-                ],
-                'attributes' => [
-                    'id' => 'access_propagation_mode',
-                ],
-            ])
-            ->add([
-                'name' => 'access_propagation_embargo',
+                'name' => 'access_embargo_cascade',
                 'type' => CommonElement\OptionalCheckbox::class,
                 'options' => [
                     'element_group' => 'propagation',
-                    'label' => 'Propagate embargo dates with the access level', // @translate
-                    'info' => 'Default off: embargo is per-resource. Check this box to make every propagation copy parent embargo start and end on resource save and reindex job.', // @translate
+                    'label' => 'Cascade embargo dates', // @translate
+                    'info' => 'Off by default: an embargo is per-resource and only gates the resource it is set on. Check this box to make an embargo set on an item set or an item apply to its items and medias too (widest window: earliest start, latest end), the same way the access level cascades. The embargo is always checked independently from the level. After changing this option, run the "Rebuild access index" task so the effective embargo is recomputed.', // @translate
                 ],
                 'attributes' => [
-                    'id' => 'access_propagation_embargo',
+                    'id' => 'access_embargo_cascade',
                 ],
             ])
         ;
