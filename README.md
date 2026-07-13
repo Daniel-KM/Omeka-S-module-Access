@@ -259,18 +259,12 @@ RewriteRule "^files/(original|large)/(.*)$" "http://%{HTTP_HOST}/digital-library
 
 #### Compatibility with module Analytics (ex-part of module Statistics)
 
-The module is compatible with the module [Analytics] for download tracking.
-When Access is active with its own `.htaccess` rule, only the Access rule
-(`/access/files/`) is needed: the module calls Analytics directly when serving
-files, so a separate `/download/` rule is not necessary.
-
-**Important**: do not keep a `/download/` rule alongside the `/access/` rule.
-The `/download/` route does not check access rights, so a private file would
-become public.
-
-When the module Access is uninstalled, it automatically converts its `.htaccess`
-rule into an Analytics download rule if the module is active, so download
-tracking continues seamlessly (see [above](#uninstall-and-module-analytics)).
+When Access serves files it calls [Analytics] directly, so its own `/access/`
+rule is enough and no separate `/download/` rule is needed. **Do not keep a
+`/download/` rule alongside the `/access/` rule**: the `/download/` route does
+not check access rights, so a private file would become public. On uninstall,
+the Access rule is converted back to an Analytics download rule (see
+[above](#uninstall-and-module-analytics)).
 
 #### Nginx
 
@@ -289,90 +283,38 @@ So in this module, three independent conditions must be satisfied for a visitor
 to download a file:
 
 - the item and the media must be public (Omeka core check);
-- the access level on the media (after cascade) must allow access for this
-  visitor;
-- the embargo dates, if any, must not block access.
+- the access level of the media must allow access for this visitor (see the
+  table below and [Inheritance](#inheritance));
+- the embargo, if any, must not block access (see [Embargo](#embargo)).
 
-A level set on an item set cascades automatically to its items and medias.
-A level set on an item cascades automatically to its medias.
+The access levels and their effect, as summarized in the configuration form:
 
-The access and the embargo are stored in the database, even if they are set via
-a property value. The computed effective rights are stored too for quicker
-access: it is the result of the cascade item set > item > media. This level is
-the strictest along the chain, on the order `free < reserved < protected < forbidden`,
-taking the maximum over the own level of the resource, its parent item and all
-its item sets:
+| Level       | Public item | Media file                                                                                                                            | Admin access request | Author contact |
+|-------------|-------------|---------------------------------------------------------------------------------------------------------------------------------------|----------------------|----------------|
+| `free`      | Visible     | Downloadable by anyone                                                                                                                | Useless              | Useless        |
+| `reserved`  | Visible     | Blocked for anonymous; unlocked by any active bypass (IP, SSO IDP, guest, CAS, LDAP, external, email regex) or by an approved request | Yes                  | Possible       |
+| `protected` | Visible     | Blocked for everyone; unlocked only by an approved request. No automatic bypass applies.                                              | Yes (mandatory)      | Possible       |
+| `forbidden` | Visible     | Blocked for everyone; no path through the admin access request flow                                                                   | No                   | Sole recourse  |
 
-- set a level on an item set: all its items and media inherit it (they can still
-  be set stricter individually, never looser);
-- set a level per media or per item: the collection is left neutral (`free`) and
-  does not interfere;
-- an item in several item sets with contradictory levels takes the strictest
-  of them (a cataloguing error can only make a resource more restricted, never
-  more open).
-
-There is no more "propagation mode" and no more "apply recursive" option: the
-cascade is permanent and non destructive. The value set by the admin is never
-overwritten and only the effective column is recomputed. A media is thus always
-at least as restricted as its item and item sets, but a `free` media in a
-`reserved` collection cannot be made public: the cascade is one-way (an ancestor
-can only tighten a descendant). To keep a document public, leave its collections
-neutral.
-
-A Rebuild access index task recomputes the effective columns for the whole base.
-It is normally not needed (the recompute is automatic on each save) but repairs
-the index after a bulk import, a direct database edit, a bulk edit of the access
-property values (in property-storage mode), or a change of the option for the
-"Cascade embargo dates".
-
-<details>
-<summary><strong>Access levels: semantic summary</strong></summary>
-
-| Level       | Record  | File                                                                                                  | Admin access request | Contact author       |
-|-------------|---------|-------------------------------------------------------------------------------------------------------|----------------------|----------------------|
-| `free`      | Visible | Downloadable by anyone                                                                                | Useless              | Useless              |
-| `reserved`  | Visible | Blocked for anonymous; unlocked by any active bypass mode or by an approved individual access request | Yes                  | Possible             |
-| `protected` | Visible | Blocked for everyone; unlocked only by an approved individual access request (no automatic bypass)    | Yes (mandatory)      | Possible             |
-| `forbidden` | Visible | Blocked for everyone; no path through the admin access request flow                                   | No                   | Only way to get file |
-
-`reserved` vs `protected` is the difference between *silently granted to known contexts*
-(a reader on the right IP, a logged-in SSO user, a member of the guest role) and
-*always individually validated* (the admin must approve every single download).
-
-`forbidden` does not deny existence (the record is still publicly visible). It
-only removes the standard request flow. If you also want the record to be
-hidden, set the resource itself to private (`is_public = 0`).
-
-</details>
+- Notice visibility: the access level and embargo apply only on files and never
+  hide the notice of a resource, which follows Omeka core visibility.
+- Independence: visibility (public/private), access level and embargo are
+  evaluated separately. Even marked free, a private item or media is never
+  accessible on the public side.
+- Cascade: a level set on an item set applies to its items and media; a level
+  set on an item applies to its media. When several apply, the strictest wins.
 
 The right to view a `reserved` file can be granted through several channels:
 the guest role, an external identity provider (module [CAS], [LDAP] or [Single Sign-On]),
 by IP (v4 or v6), by email, or by token. For `protected` files, only the
 individual access request flow (user/email/token modes) is honoured.
 
-The cascade is applied automatically and retroactively: adding an item to an
-item set, or a media to an item, immediately recomputes the effective level of
-the new resource from the hierarchy. No manual step is needed.
-
-When an embargo is set, it can be bypassed (or not) per user via the `access_embargo_bypass`
-setting. Currently only files can be under embargo. The embargo is checked
-**independently** from the level: a file may be free but under embargo, or
-reserved without embargo. By default an embargo is **per-resource** and only
-gates the resource it is set on. The `access_embargo_cascade` setting (off by
-default) makes an embargo set on an item set or an item cascade to its items
-and media too (widest window: earliest start, latest end), the same way the
-level does; run the Rebuild access index task after changing it. The
-`access_embargo_ended_level` and `access_embargo_ended_date` settings control
-what the level becomes when an embargo expires: `keep` leaves the document at
-its level (e.g. still university-only), while `free` / `under` drop it so a
-facet can show "restricted" during the embargo and "free" afterwards.
-
 For a "forbidden" resource, the standard admin access request flow is not
 offered. The recommended recourse is the view helper `accessContactAuthor($resource)`:
-when the **ContactUs** module is installed, the helper delegates to its
-`contactUs` helper with `contact='author'`, which resolves the author email from
-a configured property (e.g. `dcterms:creator`) and renders a styled contact form
-with consent, hashcash, etc. Without ContactUs, the helper falls back to a short
+when [Contact Us] module is installed, the helper delegates to its `contactUs`
+helper with `contact='author'`, which resolves the author email from a
+configured property (`dcterms:creator`) and renders a styled contact form with
+consent, hashcash, etc. Without ContactUs, the helper falls back to a short
 message inviting the visitor to reach the site administrator (who can then
 forward the request to the author).
 
@@ -390,11 +332,11 @@ can be managed in multiple ways:
   - `auth_external`: all users authenticated via an external identity provider
     (currently via module CAS and SingleSignOn, later for Ldap) have access
     to media contents.
-  - `auth_cas`: all users authenticated via CAS (module CAS) have access to all
+  - `auth_cas`: all users authenticated via CAS (module [CAS]) have access to all
     reserved files.
-  - `auth_ldap`: all users authenticated via Ldap (module Ldap) have access to
+  - `auth_ldap`: all users authenticated via Ldap (module [LDAP]) have access to
     all reserved files (currently unsupported).
-  - `auth_sso`: all users authenticated via SAML/Shibboleth (module SingleSignOn)
+  - `auth_sso`: all users authenticated via SAML/Shibboleth (module [Single Sign-On])
     have access to all reserved files.
   - `auth_sso_idp`: users authenticated by specified identity providers have
     access to a list of reserved media by item sets.
@@ -438,79 +380,40 @@ chosen in the sub-section Access rights of the configuration form via the
   is recommended to create a custom vocab and to set the datatype as `customvocab:X`
   used via the resource templates to avoid errors in the values.
 
-A private media remains private. A public media will be accessible only if its
-status is not forbidden and not during an embargo, if any.
+A public item can have a private media and vice-versa, so the access value may
+be set on the media; it can also be set on the item to manage all its media at
+once.
 
-Note that a public item can have a private media and vice-versa. So, the value
-may be set in the metadata of the media. The value can be specified for the item
-too to simplify management when all medias have the same access righs.
+### Inheritance
 
-### Inheritance and cascade
+An access level or embargo set on an item set applies automatically to its items
+and their media; one set on an item applies to its media. When several apply,
+the strictest wins (`free < reserved < protected < forbidden`):
 
-Access levels and embargo cascade **automatically** down the hierarchy
-item set > item > media. Two values are stored per resource in the
-`access_status` table:
+- a restricted item set restricts all its items and media, with no extra step;
+- an item or a media can be set stricter than what it inherits, but never looser
+  (an item set or an item can only tighten its content, never open it);
+- an item that belongs to several item sets takes the strictest of their levels,
+  so a cataloguing mistake can only restrict more, never less;
+- a media without its own level follows its item: if the item level changes
+  later, the media follows.
 
-- `level_set` (and `embargo_*_set`): the decision made by the admin on this
-  resource, before inheritance. This is what the edit form and the API edit.
-- `level` (and `embargo_start`, `embargo_end`): the effective value, the
-  materialized cascade. This is what the file gating, the facets and the search
-  read. It is recomputed on every save and never edited directly.
+By default the embargo is per-resource; enable "Cascade embargo dates" to make
+it inherit the same way as the level. The level and the embargo are always
+checked separately.
 
-The effective level is the strictest (`free < reserved < protected < forbidden`)
-of the resource own level, its parent item and all its item sets. The effective
-embargo equals the set embargo, unless `access_embargo_cascade` is on, in which
-case it is the widest window (earliest start, latest end) of the chain.
+The task Rebuild access index (Tasks tab) recomputes all the access levels.
+It is normally not needed, only to repair them after a bulk import or a direct
+database edit. The task Reset the access status switches an existing base
+between two management styles:
 
-Consequences:
+- reset item sets to manage access per document (the item sets stop restricting;
+  access is set on items and media);
+- reset items and media to manage access per item set (access is set on the item
+  sets and inherited).
 
-- A restricted item set restricts all its items and media, with no manual step.
-- A media or an item may be set stricter than its ancestors, never looser (the
-  cascade is one-way: an ancestor can only tighten a descendant).
-- An item in several item sets takes the strictest of their levels, so a
-  cataloguing error can only make a resource more restricted, never more open.
-- A media without its own level follows its item dynamically: if the item level
-  later changes, the media effective level follows.
+This clears the chosen resource types' levels and is irreversible.
 
-There is no propagation mode and no "apply recursive" option: the cascade is
-permanent and non destructive. The **Rebuild access index** task only rebuilds
-the effective columns after a bulk operation that bypassed the save events. In
-property-storage mode, the rebuild first resyncs the set columns from the
-property values, then recomputes the effective columns.
-
-The Tasks tab also offers a **Reset the access status** action, to align an
-existing base with a chosen management logic after the upgrade (the upgrade
-itself is neutral: it keeps the current effective levels for every install).
-Check the resource types to neutralize, then the task clears their level and
-embargo decisions and rebuilds the effective index:
-
-- check **item sets** to switch to a "by document" logic (the access is driven
-  by items and medias; the collections stop restricting);
-- check **items** and **medias** to switch to a "by collection" logic (the
-  access is driven by the item sets; the documents inherit).
-
-For example, a base that used the former propagation to push a collection
-level down onto every item and media should reset items and medias, so those
-inherited levels become neutral again and follow their collections. This is a
-one-time, irreversible operation. In property-storage mode, it also deletes the
-corresponding property values of the reset resources.
-
-### Embargo expiry
-
-The embargo is checked independently from the level. When an embargo ends, the
-`access_embargo_ended_level` setting controls the transition of the resource own
-level:
-
-- `keep`: the level is unchanged, so a document stays restricted after its
-  embargo (e.g. still university-only);
-- `free`: the level drops to free;
-- `under`: the level drops one step (reserved → free, protected/forbidden →
-  reserved).
-
-Combined with `access_embargo_ended_date` (`keep` or `clear` the dates), this
-lets a facet show a "restricted" status while a document is under embargo and
-"free" once the embargo has passed. In property-storage mode, the transition is
-also written back into the property values.
 ### Advanced search
 
 The advanced search form includes a multi-select filter for access levels. You
@@ -523,31 +426,44 @@ their access level.
 As indicated above, it is possible to define specific rights by item sets when
 using some access mode, mainly ip and sso idp.
 
-To define a specific rights, set the ip or the idp, then "=", then the item set
-ids to which the ip or the idp can access. If there is no item set defined, the
-check will be defined per item. Each item set may be prepended with a "-" to
-forbid access to a specific item set. This option is useful when a global item
-set is defined to identify all reserved resources. When a federation like
-Renater is used, set "federation =" then the item sets.
+In the configuration, the ip and sso idp modes each offer a list of rules. Add
+a rule, set its source, then choose the item sets it may reach with the two
+item set pickers. For the ip mode, the source is an ip or a cidr range. For
+the sso mode, the source is a select of the idps configured in the Single
+Sign-On module plus "federation" (a fallback for any federated idp not listed);
+a companion field lets you enter a federation idp not in the list, which then
+becomes a selectable option once saved.
+
+The item set pickers are:
+
+- Access only to these item sets: the source reaches only resources in the
+  selected item sets. Leave empty to grant access to every reserved resource.
+- Except these item sets: item sets excluded even when included above, useful
+  when a global item set identifies all reserved resources.
+
+Both lists empty means unrestricted access to every reserved resource. The
+"Copy item sets" button copies a rule's selection to paste it onto another
+rule, so a list shared by many ips or idps is filled once.
+
+The "Edit as a text list" button switches to a single field where all the
+rules are edited at once in the legacy `source = ids` format (an id prefixed
+with "-" is a forbidden item set), for those who prefer it; switching back, or
+saving, applies the text to the rules. The same data is saved either way.
 
 The order matters: the user is checked in the order of the list, so the
-federation is generally specified at last.
+federation rule is generally placed last.
 
 The use of the module [Dynamic Item Sets] may be useful, because it allows to
 define items included in a item sets according to a standard query.
 
 #### Example for the access mode "ip"
 
-```
-12.34.56.78
-124.8.16.32 = 17 89 -1940
-65.43.21.0/24 = -2005
-```
+- `124.8.16.32` → allow item sets A and B, except item set C.
+- `65.43.21.0/24` → except item set D (access to everything else reserved).
 
-Here, the user identified via the first ip has access to all reserved resources;
-the user identified via the second ip has access to item sets #17 and #89, but
-not to item set #1940. The federation has access to all items, except those of
-item set 2005.
+Here, the first ip reaches only resources in item sets A or B but not those in
+item set C, while the range reaches all reserved resources except those in
+item set D.
 
 #### Reverse proxy and private IPs
 
@@ -606,24 +522,24 @@ configuration.
 
 #### Example for the access mode "sso idp"
 
-```
-idp.example.org =
-shibboleth.another-example.org = 17 89 -1940
-federation = -2005
-```
+- `idp.example.org` with both lists empty (access to all reserved resources).
+- `shibboleth.another-example.org`: allow item sets A and B, except C.
+- `federation`: except item set D.
 
-Here, the user identified via idp.example.org has access to all reserved
-resources; the user identifier via the second idp has access to item sets #17
-and #89, but not to item set #1940. The federation has access to all items,
-except those of item set #2005.
+Here, a user from the first idp reaches all reserved resources; a user from the
+second idp reaches only item sets A or B but not C; and any other federated
+user reaches all reserved resources except item set D.
 
 ### Embargo
 
 By construction, the embargo works only on the media files: metadata are always
 visible for public and reserved resources.
 
-An option in the config can be used to use it with or without the reserved
-access.
+The embargo is checked independently from the access level: a file may be free
+but under embargo, or reserved without embargo. A per-user bypass is possible
+via the setting "embargo bypass". By default the embargo is per-resource; the
+setting "embargo cascade" (off by default) makes it inherit item set > item >
+media like the level (run the Rebuild access index task after changing it).
 
 To create an embargo on a file, simply set the dates in the advanced tab or use
 properties `curation:start` and/or `curation:end`, or the ones specified in the
@@ -649,6 +565,10 @@ Two settings control what happens when an embargo ends:
   - `clear`: Remove the embargo dates
   - `keep`: Keep the embargo dates
 
+With `keep`, a document stays restricted after its embargo (for example still
+university-only); with `free` or `under` it opens, so a facet can show it
+"restricted" during the embargo and "free" afterwards.
+
 A job is run automatically once a day to update access status and embargo.
 
 Furthermore, a check is automatically done when an anonymous visitor or a
@@ -662,11 +582,11 @@ it should remain private.
 
 ### Status display in admin sidebar
 
-The access status (level and, if any, embargo dates) is displayed in the
-right sidebar of the admin pages `item/show`, `item-set/show` and
-`media/show`, and also in the resource details sidebar (popup). When a
-resource has no row in `access_status`, the default level `free` is shown,
-matching the module runtime behavior (absence of status = free).
+The access status (level and, if any, embargo dates) is displayed in the right
+sidebar of the admin pages `item/show`, `item-set/show` and `media/show`, and
+also in the resource details sidebar (popup). When a resource has no row in
+table `access_status`, the default level `free` is shown, matching the module
+runtime behavior (absence of status = free).
 
 ### Management of requests
 
@@ -693,70 +613,23 @@ will add a session cookie that will allow to browse the selected resources.
 In public front-end, a dashboard is added for visitors: `/s/my-site/access-request`.
 Guest users have a specific board too: `/s/my-site/guest/access-request`.
 
-### Check of status levels
+### Checking stored statuses
 
-In some cases, when the status is stored in a property, you may want to check if
-all resources values statuses are well stored in the table access_status. Here
-are some sql queries for that, with French values and where curation:access is
-used (property 185 here):
+In property-storage mode, you can check with an sql query that the stored access
+levels match the property values. For example, to list the resources whose value
+is "Accès libre" but whose stored level is not `free` (adapt the property id and
+the labels to your install):
 
 ```sql
-# Items
-SELECT `access_status`.`id`, `access_status`.`level`, `resource`.`is_public`
+SELECT `access_status`.`id`, `access_status`.`level`
 FROM `value`
-INNER JOIN `access_status` ON `value`.`resource_id` = `access_status`.`id`
-INNER JOIN `item` ON `item`.`id` = `access_status`.`id`
-INNER JOIN `resource` ON `resource`.`id` = `item`.`id`
+INNER JOIN `access_status` ON `access_status`.`id` = `value`.`resource_id`
 WHERE `value`.`property_id` = 185
     AND `value`.`value` = "Accès libre"
     AND `access_status`.`level` != 'free';
-
-SELECT `access_status`.`id`, `access_status`.`level`, `resource`.`is_public`
-FROM `value`
-INNER JOIN `access_status` ON `value`.`resource_id` = `access_status`.`id`
-INNER JOIN `item` ON `item`.`id` = `access_status`.`id`
-INNER JOIN `resource` ON `resource`.`id` = `item`.`id`
-WHERE `value`.`property_id` = 185
-    AND `value`.`value` = "Accès restreint"
-    AND `access_status`.`level` != 'reserved';
-
-SELECT `access_status`.`id`, `access_status`.`level`, `resource`.`is_public`
-FROM `value`
-INNER JOIN `access_status` ON `value`.`resource_id` = `access_status`.`id`
-INNER JOIN `item` ON `item`.`id` = `access_status`.`id`
-INNER JOIN `resource` ON `resource`.`id` = `item`.`id`
-WHERE `value`.`property_id` = 185
-    AND `value`.`value` = "Non consultable"
-    AND `access_status`.`level` != 'forbidden';
-
-# Media
-SELECT `access_status`.`id`, `access_status`.`level`, `resource`.`is_public`
-FROM `value`
-INNER JOIN `access_status` ON `value`.`resource_id` = `access_status`.`id`
-INNER JOIN `media` ON `media`.`id` = `access_status`.`id`
-INNER JOIN `resource` ON `resource`.`id` = `media`.`id`
-WHERE `value`.`property_id` = 185
-    AND `value`.`value` = "Accès libre"
-    AND `access_status`.`level` != 'free';
-
-SELECT `access_status`.`id`, `access_status`.`level`, `resource`.`is_public`
-FROM `value`
-INNER JOIN `access_status` ON `value`.`resource_id` = `access_status`.`id`
-INNER JOIN `media` ON `media`.`id` = `access_status`.`id`
-INNER JOIN `resource` ON `resource`.`id` = `media`.`id`
-WHERE `value`.`property_id` = 185
-    AND `value`.`value` = "Accès restreint"
-    AND `access_status`.`level` != 'reserved';
-
-SELECT `access_status`.`id`, `access_status`.`level`, `resource`.`is_public`
-FROM `value`
-INNER JOIN `access_status` ON `value`.`resource_id` = `access_status`.`id`
-INNER JOIN `media` ON `media`.`id` = `access_status`.`id`
-INNER JOIN `resource` ON `resource`.`id` = `media`.`id`
-WHERE `value`.`property_id` = 185
-    AND `value`.`value` = "Non consultable"
-    AND `access_status`.`level` != 'forbidden';
 ```
+
+Run the "Rebuild access index" task to fix any mismatch.
 
 
 TODO
