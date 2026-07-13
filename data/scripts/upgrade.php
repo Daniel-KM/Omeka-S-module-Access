@@ -27,6 +27,7 @@ $api = $plugins->get('api');
 $logger = $services->get('Omeka\Logger');
 $settings = $services->get('Omeka\Settings');
 $translate = $plugins->get('translate');
+$urlPlugin = $plugins->get('url');
 $translator = $services->get('MvcTranslator');
 $connection = $services->get('Omeka\Connection');
 $messenger = $plugins->get('messenger');
@@ -36,63 +37,6 @@ $entityManager = $services->get('Omeka\EntityManager');
 $config = $services->get('Config');
 $configLocal = require dirname(__DIR__, 2) . '/config/module.config.php';
 
-/**
- * Dispatch a background job during module upgrade.
- *
- * During upgrade, module classes are not yet available to the background
- * process because the module state in the database is still "needs_upgrade".
- * This function temporarily sets the module version and active flag so the
- * spawned process can bootstrap the module, waits for the job to start, then
- * restores the original state. The Module Manager will set the real version
- * and state once upgrade() returns.
- */
-$dispatchJobDuringUpgrade = function (string $jobClass, array $args = [])
-    use ($services, $connection, $newVersion, $messenger): \Omeka\Entity\Job {
-    $moduleId = 'Access';
-
-    $shortClass = substr(strrchr('\\' . $jobClass, '\\'), 1);
-    $jobDir = dirname(__DIR__, 2) . '/src/Job/';
-    require_once $jobDir . 'AccessPropertiesTrait.php';
-    require_once $jobDir . $shortClass . '.php';
-
-    $moduleRow = $connection->executeQuery(
-        'SELECT is_active FROM module WHERE id = :id',
-        ['id' => $moduleId]
-    )->fetchAssociative();
-    $wasActive = (bool) ($moduleRow['is_active'] ?? false);
-
-    $connection->executeStatement(
-        'UPDATE module SET version = :version, is_active = 1 WHERE id = :id',
-        ['version' => $newVersion, 'id' => $moduleId]
-    );
-
-    $dispatcher = $services->get(\Omeka\Job\Dispatcher::class);
-    $job = $dispatcher->dispatch($jobClass, $args);
-
-    sleep(5);
-
-    $jobId = $job->getId();
-    $status = $connection->executeQuery(
-        'SELECT status FROM job WHERE id = :id',
-        ['id' => $jobId]
-    )->fetchOne();
-    if ($status === \Omeka\Entity\Job::STATUS_STARTING) {
-        $messenger->addWarning(new PsrMessage(
-            'The job #{job_id} is still starting after the sleep delay. It may need to be relaunched manually.', // @translate
-            ['job_id' => $jobId]
-        ));
-    }
-
-    if (!$wasActive) {
-        $connection->executeStatement(
-            'UPDATE module SET is_active = 0 WHERE id = :id',
-            ['id' => $moduleId]
-        );
-    }
-
-    return $job;
-};
-
 if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActiveVersion('Common', '3.4.88')) {
     $message = new \Omeka\Stdlib\Message(
         $translate('The module %1$s should be upgraded to version %2$s or later.'), // @translate
@@ -101,6 +45,21 @@ if (!method_exists($this, 'checkModuleActiveVersion') || !$this->checkModuleActi
     $messenger->addError($message);
     throw new \Omeka\Module\Exception\ModuleCannotInstallException((string) $translate('Missing requirement. Unable to upgrade.')); // @translate
 }
+
+/**
+ * Dispatch a background job during module upgrade.
+ *
+ * The module state handling (temporarily activating the module so the spawned
+ * process can bootstrap it, then restoring its state) is centralized in the
+ * Common service; only the module-specific job files to load are provided.
+ */
+$upgradeJobDispatch = $services->get('Common\UpgradeJobDispatch');
+$jobDir = dirname(__DIR__, 2) . '/src/Job/';
+$dispatchJobDuringUpgrade = fn (string $jobClass, array $args = []): \Omeka\Entity\Job =>
+    $upgradeJobDispatch($jobClass, $args, [
+        $jobDir . 'AccessPropertiesTrait.php',
+        $jobDir . substr(strrchr('\\' . $jobClass, '\\'), 1) . '.php',
+    ]);
 
 if (version_compare((string) $oldVersion, '3.4.19', '<')) {
     // Update vocabulary via sql.
@@ -500,14 +459,23 @@ if (version_compare((string) $oldVersion, '3.4.40', '<')) {
     // them. Re-sync now synchronously.
     $accessViaProperty = (bool) $settings->get('access_property');
     if ($accessViaProperty) {
-        $dispatchJobDuringUpgrade(\Access\Job\AccessStatusUpdate::class, [
+        $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusUpdate::class, [
             'sync' => 'from_accesses_to_properties',
             'missing' => 'skip',
             'recursive' => [],
         ]);
         $message = new PsrMessage(
-            'A previous bug may have removed access property values. A background job has been launched to restore them from indexes.' // @translate
+            'A previous bug may have removed access property values. A background job has been launched to restore them from indexes ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+            [
+                'link' => sprintf('<a href="%s">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
+                'job_id' => $job->getId(),
+                'link_end' => '</a>',
+                'link_log' => class_exists('Log\Module', false)
+                    ? sprintf('<a href="%1$s">', htmlspecialchars($urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
+                    : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
+            ]
         );
+        $message->setEscapeHtml(false);
         $messenger->addSuccess($message);
     }
 }
@@ -627,18 +595,116 @@ if (version_compare($oldVersion, '3.4.45', '<')) {
     $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusRebuild::class);
 
     $message = new PsrMessage(
-        'An access level set on an item set or an item now applies automatically to its items and medias, without any propagation step to run.' // @translate
+        'The process to check rights was simplified. Now, an access level set on an item set or an item now applies automatically to its items and medias, without any propagation step.' // @translate
     );
     $messenger->addSuccess($message);
 
     $message = new PsrMessage(
-        'A background job #{job_id} was started to apply the access levels to all resources. Watch its progress in the Jobs list.', // @translate
-        ['job_id' => $job->getId()]
+        'A background job was started to apply the access levels to all resources ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+        [
+            'link' => sprintf('<a href="%s">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
+            'job_id' => $job->getId(),
+            'link_end' => '</a>',
+            'link_log' => class_exists('Log\Module', false)
+                ? sprintf('<a href="%1$s">', htmlspecialchars($urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
+                : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
+        ]
     );
+    $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
 
     $message = new PsrMessage(
         'The old "propagation mode" options have been removed: they are no longer needed. A new option "Cascade embargo dates" (off by default) makes an embargo set on an item set or an item apply to its items and medias too, like the access level. The embargo is still checked separately.' // @translate
     );
     $messenger->addWarning($message);
+}
+
+if (version_compare((string) $oldVersion, '3.4.46', '<')) {
+    // The ip and sso idp scope settings, previously stored as a "ip = ids" text
+    // map, are now structured collections of rules with complete normalized
+    // entry.
+
+    // Text "ip = ids" map to rules keyed by source (no cidr range: a config
+    // re-save recomputes it; exact ips still match meanwhile).
+    $convertRules = function ($oldMap): array {
+        $rules = [];
+        foreach ((array) $oldMap as $source => $idsString) {
+            $source = trim((string) $source);
+            $ids = array_unique(array_filter(array_map(
+                'intval',
+                explode(' ', preg_replace('/[^\d-]/', ' ', (string) $idsString))
+            )));
+            $allow = array_values(array_filter($ids, fn ($v) => $v > 0));
+            $forbid = array_values(array_map('abs', array_filter($ids, fn ($v) => $v < 0)));
+            if ($source === '' && !$allow && !$forbid) {
+                continue;
+            }
+            $rules[$source] = ['source' => $source, 'allow' => $allow, 'forbid' => $forbid];
+        }
+        return $rules;
+    };
+
+    // Prefer the resolved ip map (it carries the cidr range); fall back to the
+    // text map for a base that never saved its config under a 3.4.x version.
+    $ipRules = [];
+    foreach ((array) $settings->get('access_ip_item_sets_by_ip', []) as $ip => $entry) {
+        if (is_array($entry)) {
+            $ipRules[(string) $ip] = ['source' => (string) $ip] + $entry;
+        }
+    }
+    if (!$ipRules) {
+        $ipRules = $convertRules($settings->get('access_ip_item_sets'));
+    }
+    $settings->set('access_ip_rules', $ipRules);
+
+    // The idp map has no derived field, so either source is equivalent.
+    $idpRules = [];
+    foreach ((array) $settings->get('access_auth_sso_idp_item_sets_by_idp', []) as $idp => $entry) {
+        if (is_array($entry)) {
+            $idpRules[(string) $idp] = [
+                'source' => (string) $idp,
+                'allow' => array_values(array_map('intval', $entry['allow'] ?? [])),
+                'forbid' => array_values(array_map('intval', $entry['forbid'] ?? [])),
+            ];
+        }
+    }
+    if (!$idpRules) {
+        $idpRules = $convertRules($settings->get('access_auth_sso_idp_item_sets'));
+    }
+    $settings->set('access_auth_sso_idp_rules', $idpRules);
+
+    $settings->delete('access_ip_item_sets');
+    $settings->delete('access_auth_sso_idp_item_sets');
+    $settings->delete('access_ip_item_sets_by_ip');
+    $settings->delete('access_auth_sso_idp_item_sets_by_idp');
+
+    $message = new PsrMessage(
+        'The config form was improved.' // @translate
+    );
+    $messenger->addSuccess($message);
+
+    // Users who passed through 3.4.45 on MySQL hit issue #3: the effective
+    // access levels recompute (job AccessStatusRebuild) failed with error 1093
+    // and the level/embargo columns kept their pre-3.4.45 values. The sql is
+    // fixed since 3.4.46, so re-run the recompute once for them. Skip when
+    // arriving from an older version, whose own 3.4.45 block already dispatches
+    // this (now-working) job, to avoid a double run. Skip MariaDB too: its
+    // 3.4.45 recompute already succeeded (1093 is a MySQL-only restriction).
+    $isMysql = stripos((string) $connection->executeQuery('SELECT VERSION()')->fetchOne(), 'mariadb') === false;
+    if ($isMysql && version_compare((string) $oldVersion, '3.4.45', '>=')) {
+        $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusRebuild::class);
+        $message = new PsrMessage(
+            'A background job was started to fix the access levels of all resources, which could not be computed on mysql ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+            [
+                'link' => sprintf('<a href="%s">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
+                'job_id' => $job->getId(),
+                'link_end' => '</a>',
+                'link_log' => class_exists('Log\Module', false)
+                    ? sprintf('<a href="%1$s">', htmlspecialchars($urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
+                    : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
+            ]
+        );
+        $message->setEscapeHtml(false);
+        $messenger->addSuccess($message);
+    }
 }
