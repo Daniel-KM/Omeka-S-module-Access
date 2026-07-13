@@ -35,6 +35,11 @@ class AccessCascade
     protected $embargoCascade;
 
     /**
+     * @var bool|null Cached engine check (true for MySQL, false for MariaDB).
+     */
+    protected $isMysql;
+
+    /**
      * SQL fragment ranking a level column on the documented order. FIELD
      * returns 1..4, or 0 for an unknown value, so COALESCE keeps it >= 1.
      */
@@ -299,23 +304,48 @@ class AccessCascade
     {
         $setRank = sprintf(self::RANK, '`access_status`.`level_set`');
         $setsRank = sprintf(self::RANK, '`a_set`.`level_set`');
-        $unrank = sprintf(self::UNRANK, "GREATEST($setRank, COALESCE((
-                SELECT MAX($setsRank)
-                FROM `item_item_set` `iis`
-                JOIN `access_status` `a_set` ON `a_set`.`id` = `iis`.`item_set_id`
-                WHERE `iis`.`item_id` = `access_status`.`id`
-            ), 1))");
         $where = $this->whereIds('access_status.id', $ids)
             . ' AND `resource`.`resource_type` = "Omeka\\\\Entity\\\\Item"';
 
-        $this->connection->executeStatement(
-            <<<SQL
-            UPDATE `access_status`
-            JOIN `resource` ON `resource`.`id` = `access_status`.`id`
-            SET `access_status`.`level` = $unrank
-            WHERE $where
-            SQL
-        );
+        if ($this->isMysql()) {
+            // MySQL forbids reading the updated table in a subquery (error
+            // 1093), so pre-aggregate the item sets ranks in a derived table
+            // (its GROUP BY forces the materialization MySQL will not do).
+            $parentWhere = $this->whereIds('iis.item_id', $ids);
+            $unrank = sprintf(self::UNRANK, "GREATEST($setRank, COALESCE(`parent`.`rank_set`, 1))");
+            $this->connection->executeStatement(
+                <<<SQL
+                UPDATE `access_status`
+                JOIN `resource` ON `resource`.`id` = `access_status`.`id`
+                LEFT JOIN (
+                    SELECT `iis`.`item_id` AS `id`, MAX($setsRank) AS `rank_set`
+                    FROM `item_item_set` `iis`
+                    JOIN `access_status` `a_set` ON `a_set`.`id` = `iis`.`item_set_id`
+                    WHERE $parentWhere
+                    GROUP BY `iis`.`item_id`
+                ) `parent` ON `parent`.`id` = `access_status`.`id`
+                SET `access_status`.`level` = $unrank
+                WHERE $where
+                SQL
+            );
+        } else {
+            // Standard engines (MariaDB, etc.): a correlated subquery on the
+            // updated table, concise and scoped to the updated rows.
+            $unrank = sprintf(self::UNRANK, "GREATEST($setRank, COALESCE((
+                    SELECT MAX($setsRank)
+                    FROM `item_item_set` `iis`
+                    JOIN `access_status` `a_set` ON `a_set`.`id` = `iis`.`item_set_id`
+                    WHERE `iis`.`item_id` = `access_status`.`id`
+                ), 1))");
+            $this->connection->executeStatement(
+                <<<SQL
+                UPDATE `access_status`
+                JOIN `resource` ON `resource`.`id` = `access_status`.`id`
+                SET `access_status`.`level` = $unrank
+                WHERE $where
+                SQL
+            );
+        }
 
         $this->recomputeItemsEmbargo($ids);
     }
@@ -342,6 +372,38 @@ class AccessCascade
         }
 
         // Widest window: earliest set start, latest set end along the chain.
+        if ($this->isMysql()) {
+            // MySQL (error 1093): pre-aggregate the widest window per item in a
+            // derived table instead of a subquery on the updated table.
+            $parentWhere = $this->whereIds('iis.item_id', $ids);
+            $this->connection->executeStatement(
+                <<<SQL
+                UPDATE `access_status`
+                JOIN `resource` ON `resource`.`id` = `access_status`.`id`
+                LEFT JOIN (
+                    SELECT `iis`.`item_id` AS `id`,
+                        MIN(`a_set`.`embargo_start_set`) AS `emin`,
+                        MAX(`a_set`.`embargo_end_set`) AS `emax`
+                    FROM `item_item_set` `iis`
+                    JOIN `access_status` `a_set` ON `a_set`.`id` = `iis`.`item_set_id`
+                    WHERE $parentWhere
+                    GROUP BY `iis`.`item_id`
+                ) `parent` ON `parent`.`id` = `access_status`.`id`
+                SET `access_status`.`embargo_start` = LEAST(
+                        COALESCE(`access_status`.`embargo_start_set`, `parent`.`emin`),
+                        COALESCE(`parent`.`emin`, `access_status`.`embargo_start_set`)
+                    ),
+                    `access_status`.`embargo_end` = GREATEST(
+                        COALESCE(`access_status`.`embargo_end_set`, `parent`.`emax`),
+                        COALESCE(`parent`.`emax`, `access_status`.`embargo_end_set`)
+                    )
+                WHERE $where
+                SQL
+            );
+            return;
+        }
+
+        // Standard engines (MariaDB, etc.): correlated subqueries on the chain.
         $this->connection->executeStatement(
             <<<SQL
             UPDATE `access_status`
@@ -458,6 +520,23 @@ class AccessCascade
             WHERE $where
             SQL
         );
+    }
+
+    /**
+     * Check if the database server is mysql.
+     *
+     * No version of mysql supports update with subquery that reads the updated
+     * table (error 1093, because mysql does not materialize sub-query). MariaDB
+     * and any other standard engine keep the concise correlated subquery.
+     */
+    protected function isMysql(): bool
+    {
+        if ($this->isMysql === null) {
+            $version = (string) $this->connection->executeQuery('SELECT VERSION()')->fetchOne();
+            // TODO  Connection::getServerVersion() is private in current dbal 2.13; mysql does not write its name in version; doctrine getDatabasePlatform()->getName() returns mysql for mariadb.
+            $this->isMysql = stripos($version, 'mariadb') === false;
+        }
+        return $this->isMysql;
     }
 
     /**
