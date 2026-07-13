@@ -11,7 +11,7 @@ use Omeka\Test\AbstractHttpControllerTestCase;
  *
  * A reserved file can be unlocked for a client only for the item sets it is
  * allowed in, and blocked for the item sets it is forbidden in, per the maps
- * access_ip_item_sets_by_ip and access_auth_sso_idp_item_sets_by_idp. This is
+ * access_ip_rules and access_auth_sso_idp_rules. This is
  * the Dante case: a collection authorized for one IdP and forbidden to the
  * general federation.
  *
@@ -74,7 +74,7 @@ class CollectionScopedBypassTest extends AbstractHttpControllerTestCase
         [$itemSetId, $media] = $this->reservedMediaInItemSet();
 
         $this->getSettings()->set('access_modes', ['ip']);
-        $this->getSettings()->set('access_ip_item_sets_by_ip', [
+        $this->getSettings()->set('access_ip_rules', [
             self::IP_INSIDE => ['allow' => [$itemSetId], 'forbid' => []],
         ]);
         $this->logout();
@@ -96,7 +96,7 @@ class CollectionScopedBypassTest extends AbstractHttpControllerTestCase
         $otherItemSet = $this->createItemSet();
 
         $this->getSettings()->set('access_modes', ['ip']);
-        $this->getSettings()->set('access_ip_item_sets_by_ip', [
+        $this->getSettings()->set('access_ip_rules', [
             self::IP_INSIDE => ['allow' => [$otherItemSet->id()], 'forbid' => []],
         ]);
         $this->logout();
@@ -117,7 +117,7 @@ class CollectionScopedBypassTest extends AbstractHttpControllerTestCase
         $this->getSettings()->set('access_modes', ['ip']);
         // Forbid only: the IP bypasses reserved everywhere except this item
         // set.
-        $this->getSettings()->set('access_ip_item_sets_by_ip', [
+        $this->getSettings()->set('access_ip_rules', [
             self::IP_INSIDE => ['allow' => [], 'forbid' => [$itemSetId]],
         ]);
         $this->logout();
@@ -134,16 +134,45 @@ class CollectionScopedBypassTest extends AbstractHttpControllerTestCase
         [, $media] = $this->reservedMediaInItemSet();
 
         $this->getSettings()->set('access_modes', ['ip']);
-        $this->getSettings()->set('access_ip_item_sets_by_ip', []);
+        $this->getSettings()->set('access_ip_rules', []);
         $this->logout();
 
         $_SERVER['REMOTE_ADDR'] = self::IP_INSIDE;
         $this->assertFalse($this->isAllowedMediaContentFresh($media), 'Denied: no IP is mapped to any item set');
     }
 
-    // The SSO IdP collection scoping (access_auth_sso_idp_item_sets_by_idp,
-    // with the "federation" fallback) uses the very same allow/forbid
-    // resolution as the IP scoping tested above, so it is not duplicated here.
-    // It additionally requires the SingleSignOn module (isSsoUser), which is
-    // out of the module test scope (Common + core only).
+    /**
+     * A cidr range keyed by source: an IP inside the range (but not equal to
+     * the key) is matched via the stored low/high. Confirms the merged rule
+     * format keeps the range lookup working without a separate resolved map.
+     */
+    public function testIpCidrRangeAllowsReserved(): void
+    {
+        [$itemSetId, $media] = $this->reservedMediaInItemSet();
+
+        $this->getSettings()->set('access_modes', ['ip']);
+        $this->getSettings()->set('access_ip_rules', [
+            '192.0.2.0/24' => [
+                'source' => '192.0.2.0/24',
+                'ipv6' => false,
+                'low' => ip2long('192.0.2.0'),
+                'high' => ip2long('192.0.2.255'),
+                'allow' => [$itemSetId],
+                'forbid' => [],
+            ],
+        ]);
+        $this->logout();
+
+        $_SERVER['REMOTE_ADDR'] = self::IP_INSIDE;
+        $this->assertTrue($this->isAllowedMediaContentFresh($media), 'Allowed from an IP inside the cidr range');
+
+        $_SERVER['REMOTE_ADDR'] = self::IP_OUTSIDE;
+        $this->assertFalse($this->isAllowedMediaContentFresh($media), 'Denied from an IP outside the cidr range');
+    }
+
+    // The SSO IdP collection scoping (access_auth_sso_idp_rules, with the
+    // "federation" fallback) uses the very same allow/forbid resolution as the
+    // IP scoping tested above, so it is not duplicated here. It additionally
+    // requires the SingleSignOn module (isSsoUser), which is out of the module
+    // test scope (Common + core only).
 }

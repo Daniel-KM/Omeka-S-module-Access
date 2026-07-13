@@ -70,7 +70,7 @@ class BypassResolver
         if ($ip === '::' || !filter_var($ip, FILTER_VALIDATE_IP)) {
             return null;
         }
-        $listIps = $this->settings->get('access_ip_item_sets_by_ip', []);
+        $listIps = $this->settings->get('access_ip_rules', []);
         if (empty($listIps)) {
             return null;
         }
@@ -117,7 +117,7 @@ class BypassResolver
         if (!$this->userSettings) {
             return null;
         }
-        $reservedIdps = $this->settings->get('access_auth_sso_idp_item_sets_by_idp', []);
+        $reservedIdps = $this->settings->get('access_auth_sso_idp_rules', []);
         if (empty($reservedIdps)) {
             return null;
         }

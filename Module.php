@@ -695,6 +695,14 @@ class Module extends AbstractModule
             return null;
         }
 
+        // The rule settings are stored keyed by source; the collection element
+        // expects a plain list (each entry keeps its own source field).
+        foreach (['access_ip_rules', 'access_auth_sso_idp_rules'] as $name) {
+            if (!empty($data[$name]) && is_array($data[$name])) {
+                $data[$name] = array_values($data[$name]);
+            }
+        }
+
         $form = $formManager->get($formClass);
         $form->init();
         $form->setData($data);
@@ -2557,7 +2565,7 @@ class Module extends AbstractModule
                 $hasError = true;
                 continue;
             }
-            $listIps[$ip] = $this->cidrToRange($ip);
+            $listIps[$ip] = ['source' => $ip] + $this->cidrToRange($ip);
             $listIps[$ip]['allow'] = $checked['allow'];
             $listIps[$ip]['forbid'] = $checked['forbid'];
         }
@@ -2576,7 +2584,10 @@ class Module extends AbstractModule
             }
         }
 
-        $settings->set('access_ip_item_sets_by_ip', $listIps);
+        // The rules are keyed by source (ip/cidr) and store the complete
+        // normalized entry (source, allow, forbid, numberized cidr range), so
+        // no separate resolved setting is needed.
+        $settings->set('access_ip_rules', $listIps);
 
         return true;
     }
@@ -2718,7 +2729,7 @@ class Module extends AbstractModule
 
         $rules = $settings->get('access_auth_sso_idp_rules') ?: [];
         if (!$rules) {
-            $settings->set('access_auth_sso_idp_item_sets_by_idp', []);
+            $settings->set('access_auth_sso_idp_rules', []);
             return true;
         }
 
@@ -2734,7 +2745,6 @@ class Module extends AbstractModule
             }
         }
 
-        $listIdps = [];
         $normalizedRules = [];
         $hasError = false;
         foreach ($rules as $rule) {
@@ -2773,10 +2783,10 @@ class Module extends AbstractModule
                 $hasError = true;
                 continue;
             }
-            $listIdps[$idpName] = ['allow' => $checked['allow'], 'forbid' => $checked['forbid']];
-            // Normalize the stored rule to a single source, so the manual entry
-            // becomes a plain (and, next time, selectable) idp.
-            $normalizedRules[] = ['source' => $idpName, 'allow' => $checked['allow'], 'forbid' => $checked['forbid']];
+            // Normalize the stored rule to a single source and key it by that
+            // source, so the manual entry becomes a plain (and, next time,
+            // selectable) idp and the resolver can look it up directly.
+            $normalizedRules[$idpName] = ['source' => $idpName, 'allow' => $checked['allow'], 'forbid' => $checked['forbid']];
         }
 
         if ($hasError) {
@@ -2784,7 +2794,6 @@ class Module extends AbstractModule
         }
 
         $settings->set('access_auth_sso_idp_rules', $normalizedRules);
-        $settings->set('access_auth_sso_idp_item_sets_by_idp', $listIdps);
 
         return true;
     }

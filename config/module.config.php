@@ -369,20 +369,30 @@ return [
 
             'access_ip_proxy_trusted' => [],
 
-            // Access-scope rules, edited as item set in config form.
-            // They are converted to the resolved "_by_ip" / "_by_idp" maps below on save.
+            // Access-scope rules, edited as item sets in the config form and
+            // normalized on save: keyed by source, each entry keeps the source
+            // field, the allow/forbid item set ids, and, for ip, the numberized
+            // cidr range. The resolver reads them directly, so there is no
+            // separate resolved setting.
             'access_ip_rules' => [
                 /*
-                    'source' => 'ip',
-                    'allow' => [item set ids],
-                    'forbid' => [item set ids].
+                '123.45.68.0/24' => [
+                    'source' => '123.45.68.0/24',
+                    'ipv6' => false,
+                    'low' => 2066564096,
+                    'high' => 2066564351,
+                    'allow' => [2],
+                    'forbid' => [3],
+                ],
                 */
             ],
             'access_auth_sso_idp_rules' => [
                 /*
+                'idp.example.org' => [
                     'source' => 'idp.example.org',
                     'allow' => [item set ids],
-                    'forbid' => [item set ids].
+                    'forbid' => [item set ids],
+                ],
                 */
             ],
 
@@ -397,27 +407,6 @@ return [
             // the same way the access level does.
             // Always checked independently from the level.
             'access_embargo_cascade' => false,
-
-            // Hidden settings automatically filled after saving config from
-            // "access_ip_rules", with numberized ip ranges (cidr) in order to
-            // do a quicker control of rights, and exploded item sets.
-            'access_ip_item_sets_by_ip' => [
-                /*
-                '123.45.67.89' => [
-                    'low' => 2066563929,
-                    'high' => 2066563929,
-                    'allow' => [],
-                    'forbid' => [],
-                ],
-                '123.45.68.0/24' => [
-                    'low' => 2066564096,
-                    'high' => 2066564351,
-                    'allow' => [2],
-                    'forbid' => [3],
-                ],
-                */
-            ],
-            'access_auth_sso_idp_item_sets_by_idp' => [],
 
             // Hidden value.
             'access_cron_last' => 0,
