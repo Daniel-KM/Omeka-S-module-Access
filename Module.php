@@ -673,7 +673,8 @@ class Module extends AbstractModule
 
         $assetUrl = $renderer->plugin('assetUrl');
         $renderer->headLink()
-            ->appendStylesheet($assetUrl('css/common-dialog-admin.css', 'Common'));
+            ->appendStylesheet($assetUrl('css/common-dialog-admin.css', 'Common'))
+            ->appendStylesheet($assetUrl('css/access-admin.css', 'Access'));
         $renderer->headScript()
             ->appendFile($assetUrl('js/common-dialog.js', 'Common'), 'text/javascript', ['defer' => 'defer'])
             ->appendFile($assetUrl('js/access-admin.js', 'Access'), 'text/javascript', ['defer' => 'defer']);
@@ -699,6 +700,18 @@ class Module extends AbstractModule
         $form->setData($data);
         $form->prepare();
 
+        // The scope-rule collections cannot be rendered by the element-group
+        // renderer (it flattens nested fieldsets), so render them here and
+        // remove them from the form so formTabs does not mangle them. They are
+        // injected in place of the anchor placeholder rendered inside the
+        // "Access modes" group, so they appear right below the access modes.
+        $scopeRules = $this->renderScopeRules($renderer, $form);
+        foreach (['access_ip_rules', 'access_auth_sso_idp_rules'] as $name) {
+            if ($form->has($name)) {
+                $form->remove($name);
+            }
+        }
+
         $translate = $renderer->plugin('translate');
         $tabs = [
             'access-settings' => [
@@ -710,8 +723,114 @@ class Module extends AbstractModule
             ],
         ];
 
+        $html = $renderer->formTabs($form, $tabs, 'access.config.section_nav');
+        $html = str_replace(\Access\Form\ConfigForm::SCOPE_RULES_PLACEHOLDER, $scopeRules, $html);
+
         return '<style>fieldset[name=access_reindex] .inputs label {display: block;}</style>'
-            . $renderer->formTabs($form, $tabs, 'access.config.section_nav');
+            . $html;
+    }
+
+    /**
+     * Render the ip and sso-idp scope-rule collections plus the idp datalist.
+     */
+    protected function renderScopeRules(PhpRenderer $renderer, \Laminas\Form\Form $form): string
+    {
+        $formCollection = $renderer->plugin('formCollection');
+
+        // Populate the idp source select options here (not in the fieldset,
+        // where init() runs before options are known), on every existing row
+        // and on the template, so cloned rows get them too.
+        if ($form->has('access_auth_sso_idp_rules')) {
+            $idpOptions = ['' => ''] + $this->idpValueOptions();
+            /** @var \Laminas\Form\Element\Collection $collection */
+            $collection = $form->get('access_auth_sso_idp_rules');
+            foreach ($collection->getFieldsets() as $rule) {
+                if ($rule->has('source')) {
+                    $rule->get('source')->setValueOptions($idpOptions);
+                }
+            }
+            $template = $collection->getTemplateElement();
+            if ($template && $template->has('source')) {
+                $template->get('source')->setValueOptions($idpOptions);
+            }
+        }
+
+        $escapeHtml = $renderer->plugin('escapeHtml');
+        $translate = $renderer->plugin('translate');
+
+        // Render each collection as a standard setting row: the label on the
+        // left (field-meta) and the list of rules on the right (inputs), like
+        // the other settings, instead of a full-width section with a legend.
+        $html = '';
+        foreach (['access_ip_rules', 'access_auth_sso_idp_rules'] as $name) {
+            if (!$form->has($name)) {
+                continue;
+            }
+            /** @var \Laminas\Form\Element\Collection $collection */
+            $collection = $form->get($name);
+            $label = $translate($collection->getLabel());
+            $info = $collection->getOption('info');
+            // Empty the label so formCollection renders the wrapping fieldset
+            // (with the id and the add-template) but no legend; the label is
+            // shown in field-meta instead.
+            $collection->setLabel('');
+            $rules = $formCollection->setShouldWrap(true)->render($collection);
+            $meta = '<label>' . $escapeHtml($label) . '</label>';
+            if ($info) {
+                $meta .= '<div class="field-description">' . $escapeHtml($translate($info)) . '</div>';
+            }
+            // Example for the "edit as a text list" view, specific to the
+            // source type (an ip/cidr for the ip rules, an idp entity id for
+            // the sso idp rules).
+            $placeholderExample = $name === 'access_ip_rules'
+                ? <<<'TXT'
+                    12.34.56.78
+                    124.8.16.32 = 17 89 -1940
+                    65.43.21.0/24 = -2005
+                    TXT // @translate
+                : <<<'TXT'
+                    idp.example.org =
+                    shibboleth.another-example.org = 17 89 -1940
+                    federation = -2005
+                    TXT; // @translate
+            $textPlaceholder = $escapeHtml($translate($placeholderExample));
+            $html .= <<<HTML
+                <div class="field access-scope-field" role="group">
+                    <div class="field-meta">$meta</div>
+                    <div class="inputs"><div class="access-scope-rules" data-text-placeholder="$textPlaceholder">$rules</div></div>
+                </div>
+                HTML;
+        }
+
+        return $html;
+    }
+
+    /**
+     * Value options for the sso idp source select: the idps configured in the
+     * Single Sign-On module, the sources already used in a saved rule (so
+     * manual federation idps persist as options), and the "federation"
+     * fallback.
+     */
+    protected function idpValueOptions(): array
+    {
+        $settings = $this->getServiceLocator()->get('Omeka\Settings');
+        $options = [];
+        foreach ($settings->get('singlesignon_idps') ?: [] as $idp) {
+            $entityId = is_array($idp) ? trim((string) ($idp['entity_id'] ?? '')) : '';
+            if ($entityId === '') {
+                continue;
+            }
+            $name = is_array($idp) ? trim((string) ($idp['entity_name'] ?? '')) : '';
+            $options[$entityId] = $name !== '' ? sprintf('%s (%s)', $name, $entityId) : $entityId;
+        }
+        foreach ($settings->get('access_auth_sso_idp_rules') ?: [] as $rule) {
+            $source = is_array($rule) ? trim((string) ($rule['source'] ?? '')) : '';
+            if ($source !== '' && $source !== 'federation' && !isset($options[$source])) {
+                $options[$source] = $source;
+            }
+        }
+        $options['federation'] = 'federation'; // @translate
+        return $options;
     }
 
     public function handleConfigForm(AbstractController $controller)
@@ -1966,7 +2085,7 @@ class Module extends AbstractModule
         $fieldset
             ->add([
                 'name' => 'access_reindex_settings',
-                'type' => \Access\Form\AccessReindexFieldset::class,
+                'type' => \Access\Form\Admin\AccessReindexFieldset::class,
                 'options' => [
                     'label' => 'Options to reindex accesses', // @translate
                 ],
@@ -2410,65 +2529,37 @@ class Module extends AbstractModule
         $settings = $services->get('Omeka\Settings');
         $messenger = $plugins->get('messenger');
 
-        $ipItemSets = $settings->get('access_ip_item_sets') ?: [];
+        $rules = $settings->get('access_ip_rules') ?: [];
 
         $listIps = [];
         $hasError = false;
-        foreach ($ipItemSets as $ip => $itemSetIdsString) {
-            $allow = [];
-            $forbid = [];
-            if (!$ip && !$itemSetIdsString) {
+        foreach ($rules as $rule) {
+            $ip = trim((string) ($rule['source'] ?? ''));
+            $allow = $this->normalizeRuleItemSets($rule['allow'] ?? []);
+            $forbid = $this->normalizeRuleItemSets($rule['forbid'] ?? []);
+            if ($ip === '' && !$allow && !$forbid) {
                 continue;
-            } elseif (!$ip || !filter_var(strtok($ip, '/'), FILTER_VALIDATE_IP)) {
-                $message = new PsrMessage(
+            }
+            if ($ip === '' || !filter_var(strtok($ip, '/'), FILTER_VALIDATE_IP)) {
+                $messenger->addError(new PsrMessage(
                     'The ip "{ip}" is empty or invalid.', // @translate
                     ['ip' => $ip]
-                );
-                $messenger->addError($message);
+                ));
                 $hasError = true;
                 continue;
-            } elseif ($itemSetIdsString) {
-                $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace('/[^\d-]/', ' ', $itemSetIdsString))));
-                if (!$itemSetIdsArray) {
-                    $message = new PsrMessage(
-                        'The item sets list "{input}" for ip {ip} is invalid: they should be numeric ids, optionaly prepended with a "-".', // @translate
-                        ['input' => $itemSetIdsString, 'ip' => $ip]
-                    );
-                    $messenger->addError($message);
-                    $hasError = true;
-                    continue;
-                }
-                // Check for duplicate absolute item set ids.
-                $absolutes = array_map('abs', $itemSetIdsArray);
-                if (count($absolutes) !== count($itemSetIdsArray)) {
-                    $message = new PsrMessage(
-                        'The item sets list "{input}" for ip {ip} contains duplicate item sets ({list}).', // @translate
-                        ['input' => $itemSetIdsString, 'ip' => $ip, 'list' => implode(', ', array_diff($itemSetIdsArray, $absolutes))]
-                    );
-                    $messenger->addError($message);
-                    $hasError = true;
-                    continue;
-                }
-                // Check valid item sets.
-                $itemSetIdsArray = array_combine($absolutes, $itemSetIdsArray);
-                $itemSetIdsChecked = $api->search('item_sets', ['id' => $absolutes], ['returnScalar' => 'id'])->getContent();
-                if (count($itemSetIdsChecked) !== count($itemSetIdsArray)) {
-                    $message = new PsrMessage(
-                        'The item sets list "{input}" for ip {ip} contains unknown item sets ({list}).', // @translate
-                        ['input' => $itemSetIdsString, 'ip' => $ip, 'list' => implode(', ', array_diff_key($itemSetIdsArray, $itemSetIdsChecked))]
-                    );
-                    $messenger->addError($message);
-                    $hasError = true;
-                    continue;
-                }
-                // Prepare an associative array of item set id and
-                // included/excluded item set id.
-                $allow = array_keys(array_filter($itemSetIdsArray, fn ($v) => $v > 0));
-                $forbid = array_keys(array_filter($itemSetIdsArray, fn ($v) => $v < 0));
+            }
+            $checked = $this->checkRuleItemSets($api, $allow, $forbid);
+            if ($checked === null) {
+                $messenger->addError(new PsrMessage(
+                    'The item sets selected for ip {ip} are unknown or duplicated.', // @translate
+                    ['ip' => $ip]
+                ));
+                $hasError = true;
+                continue;
             }
             $listIps[$ip] = $this->cidrToRange($ip);
-            $listIps[$ip]['allow'] = $allow;
-            $listIps[$ip]['forbid'] = $forbid;
+            $listIps[$ip]['allow'] = $checked['allow'];
+            $listIps[$ip]['forbid'] = $checked['forbid'];
         }
 
         if ($hasError) {
@@ -2488,6 +2579,44 @@ class Module extends AbstractModule
         $settings->set('access_ip_item_sets_by_ip', $listIps);
 
         return true;
+    }
+
+    /**
+     * Normalize a rule item-set list (from the form or a migrated setting) to a
+     * list of unique positive integer ids.
+     *
+     * @param mixed $itemSets
+     * @return int[]
+     */
+    protected function normalizeRuleItemSets($itemSets): array
+    {
+        if (!is_array($itemSets)) {
+            $itemSets = $itemSets === null || $itemSets === '' ? [] : [$itemSets];
+        }
+        $ids = array_values(array_unique(array_filter(array_map('intval', $itemSets), fn ($v) => $v > 0)));
+        return $ids;
+    }
+
+    /**
+     * Check that the allow and forbid item sets exist and do not overlap.
+     *
+     * @param int[] $allow
+     * @param int[] $forbid
+     * @return array{allow:int[],forbid:int[]}|null Null when invalid.
+     */
+    protected function checkRuleItemSets($api, array $allow, array $forbid): ?array
+    {
+        if (array_intersect($allow, $forbid)) {
+            return null;
+        }
+        $all = array_values(array_unique(array_merge($allow, $forbid)));
+        if ($all) {
+            $checked = $api->search('item_sets', ['id' => $all], ['returnScalar' => 'id'])->getContent();
+            if (count($checked) !== count($all)) {
+                return null;
+            }
+        }
+        return ['allow' => $allow, 'forbid' => $forbid];
     }
 
     /**
@@ -2587,85 +2716,74 @@ class Module extends AbstractModule
         $settings = $services->get('Omeka\Settings');
         $messenger = $plugins->get('messenger');
 
-        $idpItemSets = $settings->get('access_auth_sso_idp_item_sets') ?: [];
-        if (!$idpItemSets) {
+        $rules = $settings->get('access_auth_sso_idp_rules') ?: [];
+        if (!$rules) {
+            $settings->set('access_auth_sso_idp_item_sets_by_idp', []);
             return true;
         }
 
-        $idps = $settings->get('singlesignon_idps');
-        if (!$idps) {
-            $message = new PsrMessage(
-                'No idps are defined. Check the config of module Single Sign-On first.' // @translate
-            );
-            $messenger->addError($message);
-            return false;
+        // Known idps (entity ids) from the Single Sign-On module, plus the
+        // "federation" fallback. Empty when the module is absent: manual entry
+        // (including federation idps) is still accepted.
+        $idps = $settings->get('singlesignon_idps') ?: [];
+        $knownIdps = [];
+        foreach ($idps as $idp) {
+            $entityId = is_array($idp) ? ($idp['entity_id'] ?? null) : null;
+            if ($entityId) {
+                $knownIdps[$entityId] = true;
+            }
         }
 
         $listIdps = [];
+        $normalizedRules = [];
         $hasError = false;
-        foreach ($idpItemSets as $idpName => $itemSetIdsString) {
-            $allow = [];
-            $forbid = [];
-            $isFederation = $idpName === 'federation';
-            // Empty line.
-            if (!$idpName && !$itemSetIdsString) {
+        foreach ($rules as $rule) {
+            // The manual field takes precedence over the select, so a
+            // federation idp not in the list can be added.
+            $idpName = trim((string) ($rule['source_manual'] ?? ''));
+            if ($idpName === '') {
+                $idpName = trim((string) ($rule['source'] ?? ''));
+            }
+            $allow = $this->normalizeRuleItemSets($rule['allow'] ?? []);
+            $forbid = $this->normalizeRuleItemSets($rule['forbid'] ?? []);
+            if ($idpName === '' && !$allow && !$forbid) {
                 continue;
-            } elseif (!$isFederation && (!$idpName || !isset($idps[$idpName]))) {
-                $message = new PsrMessage(
-                    'The idp "{idp}" is empty or not defined in module Single Sign-On.', // @translate
-                    ['idp' => $idpName]
-                );
-                $messenger->addError($message);
+            }
+            if ($idpName === '') {
+                $messenger->addError(new PsrMessage(
+                    'An idp entity id is empty.' // @translate
+                ));
                 $hasError = true;
                 continue;
-            } elseif ($itemSetIdsString) {
-                $itemSetIdsArray = array_unique(array_filter(explode(' ', preg_replace('/[^\d-]/', ' ', $itemSetIdsString))));
-                if (!$itemSetIdsArray) {
-                    $message = new PsrMessage(
-                        'The item sets list "{input}" for idp {idp} is invalid: they should be numeric ids, optionaly prepended with a "-".', // @translate
-                        ['input' => $itemSetIdsString, 'idp' => $idpName]
-                    );
-                    $messenger->addError($message);
-                    $hasError = true;
-                    continue;
-                }
-                // Check for duplicate absolute item set ids.
-                $absolutes = array_map('abs', $itemSetIdsArray);
-                if (count($absolutes) !== count($itemSetIdsArray)) {
-                    $message = new PsrMessage(
-                        'The item sets list "{input}" for idp {idp} contains duplicate item sets ({list}).', // @translate
-                        ['input' => $itemSetIdsString, 'idp' => $idpName, 'list' => implode(', ', array_diff($itemSetIdsArray, $absolutes))]
-                    );
-                    $messenger->addError($message);
-                    $hasError = true;
-                    continue;
-                }
-                // Check valid item sets.
-                $itemSetIdsArray = array_combine($absolutes, $itemSetIdsArray);
-                $itemSetIdsChecked = $api->search('item_sets', ['id' => $absolutes], ['returnScalar' => 'id'])->getContent();
-                if (count($itemSetIdsChecked) !== count($itemSetIdsArray)) {
-                    $message = new PsrMessage(
-                        'The item sets list "{input}" for idp {idp} contains unknown item sets ({list}).', // @translate
-                        ['input' => $itemSetIdsString, 'idp' => $idpName, 'list' => implode(', ', array_diff($itemSetIdsArray, $itemSetIdsChecked))]
-                    );
-                    $messenger->addError($message);
-                    $hasError = true;
-                    continue;
-                }
-                // Prepare an associative array of item set id and
-                // included/excluded item set id.
-                $allow = array_keys(array_filter($itemSetIdsArray, fn ($v) => $v > 0));
-                $forbid = array_keys(array_filter($itemSetIdsArray, fn ($v) => $v < 0));
             }
-            $listIdps[$idpName] = [];
-            $listIdps[$idpName]['allow'] = $allow;
-            $listIdps[$idpName]['forbid'] = $forbid;
+            // A configured idp or "federation" is expected; a manually entered
+            // federation idp is accepted but reported as a notice.
+            if ($idpName !== 'federation' && !isset($knownIdps[$idpName]) && $knownIdps) {
+                $messenger->addWarning(new PsrMessage(
+                    'The idp "{idp}" is not configured in module Single Sign-On; it is kept as a manual federation idp.', // @translate
+                    ['idp' => $idpName]
+                ));
+            }
+            $checked = $this->checkRuleItemSets($api, $allow, $forbid);
+            if ($checked === null) {
+                $messenger->addError(new PsrMessage(
+                    'The item sets selected for idp {idp} are unknown or duplicated.', // @translate
+                    ['idp' => $idpName]
+                ));
+                $hasError = true;
+                continue;
+            }
+            $listIdps[$idpName] = ['allow' => $checked['allow'], 'forbid' => $checked['forbid']];
+            // Normalize the stored rule to a single source, so the manual entry
+            // becomes a plain (and, next time, selectable) idp.
+            $normalizedRules[] = ['source' => $idpName, 'allow' => $checked['allow'], 'forbid' => $checked['forbid']];
         }
 
         if ($hasError) {
             return false;
         }
 
+        $settings->set('access_auth_sso_idp_rules', $normalizedRules);
         $settings->set('access_auth_sso_idp_item_sets_by_idp', $listIdps);
 
         return true;

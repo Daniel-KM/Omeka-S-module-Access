@@ -69,7 +69,7 @@ class AccessRequest extends AbstractBlockLayout implements TemplateableBlockLayo
         $services = $site->getServiceLocator();
         $formElementManager = $services->get('FormElementManager');
         $defaultSettings = $services->get('Config')['access']['block_settings']['accessRequest'];
-        $blockFieldset = \Access\Form\AccessRequestFieldset::class;
+        $blockFieldset = \Access\Form\Admin\AccessRequestFieldset::class;
 
         $data = $block ? ($block->data() ?? []) + $defaultSettings : $defaultSettings;
 

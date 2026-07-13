@@ -63,7 +63,9 @@ return [
     ],
     'form_elements' => [
         'invokables' => [
-            Form\AccessRequestFieldset::class => Form\AccessRequestFieldset::class,
+            Form\Admin\AccessIpRuleFieldset::class => Form\Admin\AccessIpRuleFieldset::class,
+            Form\Admin\AccessRequestFieldset::class => Form\Admin\AccessRequestFieldset::class,
+            Form\Admin\AccessSsoIdpRuleFieldset::class => Form\Admin\AccessSsoIdpRuleFieldset::class,
             Form\Admin\QuickSearchAccessLogForm::class => Form\Admin\QuickSearchAccessLogForm::class,
             Form\Admin\QuickSearchAccessRequestForm::class => Form\Admin\QuickSearchAccessRequestForm::class,
             Form\ConfigForm::class => Form\ConfigForm::class,
@@ -309,6 +311,12 @@ return [
         'The resource or the access doesn’t exist.', // @translate
         'Something went wrong', // @translate
         '[Untitled]', // @translate
+        'Add a rule', // @translate
+        'Edit as a text list', // @translate
+        'Edit as rules', // @translate
+        'Copy item sets', // @translate
+        'Paste item sets', // @translate
+        'Remove', // @translate
     ],
     'access' => [
         'config' => [
@@ -333,17 +341,16 @@ return [
 
             // Skip .htaccess management entirely (manual Apache configuration).
             'access_htaccess_skip' => false,
-            // Flags used in the managed RewriteRule. Automatically synced from
-            // the existing rule when .htaccess is read. Default "NC,L". Use "P"
-            // behind a reverse proxy (requires mod_proxy).
+            // Flags used in the managed RewriteRule.
+            // Automatically synced from the existing rule when .htaccess is read.
+            // Default "NC,L". Use "P" behind a reverse proxy (requires mod_proxy).
             'access_htaccess_flags' => 'NC,L',
-            // Types of files protected via .htaccess. Empty means not managed
-            // by the module.
+            // Types of files protected via .htaccess. Empty means not managed by module.
             'access_htaccess_types' => [],
             // Custom file paths to protect (for DerivativeMedia, etc.).
             'access_htaccess_custom_types' => '',
 
-            // True means that records are protected, not only media contents (files).
+            // True means that notices are protected, not only media contents (files).
             'access_full' => false,
 
             'access_modes' => [
@@ -361,9 +368,23 @@ return [
             ],
 
             'access_ip_proxy_trusted' => [],
-            'access_ip_item_sets' => [],
 
-            'access_auth_sso_idp_item_sets' => [],
+            // Access-scope rules, edited as item set in config form.
+            // They are converted to the resolved "_by_ip" / "_by_idp" maps below on save.
+            'access_ip_rules' => [
+                /*
+                    'source' => 'ip',
+                    'allow' => [item set ids],
+                    'forbid' => [item set ids].
+                */
+            ],
+            'access_auth_sso_idp_rules' => [
+                /*
+                    'source' => 'idp.example.org',
+                    'allow' => [item set ids],
+                    'forbid' => [item set ids].
+                */
+            ],
 
             'access_email_regex' => '',
 
@@ -371,15 +392,15 @@ return [
             'access_embargo_ended_level' => 'free',
             'access_embargo_ended_date' => 'keep',
 
-            // Off by default: an embargo is per-resource. Set to true to make
-            // an embargo cascade item set > item > media the same way the
-            // access level does. Always checked independently from the level.
+            // Off by default: an embargo is per-resource.
+            // Set to true to make an embargo cascade item set > item > media
+            // the same way the access level does.
+            // Always checked independently from the level.
             'access_embargo_cascade' => false,
 
-            // Hidden settings automatically filled after saving config. It
-            // contains the same data than "access_ip_item_sets", but with
-            // numberized ip ranges (cidr) in order to do a quicker control of
-            // rights, and exploded item sets.
+            // Hidden settings automatically filled after saving config from
+            // "access_ip_rules", with numberized ip ranges (cidr) in order to
+            // do a quicker control of rights, and exploded item sets.
             'access_ip_item_sets_by_ip' => [
                 /*
                 '123.45.67.89' => [

@@ -1,13 +1,13 @@
 <?php declare(strict_types=1);
 
-namespace Access\Form;
+namespace Access\Form\Admin;
 
 use Laminas\Form\Element;
 use Laminas\Form\Fieldset;
 use Omeka\Form\Element as OmekaElement;
 
 /**
- * @see \Access\Form\AccessRequestFieldset
+ * @see \Access\Form\Admin\AccessRequestFieldset
  * @see \ContactUs\Form\ContactUsFieldset
  * @see \ContactUs\Form\NewsletterFieldset
  */

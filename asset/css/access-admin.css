@@ -165,3 +165,58 @@
         width: 15%;
     }
 }
+
+/* Access-scope rule collections (ip and sso idp) in the config form. */
+.access-scope-rules > fieldset > fieldset {
+    border: 1px solid #d4d4d4;
+    border-radius: 3px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+/* Full-width inputs (text and chosen selects) inside a rule. */
+.access-scope-rules .inputs input[type="text"],
+.access-scope-rules .inputs .chosen-container {
+    width: 100% !important;
+    max-width: none;
+    box-sizing: border-box;
+}
+
+/* Keep the info toggle on the same line as the label, not below it, and use
+   a normal line spacing when the label wraps to two lines. */
+.access-scope-rules .field-meta {
+    line-height: 1.3;
+}
+.access-scope-rules .field-meta > label {
+    display: inline;
+}
+.access-scope-rules .field-meta > .expand {
+    display: inline-block;
+    margin-left: 4px;
+}
+
+/* Rule action buttons: right-aligned, consistent (no icons), spaced. */
+.access-scope-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
+}
+.access-scope-add.o-icon-add::before {
+    margin-right: 4px;
+}
+.access-scope-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: monospace;
+}
+/* Footer row: the text/rule toggle on the left, "Add a rule" on the far right,
+   pushed to the edges by space-between. */
+.access-scope-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    flex-basis: 100%;
+    margin-top: 6px;
+}

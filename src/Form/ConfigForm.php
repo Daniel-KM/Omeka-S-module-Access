@@ -9,6 +9,12 @@ use Omeka\Form\Element as OmekaElement;
 
 class ConfigForm extends Form
 {
+    /**
+     * Placeholder rendered inside the "Access modes" group and replaced by the
+     * ip and sso rule collections in getConfigForm.
+     */
+    const SCOPE_RULES_PLACEHOLDER = '{{access_scope_rules}}';
+
     protected $elementGroups = [
         'rights' => 'Access rights', // @translate
         'files' => 'Files to protect', // @translate
@@ -25,42 +31,55 @@ class ConfigForm extends Form
                 'name' => 'access_levels_table_note',
                 'type' => CommonElement\Note::class,
                 'options' => [
-                    'element_group' => 'rights',
-                    // HTML kept inline so it renders as a real <details> in the
-                    // admin form. Translators only need to translate the
-                    // human-facing strings inside cells.
-                    'text' => '<details><summary>' . 'Access levels summary' /* @translate */ . '</summary>'
-                        . '<table class="access-levels-table">'
-                        . '<thead><tr>'
-                        . '<th>' . 'Level' /* @translate */ . '</th>'
-                        . '<th>' . 'Notice (if is_public=1)' /* @translate */ . '</th>'
-                        . '<th>' . 'File' /* @translate */ . '</th>'
-                        . '<th>' . 'Admin access request' /* @translate */ . '</th>'
-                        . '<th>' . 'Author contact' /* @translate */ . '</th>'
-                        . '</tr></thead><tbody>'
-                        . '<tr><th><code>free</code></th>'
-                        . '<td>' . 'Visible' /* @translate */ . '</td>'
-                        . '<td>' . 'Downloadable by anyone' /* @translate */ . '</td>'
-                        . '<td>-</td><td>-</td></tr>'
-                        . '<tr><th><code>reserved</code></th>'
-                        . '<td>' . 'Visible' /* @translate */ . '</td>'
-                        . '<td>' . 'Blocked for anonymous; unlocked by any active bypass (IP, SSO IDP, guest, CAS, LDAP, external, email regex) or by an approved individual access request' /* @translate */ . '</td>'
-                        . '<td>' . 'Yes' /* @translate */ . '</td>'
-                        . '<td>' . 'Possible' /* @translate */ . '</td></tr>'
-                        . '<tr><th><code>protected</code></th>'
-                        . '<td>' . 'Visible' /* @translate */ . '</td>'
-                        . '<td>' . 'Blocked for everyone; unlocked ONLY by an approved individual access request. No automatic bypass applies.' /* @translate */ . '</td>'
-                        . '<td>' . 'Yes (mandatory)' /* @translate */ . '</td>'
-                        . '<td>' . 'Possible' /* @translate */ . '</td></tr>'
-                        . '<tr><th><code>forbidden</code></th>'
-                        . '<td>' . 'Visible' /* @translate */ . '</td>'
-                        . '<td>' . 'Blocked for everyone; no path through the admin access request flow' /* @translate */ . '</td>'
-                        . '<td>' . 'No' /* @translate */ . '</td>'
-                        . '<td>' . 'Sole recourse (theme-side "contact the author" feature)' /* @translate */ . '</td></tr>'
-                        . '</tbody></table>'
-                        . '<p><strong>' . 'Notice visibility' /* @translate */ . '</strong>: ' . 'follows Omeka core is_public only; the access level never hides a notice.' /* @translate */ . '</p>'
-                        . '<p><strong>' . 'Cascade' /* @translate */ . '</strong>: ' . 'a level set on an item set or an item applies automatically to its items and medias. When several levels apply, the strictest wins.' /* @translate */ . '</p>'
-                        . '</details>',
+                    'text' => <<<'HTML'
+                        <details>
+                            <summary>Quick help about access levels</summary>
+                            <table class="access-levels-table">
+                                <thead>
+                                    <tr>
+                                        <th>Level</th>
+                                        <th>Public item</th>
+                                        <th>Media file</th>
+                                        <th>Admin access request</th>
+                                        <th>Author contact</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th><strong>free</strong></th>
+                                        <td>Visible</td>
+                                        <td>Downloadable by anyone</td>
+                                        <td>Useless</td>
+                                        <td>Useless</td>
+                                    </tr>
+                                    <tr>
+                                        <th><strong>reserved</strong></th>
+                                        <td>Visible</td>
+                                        <td>Blocked for anonymous; unlocked by any active bypass (IP, SSO IDP, guest, CAS, LDAP, external, email regex) or by an approved individual access request</td>
+                                        <td>Yes</td>
+                                        <td>Possible</td>
+                                    </tr>
+                                    <tr>
+                                        <th><strong>protected</strong></th>
+                                        <td>Visible</td>
+                                        <td>Blocked for everyone; unlocked only by an approved individual access request. No automatic bypass applies.</td>
+                                        <td>Yes (mandatory)</td>
+                                        <td>Possible</td>
+                                    </tr>
+                                    <tr>
+                                        <th><strong>forbidden</strong></th>
+                                        <td>Visible</td>
+                                        <td>Blocked for everyone; no path through the admin access request flow</td>
+                                        <td>No</td>
+                                        <td>Sole recourse</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p><strong>Notice visibility</strong>: The access level and embargo apply only on files and never hide the notice of a resource, that follow Omeka core rules for visibility.</p>
+                            <p><strong>Independancy</strong>: The visibility public/private, the access status and the embargo are evaluated separately. Even marked for free access, a private item or media is never accessible on public side.</p>
+                            <p><strong>Cascade</strong>: A level set on an item set applies automatically to its items and medias; a level set on an item applies to its medias. When several levels apply, the strictest wins.</p>
+                        </details>
+                        HTML, // @translate
                     'disable_html_escape' => true,
                 ],
             ])
@@ -98,9 +117,6 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'label' => 'Set access via property', // @translate
-                    'label_attributes' => [
-                        'style' => 'display: block;',
-                    ],
                     'value_options' => [
                         'level' => 'Access via property with mode "level" (four possible values)', // @translate
                         'reserved' => 'Access via property with mode "reserved" (presence or not of a value)', // @translate
@@ -138,8 +154,8 @@ class ConfigForm extends Form
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
                     'element_group' => 'rights',
-                    'label' => 'Labels for access levels ("protected" is not used currently)', // @translate
-                    'info' => 'One level by line, formatted as "key = label". The keys ("free", "reserved", "protected", "forbidden") are fixed; only the labels can be customized. The labels are used as values of the property above (typically a custom vocab) and must match the allowed terms.', // @translate
+                    'label' => 'Labels for access levels', // @translate
+                    'info' => 'One level by line, formatted as "key = label". The keys ("free", "reserved", "protected", "forbidden") are fixed; only the labels can be customized. The labels are used as values of the property above (typically a custom vocab or a table) and must match the allowed terms.', // @translate
                     'as_key_value' => true,
                 ],
                 'attributes' => [
@@ -160,7 +176,7 @@ class ConfigForm extends Form
                 'options' => [
                     'element_group' => 'rights',
                     'label' => 'Data type to use for the level', // @translate
-                    'info' => 'A data type like "literal" (default) or "customvocab:X" (recommended), where X is the custom vocab id to set. This value is used for batch processes.', // @translate
+                    'info' => 'A data type like "literal" (default) or a controlled vocabulary like "customvocab:X" or "table:X". A specific data type is recommended to simplify resource edition and batch processes.', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_property_level_datatype',
@@ -243,9 +259,7 @@ class ConfigForm extends Form
                 'options' => [
                     'element_group' => 'files',
                     'label' => 'File types to protect via .htaccess', // @translate
-                    'label_attributes' => [
-                        'style' => 'display: block;',
-                    ],
+                    'value_column' => true,
                     'info' => 'Select the file types that should be protected by an Apache rewrite rule in the root .htaccess. The rule redirects direct file access through the module Access controller, which checks access rights. When writable, the .htaccess is updated automatically; otherwise, the rule to copy is displayed.', // @translate
                     'value_options' => [
                         'original' => 'original', // @translate
@@ -281,9 +295,7 @@ class ConfigForm extends Form
                 'options' => [
                     'element_group' => 'files',
                     'label' => 'Protection', // @translate
-                    'label_attributes' => [
-                        'style' => 'display: block;',
-                    ],
+                    'value_column' => true,
                     'value_options' => [
                         '0' => 'Protect media content only (files)', // @translate
                         '1' => 'Protect records and content (not supported currently)', // @translate
@@ -311,9 +323,7 @@ class ConfigForm extends Form
                 'options' => [
                     'element_group' => 'modes',
                     'label' => 'Access modes', // @translate
-                    'label_attributes' => [
-                        'style' => 'display: block;',
-                    ],
+                    'value_column' => true,
                     'value_options' => [
                         'ip' => 'IP: visitors with specified ips have access to all reserved medias, or only to those in selected item sets', // @translate
                         'guest' => 'Guest: all users, included guests, have access to all reserved medias', // @translate
@@ -349,54 +359,63 @@ class ConfigForm extends Form
                     'placeholder' => "172.18.0.1\n10.0.0.5",
                 ],
             ])
+
+            // Anchor rendered inside the "Access modes" group; getConfigForm
+            // replaces it with the ip and sso rule collections, so they appear
+            // right below the access modes instead of in a separate section.
             ->add([
-                'name' => 'access_ip_item_sets',
-                'type' => OmekaElement\ArrayTextarea::class,
+                'name' => 'access_scope_rules_anchor',
+                'type' => CommonElement\Note::class,
                 'options' => [
                     'element_group' => 'modes',
-                    'label' => 'List of ips with open access, eventually limited to selected item sets', // @translate
-                    'info' => <<<'TXT'
-                        List the ips separated by a "=", one by line. Range ip are allowed (formatted as cidr). The value after "=" controls which item sets are reachable:
-                        - empty (no item set after "="): the ip has unrestricted access to every reserved resource, including resources that are not attached to any item set;
-                        - one or more item set ids: the ip has access only to resources attached to at least one of these item sets; resources not in any item set are denied;
-                        - an item set id prepended with "-" is an excluded item set, useful when a global item set is defined to identify all reserved resources.
-                        TXT, // @translate
-                    'as_key_value' => true,
-                ],
-                'attributes' => [
-                    'id' => 'access_ip_item_sets',
-                    'rows' => 12,
-                    'placeholder' => <<<'TXT'
-                        12.34.56.78
-                        124.8.16.32 = 17 89 -1940
-                        65.43.21.0/24 = -2005
-                        TXT,
+                    'text' => self::SCOPE_RULES_PLACEHOLDER,
+                    'disable_html_escape' => true,
                 ],
             ])
 
             ->add([
-                'name' => 'access_auth_sso_idp_item_sets',
-                'type' => OmekaElement\ArrayTextarea::class,
+                'name' => 'access_ip_rules',
+                'type' => Element\Collection::class,
                 'options' => [
                     'element_group' => 'modes',
-                    'label' => 'List of sso idp with open access, eventually limited to selected item sets', // @translate
-                    'info' => <<<'TXT'
-                        List the identity providers separated by a "=", one by line. The idp name is the entity id (or the value used in the login form). "federation" can be used as fallback for all users authenticated via a federated idp not listed above. The value after "=" controls which item sets are reachable:
-                        - empty (no item set after "="): the idp has unrestricted access to every reserved resource, including resources that are not attached to any item set;
-                        - one or more item set ids: the idp has access only to resources attached to at least one of these item sets; resources not in any item set are denied;
-                        - an item set id prepended with "-" is an excluded item set, useful when a global item set is defined to identify all reserved resources.
-                        Without any matching entry (and no "federation" fallback), the user is denied.
-                        TXT, // @translate
-                    'as_key_value' => true,
+                    'label' => 'IP addresses with open access to reserved files', // @translate
+                    'info' => 'For each ip or range, choose the item sets it may reach. Leave both lists empty for access to every reserved resource.', // @translate
+                    'count' => 0,
+                    'allow_add' => true,
+                    'allow_remove' => true,
+                    'should_create_template' => true,
+                    'template_placeholder' => '__index__',
+                    'create_new_objects' => true,
+                    'target_element' => [
+                        'type' => Admin\AccessIpRuleFieldset::class,
+                    ],
                 ],
                 'attributes' => [
-                    'id' => 'access_auth_sso_idp_item_sets',
-                    'rows' => 12,
-                    'placeholder' => <<<'TXT'
-                        idp.example.org =
-                        shibboleth.another-example.org = 17 89 -1940
-                        federation = -2005
-                        TXT,
+                    'id' => 'access_ip_rules',
+                    'class' => 'form-fieldset-collection',
+                ],
+            ])
+
+            ->add([
+                'name' => 'access_auth_sso_idp_rules',
+                'type' => Element\Collection::class,
+                'options' => [
+                    'element_group' => 'modes',
+                    'label' => 'SSO identity providers with open access to reserved files', // @translate
+                    'info' => 'For each idp (or "federation" as a fallback), choose the item sets it may reach. Leave both lists empty for access to every reserved resource.', // @translate
+                    'count' => 0,
+                    'allow_add' => true,
+                    'allow_remove' => true,
+                    'should_create_template' => true,
+                    'template_placeholder' => '__index__',
+                    'create_new_objects' => true,
+                    'target_element' => [
+                        'type' => Admin\AccessSsoIdpRuleFieldset::class,
+                    ],
+                ],
+                'attributes' => [
+                    'id' => 'access_auth_sso_idp_rules',
+                    'class' => 'form-fieldset-collection',
                 ],
             ])
 
@@ -438,9 +457,7 @@ class ConfigForm extends Form
                 'options' => [
                     'element_group' => 'embargo',
                     'label' => 'Update access level when embargo ends', // @translate
-                    'label_attributes' => [
-                        'style' => 'display: block;',
-                    ],
+                    'value_column' => true,
                     'value_options' => [
                         'free' => 'Set access level to "free"', // @translate
                         'under' => 'Set access level to the level under ("free" for reserved, "reserved" for protected/forbidden)', // @translate
@@ -457,9 +474,7 @@ class ConfigForm extends Form
                 'options' => [
                     'element_group' => 'embargo',
                     'label' => 'Update embargo dates when embargo ends', // @translate
-                    'label_attributes' => [
-                        'style' => 'display: block;',
-                    ],
+                    'value_column' => true,
                     'value_options' => [
                         'clear' => 'Remove embargo dates', // @translate
                         'keep' => 'Keep embargo dates', // @translate
@@ -475,7 +490,7 @@ class ConfigForm extends Form
                 'options' => [
                     'element_group' => 'embargo',
                     'label' => 'Cascade embargo dates', // @translate
-                    'info' => 'Off by default: an embargo applies only to the resource it is set on. Check this box to make an embargo set on an item set or an item also apply to its items and medias, like the access level. The embargo is always checked separately from the level. After changing this option, run the "Rebuild access index" task.', // @translate
+                    'info' => 'By default, an embargo applies only to the resource it is set on. Check this box to make an embargo set on an item set or an item also apply to its items and medias, like the access level. After changing this option, run the "Rebuild access index" task.', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_embargo_cascade',
@@ -488,7 +503,7 @@ class ConfigForm extends Form
         $this
             ->add([
                 'name' => 'access_reindex',
-                'type' => AccessReindexFieldset::class,
+                'type' => Admin\AccessReindexFieldset::class,
                 'options' => [
                     'use_as_base_fieldset' => false,
                 ],

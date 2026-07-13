@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Access\Form;
+namespace Access\Form\Admin;
 
 use Common\Form\Element as CommonElement;
 use Laminas\Form\Element;
@@ -45,7 +45,7 @@ class AccessReindexFieldset extends Fieldset
                 'name' => 'reset_note',
                 'type' => CommonElement\Note::class,
                 'options' => [
-                    'text' => 'Clear the access levels and embargoes set on whole resource types, then update the access. Check "item sets" to manage access by document (the access is set on items and medias). Check "items" and "medias" to manage access by collection (the access is set on the item sets). This clears the checked levels and cannot be undone.', // @translate
+                    'text' => 'Clear the access levels and embargoes set on whole resource types, then update the access. Check "item sets" to manage access by document (the access is set on items and medias). Check "items" and "medias" to manage access by item set (the access is set on the item sets). This clears the checked levels and cannot be undone.', // @translate
                 ],
             ])
             ->add([
@@ -55,8 +55,8 @@ class AccessReindexFieldset extends Fieldset
                     'label' => 'Reset the access status of', // @translate
                     'value_options' => [
                         'item_sets' => 'Item sets (to manage access by document)', // @translate
-                        'items' => 'Items (to manage access by collection)', // @translate
-                        'media' => 'Medias (to manage access by collection)', // @translate
+                        'items' => 'Items (to manage access by item set)', // @translate
+                        'media' => 'Medias (to manage access by item set)', // @translate
                     ],
                 ],
                 'attributes' => [
