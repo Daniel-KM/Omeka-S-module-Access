@@ -705,129 +705,15 @@ class Module extends AbstractModule
         $form->setData($data);
         $form->prepare();
 
-        // The scope-rule collections cannot be rendered by the element-group
-        // renderer (it flattens nested fieldsets), so render them here and
-        // remove them from the form so formTabs does not mangle them. They are
-        // injected in place of the anchor placeholder rendered inside the
-        // "Access modes" group, so they appear right below the access modes.
-        $scopeRules = $this->renderScopeRules($renderer, $form);
-        foreach (['access_ip_rules', 'access_auth_sso_idp_rules'] as $name) {
-            if ($form->has($name)) {
-                $form->remove($name);
-            }
-        }
-
         // The tabs are declared by the form, each element carrying its own tab.
         // @see \Access\Form\ConfigForm
         $html = $renderer->formTabs($form, [], 'access.config.section_nav');
-        $html = str_replace(\Access\Form\ConfigForm::SCOPE_RULES_PLACEHOLDER, $scopeRules, $html);
 
         return '<style>fieldset[name=access_reindex] .inputs label {display: block;}</style>'
             . $html;
     }
 
-    /**
-     * Render the ip and sso-idp scope-rule collections plus the idp datalist.
-     */
-    protected function renderScopeRules(PhpRenderer $renderer, \Laminas\Form\Form $form): string
-    {
-        $formCollection = $renderer->plugin('formCollection');
 
-        // Populate the idp source select options here (not in the fieldset,
-        // where init() runs before options are known), on every existing row
-        // and on the template, so cloned rows get them too.
-        if ($form->has('access_auth_sso_idp_rules')) {
-            $idpOptions = ['' => ''] + $this->idpValueOptions();
-            /** @var \Laminas\Form\Element\Collection $collection */
-            $collection = $form->get('access_auth_sso_idp_rules');
-            foreach ($collection->getFieldsets() as $rule) {
-                if ($rule->has('source')) {
-                    $rule->get('source')->setValueOptions($idpOptions);
-                }
-            }
-            $template = $collection->getTemplateElement();
-            if ($template && $template->has('source')) {
-                $template->get('source')->setValueOptions($idpOptions);
-            }
-        }
-
-        $escapeHtml = $renderer->plugin('escapeHtml');
-        $translate = $renderer->plugin('translate');
-
-        // Render each collection as a standard setting row: the label on the
-        // left (field-meta) and the list of rules on the right (inputs), like
-        // the other settings, instead of a full-width section with a legend.
-        $html = '';
-        foreach (['access_ip_rules', 'access_auth_sso_idp_rules'] as $name) {
-            if (!$form->has($name)) {
-                continue;
-            }
-            /** @var \Laminas\Form\Element\Collection $collection */
-            $collection = $form->get($name);
-            $label = $translate($collection->getLabel());
-            $info = $collection->getOption('info');
-            // Empty the label so formCollection renders the wrapping fieldset
-            // (with the id and the add-template) but no legend; the label is
-            // shown in field-meta instead.
-            $collection->setLabel('');
-            $rules = $formCollection->setShouldWrap(true)->render($collection);
-            $meta = '<label>' . $escapeHtml($label) . '</label>';
-            if ($info) {
-                $meta .= '<div class="field-description">' . $escapeHtml($translate($info)) . '</div>';
-            }
-            // Example for the "edit as a text list" view, specific to the
-            // source type (an ip/cidr for the ip rules, an idp entity id for
-            // the sso idp rules).
-            $placeholderExample = $name === 'access_ip_rules'
-                ? <<<'TXT'
-                    12.34.56.78
-                    124.8.16.32 = 17 89 -1940
-                    65.43.21.0/24 = -2005
-                    TXT // @translate
-                : <<<'TXT'
-                    idp.example.org =
-                    shibboleth.another-example.org = 17 89 -1940
-                    federation = -2005
-                    TXT; // @translate
-            $textPlaceholder = $escapeHtml($translate($placeholderExample));
-            $html .= <<<HTML
-                <div class="field access-scope-field" role="group">
-                    <div class="field-meta">$meta</div>
-                    <div class="inputs"><div class="access-scope-rules" data-text-placeholder="$textPlaceholder">$rules</div></div>
-                </div>
-                HTML;
-        }
-
-        return $html;
-    }
-
-    /**
-     * Value options for the sso idp source select: the idps configured in the
-     * Single Sign-On module, the sources already used in a saved rule (so
-     * manual federation idps persist as options), and the "federation"
-     * fallback.
-     */
-    protected function idpValueOptions(): array
-    {
-        $settings = $this->getServiceLocator()->get('Omeka\Settings');
-        $options = [];
-        foreach ($settings->get('singlesignon_idps') ?: [] as $idp) {
-            $entityId = is_array($idp) ? trim((string) ($idp['entity_id'] ?? '')) : '';
-            if ($entityId === '') {
-                continue;
-            }
-            $name = is_array($idp) ? trim((string) ($idp['entity_name'] ?? '')) : '';
-            $options[$entityId] = $name !== '' ? sprintf('%s (%s)', $name, $entityId) : $entityId;
-        }
-        foreach ($settings->get('access_auth_sso_idp_rules') ?: [] as $rule) {
-            $source = is_array($rule) ? trim((string) ($rule['source'] ?? '')) : '';
-            if ($source !== '' && $source !== 'federation' && !isset($options[$source])) {
-                $options[$source] = $source;
-            }
-        }
-        $options['federation'] = 'federation'; // @translate
-        return $options;
-    }
 
     public function handleConfigForm(AbstractController $controller)
     {

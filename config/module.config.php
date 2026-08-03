@@ -41,6 +41,7 @@ return [
         ],
         'factories' => [
             'accessLevel' => Service\ViewHelper\AccessLevelFactory::class,
+            'formScopeRules' => Service\ViewHelper\FormScopeRulesFactory::class,
             'accessibleMedia' => Service\ViewHelper\AccessibleMediaFactory::class,
             'accessRequest' => Service\ViewHelper\AccessRequestFactory::class,
             'accessStatus' => Service\ViewHelper\AccessStatusFactory::class,

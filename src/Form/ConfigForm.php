@@ -9,12 +9,6 @@ use Omeka\Form\Element as OmekaElement;
 
 class ConfigForm extends Form
 {
-    /**
-     * Placeholder rendered inside the "Access modes" group and replaced by the
-     * ip and sso rule collections in getConfigForm.
-     */
-    const SCOPE_RULES_PLACEHOLDER = '{{access_scope_rules}}';
-
     protected $elementGroups = [
         'rights' => 'Access rights', // @translate
         'files' => 'Files to protect', // @translate
@@ -393,23 +387,12 @@ class ConfigForm extends Form
 
             // Anchor rendered inside the "Access modes" group; getConfigForm
             // replaces it with the ip and sso rule collections, so they appear
-            // right below the access modes instead of in a separate section.
-            ->add([
-                'name' => 'access_scope_rules_anchor',
-                'type' => CommonElement\Note::class,
-                'options' => [
-                    'element_group' => 'modes',
-                    'tab' => 'access-settings',
-                    'text' => self::SCOPE_RULES_PLACEHOLDER,
-                    'disable_html_escape' => true,
-                ],
-            ])
 
             ->add([
                 'name' => 'access_ip_rules',
                 'type' => Element\Collection::class,
                 'options' => [
-                    'tab' => 'access-settings',
+                    'render_helper' => 'formScopeRules',
                     'element_group' => 'modes',
                     'tab' => 'access-settings',
                     'label' => 'IP addresses with open access to reserved files', // @translate
@@ -434,7 +417,7 @@ class ConfigForm extends Form
                 'name' => 'access_auth_sso_idp_rules',
                 'type' => Element\Collection::class,
                 'options' => [
-                    'tab' => 'access-settings',
+                    'render_helper' => 'formScopeRules',
                     'element_group' => 'modes',
                     'tab' => 'access-settings',
                     'label' => 'SSO identity providers with open access to reserved files', // @translate
