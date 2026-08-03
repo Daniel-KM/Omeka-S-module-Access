@@ -5,8 +5,10 @@ namespace Access\Controller\Site;
 use Access\Controller\AccessTrait;
 use Access\Entity\AccessRequest;
 use Access\Form\Site\AccessRequestForm;
+use Access\Spam\SpamCheckerInterface;
 use Common\Mvc\Controller\Plugin\JSend;
 use Common\Stdlib\PsrMessage;
+use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Http\Response as HttpResponse;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
@@ -14,6 +16,16 @@ use Laminas\View\Model\ViewModel;
 class RequestController extends AbstractActionController
 {
     use AccessTrait;
+
+    /**
+     * @var \Access\Spam\SpamCheckerInterface
+     */
+    protected $spamChecker;
+
+    public function __construct(SpamCheckerInterface $spamChecker)
+    {
+        $this->spamChecker = $spamChecker;
+    }
 
     public function browseAction()
     {
@@ -163,6 +175,26 @@ class RequestController extends AbstractActionController
             ], null, HttpResponse::STATUS_CODE_405);
         }
 
+        // Anonymous requests are the spam surface: run the spam check
+        // (SpamGuard when active, no-op otherwise) before any processing.
+        if (!$user) {
+            $reasons = $this->checkSpam($post, (string) $email);
+            if ($reasons) {
+                $msg = new PsrMessage(
+                    'Your request was detected as spam and was not saved. Please retry or contact us.' // @translate
+                );
+                if ($requestUri) {
+                    $this->messenger()->addError($msg);
+                    return $this->redirect()->toUrl($requestUri);
+                }
+                return $this->jSend(JSend::FAIL, [
+                    'access_request' => [
+                        'o:email' => $msg->setTranslator($this->translator()),
+                    ],
+                ], null, HttpResponse::STATUS_CODE_405);
+            }
+        }
+
         // TODO Find a way to load the list of resources in RequestController.
 
         /** @var \Access\Form\Site\AccessRequestForm $form */
@@ -248,5 +280,35 @@ class RequestController extends AbstractActionController
                 $msg->setTranslator($this->translator()),
             ]);
         }
+    }
+
+    /**
+     * Run the spam check on an anonymous request and log the matched reasons.
+     *
+     * @return string[] Reason keys, empty when the submission is not spam.
+     */
+    protected function checkSpam(array $post, string $email): array
+    {
+        $reasons = $this->spamChecker->check($this->spamContext($post, $email));
+        if ($reasons) {
+            $this->logger()->warn(
+                'An access request was blocked as spam ({reasons}).', // @translate
+                ['reasons' => implode(', ', $reasons)]
+            );
+        }
+        return $reasons;
+    }
+
+    /**
+     * Build the spam check context from the request and the posted values.
+     */
+    protected function spamContext(array $post, string $email): array
+    {
+        return [
+            'ip' => (new RemoteAddress())->getIpAddress(),
+            'userAgent' => (string) $this->getRequest()->getServer('HTTP_USER_AGENT', ''),
+            'email' => $email,
+            'body' => (string) ($post['o:message'] ?? ''),
+        ];
     }
 }

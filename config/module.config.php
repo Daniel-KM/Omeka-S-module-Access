@@ -6,6 +6,7 @@ return [
     'service_manager' => [
         'factories' => [
             Stdlib\AccessCascade::class => Service\Stdlib\AccessCascadeFactory::class,
+            'Access\SpamChecker' => Service\SpamCheckerFactory::class,
         ],
     ],
     'api_adapters' => [
@@ -83,9 +84,9 @@ return [
     'controllers' => [
         'invokables' => [
             Controller\Site\GuestBoardController::class => Controller\Site\GuestBoardController::class,
-            Controller\Site\RequestController::class => Controller\Site\RequestController::class,
         ],
         'factories' => [
+            Controller\Site\RequestController::class => Service\Controller\SiteRequestControllerFactory::class,
             Controller\AccessFileController::class => Service\Controller\AccessFileControllerFactory::class,
             Controller\AuthorizeController::class => Service\Controller\AuthorizeControllerFactory::class,
             Controller\Admin\LogController::class => Service\Controller\LogControllerFactory::class,
