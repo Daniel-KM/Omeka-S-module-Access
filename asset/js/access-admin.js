@@ -352,17 +352,17 @@
             const $collection = $(this);
             addRuleButtons($collection);
             initChosen($collection);
-            // Text list view textarea (hidden), and a footer with the text/rule
-            // toggle on the left and "Add a rule" on the far right, on one
+            // Text list view textarea (hidden), and a footer with "Add a rule"
+            // on the left and the text/rule toggle on the far right, on one
             // line. They live in the inputs column, after the rules. The
             // placeholder example depends on the source type (ip or idp).
             $collection.after('<textarea class="access-scope-textarea" rows="6" style="display:none;"'
                 + ' placeholder="' + ($collection.attr('data-text-placeholder') || '') + '"></textarea>'
                 + '<div class="access-scope-footer">'
-                + '<button type="button" class="access-scope-toggle button">'
-                + Omeka.jsTranslate('Edit as a text list') + '</button>'
                 + '<button type="button" class="access-scope-add button o-icon-add">'
                 + Omeka.jsTranslate('Add a rule') + '</button>'
+                + '<button type="button" class="access-scope-toggle button">'
+                + Omeka.jsTranslate('Edit as a text list') + '</button>'
                 + '</div>');
             $collection.closest('.access-scope-field').data('scopeView', 'rules');
         });
