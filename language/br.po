@@ -1,17 +1,17 @@
 msgid ""
 msgstr ""
+"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Generated-By: Babel 2.18.0\n"
+"Language: br\n"
+"Language-Team: br <LL@li.org>\n"
+"Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
+"MIME-Version: 1.0\n"
+"PO-Revision-Date: 2026-08-03 00:00+0000\n"
+"POT-Creation-Date: 2026-08-03 00:00+0000\n"
+"Plural-Forms: nplurals=6; plural=(n==1 ? 0 : n%10==1 && n%100!=11 && n%100!=71 && n%100!=91 ? 1 : n%10==2 && n%100!=12 && n%100!=72 && n%100!=92 ? 2 : (n%10==3 || n%10==4 || n%10==9) && n%100!=13 && n%100!=14 && n%100!=19 && n%100!=73 && n%100!=74 && n%100!=79 && n%100!=93 && n%100!=94 && n%100!=99 ? 3 : n%1000000==0 ? 4 : 5);\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-13 00:00+0000\n"
-"PO-Revision-Date: 2026-07-13 00:00+0000\n"
-"Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
-"Language-Team: br <LL@li.org>\n"
-"Language: br\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=(n==1 ? 0 : n%10==1 && n%100!=11 && n%100!=71 && n%100!=91 ? 1 : n%10==2 && n%100!=12 && n%100!=72 && n%100!=92 ? 2 : (n%10==3 || n%10==4 || n%10==9) && n%100!=13 && n%100!=14 && n%100!=19 && n%100!=73 && n%100!=74 && n%100!=79 && n%100!=93 && n%100!=94 && n%100!=99 ? 3 : n%1000000==0 ? 4 : 5);\n"
-"Generated-By: Babel 2.18.0\n"
 "X-Generator: Poedit 3.6\n"
 
 #: data/scripts/upgrade_vocabulary.php:19
@@ -19,7 +19,9 @@ msgstr ""
 msgid "This module requires module %1$s version %2$s or greater."
 msgstr "Ezhomm en deus ar modul-mañ eus ar modul %1$s stumm %2$s pe unan uheloc'h."
 
-#: data/scripts/upgrade.php:42 Module.php:53 Module.php:69
+#: data/scripts/upgrade.php:42
+#: Module.php:53
+#: Module.php:69
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr "Ar modul %1$s a zlefe bezañ hizivaet d'ar stumm %2$s pe d'ur stumm nevesoc'h."
@@ -44,7 +46,8 @@ msgstr "Kefridioù"
 msgid "When properties are used, three properties should be defined for \"level\", \"embargo start\" and \"embargo end\"."
 msgstr "Pa vez implijet perzhioù, e tlefe bezañ termenet tri perzh evit \"live\", \"deroù an embargo\" hag \"fin an embargo\"."
 
-#: Module.php:1914 view/access/admin/log/browse.phtml:27
+#: Module.php:1914
+#: view/access/admin/log/browse.phtml:27
 #: view/access/admin/request/browse.phtml:35
 #: view/access/admin/request/edit.phtml:30
 #: view/access/admin/request/edit.phtml:31
@@ -52,7 +55,8 @@ msgstr "Pa vez implijet perzhioù, e tlefe bezañ termenet tri perzh evit \"live
 msgid "Access"
 msgstr "Moned"
 
-#: Module.php:1944 view/access/site/request/browse.phtml:26
+#: Module.php:1944
+#: view/access/site/request/browse.phtml:26
 msgid "Access requests"
 msgstr "Goulennadennoù moned"
 
@@ -160,7 +164,8 @@ msgstr "Ober"
 msgid "Record Id"
 msgstr "Identel an enrolladenn"
 
-#: view/access/admin/log/browse.phtml:59 view/access/admin/log/browse.phtml:62
+#: view/access/admin/log/browse.phtml:59
+#: view/access/admin/log/browse.phtml:62
 msgid "[no user]"
 msgstr "[implijer ebet]"
 
@@ -276,7 +281,8 @@ msgstr "Diouzh an tu 'peus dija da vont d'ar vammenn. Distro d'ar bajenn a-raok 
 
 #: view/common/access-request-block.phtml:80
 #: view/common/access-request-block.phtml:94
-#: view/common/access-request.phtml:86 view/common/access-request.phtml:100
+#: view/common/access-request.phtml:86
+#: view/common/access-request.phtml:100
 #, php-format
 msgid "To request access please %1$slogin%2$s or contact the publisher!"
 msgstr "Evit goulenn moned, kevreit mar plij %1$slogin%2$s pe kit e darempred gant an embanner!"
@@ -325,7 +331,8 @@ msgstr "Gweredekaat pe dizgweredekaat"
 msgid "Remove request"
 msgstr "Tennañ ar goulenn"
 
-#: view/common/access-request.phtml:58 view/common/access-request.phtml:64
+#: view/common/access-request.phtml:58
+#: view/common/access-request.phtml:64
 msgid "Request access"
 msgstr "Goulenn an aotre"
 
@@ -410,7 +417,8 @@ msgstr "Ur wech an deiz e vez lañset ul labour evit hizivaat an tremenoù pa ec
 msgid "The three criteria to access a media are now fully independant: visibility of item and media should be public; access level should be free (or reserved for authorized users); resource should not be under embargo."
 msgstr "An tri ziviz evit kaout moned d'ur media a zo bremañ penn-da-benn dizalc'h : gwelusted an elfenn hag ar media a rank bezañ foran ; al live moned a rank bezañ digoust (pe miret evit an implijerien aotreet) ; ar resurs ne rank ket bezañ dindan embargo."
 
-#: data/scripts/upgrade.php:419 Module.php:2258
+#: data/scripts/upgrade.php:419
+#: Module.php:2258
 msgid "The .htaccess rule is managed by the module and protects file types: {types}."
 msgstr "Meret e vez ar reolenn .htaccess gant ar modul ha gwareziñ a ra ar seurtadoù restroù: {types}."
 
@@ -570,31 +578,39 @@ msgstr ""
 "Parametrioù naetaet implijet evit an Access :\n"
 "{json}"
 
-#: Module.php:1537 src/Controller/Admin/RequestController.php:311
+#: Module.php:1537
+#: src/Controller/Admin/RequestController.php:311
 msgid "You should set either a user or an email or check box for token."
 msgstr "Ret e vefe deoc'h lakaat pe un implijer, pe ur chomlec'h postel, pe ur voest da askañ evit an toкен."
 
-#: Module.php:1560 src/Controller/Admin/RequestController.php:337
+#: Module.php:1560
+#: src/Controller/Admin/RequestController.php:337
 msgid "Access request successfully created."
 msgstr "Krouet eo bet ar goulenn moned gant berzh."
 
-#: Module.php:1641 src/Form/Admin/BatchEditFieldset.php:51
+#: Module.php:1641
+#: src/Form/Admin/BatchEditFieldset.php:51
 msgid "Reserved"
 msgstr "Miret"
 
-#: Module.php:1642 src/Form/Admin/BatchEditFieldset.php:52
+#: Module.php:1642
+#: src/Form/Admin/BatchEditFieldset.php:52
 msgid "Protected"
 msgstr "Gwarezet"
 
-#: Module.php:1657 src/ColumnType/AccessLevel.php:13
+#: Module.php:1657
+#: src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr "Live moned"
 
-#: Module.php:1671 src/Form/Admin/BatchEditFieldset.php:89
+#: Module.php:1671
+#: src/Form/Admin/BatchEditFieldset.php:89
 msgid "Embargo start"
 msgstr "Krogiad an embargo"
 
-#: Module.php:1688 Module.php:1696 src/Form/Admin/BatchEditFieldset.php:134
+#: Module.php:1688
+#: Module.php:1696
+#: src/Form/Admin/BatchEditFieldset.php:134
 msgid "Embargo end"
 msgstr "Fin an embargo"
 
@@ -929,7 +945,8 @@ msgstr "Ar chomlec'h-mañ a vo lakaet evel chomlec'h da respont d'an e-bosteloù
 msgid "Default subject when answering a requester"
 msgstr "Danvez dre ziouer pa respontet d'ur goulener"
 
-#: src/Form/SettingsFieldset.php:54 src/Form/SettingsFieldset.php:67
+#: src/Form/SettingsFieldset.php:54
+#: src/Form/SettingsFieldset.php:67
 msgid "Placeholders: {name}, {email}, {main_title}, {main_url}, {site_title}, {site_url}, {resource}, {resources}."
 msgstr "Plasdermennoù: {name}, {email}, {main_title}, {main_url}, {site_title}, {site_url}, {resource}, {resources}."
 
@@ -945,7 +962,8 @@ msgstr "Danvez postel ar mererezh"
 msgid "Message to admin for new request"
 msgstr "Kinnig goulenn nevez d'ar merour"
 
-#: src/Form/SettingsFieldset.php:93 src/Form/SettingsFieldset.php:105
+#: src/Form/SettingsFieldset.php:93
+#: src/Form/SettingsFieldset.php:105
 msgid "{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource} , {resources} and specific fields wrapped with \"{}\"."
 msgstr "{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource} , {resources} hag ar maeziennoù spesius paket gant \"{}\"."
 
@@ -961,7 +979,8 @@ msgstr "Danvez postel an implijer"
 msgid "Message to user for new request"
 msgstr "Kemenadenn d'an implijer evit ur goulenn nevez"
 
-#: src/Form/SettingsFieldset.php:129 src/Form/SettingsFieldset.php:141
+#: src/Form/SettingsFieldset.php:129
+#: src/Form/SettingsFieldset.php:141
 #: src/Form/SettingsFieldset.php:153
 msgid "{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource}, {resources} and specific fields wrapped with \"{}\"."
 msgstr "{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource}, {resources} hag ar maeziennoù spesius paket gant \"{}\"."
@@ -982,7 +1001,8 @@ msgstr "Danvez postel ar gweladenner"
 msgid "Message to visitor for new request"
 msgstr "Kemenadenn d'ar gweladenner evit ur goulenn nevez"
 
-#: src/Form/SettingsFieldset.php:177 src/Form/SettingsFieldset.php:189
+#: src/Form/SettingsFieldset.php:177
+#: src/Form/SettingsFieldset.php:189
 #: src/Form/SettingsFieldset.php:201
 msgid "{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource}, {resources}, {session_url} and specific fields wrapped with \"{}\"."
 msgstr "{main_title}, {main_url}, {site_title}, {site_url}, {email}, {name}, {message}, {resource}, {resources}, {session_url} hag ar maeziennoù spesius paket gant \"{}\"."
@@ -1007,7 +1027,8 @@ msgstr "Gwirioù moned"
 msgid "Files to protect"
 msgstr "Restroù da wareziñ"
 
-#: src/Form/ConfigForm.php:21 src/Form/ConfigForm.php:325
+#: src/Form/ConfigForm.php:21
+#: src/Form/ConfigForm.php:325
 msgid "Access modes"
 msgstr "Modoù moned"
 
@@ -1811,7 +1832,8 @@ msgstr ""
 "{main_title}\n"
 "{main_url}"
 
-#: config/module.config.php:433 config/module.config.php:436
+#: config/module.config.php:433
+#: config/module.config.php:436
 #: config/module.config.php:440
 msgid "New request status!"
 msgstr "Stad nevez ar goulenn!"
@@ -1832,7 +1854,8 @@ msgstr "Ho koulenn da gaout moned d'ar vammenn {resource} zo bet kaset d'ar mero
 msgid "Your request to access resource {resource} was accepted."
 msgstr "Degemeret eo bet ho koulenn da gaout moned d'ar vammenn {resource}."
 
-#: config/module.config.php:439 config/module.config.php:443
+#: config/module.config.php:439
+#: config/module.config.php:443
 msgid "Your request to access resource {resource} was rejected."
 msgstr "Ho koulenn evit kaout moned d'ar vammenn {resource} a zo bet nac'het."
 
