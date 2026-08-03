@@ -22,15 +22,30 @@ class ConfigForm extends Form
         'embargo' => 'Embargo', // @translate
     ];
 
+    /**
+     * The settings are in the first tab and the processes in the second one.
+     *
+     * The ids are the ones used before the tabs were declared here, so the
+     * anchors of the sections are unchanged.
+     *
+     * @see \Common\View\Helper\FormTabs
+     */
+    protected $elementTabs = [
+        'access-settings' => 'Settings', // @translate
+        'access-tasks' => 'Tasks', // @translate
+    ];
+
     public function init(): void
     {
         $this->setOption('element_groups', $this->elementGroups);
+        $this->setOption('element_tabs', $this->elementTabs);
 
         $this
             ->add([
                 'name' => 'access_levels_table_note',
                 'type' => CommonElement\Note::class,
                 'options' => [
+                    'tab' => 'access-settings',
                     'text' => <<<'HTML'
                         <details>
                             <summary>Quick help about access levels</summary>
@@ -89,6 +104,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\Note::class,
                 'options' => [
                     'element_group' => 'rights',
+                    'tab' => 'access-settings',
                     'text' => 'Access level and embargo dates can be managed either separately as specific metadata of each resource set via a tab in the resource edit page, or as standard property values of the resource.', // @translate
                 ],
             ])
@@ -98,6 +114,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'element_group' => 'rights',
+                    'tab' => 'access-settings',
                     'label' => 'Storage of access level and embargo', // @translate
                     'value_options' => [
                         '0' => 'Resource metadata', // @translate
@@ -137,6 +154,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
                     'element_group' => 'rights',
+                    'tab' => 'access-settings',
                     'label' => 'Set property when access uses property', // @translate
                     'info' => 'Warning: a full reindexation is needed when changing the property.', // @translate
                     'term_as_value' => true,
@@ -154,6 +172,7 @@ class ConfigForm extends Form
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
                     'element_group' => 'rights',
+                    'tab' => 'access-settings',
                     'label' => 'Labels for access levels', // @translate
                     'info' => 'One level by line, formatted as "key = label". The keys ("free", "reserved", "protected", "forbidden") are fixed; only the labels can be customized. The labels are used as values of the property above (typically a custom vocab or a table) and must match the allowed terms.', // @translate
                     'as_key_value' => true,
@@ -175,6 +194,7 @@ class ConfigForm extends Form
                 'type' => Element\Text::class,
                 'options' => [
                     'element_group' => 'rights',
+                    'tab' => 'access-settings',
                     'label' => 'Data type to use for the level', // @translate
                     'info' => 'A data type like "literal" (default) or a controlled vocabulary like "customvocab:X" or "table:X". A specific data type is recommended to simplify resource edition and batch processes.', // @translate
                 ],
@@ -190,6 +210,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
                     'element_group' => 'rights',
+                    'tab' => 'access-settings',
                     'label' => 'Set property to use for embargo start', // @translate
                     'term_as_value' => true,
                     'empty_option' => '',
@@ -206,6 +227,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalPropertySelect::class,
                 'options' => [
                     'element_group' => 'rights',
+                    'tab' => 'access-settings',
                     'label' => 'Set property to use for embargo end', // @translate
                     'term_as_value' => true,
                     'empty_option' => '',
@@ -223,6 +245,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalCheckbox::class,
                 'options' => [
                     'element_group' => 'rights',
+                    'tab' => 'access-settings',
                     'label' => 'Show the access status in advanced tab of resource form', // @translate
                 ],
                 'attributes' => [
@@ -236,6 +259,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\Note::class,
                 'options' => [
                     'element_group' => 'files',
+                    'tab' => 'access-settings',
                     'text' => 'Determine if you want to protect only original files or derivative thumbnails too. This option must be set in the file .htaccess of the server. It can be done automatically only if the web server has access to it.', // @translate
                 ],
             ])
@@ -245,6 +269,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalCheckbox::class,
                 'options' => [
                     'element_group' => 'files',
+                    'tab' => 'access-settings',
                     'label' => 'Do not modify .htaccess (manage Apache redirections manually)', // @translate
                     'info' => 'When checked, the module will not write or update the rewrite rule in the root .htaccess. Add the rules manually to redirect file requests through the Access controller.', // @translate
                 ],
@@ -258,6 +283,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalMultiCheckbox::class,
                 'options' => [
                     'element_group' => 'files',
+                    'tab' => 'access-settings',
                     'label' => 'File types to protect via .htaccess', // @translate
                     'value_column' => true,
                     'info' => 'Select the file types that should be protected by an Apache rewrite rule in the root .htaccess. The rule redirects direct file access through the module Access controller, which checks access rights. When writable, the .htaccess is updated automatically; otherwise, the rule to copy is displayed.', // @translate
@@ -280,6 +306,7 @@ class ConfigForm extends Form
                 'type' => Element\Text::class,
                 'options' => [
                     'element_group' => 'files',
+                    'tab' => 'access-settings',
                     'label' => 'Custom directory paths to protect via .htaccess', // @translate
                     'info' => 'Additional file subdirectories to protect, for example for the module Derivative Media (mp3, mp4, webm, ogg, pdf, etc.). Separate paths with spaces.', // @translate
                 ],
@@ -294,6 +321,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'element_group' => 'files',
+                    'tab' => 'access-settings',
                     'label' => 'Protection', // @translate
                     'value_column' => true,
                     'value_options' => [
@@ -313,6 +341,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\Note::class,
                 'options' => [
                     'element_group' => 'modes',
+                    'tab' => 'access-settings',
                     'text' => 'Two approaches can be combined: global rules (ip, guest, authentication…) grant access to a whole audience, while individual requests (user, email, token) let a visitor request access to a specific resource.', // @translate
                 ],
             ])
@@ -322,6 +351,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalMultiCheckbox::class,
                 'options' => [
                     'element_group' => 'modes',
+                    'tab' => 'access-settings',
                     'label' => 'Access modes', // @translate
                     'value_column' => true,
                     'value_options' => [
@@ -350,6 +380,7 @@ class ConfigForm extends Form
                 'type' => OmekaElement\ArrayTextarea::class,
                 'options' => [
                     'element_group' => 'modes',
+                    'tab' => 'access-settings',
                     'label' => 'Trusted proxies (one IP per line)', // @translate
                     'info' => 'When filled, the module reads the real client IP from the proxy headers X-Forwarded-For / X-Real-IP, but only when the request comes from one of these IPs. Without this list, proxy headers are ignored and every visitor is seen with REMOTE_ADDR. Put here the internal IPs of your reverse proxy (Traefik, nginx, Docker bridge, load balancer).', // @translate
                 ],
@@ -368,6 +399,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\Note::class,
                 'options' => [
                     'element_group' => 'modes',
+                    'tab' => 'access-settings',
                     'text' => self::SCOPE_RULES_PLACEHOLDER,
                     'disable_html_escape' => true,
                 ],
@@ -377,7 +409,9 @@ class ConfigForm extends Form
                 'name' => 'access_ip_rules',
                 'type' => Element\Collection::class,
                 'options' => [
+                    'tab' => 'access-settings',
                     'element_group' => 'modes',
+                    'tab' => 'access-settings',
                     'label' => 'IP addresses with open access to reserved files', // @translate
                     'info' => 'For each ip or range, choose the item sets it may reach. Leave both lists empty for access to every reserved resource.', // @translate
                     'count' => 0,
@@ -400,7 +434,9 @@ class ConfigForm extends Form
                 'name' => 'access_auth_sso_idp_rules',
                 'type' => Element\Collection::class,
                 'options' => [
+                    'tab' => 'access-settings',
                     'element_group' => 'modes',
+                    'tab' => 'access-settings',
                     'label' => 'SSO identity providers with open access to reserved files', // @translate
                     'info' => 'For each idp (or "federation" as a fallback), choose the item sets it may reach. Leave both lists empty for access to every reserved resource.', // @translate
                     'count' => 0,
@@ -424,6 +460,7 @@ class ConfigForm extends Form
                 'type' => Element\Text::class,
                 'options' => [
                     'element_group' => 'modes',
+                    'tab' => 'access-settings',
                     'label' => 'Regex on email of users allowed to access reserved medias (option above)', // @translate
                 ],
                 'attributes' => [
@@ -436,15 +473,30 @@ class ConfigForm extends Form
                 'type' => CommonElement\Note::class,
                 'options' => [
                     'element_group' => 'embargo',
-                    'text' => 'Specify what the metadata for embargo becomes when the date is reached.', // @translate
+                    'tab' => 'access-settings',
+                    'text' => 'Manage embargo dates and specify behavior when the date is reached.', // @translate
                 ],
             ])
 
+            ->add([
+                'name' => 'access_embargo_cascade',
+                'type' => CommonElement\OptionalCheckbox::class,
+                'options' => [
+                    'element_group' => 'embargo',
+                    'tab' => 'access-settings',
+                    'label' => 'Cascade embargo dates', // @translate
+                    'info' => 'By default, an embargo applies only to the resource it is set on. Check this box to make an embargo set on an item set or an item also apply to its items and medias, like the access level. After changing this option, run the "Rebuild access index" task.', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'access_embargo_cascade',
+                ],
+            ])
             ->add([
                 'name' => 'access_embargo_bypass',
                 'type' => CommonElement\OptionalCheckbox::class,
                 'options' => [
                     'element_group' => 'embargo',
+                    'tab' => 'access-settings',
                     'label' => 'Bypass embargo dates for reserved resources', // @translate
                 ],
                 'attributes' => [
@@ -456,6 +508,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'element_group' => 'embargo',
+                    'tab' => 'access-settings',
                     'label' => 'Update access level when embargo ends', // @translate
                     'value_column' => true,
                     'value_options' => [
@@ -473,6 +526,7 @@ class ConfigForm extends Form
                 'type' => CommonElement\OptionalRadio::class,
                 'options' => [
                     'element_group' => 'embargo',
+                    'tab' => 'access-settings',
                     'label' => 'Update embargo dates when embargo ends', // @translate
                     'value_column' => true,
                     'value_options' => [
@@ -484,18 +538,6 @@ class ConfigForm extends Form
                     'id' => 'access_embargo_ended_date',
                 ],
             ])
-            ->add([
-                'name' => 'access_embargo_cascade',
-                'type' => CommonElement\OptionalCheckbox::class,
-                'options' => [
-                    'element_group' => 'embargo',
-                    'label' => 'Cascade embargo dates', // @translate
-                    'info' => 'By default, an embargo applies only to the resource it is set on. Check this box to make an embargo set on an item set or an item also apply to its items and medias, like the access level. After changing this option, run the "Rebuild access index" task.', // @translate
-                ],
-                'attributes' => [
-                    'id' => 'access_embargo_cascade',
-                ],
-            ])
         ;
 
         // Tasks fieldset (rebuild / reset). It provides its own submit buttons;
@@ -505,6 +547,7 @@ class ConfigForm extends Form
                 'name' => 'access_reindex',
                 'type' => Admin\AccessReindexFieldset::class,
                 'options' => [
+                    'tab' => 'access-tasks',
                     'use_as_base_fieldset' => false,
                 ],
             ]);

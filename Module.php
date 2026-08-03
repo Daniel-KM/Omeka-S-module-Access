@@ -717,18 +717,9 @@ class Module extends AbstractModule
             }
         }
 
-        $translate = $renderer->plugin('translate');
-        $tabs = [
-            'access-settings' => [
-                'label' => $translate('Settings'), // @translate
-            ],
-            'access-tasks' => [
-                'label' => $translate('Tasks'), // @translate
-                'elements' => ['access_reindex'],
-            ],
-        ];
-
-        $html = $renderer->formTabs($form, $tabs, 'access.config.section_nav');
+        // The tabs are declared by the form, each element carrying its own tab.
+        // @see \Access\Form\ConfigForm
+        $html = $renderer->formTabs($form, [], 'access.config.section_nav');
         $html = str_replace(\Access\Form\ConfigForm::SCOPE_RULES_PLACEHOLDER, $scopeRules, $html);
 
         return '<style>fieldset[name=access_reindex] .inputs label {display: block;}</style>'
