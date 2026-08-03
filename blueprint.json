@@ -51,7 +51,7 @@
       "state": "activate",
       "source": {
         "type": "url",
-        "url": "https://github.com/Daniel-KM/Omeka-S-module-Common/releases/download/3.4.88/Common-3.4.88.zip"
+        "url": "https://gitlab.com/Daniel-KM/Omeka-S-module-Common/-/releases/3.4.89/downloads/Common-3.4.89.zip"
       }
     },
     {
@@ -59,7 +59,7 @@
       "state": "activate",
       "source": {
         "type": "url",
-        "url": "https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/archive/3.4.46/Omeka-S-module-Access-3.4.46.zip"
+        "url": "https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/archive/3.4.47/Omeka-S-module-Access-3.4.47.zip"
       }
     }
   ],

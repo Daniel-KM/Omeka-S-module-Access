@@ -317,6 +317,38 @@ class Module extends AbstractModule
         $this->manageHtaccess(['original', 'large']);
 
         $this->autoDetectTrustedProxy();
+
+        $this->recommendSpamGuard();
+    }
+
+    /**
+     * Recommend the module SpamGuard, that protects anonymous access requests.
+     *
+     * Access has no built-in spam engine: with the individual modes "email" or
+     * "token", any visitor can post a request, that is stored and emailed to
+     * the admin and to the submitted address, so SpamGuard is the only
+     * protection.
+     */
+    public function recommendSpamGuard(): void
+    {
+        $services = $this->getServiceLocator();
+
+        $spamGuard = $services->get('Omeka\ModuleManager')->getModule('SpamGuard');
+        if ($spamGuard && $spamGuard->getState() === \Omeka\Module\Manager::STATE_ACTIVE) {
+            return;
+        }
+
+        $modes = $services->get('Omeka\Settings')->get('access_modes') ?: [];
+        $isAnonymousRequest = (bool) array_intersect(['email', 'token'], $modes);
+
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+        $isAnonymousRequest
+            ? $messenger->addWarning(new PsrMessage(
+                'Access requests are open to any visitor, but no anti-spam protection is available. Install and enable the module SpamGuard to protect anonymous requests.' // @translate
+            ))
+            : $messenger->addNotice(new PsrMessage(
+                'To open access requests to any visitor with modes "email" or "token", install the module SpamGuard first: it is the only anti-spam protection for anonymous requests.' // @translate
+            ));
     }
 
     /**

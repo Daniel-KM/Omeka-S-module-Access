@@ -570,10 +570,12 @@ if (version_compare($oldVersion, '3.4.45', '<')) {
             ADD COLUMN `embargo_start_set` DATETIME DEFAULT NULL AFTER `embargo_start`,
             ADD COLUMN `embargo_end_set` DATETIME DEFAULT NULL AFTER `embargo_end`
         SQL;
-    try {
+    // Don't catch every exception here: only a column already added (re-run of
+    // a partial upgrade) is expected. Any other failure must stop the upgrade,
+    // else the module is recorded as upgraded with an unusable table.
+    $existingColumns = array_map('strtolower', array_keys($connection->getSchemaManager()->listTableColumns('access_status')));
+    if (!in_array('level_set', $existingColumns)) {
         $connection->executeStatement($sql);
-    } catch (\Exception $e) {
-        // Columns already added (re-run of a partial upgrade).
     }
 
     // The current level and embargo columns hold the admin decision, because no
@@ -683,6 +685,38 @@ if (version_compare((string) $oldVersion, '3.4.46', '<')) {
     );
     $messenger->addSuccess($message);
 
+    // Some bases are recorded as upgraded to 3.4.45 but their access_status
+    // table has no "_set" columns, so every read of an access status fails with
+    // "Unknown column 'level_set'". Repair the schema here instead of relying
+    // on the 3.4.45 block, that is skipped for them. Each column is added
+    // separately: a base may miss only some of them.
+    $columnsSet = [
+        'level_set' => "ADD COLUMN `level_set` VARCHAR(15) NOT NULL DEFAULT 'free' AFTER `level`",
+        'embargo_start_set' => 'ADD COLUMN `embargo_start_set` DATETIME DEFAULT NULL AFTER `embargo_start`',
+        'embargo_end_set' => 'ADD COLUMN `embargo_end_set` DATETIME DEFAULT NULL AFTER `embargo_end`',
+    ];
+    $existingColumns = array_map('strtolower', array_keys($connection->getSchemaManager()->listTableColumns('access_status')));
+    $missingColumns = array_diff(array_keys($columnsSet), $existingColumns);
+    foreach ($missingColumns as $missingColumn) {
+        $connection->executeStatement('ALTER TABLE `access_status` ' . $columnsSet[$missingColumn]);
+    }
+
+    if ($missingColumns) {
+        // The level and embargo columns hold the admin decision on these bases,
+        // since the cascade never ran: copy them into the "_set" columns.
+        $connection->executeStatement(<<<'SQL'
+            UPDATE `access_status`
+            SET `level_set` = `level`,
+                `embargo_start_set` = `embargo_start`,
+                `embargo_end_set` = `embargo_end`
+            SQL);
+
+        $messenger->addWarning(new PsrMessage(
+            'The table of access statuses was missing the columns holding the admin decision ({columns}), so access statuses were unreadable. They were added and filled from the current levels.', // @translate
+            ['columns' => implode(', ', $missingColumns)]
+        ));
+    }
+
     // Users who passed through 3.4.45 on MySQL hit issue #3: the effective
     // access levels recompute (job AccessStatusRebuild) failed with error 1093
     // and the level/embargo columns kept their pre-3.4.45 values. The sql is
@@ -690,8 +724,11 @@ if (version_compare((string) $oldVersion, '3.4.46', '<')) {
     // arriving from an older version, whose own 3.4.45 block already dispatches
     // this (now-working) job, to avoid a double run. Skip MariaDB too: its
     // 3.4.45 recompute already succeeded (1093 is a MySQL-only restriction).
+    // A repaired schema always needs the recompute, whatever the database.
     $isMysql = stripos((string) $connection->executeQuery('SELECT VERSION()')->fetchOne(), 'mariadb') === false;
-    if ($isMysql && version_compare((string) $oldVersion, '3.4.45', '>=')) {
+    if ($missingColumns
+        || ($isMysql && version_compare((string) $oldVersion, '3.4.45', '>='))
+    ) {
         $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusRebuild::class);
         $message = new PsrMessage(
             'A background job was started to fix the access levels of all resources, which could not be computed on mysql ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
@@ -708,3 +745,7 @@ if (version_compare((string) $oldVersion, '3.4.46', '<')) {
         $messenger->addSuccess($message);
     }
 }
+
+// Recommend SpamGuard on each upgrade: Access has no built-in spam engine, so
+// anonymous access requests are unprotected without it.
+$this->recommendSpamGuard();
