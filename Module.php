@@ -416,7 +416,7 @@ class Module extends AbstractModule
         }
 
         $roles = $acl->getRoles();
-        $rolesExceptGuest = array_diff($roles, ['guest']);
+        $rolesExceptGuest = array_diff($roles, ['guest', 'guest_private', 'guest_private_site']);
 
         // Only admins can manage requests.
         $rolesAdmins = [
