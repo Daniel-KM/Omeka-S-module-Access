@@ -12,7 +12,7 @@
 require dirname(__DIR__, 3) . '/modules/Common/tests/Bootstrap.php';
 
 \CommonTest\Bootstrap::bootstrap(
-    ['Common', '?SpamGuard', 'Access', '?Guest', '?DigitalObject'],
+    ['Common', '?SpamGuard', 'Access', '?Guest', '?GuestPrivate', '?DigitalObject', '?DerivativeMedia'],
     'AccessTest',
     __DIR__ . '/AccessTest'
 );

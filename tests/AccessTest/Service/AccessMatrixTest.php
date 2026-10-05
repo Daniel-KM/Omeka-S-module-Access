@@ -42,7 +42,7 @@ class AccessMatrixTest extends AbstractHttpControllerTestCase
         $this->loginAdmin();
         // The guest role unlocks reserved content only when the guest mode is
         // active.
-        $this->setAccessModes(['guest']);
+        $this->setAccessModes(['auth_guest']);
     }
 
     public function tearDown(): void
