@@ -22,12 +22,12 @@ use Common\Stdlib\PsrMessage;
  * @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger
  */
 $plugins = $services->get('ControllerPluginManager');
-$url = $services->get('ViewHelperManager')->get('url');
+$helpers = $services->get('ViewHelperManager');
+$url = $helpers->get('url');
 $api = $plugins->get('api');
 $logger = $services->get('Omeka\Logger');
 $settings = $services->get('Omeka\Settings');
 $translate = $plugins->get('translate');
-$urlPlugin = $plugins->get('url');
 $translator = $services->get('MvcTranslator');
 $connection = $services->get('Omeka\Connection');
 $messenger = $plugins->get('messenger');
@@ -467,12 +467,12 @@ if (version_compare((string) $oldVersion, '3.4.40', '<')) {
         $message = new PsrMessage(
             'A previous bug may have removed access property values. A background job has been launched to restore them from indexes ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
             [
-                'link' => sprintf('<a href="%s">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
+                'link' => sprintf('<a href="%s">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
                 'job_id' => $job->getId(),
                 'link_end' => '</a>',
                 'link_log' => class_exists('Log\Module', false)
-                    ? sprintf('<a href="%1$s">', htmlspecialchars($urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
-                    : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
+                    ? sprintf('<a href="%1$s">', htmlspecialchars($url('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
+                    : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
             ]
         );
         $message->setEscapeHtml(false);
@@ -604,12 +604,12 @@ if (version_compare($oldVersion, '3.4.45', '<')) {
     $message = new PsrMessage(
         'A background job was started to apply the access levels to all resources ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
         [
-            'link' => sprintf('<a href="%s">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
+            'link' => sprintf('<a href="%s">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
             'job_id' => $job->getId(),
             'link_end' => '</a>',
             'link_log' => class_exists('Log\Module', false)
-                ? sprintf('<a href="%1$s">', htmlspecialchars($urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
-                : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
+                ? sprintf('<a href="%1$s">', htmlspecialchars($url('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
+                : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
         ]
     );
     $message->setEscapeHtml(false);
@@ -733,16 +733,32 @@ if (version_compare((string) $oldVersion, '3.4.46', '<')) {
         $message = new PsrMessage(
             'A background job was started to fix the access levels of all resources, which could not be computed on mysql ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
             [
-                'link' => sprintf('<a href="%s">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
+                'link' => sprintf('<a href="%s">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
                 'job_id' => $job->getId(),
                 'link_end' => '</a>',
                 'link_log' => class_exists('Log\Module', false)
-                    ? sprintf('<a href="%1$s">', htmlspecialchars($urlPlugin->fromRoute('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
-                    : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($urlPlugin->fromRoute('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
+                    ? sprintf('<a href="%1$s">', htmlspecialchars($url('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
+                    : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
             ]
         );
         $message->setEscapeHtml(false);
         $messenger->addSuccess($message);
+    }
+}
+
+if (version_compare((string) $oldVersion, '3.4.48', '<')) {
+    // Mode "guest" was split into "auth_any" (any authenticated user) and
+    // "auth_guest" (guest roles only). Keep the previous behavior.
+    $accessModes = $settings->get('access_modes') ?: [];
+    if (in_array('guest', $accessModes, true)) {
+        $accessModes = array_values(array_unique(array_merge(
+            array_diff($accessModes, ['guest']),
+            ['auth_guest']
+        )));
+        $settings->set('access_modes', $accessModes);
+        $messenger->addWarning(new PsrMessage(
+            'The access mode "guest" was renamed "auth_guest" (users with a guest role). A new mode "auth_any" gives access to any authenticated user.' // @translate
+        ));
     }
 }
 
