@@ -746,6 +746,22 @@ if (version_compare((string) $oldVersion, '3.4.46', '<')) {
     }
 }
 
+if (version_compare((string) $oldVersion, '3.4.48', '<')) {
+    // Mode "guest" was split into "auth_any" (any authenticated user) and
+    // "auth_guest" (guest roles only). Keep the previous behavior.
+    $accessModes = $settings->get('access_modes') ?: [];
+    if (in_array('guest', $accessModes, true)) {
+        $accessModes = array_values(array_unique(array_merge(
+            array_diff($accessModes, ['guest']),
+            ['auth_guest']
+        )));
+        $settings->set('access_modes', $accessModes);
+        $messenger->addWarning(new PsrMessage(
+            'The access mode "guest" was renamed "auth_guest" (users with a guest role). A new mode "auth_any" gives access to any authenticated user.' // @translate
+        ));
+    }
+}
+
 // Recommend SpamGuard on each upgrade: Access has no built-in spam engine, so
 // anonymous access requests are unprotected without it.
 $this->recommendSpamGuard();
