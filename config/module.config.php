@@ -357,7 +357,8 @@ return [
 
             'access_modes' => [
                 // 'ip',
-                'guest',
+                'auth_any',
+                // 'auth_guest',
                 // 'auth_external',
                 // 'auth_cas',
                 // 'auth_ldap',

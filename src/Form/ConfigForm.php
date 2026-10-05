@@ -350,7 +350,8 @@ class ConfigForm extends Form
                     'value_column' => true,
                     'value_options' => [
                         'ip' => 'IP: visitors with specified ips have access to all reserved medias, or only to those in selected item sets', // @translate
-                        'guest' => 'Guest: all users, included guests, have access to all reserved medias', // @translate
+                        'auth_any' => 'Authenticated: all authenticated users have access to all reserved medias', // @translate
+                        'auth_guest' => 'Guest: users with a guest role have access to all reserved medias', // @translate
                         'auth_external' => 'External: users externally authenticated (cas, ldap, sso) have access to all reserved medias', // @translate
                         'auth_cas' => 'CAS: users authenticated by cas have access to all reserved medias', // @translate
                         'auth_ldap' => 'LDAP: users authenticated by ldap have access to all reserved medias', // @translate

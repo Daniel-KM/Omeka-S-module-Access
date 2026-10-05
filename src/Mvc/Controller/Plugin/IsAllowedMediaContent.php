@@ -209,7 +209,11 @@ class IsAllowedMediaContent extends AbstractPlugin
         }
 
         if ($this->user) {
-            $modeGuest = in_array('guest', $modes);
+            if (in_array('auth_any', $modes)) {
+                return true;
+            }
+
+            $modeGuest = in_array('auth_guest', $modes);
             if ($modeGuest && in_array($this->user->getRole(), ['guest', 'guest_private', 'guest_private_site'])) {
                 return true;
             }
