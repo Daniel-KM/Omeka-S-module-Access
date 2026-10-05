@@ -52,7 +52,7 @@ class AccessReindexFieldset extends Fieldset
                 'name' => 'reset',
                 'type' => CommonElement\OptionalMultiCheckbox::class,
                 'options' => [
-                    'label' => 'Reset the access status of', // @translate
+                    'label' => 'Remove the access status of', // @translate
                     'value_options' => [
                         'item_sets' => 'Item sets (to manage access by document)', // @translate
                         'items' => 'Items (to manage access by item set)', // @translate

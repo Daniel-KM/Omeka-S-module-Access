@@ -4,7 +4,7 @@ namespace Access\View\Helper;
 
 use Access\Mvc\Controller\Plugin\IsAllowedMediaContent as IsAllowedMediaContentPlugin;
 use Laminas\View\Helper\AbstractHelper;
-use Omeka\Api\Representation\MediaRepresentation;
+use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 
 class IsAllowedMediaContent extends AbstractHelper
 {
@@ -41,10 +41,14 @@ class IsAllowedMediaContent extends AbstractHelper
      *
      * The embargo is checked first.
      *
-     *@uses \Access\Mvc\Controller\Plugin\IsAllowedMediaContent
+     * The argument is any resource entity, not only a media: the plugin reads
+     * the access status of an item or a digital object too, and falls back on
+     * the item of a media that has none.
+     *
+     * @uses \Access\Mvc\Controller\Plugin\IsAllowedMediaContent
      */
-    public function __invoke(?MediaRepresentation $media): bool
+    public function __invoke(?AbstractResourceEntityRepresentation $resource): bool
     {
-        return $this->isAllowedMediaContentPlugin->__invoke($media);
+        return $this->isAllowedMediaContentPlugin->__invoke($resource);
     }
 }
