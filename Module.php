@@ -712,6 +712,7 @@ class Module extends AbstractModule
 
         $this->infoEmbargo();
         $this->checkIpProxySetting();
+        $this->checkDerivativeMediaFolders();
 
         $assetUrl = $renderer->plugin('assetUrl');
         $renderer->headLink()
@@ -2328,6 +2329,112 @@ class Module extends AbstractModule
         /** @var \Omeka\Mvc\Controller\Plugin\Messenger $messenger */
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
         $messenger->addSuccess($message);
+    }
+
+    /**
+     * Warn when the folders of the module Derivative Media are not protected by
+     * the rewrite rule.
+     *
+     * Derivative Media stores its files in its own folders (zip, pdf, alto,
+     * mp3, etc.), that the default rule does not cover, since it only protects
+     * the folders of Omeka. So the derivatives of a reserved file remain
+     * downloadable directly, whatever the access level of the original.
+     */
+    protected function checkDerivativeMediaFolders(): void
+    {
+        $services = $this->getServiceLocator();
+
+        $module = $services->get('Omeka\ModuleManager')->getModule('DerivativeMedia');
+        if (!$module || $module->getState() !== \Omeka\Module\Manager::STATE_ACTIVE) {
+            return;
+        }
+
+        $settings = $services->get('Omeka\Settings');
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+
+        $dirs = $this->derivativeMediaFolders($settings);
+        if (!$dirs) {
+            return;
+        }
+
+        $covered = $settings->get('access_htaccess_types') ?: [];
+        $custom = (string) $settings->get('access_htaccess_custom_types', '');
+        $covered = array_merge($covered, preg_split('/[\s,]+/', $custom, -1, PREG_SPLIT_NO_EMPTY) ?: []);
+        $covered = array_map('trim', $covered);
+
+        $missing = array_values(array_diff($dirs, $covered));
+        if (!$missing) {
+            return;
+        }
+
+        $basePath = $services->get('Config')['file_store']['local']['base_path']
+            ?: (OMEKA_PATH . '/files');
+
+        $filled = [];
+        $empty = [];
+        foreach ($missing as $dir) {
+            $path = $basePath . '/' . $dir;
+            $isFilled = is_dir($path) && (bool) glob($path . '/*');
+            $isFilled ? $filled[] = $dir : $empty[] = $dir;
+        }
+
+        if ($settings->get('access_htaccess_skip')) {
+            $messenger->addWarning(new PsrMessage(
+                'The module Derivative Media stores files in folders that are not protected: {dirs}. The automatic management of .htaccess is disabled, so add them to the rewrite rule manually.', // @translate
+                ['dirs' => implode(', ', $missing)]
+            ));
+            return;
+        }
+
+        if ($filled) {
+            $messenger->addError(new PsrMessage(
+                'The folders of the module Derivative Media {dirs} contain files and are not protected: the derivatives of a reserved file can be downloaded directly. Add them to the option "Custom directory paths to protect via .htaccess" below.', // @translate
+                ['dirs' => implode(', ', $filled)]
+            ));
+        }
+
+        if ($empty) {
+            $messenger->addWarning(new PsrMessage(
+                'The module Derivative Media may create the folders {dirs}, that are not protected. Add them to the option "Custom directory paths to protect via .htaccess" below before building derivatives.', // @translate
+                ['dirs' => implode(', ', $empty)]
+            ));
+        }
+    }
+
+    /**
+     * The folders are the ones of the item level derivatives, and the first
+     * segment of each converter of the media level ones.
+     *
+     * @return string[]
+     */
+    protected function derivativeMediaFolders(\Omeka\Settings\Settings $settings): array
+    {
+        $dirs = [];
+
+        if (class_exists('DerivativeMedia\Module')) {
+            foreach (\DerivativeMedia\Module::DERIVATIVES as $derivative) {
+                if (!empty($derivative['dir'])) {
+                    $dirs[] = (string) $derivative['dir'];
+                }
+            }
+        }
+
+        foreach (['image', 'audio', 'video', 'pdf'] as $mediaType) {
+            $converters = $settings->get('derivativemedia_converters_' . $mediaType) ?: [];
+            foreach (array_keys($converters) as $pattern) {
+                // Comments are stored as keys beginning with a sharp.
+                $pattern = trim((string) $pattern);
+                if ($pattern === '' || mb_substr($pattern, 0, 1) === '#') {
+                    continue;
+                }
+                $dir = trim(strtok($pattern, '/'));
+                if ($dir !== '' && $dir !== $pattern) {
+                    $dirs[] = $dir;
+                }
+            }
+        }
+
+        return array_values(array_unique($dirs));
     }
 
     /**
