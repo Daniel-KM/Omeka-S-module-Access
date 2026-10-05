@@ -29,6 +29,10 @@ Installation
 To allow access to reserved resources for user with role "Guest", the module
 will need to identify users, generally with the module [Guest] or [Guest Role].
 
+The module is compatible with the module [Guest Private]: with the access mode
+`auth_guest`, the roles `guest_private` and `guest_private_site` have the same
+access as the role `guest`.
+
 To define specific item sets, you can use standard item sets or use the module
 [Dynamic Item Sets] to include items automatically in specific items sets
 according to metadata.
@@ -103,6 +107,22 @@ The Files to protect sub-section provides:
   `original`, `large`, `medium` and `square`.
 - Custom types field: add extra path segments separated by spaces, for example
   `mp3 mp4 webm ogg pdf` when using module [Derivative Media].
+
+When the module [Derivative Media] is active, the configuration page checks its
+folders against the rule and reports the ones left unprotected: the folders of
+the item level derivatives (`zip`, `pdf`, `alto`, `txt`, `pdf2xml`, etc.) and
+the first path segment of each configured converter (`mp3`, `mp4`, `webm`,
+`webp`, etc.). A folder that already contains files is reported as an error,
+since the derivatives of a reserved file can be downloaded directly, whatever
+the access level of the original; a folder not created yet is reported as a
+warning. Add the listed folders to the custom types field.
+
+A folder holding an `.htaccess` that denies any direct web access (`Require all
+denied`) is skipped: such a folder is already unreachable and needs no rewrite
+rule, which only serves a file through the controller. This is the case of the
+cache of IIIF manifests (`iiif/2`, `iiif/3`) and of the OCR folders, protected
+by the modules that write them. A deny set on a parent folder counts for its
+children.
 
 When you save the configuration, the module inserts or updates a managed block
 in the `.htaccess`:
@@ -328,7 +348,10 @@ can be managed in multiple ways:
     library or the one of a researcher, can have access to all the reserved
     files. Ip can be configured to access specific item sets, for example
     `123.45.67.89 = 51, 54`
-  - `guest`: all guest users have access to all the reserved files.
+  - `auth_any`: all authenticated users have access to all the reserved files.
+  - `auth_guest`: all users with a guest role (`guest`, and `guest_private` and
+    `guest_private_site` of module [Guest Private]) have access to all the
+    reserved files.
   - `auth_external`: all users authenticated via an external identity provider
     (currently via module CAS and SingleSignOn, later for Ldap) have access
     to media contents.
@@ -499,6 +522,19 @@ authorization result as an HTTP status code with an empty body:
 - `403`: access denied
 - `404`: media not found
 
+The response carries the header `Omeka-S-Access-Status`, set to `allowed` or `denied`.
+The file controller sets the same header, so a supervision tool can rely on a
+single signal for both endpoints. It is useful, because `/access/files` always
+answers `200`: when access is denied, the file is replaced by a placeholder
+("locked file") instead of returning an error, so the status code alone cannot
+tell a protected file from a served one.
+
+```
+# Access denied: the placeholder is served, not the real file.
+curl -sI https://example.org/files/original/24829/0002.jpg | grep -i omeka-s-access-status
+Omeka-S-Access-Status: denied
+```
+
 Accepts one of the following query parameters:
 
 - `media=<id>`: internal media id
@@ -590,7 +626,8 @@ runtime behavior (absence of status = free).
 
 ### Management of requests
 
-If you choose modes `ip`, `guest`, or `external`, there is nothing to do more.
+If you choose modes `ip`, `auth_any`, `auth_guest`, or `auth_external`, there
+is nothing to do more.
 Once users are authenticated or authorized, they will be able to see the files.
 
 In the case of the single modes `user`, `email` or `token`, there are two ways
