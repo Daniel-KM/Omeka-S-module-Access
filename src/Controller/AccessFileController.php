@@ -133,6 +133,11 @@ class AccessFileController extends AbstractActionController
         $sourceFilename = $media->source();
         $downloadFilename = $sourceFilename ? basename($sourceFilename) : basename($filepath);
 
+        // The status code is always 200, even with the fake file, so add an
+        // explicit header to allow monitoring protection without checking body.
+        $this->getResponse()->getHeaders()
+            ->addHeaderLine('Omeka-S-Access-Status: ' . ($isAllowedMediaContent ? 'allowed' : 'denied'));
+
         return $isAllowedMediaContent
             ? $this->sendFile($filepath, $media, null, $downloadFilename, $storageType, $forceDownload)
             : $this->sendFakeFile($media, $downloadFilename, $forceDownload);

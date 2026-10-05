@@ -14,7 +14,9 @@ use Omeka\Api\Representation\MediaRepresentation;
  *
  * Returns 200 when the current request is allowed to access the media content,
  * 403 otherwise. Body is empty on purpose so reverse proxies can use it as a
- * pure signal.
+ * pure signal. The header "Omeka-S-Access-Status" repeats the result as
+ * "allowed" or "denied", like the file controller, so a supervision tool can
+ * check a single header on both endpoints.
  *
  * Accepted query parameters (any one, resolved in this order):
  * - media    : internal media id
@@ -73,7 +75,7 @@ class AuthorizeController extends AbstractActionController
         $allowed = (bool) $this->isAllowedMediaContent($media);
         return $this->emptyResponse($allowed
             ? Response::STATUS_CODE_200
-            : Response::STATUS_CODE_403);
+            : Response::STATUS_CODE_403, $allowed ? 'allowed' : 'denied');
     }
 
     protected function mediaFromId(int $id): ?MediaRepresentation
@@ -94,12 +96,17 @@ class AuthorizeController extends AbstractActionController
         return $entity ? $this->mediaAdapter->getRepresentation($entity) : null;
     }
 
-    protected function emptyResponse(int $statusCode): Response
+    protected function emptyResponse(int $statusCode, ?string $accessStatus = null): Response
     {
         /** @var \Laminas\Http\Response $response */
         $response = $this->getResponse();
         $response->setStatusCode($statusCode);
         $response->setContent('');
+        // The header is the same as the one set by the file controller, so a
+        // supervision tool can use a single signal on both endpoints.
+        if ($accessStatus !== null) {
+            $response->getHeaders()->addHeaderLine('Omeka-S-Access-Status: ' . $accessStatus);
+        }
         return $response;
     }
 }
