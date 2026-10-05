@@ -139,7 +139,7 @@ class AccessFileController extends AbstractActionController
             ->addHeaderLine('Omeka-S-Access-Status: ' . ($isAllowedMediaContent ? 'allowed' : 'denied'));
 
         return $isAllowedMediaContent
-            ? $this->sendFile($filepath, $media, null, $downloadFilename, $storageType, $forceDownload)
+            ? $this->sendFile($filepath, $media, null, $downloadFilename, $storageType, false, $forceDownload)
             : $this->sendFakeFile($media, $downloadFilename, $forceDownload);
     }
 
