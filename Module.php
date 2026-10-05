@@ -2154,7 +2154,7 @@ class Module extends AbstractModule
                     $savedTypes,
                     array_filter(array_map('trim', preg_split('/[\s,|]+/', $savedCustom)))
                 )));
-                $exampleRule = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(' . implode('|', $wantedTypes) . ')/(.*)$" "access/files/$1/$2" [' . $flags . ']';
+                $exampleRule = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(' . implode('|', $wantedTypes) . ')/(.*)$" "access/files/$1/$2" [' . $flags . ']' . "\n" . $markerEnd;
                 $message = new PsrMessage(
                     'The file .htaccess is not writable, so the rule for types "{types}" set below could not be applied. Add the following lines manually in the file .htaccess at the root of Omeka, just after "RewriteEngine On":{line_break}{rule}', // @translate
                     [
@@ -2166,7 +2166,7 @@ class Module extends AbstractModule
                 $message->setEscapeHtml(false);
                 $messenger->addWarning($message);
             } elseif (empty($currentTypes)) {
-                $exampleRule = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [' . $flags . ']';
+                $exampleRule = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [' . $flags . ']' . "\n" . $markerEnd;
                 $message = new PsrMessage(
                     'No .htaccess rule is set to protect files. To control access to files, add the following lines in the file .htaccess at the root of Omeka, just after "RewriteEngine On":{line_break}{rule}', // @translate
                     [
