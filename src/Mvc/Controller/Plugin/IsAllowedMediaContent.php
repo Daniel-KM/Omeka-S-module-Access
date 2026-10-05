@@ -183,10 +183,10 @@ class IsAllowedMediaContent extends AbstractPlugin
             return true;
         }
 
-        $modes = $this->settings->get('access_modes');
-        if (empty($modes)) {
-            return true;
-        }
+        // Here, the level is reserved or protected. An empty list of modes means
+        // that no bypass is enabled, so the content is denied: the checks below
+        // all fail with an empty list, so there is no shortcut.
+        $modes = $this->settings->get('access_modes') ?: [];
 
         // Protected: stricter than reserved. No global bypass modes (IP, SSO
         // IDP, guest, CAS, LDAP, external, email regex) apply. The only way to
