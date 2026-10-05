@@ -2370,6 +2370,19 @@ class Module extends AbstractModule
         $basePath = $services->get('Config')['file_store']['local']['base_path']
             ?: (OMEKA_PATH . '/files');
 
+        // A folder may also be protected by an .htaccess denying any direct web
+        // access, like the ones written for the private data of the modules.
+        // Such a folder needs no rewrite rule: the rule only serves a file
+        // through the controller, that is useless for data never requested by
+        // an url.
+        $missing = array_values(array_filter(
+            $missing,
+            fn ($dir) => !$this->isDirectoryDenied($basePath, (string) $dir)
+        ));
+        if (!$missing) {
+            return;
+        }
+
         $filled = [];
         $empty = [];
         foreach ($missing as $dir) {
@@ -2399,6 +2412,31 @@ class Module extends AbstractModule
                 ['dirs' => implode(', ', $empty)]
             ));
         }
+    }
+
+    /**
+     * Is a directory protected by an .htaccess denying any direct web access?
+     *
+     * The check walks up to the base directory, since a deny set on a parent
+     * applies to its children, for example "files/iiif" for "files/iiif/3".
+     */
+    protected function isDirectoryDenied(string $basePath, string $dir): bool
+    {
+        $path = $basePath . '/' . $dir;
+        while (strlen($path) >= strlen($basePath)) {
+            $htaccess = $path . '/.htaccess';
+            if (file_exists($htaccess)
+                && preg_match('~^\s*(Require\s+all\s+denied|Deny\s+from\s+all)~mi', (string) file_get_contents($htaccess))
+            ) {
+                return true;
+            }
+            $parent = dirname($path);
+            if ($parent === $path) {
+                break;
+            }
+            $path = $parent;
+        }
+        return false;
     }
 
     /**
