@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 00:00+0000\n"
+"POT-Creation-Date: 2026-09-06 11:41+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: \n"
@@ -645,8 +645,8 @@ msgid ""
 "individual access request and no global bypass applies."
 msgstr ""
 "Le statut « protégé » a été clarifié : un fichier « réservé » est géré via "
-"les règles de générales, tandis qu’un fichier « protégé » nécessite une "
-"demande d'accès individuelle approuvée et aucun règle générale ne s’applique."
+"les règles générales, tandis qu’un fichier « protégé » nécessite une demande "
+"d'accès individuelle approuvée et aucun règle générale ne s’applique."
 
 #: data/scripts/upgrade.php:600
 msgid ""
@@ -1994,8 +1994,8 @@ msgstr ""
 "ne peut pas être annulé."
 
 #: src/Form/Admin/AccessReindexFieldset.php:55
-msgid "Reset the access status of"
-msgstr "Réinitialisation des statuts d’accès des"
+msgid "Remove the access status of"
+msgstr "Efface les statuts d’accès des"
 
 #: src/Form/Admin/AccessReindexFieldset.php:57
 msgid "Item sets (to manage access by document)"
@@ -2250,7 +2250,6 @@ msgstr ""
 "collection globale identifiant toutes les ressources réservées."
 
 #: src/Form/View/Helper/FormScopeRules.php:93
-#| msgid "124.8.16.32  or  65.43.21.0/24"
 msgid ""
 "12.34.56.78\n"
 "124.8.16.32 = 17 89 -1940\n"
