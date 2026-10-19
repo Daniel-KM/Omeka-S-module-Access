@@ -54,6 +54,11 @@ class AccessMatrixTest extends AbstractHttpControllerTestCase
 
     public function testFullMatrix(): void
     {
+        // The role "guest" is registered by the module Guest.
+        if (!$this->getServiceLocator()->get('Omeka\Acl')->hasRole('guest')) {
+            $this->markTestSkipped('Requires the role "guest" (module Guest).');
+        }
+
         $itemSet = $this->createItemSet();
         $item = $this->createItem(['item_set' => $itemSet]);
         $media = $this->createMedia($item);

@@ -127,6 +127,58 @@ class CollectionScopedBypassTest extends AbstractHttpControllerTestCase
     }
 
     /**
+     * An ipv6 range is saved from the config (binary ranges cannot be stored
+     * in json) and unlocks the reserved file inside the range only.
+     */
+    public function testIpv6RangeAllowsReservedInScopedItemSet(): void
+    {
+        [$itemSetId, $media] = $this->reservedMediaInItemSet();
+
+        $this->getSettings()->set('access_modes', ['ip']);
+        $this->getSettings()->set('access_ip_rules', [
+            ['source' => '2001:DB8:0::/32', 'allow' => [$itemSetId], 'forbid' => []],
+        ]);
+        $this->assertTrue($this->prepareIpItemSets(), 'The ipv6 rule is saved');
+        $rules = $this->getSettings()->get('access_ip_rules');
+        $this->assertArrayHasKey('2001:db8::/32', $rules, 'The source is normalized');
+        $this->assertSame('20010db8000000000000000000000000', $rules['2001:db8::/32']['low_hex']);
+        $this->logout();
+
+        $_SERVER['REMOTE_ADDR'] = '2001:db8:1234::10';
+        $this->assertTrue($this->isAllowedMediaContentFresh($media), 'Allowed from an ip of the range');
+
+        $_SERVER['REMOTE_ADDR'] = '2001:db9::10';
+        $this->assertFalse($this->isAllowedMediaContentFresh($media), 'Denied from an ip outside the range');
+    }
+
+    /**
+     * An ipv4 mapped in ipv6, as sent by a dual stack proxy, matches the ipv4
+     * rules.
+     */
+    public function testIpv4MappedInIpv6MatchesIpv4Rule(): void
+    {
+        [$itemSetId, $media] = $this->reservedMediaInItemSet();
+
+        $this->getSettings()->set('access_modes', ['ip']);
+        $this->getSettings()->set('access_ip_rules', [
+            ['source' => '192.0.2.0/24', 'allow' => [$itemSetId], 'forbid' => []],
+        ]);
+        $this->assertTrue($this->prepareIpItemSets());
+        $this->logout();
+
+        $_SERVER['REMOTE_ADDR'] = '::ffff:' . self::IP_INSIDE;
+        $this->assertTrue($this->isAllowedMediaContentFresh($media), 'Allowed from the mapped ipv4');
+    }
+
+    private function prepareIpItemSets(): bool
+    {
+        $module = $this->getApplication()->getServiceManager()->get('ModuleManager')->getModule('Access');
+        $method = new \ReflectionMethod($module, 'prepareIpItemSets');
+        $method->setAccessible(true);
+        return $method->invoke($module);
+    }
+
+    /**
      * With no IP map, the IP mode does not unlock a reserved file.
      */
     public function testNoIpMapDeniesReserved(): void
