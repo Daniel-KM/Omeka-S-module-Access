@@ -129,6 +129,8 @@ class AccessStatusRebuild extends AbstractJob
             );
         }
 
+        $cascade->triggerUpdated();
+
         $logger->info(
             'End of the access rebuild.' // @translate
         );

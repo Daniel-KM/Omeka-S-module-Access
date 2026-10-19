@@ -668,6 +668,23 @@ WHERE `value`.`property_id` = 185
 
 Run the "Rebuild access index" task to fix any mismatch.
 
+### Event for other modules
+
+At the end of each process that updates the effective access statuses (saving
+a resource, batch update, rebuild, end of embargo, indexation), the module
+triggers the event `access.status.updated` with the identifier `Access`. Its
+param `resource_ids` lists the recomputed resources, including the items and
+the media of an item set, or is `null` when all resources may have changed.
+
+For example, the module [IIIF Search] uses it to update the visibility of the
+extracted text when its option is "According to the access of the files".
+
+```php
+$sharedEventManager->attach('Access', 'access.status.updated', function ($event) {
+    $resourceIds = $event->getParam('resource_ids');
+});
+```
+
 
 TODO
 ----
@@ -757,6 +774,7 @@ Copyright
 [Statistics]: https://gitlab.com/Daniel-KM/Omeka-S-module-Statistics
 [installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [Common]: https://gitlab.com/Daniel-KM/Omeka-S-module-Common
+[IIIF Search]: https://gitlab.com/Daniel-KM/Omeka-S-module-IiifSearch
 [Access.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/releases
 [Protect original files]: #protect-original-files
 [.htaccess]: https://github.com/omeka/omeka-s/blob/develop/.htaccess.dist#L4

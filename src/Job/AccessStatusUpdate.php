@@ -236,6 +236,9 @@ class AccessStatusUpdate extends AbstractJob
             }
         }
 
+        // The statuses are updated directly, outside of the cascade.
+        $services->get(\Access\Stdlib\AccessCascade::class)->triggerUpdated(true);
+
         $this->logger->info(
             'End of indexation.' // @translate
         );

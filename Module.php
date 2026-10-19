@@ -1140,6 +1140,7 @@ class Module extends AbstractModule
                 $cascade->recomputeMedia($resource->getId());
             }
         }
+        $cascade->triggerUpdated();
     }
 
     /**
@@ -1201,6 +1202,8 @@ class Module extends AbstractModule
                 $this->manageAccessStatusForResource($media, $accessData);
             }
         }
+
+        $this->getServiceLocator()->get(\Access\Stdlib\AccessCascade::class)->triggerUpdated();
     }
 
     protected function manageAccessStatusForResource(Resource $resource, array $accessData): void

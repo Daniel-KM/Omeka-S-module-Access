@@ -247,6 +247,7 @@ class AccessEmbargoUpdate extends AbstractJob
         /** @var \Access\Stdlib\AccessCascade $cascade */
         $cascade = $services->get(\Access\Stdlib\AccessCascade::class);
         $cascade->recomputeAll();
+        $cascade->triggerUpdated();
     }
 
     /**

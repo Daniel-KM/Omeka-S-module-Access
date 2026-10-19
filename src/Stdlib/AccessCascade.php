@@ -3,6 +3,7 @@
 namespace Access\Stdlib;
 
 use Doctrine\DBAL\Connection;
+use Laminas\EventManager\EventManagerInterface;
 
 /**
  * Materialize the effective access columns of access_status from the "set"
@@ -21,6 +22,10 @@ use Doctrine\DBAL\Connection;
  * The recompute is set-based SQL, ordered item sets, then items, then media, so
  * each layer reads the already-updated effective value of its parent. It runs
  * on the whole base (rebuild job) or on a subtree (resource save events).
+ *
+ * At the end of a process, triggerUpdated() notifies the other modules with the
+ * event "access.status.updated" and the ids of the recomputed resources (null
+ * for all resources), so they can adapt their data (visibility of a text…).
  */
 class AccessCascade
 {
@@ -35,9 +40,19 @@ class AccessCascade
     protected $embargoCascade;
 
     /**
+     * @var \Laminas\EventManager\EventManagerInterface
+     */
+    protected $eventManager;
+
+    /**
      * @var bool|null Cached engine check (true for MySQL, false for MariaDB).
      */
     protected $isMysql;
+
+    /**
+     * @var int[]|null Ids recomputed since the last notification, null for all.
+     */
+    protected $recomputedIds = [];
 
     /**
      * SQL fragment ranking a level column on the documented order. FIELD
@@ -47,10 +62,32 @@ class AccessCascade
 
     protected const UNRANK = "ELT(%s, 'free', 'reserved', 'protected', 'forbidden')";
 
-    public function __construct(Connection $connection, bool $embargoCascade)
+    public function __construct(Connection $connection, EventManagerInterface $eventManager, bool $embargoCascade)
     {
         $this->connection = $connection;
+        $this->eventManager = $eventManager;
         $this->embargoCascade = $embargoCascade;
+    }
+
+    /**
+     * Notify the other modules that the effective access statuses changed.
+     *
+     * The param "resource_ids" lists the recomputed resources since the last
+     * notification, or is null when all resources may have changed.
+     *
+     * @param bool $all Set true when the statuses were updated outside of the
+     *   cascade.
+     */
+    public function triggerUpdated(bool $all = false): void
+    {
+        $ids = $all ? null : $this->recomputedIds;
+        $this->recomputedIds = [];
+        if ($ids === []) {
+            return;
+        }
+        $this->eventManager->trigger('access.status.updated', $this, [
+            'resource_ids' => $ids === null ? null : array_values(array_unique($ids)),
+        ]);
     }
 
     /**
@@ -281,6 +318,7 @@ class AccessCascade
      */
     protected function recomputeItemSets(?array $ids): void
     {
+        $this->trackRecomputedIds($ids);
         // Item sets have no parent, so the effective value equals the set one,
         // for the level and the embargo, whatever the cascade setting.
         $where = $this->whereIds('access_status.id', $ids)
@@ -302,6 +340,7 @@ class AccessCascade
      */
     protected function recomputeItems(?array $ids): void
     {
+        $this->trackRecomputedIds($ids);
         $setRank = sprintf(self::RANK, '`access_status`.`level_set`');
         $setsRank = sprintf(self::RANK, '`a_set`.`level_set`');
         $where = $this->whereIds('access_status.id', $ids)
@@ -446,6 +485,7 @@ class AccessCascade
      */
     protected function recomputeMediaSet(?array $ids): void
     {
+        $this->trackRecomputedIds($ids);
         $mediaRank = sprintf(self::RANK, '`access_status`.`level_set`');
         $itemRank = sprintf(self::RANK, '`a_item`.`level`');
         $unrank = sprintf(self::UNRANK, "GREATEST($mediaRank, COALESCE($itemRank, 1))");
@@ -520,6 +560,18 @@ class AccessCascade
             WHERE $where
             SQL
         );
+    }
+
+    /**
+     * @param int[]|null $ids Null when all resources are recomputed.
+     */
+    protected function trackRecomputedIds(?array $ids): void
+    {
+        if ($ids === null) {
+            $this->recomputedIds = null;
+        } elseif ($this->recomputedIds !== null) {
+            $this->recomputedIds = array_merge($this->recomputedIds, array_filter(array_map('intval', $ids)));
+        }
     }
 
     /**
