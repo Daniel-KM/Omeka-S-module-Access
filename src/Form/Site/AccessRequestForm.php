@@ -120,7 +120,10 @@ class AccessRequestForm extends Form
                         'name' => 'fields[' . substr($name, 0, -2) . '][]',
                         'type' => $fieldType,
                         'options' => [
-                            'label' => $data['label'] ?? '',
+                            // An empty label is skipped as a null one: the
+                            // partial of the core until Omeka S 4.1 passes an
+                            // empty label to the helper formLabel, that throws.
+                            'label' => ($data['label'] ?? '') === '' ? null : $data['label'],
                             'value_options' => $data['value_options'] ?? [],
                         ],
                         'attributes' => [
@@ -136,7 +139,10 @@ class AccessRequestForm extends Form
                         'name' => 'fields[' . $name . ']',
                         'type' => $data['type'] ?? Element\Text::class,
                         'options' => [
-                            'label' => $data['label'] ?? '',
+                            // An empty label is skipped as a null one: the
+                            // partial of the core until Omeka S 4.1 passes an
+                            // empty label to the helper formLabel, that throws.
+                            'label' => ($data['label'] ?? '') === '' ? null : $data['label'],
                         ],
                         'attributes' => [
                             'id' => 'fields-' . $name,
