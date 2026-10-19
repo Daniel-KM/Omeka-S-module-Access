@@ -6,10 +6,10 @@ use Access\Entity\AccessLog;
 use Common\Stdlib\PsrMessage;
 use Doctrine\ORM\EntityManager;
 use Laminas\Mvc\Controller\AbstractActionController;
+use Laminas\View\Model\ViewModel;
 use Omeka\Api\Adapter\MediaAdapter;
 use Omeka\Api\Representation\AbstractResourceEntityRepresentation;
 use Omeka\Api\Representation\MediaRepresentation;
-use Omeka\Mvc\Exception;
 use Omeka\Permissions\Acl;
 
 class AccessFileController extends AbstractActionController
@@ -75,12 +75,17 @@ class AccessFileController extends AbstractActionController
             || !file_exists($filepath)
             || !is_readable($filepath)
         ) {
-            $message = new PsrMessage(
-                'The file {file} (derivative: {derivative}) is invalid or not available.', // @translate
-                ['file' => $filename, 'derivative' => $storageType]
-            );
-            $this->logger()->err($message->getMessage(), $message->getContext());
-            throw new Exception\NotFoundException((string) $message);
+            // A missing file of an existing resource is an issue to fix, but an
+            // old url of a deleted media, often requested by bots, is a simple
+            // page not found.
+            if (strpos($filepath, '../') === false && $this->hasResourceForFilename($filename)) {
+                $message = new PsrMessage(
+                    'The file {file} (derivative: {derivative}) is invalid or not available.', // @translate
+                    ['file' => $filename, 'derivative' => $storageType]
+                );
+                $this->logger()->err($message->getMessage(), $message->getContext());
+            }
+            return $this->notFound();
         }
 
         $media = $this->mediaFromFilename($filename);
@@ -100,7 +105,7 @@ class AccessFileController extends AbstractActionController
             }
             // Only warn: this is a rights issue, nearly never a file issue.
             $this->logger()->warn($message->getMessage(), $message->getContext());
-            throw new Exception\NotFoundException((string) $message);
+            return $this->notFound();
         }
 
         // Here, the media exists and is readable by the user (public/private).
@@ -143,15 +148,51 @@ class AccessFileController extends AbstractActionController
             : $this->sendFakeFile($media, $downloadFilename, $forceDownload);
     }
 
-    protected function mediaFromFilename(string $filename): ?AbstractResourceEntityRepresentation
+    /**
+     * Send the page not found without exception, so the core does not log it.
+     */
+    protected function notFound(): ViewModel
     {
-        // For compatibility with module ArchiveRepertory, don't take the
-        // filename, but remove the extension. $storageId = pathinfo($filename,
-        // PATHINFO_FILENAME);
+        $this->getResponse()->setStatusCode(404);
+        return (new ViewModel())->setTemplate('error/404');
+    }
+
+    /**
+     * Get the storage id from a filename.
+     *
+     * For compatibility with module ArchiveRepertory, don't take the filename,
+     * but remove the extension.
+     */
+    protected function storageIdFromFilename(string $filename): string
+    {
         $extension = pathinfo($filename, PATHINFO_EXTENSION);
-        $storageId = mb_strlen($extension)
+        return mb_strlen($extension)
             ? mb_substr($filename, 0, -mb_strlen($extension) - 1)
             : $filename;
+    }
+
+    /**
+     * Check if a media or a digital object uses a filename, whatever the rights.
+     */
+    protected function hasResourceForFilename(string $filename): bool
+    {
+        $storageId = $this->storageIdFromFilename($filename);
+        if (!$storageId) {
+            return false;
+        }
+        $connection = $this->entityManager->getConnection();
+        if ($connection->fetchOne('SELECT 1 FROM `media` WHERE `storage_id` = ? LIMIT 1', [$storageId])) {
+            return true;
+        }
+        return class_exists('DigitalObject\Module', false)
+            && (bool) $this->entityManager
+                ->getRepository(\DigitalObject\Entity\DigitalObject::class)
+                ->findOneBy(['storageId' => $storageId]);
+    }
+
+    protected function mediaFromFilename(string $filename): ?AbstractResourceEntityRepresentation
+    {
+        $storageId = $this->storageIdFromFilename($filename);
         if (!$storageId) {
             return null;
         }
