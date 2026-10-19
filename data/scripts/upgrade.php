@@ -762,6 +762,53 @@ if (version_compare((string) $oldVersion, '3.4.48', '<')) {
     }
 }
 
+if (version_compare((string) $oldVersion, '3.4.49', '<')) {
+    // The ipv6 ranges were stored as binary strings, that cannot be stored in
+    // json, so they are now hexadecimal; the sources are normalized too.
+    require_once dirname(__DIR__, 2) . '/src/Stdlib/IpRange.php';
+    $ipRules = [];
+    $invalidSources = [];
+    foreach ($settings->get('access_ip_rules') ?: [] as $source => $rule) {
+        $source = trim((string) ($rule['source'] ?? $source));
+        $range = \Access\Stdlib\IpRange::fromCidr($source);
+        if (!$range) {
+            $invalidSources[] = $source;
+            continue;
+        }
+        $prefix = strpos($source, '/') === false ? '' : '/' . substr($source, strpos($source, '/') + 1);
+        $source = \Access\Stdlib\IpRange::normalizeIp(strtok($source, '/')) . $prefix;
+        $ipRules[$source] = ['source' => $source] + $range + [
+            'allow' => array_values($rule['allow'] ?? []),
+            'forbid' => array_values($rule['forbid'] ?? []),
+        ];
+    }
+    $settings->set('access_ip_rules', $ipRules);
+    if ($invalidSources) {
+        $messenger->addWarning(new PsrMessage(
+            'These ip rules were removed, because their source is not a valid ip or cidr range: {list}. Check the rules in the config of the module.', // @translate
+            ['list' => implode(', ', $invalidSources)]
+        ));
+    }
+
+    // The rebuild triggers the new event "access.status.updated" for all the
+    // resources, so the other modules can update their data, for example the
+    // visibility of the extracted text in module IIIF Search.
+    $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusRebuild::class);
+    $message = new PsrMessage(
+        'A background job was started to rebuild the access index, so the modules that follow the access statuses can update their data ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+        [
+            'link' => sprintf('<a href="%s">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
+            'job_id' => $job->getId(),
+            'link_end' => '</a>',
+            'link_log' => class_exists('Log\Module', false)
+                ? sprintf('<a href="%1$s">', htmlspecialchars($url('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
+                : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
+        ]
+    );
+    $message->setEscapeHtml(false);
+    $messenger->addSuccess($message);
+}
+
 // Recommend SpamGuard on each upgrade: Access has no built-in spam engine, so
 // anonymous access requests are unprotected without it.
 $this->recommendSpamGuard();
