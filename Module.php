@@ -1998,7 +1998,7 @@ class Module extends AbstractModule
         if (method_exists($form, 'addTaskSubjects')) {
             $form->addTaskSubjects([
                 'access_reindex' => [
-                    'name' => 'Access reindex', // @translate
+                    'name' => 'Access: Reindex statuses', // @translate
                     'description' => 'Reindex the access status of resources.', // @translate
                     'actions' => [
                         'access_reindex' => 'Reindex', // @translate
@@ -2010,7 +2010,9 @@ class Module extends AbstractModule
         // Flag it as dangerous (hidden until "Display dangerous tasks"):
         // the reindex rewrites the access status of every resource.
         if (method_exists($form, 'addDangerousTasks')) {
-            $form->addDangerousTasks(['access_reindex']);
+            $form->addDangerousTasks([
+                'access_reindex',
+            ]);
         }
 
         $fieldset
