@@ -451,7 +451,9 @@ using some access mode, mainly ip and sso idp.
 
 In the configuration, the ip and sso idp modes each offer a list of rules. Add
 a rule, set its source, then choose the item sets it may reach with the two
-item set pickers. For the ip mode, the source is an ip or a cidr range. For
+item set pickers. For the ip mode, the source is an ip or a cidr range, ipv4
+(`192.0.2.0/24`) or ipv6 (`2001:db8::/32`); an ipv4 mapped in ipv6
+(`::ffff:192.0.2.1`), as sent by some proxies, matches the ipv4 rules. For
 the sso mode, the source is a select of the idps configured in the Single
 Sign-On module plus "federation" (a fallback for any federated idp not listed);
 a companion field lets you enter a federation idp not in the list, which then
@@ -769,14 +771,12 @@ Copyright
 [LDAP]: https://gitlab.com/Daniel-KM/Omeka-S-module-Ldap
 [Single Sign-On]: https://gitlab.com/Daniel-KM/Omeka-S-module-SingleSignOn
 [Numeric Datatypes]: https://github.com/omeka-s-modules/NumericDatatypes
-[Easy Admin]: https://gitlab.com/Daniel-KM/Omeka-S-module-EasyAdmin
 [Analytics]: https://gitlab.com/Daniel-KM/Omeka-S-module-Analytics
 [Statistics]: https://gitlab.com/Daniel-KM/Omeka-S-module-Statistics
 [installing a module]: https://omeka.org/s/docs/user-manual/modules/#installing-modules
 [Common]: https://gitlab.com/Daniel-KM/Omeka-S-module-Common
 [IIIF Search]: https://gitlab.com/Daniel-KM/Omeka-S-module-IiifSearch
 [Access.zip]: https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/releases
-[Protect original files]: #protect-original-files
 [.htaccess]: https://github.com/omeka/omeka-s/blob/develop/.htaccess.dist#L4
 [module issues]: https://gitlab.com/Daniel-KM/Omeka-S-module-Access/-/work_items
 [CeCILL v2.1]: https://www.cecill.info/licences/Licence_CeCILL_V2.1-en.html
