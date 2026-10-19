@@ -2615,7 +2615,8 @@ class Module extends AbstractModule
             if ($ip === '' && !$allow && !$forbid) {
                 continue;
             }
-            if ($ip === '' || !filter_var(strtok($ip, '/'), FILTER_VALIDATE_IP)) {
+            $range = $ip === '' ? null : \Access\Stdlib\IpRange::fromCidr($ip);
+            if (!$range) {
                 $messenger->addError(new PsrMessage(
                     'The ip "{ip}" is empty or invalid.', // @translate
                     ['ip' => $ip]
@@ -2632,7 +2633,11 @@ class Module extends AbstractModule
                 $hasError = true;
                 continue;
             }
-            $listIps[$ip] = ['source' => $ip] + $this->cidrToRange($ip);
+            // The source is normalized, so the exact ip matches whatever its
+            // notation (ipv6 compressed or not, upper or lower case).
+            $prefix = strpos($ip, '/') === false ? '' : '/' . substr($ip, strpos($ip, '/') + 1);
+            $ip = \Access\Stdlib\IpRange::normalizeIp(strtok($ip, '/')) . $prefix;
+            $listIps[$ip] = ['source' => $ip] + $range;
             $listIps[$ip]['allow'] = $checked['allow'];
             $listIps[$ip]['forbid'] = $checked['forbid'];
         }
@@ -2695,86 +2700,6 @@ class Module extends AbstractModule
             }
         }
         return ['allow' => $allow, 'forbid' => $forbid];
-    }
-
-    /**
-     * Extract first and last ip as number from an ip/cidr.
-     *
-     * Supports both IPv4 and IPv6 addresses.
-     *
-     * @param string $cidr Checked ip with or without cidr.
-     * @link https://stackoverflow.com/questions/4931721/getting-list-ips-from-cidr-notation-in-php/4931756#4931756
-     * @return array Associative array with lowest and highest ip as number (IPv4)
-     *   or binary string (IPv6), plus 'ipv6' flag.
-     */
-    protected function cidrToRange($cidr): array
-    {
-        // Determine if IPv6 (contains colon).
-        $isIpv6 = strpos($cidr, ':') !== false;
-
-        if ($isIpv6) {
-            return $this->cidrToRangeIpv6($cidr);
-        }
-
-        // Ipv4.
-        if (strpos($cidr, '/') === false) {
-            return [
-                'ipv6' => false,
-                'low' => ip2long($cidr),
-                'high' => ip2long($cidr),
-            ];
-        }
-
-        $cidr = explode('/', $cidr);
-        $range = ['ipv6' => false];
-        $range['low'] = (ip2long($cidr[0])) & ((-1 << (32 - (int) $cidr[1])));
-        $range['high'] = (ip2long(long2ip($range['low']))) + 2 ** (32 - (int) $cidr[1]) - 1;
-        return $range;
-    }
-
-    /**
-     * Extract first and last ip as binary string from an IPv6/cidr.
-     *
-     * @param string $cidr IPv6 address with or without cidr.
-     * @return array Associative array with lowest and highest ip as binary string.
-     */
-    protected function cidrToRangeIpv6(string $cidr): array
-    {
-        if (strpos($cidr, '/') === false) {
-            $ipBinary = inet_pton($cidr);
-            return [
-                'ipv6' => true,
-                'low_bin' => $ipBinary,
-                'high_bin' => $ipBinary,
-            ];
-        }
-
-        [$ip, $prefixLen] = explode('/', $cidr);
-        $prefixLen = (int) $prefixLen;
-        $ipBinary = inet_pton($ip);
-
-        // Create network mask: set first $prefixLen bits to 1, rest to 0.
-        $mask = str_repeat("\xff", (int) ($prefixLen / 8));
-        if ($prefixLen % 8) {
-            $mask .= chr(0xff << (8 - ($prefixLen % 8)));
-        }
-        $mask = str_pad($mask, 16, "\x00");
-
-        // Create inverted mask for high address.
-        $invertedMask = '';
-        for ($i = 0; $i < 16; $i++) {
-            $invertedMask .= chr(~ord($mask[$i]) & 0xff);
-        }
-
-        // Low = ip AND mask, High = ip OR inverted_mask.
-        $low = $ipBinary & $mask;
-        $high = $ipBinary | $invertedMask;
-
-        return [
-            'ipv6' => true,
-            'low_bin' => $low,
-            'high_bin' => $high,
-        ];
     }
 
     /**

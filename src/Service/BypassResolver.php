@@ -2,6 +2,7 @@
 
 namespace Access\Service;
 
+use Access\Stdlib\IpRange;
 use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Omeka\Settings\Settings;
 use Omeka\Settings\UserSettings;
@@ -75,34 +76,17 @@ class BypassResolver
             return null;
         }
 
+        // The sources are normalized, so the exact ip matches directly.
+        $ip = IpRange::normalizeIp($ip);
+        if ($ip === null) {
+            return null;
+        }
         if (isset($listIps[$ip])) {
             return $this->normalise($listIps[$ip]);
         }
 
-        $isIpv6 = strpos($ip, ':') !== false;
-        if ($isIpv6) {
-            $ipBinary = inet_pton($ip);
-            if ($ipBinary === false) {
-                return null;
-            }
-            foreach ($listIps as $range) {
-                if (!empty($range['ipv6']) && isset($range['low_bin'], $range['high_bin'])
-                    && $ipBinary >= $range['low_bin'] && $ipBinary <= $range['high_bin']
-                ) {
-                    return $this->normalise($range);
-                }
-            }
-            return null;
-        }
-
-        $ipLong = ip2long($ip);
-        if ($ipLong === false) {
-            return null;
-        }
-        foreach ($listIps as $range) {
-            if (empty($range['ipv6']) && isset($range['low'], $range['high'])
-                && $ipLong >= $range['low'] && $ipLong <= $range['high']
-            ) {
+        foreach ($listIps as $source => $range) {
+            if (IpRange::contains($range + ['source' => (string) $source], $ip)) {
                 return $this->normalise($range);
             }
         }
