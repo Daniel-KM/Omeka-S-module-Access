@@ -108,8 +108,7 @@ class AccessStatusRebuild extends AbstractJob
 
         // Report how the effective access levels moved. A file that becomes
         // more restrictive is no longer downloadable by visitors who could
-        // reach it before (e.g. a free file inside a reserved item set); the
-        // reset task can switch the base to a by-document logic if needed.
+        // reach it before (e.g. a free file inside a reserved item set).
         $rankBefore = "FIELD(`b`.`level`, 'free', 'reserved', 'protected', 'forbidden')";
         $rankAfter = "FIELD(`access_status`.`level`, 'free', 'reserved', 'protected', 'forbidden')";
         $counts = $connection->executeQuery(
@@ -128,7 +127,7 @@ class AccessStatusRebuild extends AbstractJob
 
         if ($moreRestrictive) {
             $logger->warn(
-                '{count} resources are now more restricted than before (for example free files inside a reserved item set now follow its level), so their files can no longer be downloaded by visitors who could reach them before. If this is not wanted, run the "reset item sets" task to manage access by document.', // @translate
+                '{count} resources are now more restricted than before (for example free files inside a reserved item set now follow its level), so their files can no longer be downloaded by visitors who could reach them before.', // @translate
                 ['count' => $moreRestrictive]
             );
         }

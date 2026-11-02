@@ -64,7 +64,7 @@ class AccessReindexFieldset extends Fieldset
                 'name' => 'reset_note',
                 'type' => CommonElement\Note::class,
                 'options' => [
-                    'text' => 'Clear the access levels and embargoes set on whole resource types, then update the access. Check "item sets" to manage access by document (the access is set on items and medias). Check "items" and "medias" to manage access by item set (the access is set on the item sets). This clears the checked levels and cannot be undone.', // @translate
+                    'text' => 'Clear the access levels and embargoes set on whole resource types, then update the access. Check "item sets" to manage access by document (the access is set on items and medias). Check "items" and "medias" to manage access by item set (the access is set on the item sets). This clears the checked levels and cannot be undone: the resources without another restricted level become free.', // @translate
                 ],
             ])
             ->add([
