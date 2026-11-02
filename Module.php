@@ -698,6 +698,18 @@ class Module extends AbstractModule
                 'rep.resource.json',
                 [$this, 'filterEntityJsonLd']
             );
+            // Load the statuses of the found resources at once.
+            foreach ([
+                \Omeka\Api\Adapter\ItemAdapter::class,
+                \Omeka\Api\Adapter\MediaAdapter::class,
+                \Omeka\Api\Adapter\ItemSetAdapter::class,
+            ] as $adapter) {
+                $sharedEventManager->attach(
+                    $adapter,
+                    'api.search.post',
+                    [$this, 'preloadAccessStatuses']
+                );
+            }
         }
 
         // No events are simple to use:
@@ -1158,6 +1170,23 @@ class Module extends AbstractModule
      * Use getJsonLd() instead of jsonSerialize() because access status is not
      * an api for now.
      */
+    /**
+     * Load the access statuses of the found resources with one query, so the
+     * json-ld of each resource does not query its own status.
+     */
+    public function preloadAccessStatuses(Event $event): void
+    {
+        $resources = array_filter(
+            (array) $event->getParam('response')->getContent(),
+            fn ($resource) => $resource instanceof Resource
+        );
+        if (count($resources) > 1) {
+            $this->getServiceLocator()->get('Omeka\EntityManager')
+                ->getRepository(AccessStatus::class)
+                ->findBy(['id' => array_values($resources)]);
+        }
+    }
+
     public function filterEntityJsonLd(Event $event): void
     {
         $resource = $event->getTarget();
