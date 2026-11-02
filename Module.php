@@ -430,6 +430,39 @@ class Module extends AbstractModule
             ->manageSiteSettings('install')
             ->manageUserSettings('install')
             ->postInstall();
+
+        // The upgrade from AccessResource dispatches the rebuild itself.
+        if (!$wasUpgradedFromAccessResource) {
+            $this->dispatchAccessStatusRebuild();
+        }
+    }
+
+    /**
+     * Rebuild the access statuses in a background job during install.
+     */
+    protected function dispatchAccessStatusRebuild(): void
+    {
+        $services = $this->getServiceLocator();
+        $jobDir = __DIR__ . '/src/Job/';
+        $job = $services->get('Common\UpgradeJobDispatch')(
+            \Access\Job\AccessStatusRebuild::class,
+            [],
+            [$jobDir . 'AccessPropertiesTrait.php', $jobDir . 'AccessStatusRebuild.php']
+        );
+        $url = $services->get('ViewHelperManager')->get('url');
+        $message = new PsrMessage(
+            'A background job was started to rebuild the access statuses ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+            [
+                'link' => sprintf('<a href="%s">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
+                'job_id' => $job->getId(),
+                'link_end' => '</a>',
+                'link_log' => class_exists('Log\Module', false)
+                    ? sprintf('<a href="%1$s">', htmlspecialchars($url('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
+                    : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
+            ]
+        );
+        $message->setEscapeHtml(false);
+        $services->get('ControllerPluginManager')->get('messenger')->addSuccess($message);
     }
 
     /**
@@ -461,12 +494,6 @@ class Module extends AbstractModule
             $searchFields[] = 'common/advanced-search/access';
             $settings->set('advancedsearch_search_fields', $searchFields);
         }
-
-        // Don't add the job to update initial status: use config form.
-        $message = new PsrMessage(
-            'It is recommended to run the job in config form to initialize all access statuses.' // @translate
-        );
-        $messenger->addWarning($message);
 
         $messenger->addWarning(new PsrMessage(
             'Choose the storage mode for access level and embargo in the module configuration: either as resource metadata (default) or as property values on the resource.' // @translate
