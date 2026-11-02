@@ -15,6 +15,16 @@ use Omeka\Permissions\Acl;
 class AccessFileController extends AbstractActionController
 {
     /**
+     * Cache duration of a file free for everybody, in seconds.
+     */
+    const CACHE_MAX_AGE_PUBLIC = 86400;
+
+    /**
+     * Cache duration of a file allowed to the current user only, in seconds.
+     */
+    const CACHE_MAX_AGE_PRIVATE = 3600;
+
+    /**
      * @var \Doctrine\ORM\EntityManager
      */
     protected $entityManager;
@@ -144,8 +154,25 @@ class AccessFileController extends AbstractActionController
             ->addHeaderLine('Omeka-S-Access-Status: ' . ($isAllowedMediaContent ? 'allowed' : 'denied'));
 
         return $isAllowedMediaContent
-            ? $this->sendFile($filepath, $media, null, $downloadFilename, $storageType, false, $forceDownload)
+            ? $this->sendFile($filepath, $media, null, $downloadFilename, $storageType, $this->isFreeForAll($media) ? 'public' : 'private', $forceDownload)
             : $this->sendFakeFile($media, $downloadFilename, $forceDownload);
+    }
+
+    /**
+     * Check if a file is free for everybody, so it can be cached by proxies.
+     */
+    protected function isFreeForAll(AbstractResourceEntityRepresentation $media): bool
+    {
+        if (!$media->isPublic()
+            || ($media instanceof MediaRepresentation && !$media->item()->isPublic())
+        ) {
+            return false;
+        }
+        /** @var \Access\Entity\AccessStatus $accessStatus */
+        $accessStatus = $this->accessStatus($media);
+        return $accessStatus
+            && $accessStatus->getLevel() === \Access\Entity\AccessStatus::FREE
+            && !$accessStatus->isUnderEmbargo();
     }
 
     /**
@@ -242,7 +269,7 @@ class AccessFileController extends AbstractActionController
         ?string $mediaType = null,
         ?string $filename = null,
         ?string $storageType = null,
-        bool $cache = false,
+        string $cache = '',
         bool $forceDownload = false
     ): \Laminas\Http\PhpEnvironment\Response {
         if (!$mediaType) {
@@ -265,12 +292,26 @@ class AccessFileController extends AbstractActionController
             ->addHeaderLine(sprintf('Content-Disposition: %s; filename="%s"', $dispositionMode, $filename))
             // ->addHeaderLine('Content-Description', 'File Transfer')
             ->addHeaderLine('Content-Transfer-Encoding: binary');
-        // $header = new Header\ContentLength();
+
+        // The cache may be "public" (free for everybody), "private" (allowed to
+        // the current user) or none (fake file). The headers of the session (no
+        // store, pragma) are replaced.
         if ($cache) {
-            // Cache for 30 days.
+            $maxAge = $cache === 'public' ? self::CACHE_MAX_AGE_PUBLIC : self::CACHE_MAX_AGE_PRIVATE;
+            $lastModified = (int) filemtime($filepath);
             $headers
-                ->addHeaderLine('Cache-Control: private, max-age=2592000, post-check=2592000, pre-check=2592000')
-                ->addHeaderLine(sprintf('Expires: %s', gmdate('D, d M Y H:i:s', time() + 2592000) . ' GMT'));
+                ->addHeaderLine(sprintf('Cache-Control: %s, max-age=%d', $cache === 'public' ? 'public' : 'private', $maxAge))
+                ->addHeaderLine('Expires: ' . gmdate('D, d M Y H:i:s', time() + $maxAge) . ' GMT')
+                ->addHeaderLine('Last-Modified: ' . gmdate('D, d M Y H:i:s', $lastModified) . ' GMT');
+            if (!headers_sent()) {
+                header_remove('Pragma');
+            }
+            $ifModifiedSince = strtotime((string) ($_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '')) ?: 0;
+            if ($lastModified && $ifModifiedSince >= $lastModified) {
+                return $response->setStatusCode($response::STATUS_CODE_304);
+            }
+        } else {
+            $headers->addHeaderLine('Cache-Control: no-store');
         }
 
         // Normally, these formats are not used, so check quality.
@@ -419,6 +460,6 @@ class AccessFileController extends AbstractActionController
         $filepath = OMEKA_PATH . $filepath;
 
         // "asset" means theme asset, not Asset entity.
-        return $this->sendFile($filepath, $media, $mediaType, $filename, 'asset', false, $forceDownload);
+        return $this->sendFile($filepath, $media, $mediaType, $filename, 'asset', '', $forceDownload);
     }
 }
