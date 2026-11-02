@@ -197,7 +197,9 @@ class Module extends AbstractModule
         $tables = array_map('strtolower', $connection->fetchFirstColumn(
             'SELECT `table_name` FROM `information_schema`.`tables` WHERE `table_schema` = DATABASE()'
         ));
-        if (!in_array('access_log', $tables, true)) {
+        // The tables may be upgraded already, for example after an install that
+        // failed later, even if the files of AccessResource are still present.
+        if (!in_array('access_log', $tables, true) || $this->hasTablesOfAccess()) {
             // Continue standard install.
             return false;
         }
@@ -222,6 +224,10 @@ class Module extends AbstractModule
         } catch (\Omeka\Module\Exception\ModuleCannotInstallException $e) {
             throw $e;
         } catch (\Throwable $e) {
+            $services->get('Omeka\Logger')->err(
+                'Migration of module AccessResource: {exception}', // @translate
+                ['exception' => (string) $e]
+            );
             $message = new PsrMessage(
                 'An error occurred during migration of module "{module}". Check the config and uninstall it manually.', // @translate
                 ['module' => 'AccessResource']
@@ -265,6 +271,21 @@ class Module extends AbstractModule
      *
      * @param string[] $tables Lower case names of the tables of the database.
      */
+    /**
+     * Remove the data of AccessResource remaining after a failed upgrade.
+     *
+     * The table "access_reserved" and the settings are useless once the tables
+     * of Access are upgraded.
+     */
+    protected function removeLeftoversOfAccessResource(): void
+    {
+        $connection = $this->getServiceLocator()->get('Omeka\Connection');
+        $connection->executeStatement('DROP TABLE IF EXISTS `access_reserved`');
+        $connection->executeStatement('DELETE FROM `setting` WHERE `id` LIKE "accessresource#_%" ESCAPE "#"');
+        $connection->executeStatement('DELETE FROM `site_setting` WHERE `id` LIKE "accessresource#_%" ESCAPE "#"');
+        $connection->executeStatement('DELETE FROM `module` WHERE `id` = "AccessResource"');
+    }
+
     protected function accessResourceVersion(array $tables): ?string
     {
         $services = $this->getServiceLocator();
@@ -321,6 +342,7 @@ class Module extends AbstractModule
         // are kept.
         $hasTablesOfAccess = !$wasUpgradedFromAccessResource && $this->hasTablesOfAccess();
         if ($hasTablesOfAccess) {
+            $this->removeLeftoversOfAccessResource();
             $services->get('ControllerPluginManager')->get('messenger')->addWarning(new PsrMessage(
                 'The tables of the module Access exist already, so they are kept with their data.' // @translate
             ));
