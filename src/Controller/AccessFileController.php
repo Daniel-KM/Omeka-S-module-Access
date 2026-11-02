@@ -25,11 +25,6 @@ class AccessFileController extends AbstractActionController
     const CACHE_MAX_AGE_PRIVATE = 3600;
 
     /**
-     * Maximum size of a generic xml file to repair before sending, in bytes.
-     */
-    const MAX_XML_REPAIR_SIZE = 10000000;
-
-    /**
      * @var \Doctrine\ORM\EntityManager
      */
     protected $entityManager;
@@ -322,28 +317,6 @@ class AccessFileController extends AbstractActionController
             }
         } else {
             $headers->addHeaderLine('Cache-Control: no-store');
-        }
-
-        // Generic xml files are repaired when they are malformed, unless they
-        // are too big to be loaded in memory, in which case they are sent as is.
-        if (($mediaType === 'text/xml' || $mediaType === 'application/xml')
-            && $filesize <= self::MAX_XML_REPAIR_SIZE
-        ) {
-            libxml_use_internal_errors(true);
-            $dom = new \DOMDocument('1.1', 'UTF-8');
-            $dom->strictErrorChecking = false;
-            $dom->validateOnParse = false;
-            $dom->recover = true;
-            $content = $dom->loadXML((string) file_get_contents($filepath), LIBXML_NONET)
-                ? $dom->saveXML()
-                : false;
-            libxml_clear_errors();
-            libxml_use_internal_errors(false);
-            if ($content !== false) {
-                $headers->addHeaderLine('Content-Length: ' . strlen($content));
-                $response->setContent($content);
-                return $response;
-            }
         }
 
         $headers
