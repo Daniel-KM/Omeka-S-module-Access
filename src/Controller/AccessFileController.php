@@ -425,6 +425,30 @@ class AccessFileController extends AbstractActionController
     }
 
     /**
+     * Get the media type and the asset file sent instead of a reserved file.
+     *
+     * @return array{0: string, 1: string}
+     */
+    public static function fakeFile(string $mediaType): array
+    {
+        switch (strtok($mediaType, '/')) {
+            case 'image':
+                return ['image/png', 'img/locked-file.png'];
+            case 'audio':
+                return ['audio/mpeg', 'img/locked-file.mp3'];
+            case 'video':
+                return ['video/mp4', 'img/locked-file.mp4'];
+        }
+        switch ($mediaType) {
+            case 'application/pdf':
+                return [$mediaType, 'img/locked-file.pdf'];
+            case 'application/vnd.oasis.opendocument.text':
+                return [$mediaType, 'img/locked-file.odt'];
+        }
+        return ['image/png', 'img/locked-file.png'];
+    }
+
+    /**
      * This is the 'file' action that is invoked when a user wants to download
      * the given file without rights.
      */
@@ -433,34 +457,7 @@ class AccessFileController extends AbstractActionController
         ?string $filename = null,
         bool $forceDownload = false
     ) {
-        $mediaType = $media ? (string) $media->mediaType() : 'image/png';
-        $mediaTypeMain = strtok($mediaType, '/');
-        switch ($mediaTypeMain) {
-            case 'image':
-                $mediaType = 'image/png';
-                $file = 'img/locked-file.png';
-                break;
-            case 'audio':
-            case 'video':
-                $mediaType = 'video/mp4';
-                $file = 'img/locked-file.mp4';
-                break;
-            default:
-                // Check specific full media types.
-                switch ($mediaType) {
-                    case 'application/pdf':
-                        $file = 'img/locked-file.pdf';
-                        break;
-                    case 'application/vnd.oasis.opendocument.text':
-                        $file = 'img/locked-file.odt';
-                        break;
-                    default:
-                        $mediaType = 'image/png';
-                        $file = 'img/locked-file.png';
-                        break;
-                }
-                break;
-        }
+        [$mediaType, $file] = static::fakeFile($media ? (string) $media->mediaType() : 'image/png');
 
         // Manage custom asset file from the theme.
         $viewHelpers = $this->viewHelpers();
