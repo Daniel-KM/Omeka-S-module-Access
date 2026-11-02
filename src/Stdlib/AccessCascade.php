@@ -60,6 +60,11 @@ class AccessCascade
      */
     protected const RANK = "FIELD(%s, 'free', 'reserved', 'protected', 'forbidden')";
 
+    /**
+     * Maximum number of ids sent in the event, else all resources are sent.
+     */
+    protected const MAX_NOTIFIED_IDS = 10000;
+
     protected const UNRANK = "ELT(%s, 'free', 'reserved', 'protected', 'forbidden')";
 
     public function __construct(Connection $connection, EventManagerInterface $eventManager, bool $embargoCascade)
@@ -316,27 +321,18 @@ class AccessCascade
      */
     public function recomputeItemSet(int $itemSetId): void
     {
+        // The subtree is selected via sql, because an item set may contain
+        // millions of medias.
+        $itemsSql = "SELECT `item_id` AS `id` FROM `item_item_set` WHERE `item_set_id` = $itemSetId";
+        $mediaSql = "SELECT `media`.`id` FROM `item_item_set` JOIN `media` ON `media`.`item_id` = `item_item_set`.`item_id` WHERE `item_item_set`.`item_set_id` = $itemSetId";
+
         // The subtree may contain resources without status, for example after
         // a direct import or when the module was disabled.
-        $this->insertMissingStatuses(
-            <<<SQL
-            SELECT $itemSetId AS `id`
-            UNION SELECT `item_id` FROM `item_item_set` WHERE `item_set_id` = $itemSetId
-            UNION SELECT `media`.`id` FROM `item_item_set` JOIN `media` ON `media`.`item_id` = `item_item_set`.`item_id` WHERE `item_item_set`.`item_set_id` = $itemSetId
-            SQL
-        );
+        $this->insertMissingStatuses("SELECT $itemSetId AS `id` UNION $itemsSql UNION $mediaSql");
+
         $this->recomputeItemSets([$itemSetId]);
-        // Items that belong to this item set, and their media.
-        $itemIds = $this->connection
-            ->executeQuery(
-                'SELECT item_id FROM item_item_set WHERE item_set_id = :id',
-                ['id' => $itemSetId],
-                ['id' => \Doctrine\DBAL\ParameterType::INTEGER]
-            )
-            ->fetchFirstColumn();
-        $itemIds = array_map('intval', $itemIds);
-        $this->recomputeItems($itemIds ?: [0]);
-        $this->recomputeMediaOfItems($itemIds ?: [0]);
+        $this->recomputeItems($itemsSql);
+        $this->recomputeMediaSet($mediaSql);
     }
 
     /**
@@ -364,9 +360,9 @@ class AccessCascade
     }
 
     /**
-     * @param int[]|null $ids Null to process every item set.
+     * @param int[]|string|null $ids A sql selecting the ids, or null for all.
      */
-    protected function recomputeItemSets(?array $ids): void
+    protected function recomputeItemSets($ids): void
     {
         $this->trackRecomputedIds($ids);
         // Item sets have no parent, so the effective value equals the set one,
@@ -386,9 +382,9 @@ class AccessCascade
     }
 
     /**
-     * @param int[]|null $ids Null to process every item.
+     * @param int[]|string|null $ids A sql selecting the ids, or null for all.
      */
-    protected function recomputeItems(?array $ids): void
+    protected function recomputeItems($ids): void
     {
         $this->trackRecomputedIds($ids);
         $setRank = sprintf(self::RANK, '`access_status`.`level_set`');
@@ -440,9 +436,9 @@ class AccessCascade
     }
 
     /**
-     * @param int[]|null $ids
+     * @param int[]|string|null $ids
      */
-    protected function recomputeItemsEmbargo(?array $ids): void
+    protected function recomputeItemsEmbargo($ids): void
     {
         $where = $this->whereIds('access_status.id', $ids)
             . ' AND `resource`.`resource_type` = "Omeka\\\\Entity\\\\Item"';
@@ -531,9 +527,9 @@ class AccessCascade
     }
 
     /**
-     * @param int[]|null $ids Null to process every media.
+     * @param int[]|string|null $ids A sql selecting the ids, or null for all.
      */
-    protected function recomputeMediaSet(?array $ids): void
+    protected function recomputeMediaSet($ids): void
     {
         $this->trackRecomputedIds($ids);
         $mediaRank = sprintf(self::RANK, '`access_status`.`level_set`');
@@ -573,9 +569,9 @@ class AccessCascade
     }
 
     /**
-     * @param int[]|null $ids
+     * @param int[]|string|null $ids
      */
-    protected function recomputeMediaEmbargo(?array $ids): void
+    protected function recomputeMediaEmbargo($ids): void
     {
         $where = $this->whereIds('access_status.id', $ids);
 
@@ -613,10 +609,17 @@ class AccessCascade
     }
 
     /**
-     * @param int[]|null $ids Null when all resources are recomputed.
+     * @param int[]|string|null $ids A sql selecting the ids, or null for all.
      */
-    protected function trackRecomputedIds(?array $ids): void
+    protected function trackRecomputedIds($ids): void
     {
+        // A big subtree is notified as all resources, to keep a small event.
+        if (is_string($ids)) {
+            $ids = $this->connection->fetchFirstColumn("SELECT `ids`.`id` FROM ($ids) `ids` LIMIT " . (self::MAX_NOTIFIED_IDS + 1));
+            if (count($ids) > self::MAX_NOTIFIED_IDS) {
+                $ids = null;
+            }
+        }
         if ($ids === null) {
             $this->recomputedIds = null;
         } elseif ($this->recomputedIds !== null) {
@@ -642,15 +645,19 @@ class AccessCascade
     }
 
     /**
-     * Build a WHERE fragment scoping to a list of ids, or always-true for a
-     * full pass.
+     * Build a WHERE fragment scoping to a list of ids or to a sql selecting
+     * them, or always-true for a full pass.
      *
-     * @param int[]|null $ids
+     * @param int[]|string|null $ids
      */
-    protected function whereIds(string $column, ?array $ids): string
+    protected function whereIds(string $column, $ids): string
     {
         if ($ids === null) {
             return '1 = 1';
+        }
+        // The derived table is materialized by mysql (see isMysql()).
+        if (is_string($ids)) {
+            return sprintf('%s IN (SELECT `scope`.`id` FROM (%s) `scope`)', $column, $ids);
         }
         $ids = array_values(array_unique(array_map('intval', $ids))) ?: [0];
         return sprintf('%s IN (%s)', $column, implode(', ', $ids));
