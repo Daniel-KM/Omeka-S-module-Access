@@ -320,6 +320,12 @@ return [
         'Paste item sets', // @translate
         'Remove', // @translate
     ],
+    'common' => [
+        // The files are checked without session for anonymous visitors.
+        'session_free_paths' => [
+            '/access/files/',
+        ],
+    ],
     'access' => [
         'config' => [
             'access_property' => false,
