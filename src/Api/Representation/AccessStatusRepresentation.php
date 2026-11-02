@@ -152,9 +152,68 @@ class AccessStatusRepresentation extends AbstractEntityRepresentation
         return $this->resource->isUnderEmbargo();
     }
 
-    public function displayLevel(): string
+    /**
+     * Get the resources that impose the effective level, when it is stricter
+     * than the level set on this resource.
+     *
+     * @return \Omeka\Api\Representation\AbstractResourceEntityRepresentation[]
+     */
+    public function levelOrigins(): array
     {
         $level = $this->level();
+        $ranks = array_flip(array_keys(self::LEVELS));
+        if (($ranks[$level] ?? 0) <= ($ranks[$this->levelSet()] ?? 0)) {
+            return [];
+        }
+
+        $services = $this->getServiceLocator();
+        $connection = $services->get('Omeka\Connection');
+        $resource = $this->resource->getId();
+        $itemSetIds = fn (int $itemId): array => $connection->fetchFirstColumn(
+            <<<'SQL'
+            SELECT `item_item_set`.`item_set_id`
+            FROM `item_item_set`
+            JOIN `access_status` ON `access_status`.`id` = `item_item_set`.`item_set_id`
+            WHERE `item_item_set`.`item_id` = ? AND `access_status`.`level_set` = ?
+            ORDER BY `item_item_set`.`item_set_id`
+            SQL,
+            [$itemId, $level]
+        );
+
+        if ($resource instanceof \Omeka\Entity\Media) {
+            $itemId = $resource->getItem()->getId();
+            $itemLevelSet = $connection->fetchOne('SELECT `level_set` FROM `access_status` WHERE `id` = ?', [$itemId]);
+            $ids = $itemLevelSet === $level ? [$itemId] : $itemSetIds($itemId);
+        } elseif ($resource instanceof \Omeka\Entity\Item) {
+            $ids = $itemSetIds($resource->getId());
+        } else {
+            return [];
+        }
+
+        $adapter = $services->get('Omeka\ApiAdapterManager')->get('resources');
+        $entityManager = $services->get('Omeka\EntityManager');
+        $origins = [];
+        foreach ($ids as $id) {
+            $entity = $entityManager->find(\Omeka\Entity\Resource::class, (int) $id);
+            if ($entity) {
+                $origins[] = $adapter->getRepresentation($entity);
+            }
+        }
+        return $origins;
+    }
+
+    public function displayLevel(): string
+    {
+        return $this->displayAnyLevel($this->level());
+    }
+
+    public function displayLevelSet(): string
+    {
+        return $this->displayAnyLevel($this->levelSet());
+    }
+
+    protected function displayAnyLevel(string $level): string
+    {
         $settings = $this->getServiceLocator()->get('Omeka\Settings');
         $accessLevels = $settings->get('access_property_levels', []);
         if ($accessLevels && isset($accessLevels[$level])) {
@@ -171,8 +230,19 @@ class AccessStatusRepresentation extends AbstractEntityRepresentation
      */
     public function displayEmbargo(?string $dateTimeFormat = 'medium'): string
     {
-        $embargoStart = $this->embargoStart();
-        $embargoEnd = $this->embargoEnd();
+        return $this->displayAnyEmbargo($this->embargoStart(), $this->embargoEnd(), $dateTimeFormat);
+    }
+
+    /**
+     * Get a string according to the embargo set on this resource.
+     */
+    public function displayEmbargoSet(?string $dateTimeFormat = 'medium'): string
+    {
+        return $this->displayAnyEmbargo($this->embargoStartSet(), $this->embargoEndSet(), $dateTimeFormat);
+    }
+
+    protected function displayAnyEmbargo(?DateTime $embargoStart, ?DateTime $embargoEnd, ?string $dateTimeFormat): string
+    {
         if (!$embargoStart && !$embargoEnd) {
             return '';
         }

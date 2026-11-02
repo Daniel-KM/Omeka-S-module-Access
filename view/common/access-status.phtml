@@ -5,11 +5,14 @@
  * @var \Access\Api\Representation\AccessStatusRepresentation|null $accessStatus
  */
 
-// Display the access status of a resource.
+// Display the access status of a resource. In admin, when the applied status
+// differs from the one set on the resource, both are displayed with the origin.
 
 $plugins = $this->getHelperPluginManager();
 $translate = $plugins->get('translate');
 $escape = $plugins->get('escapeHtml');
+
+$isAdmin = $plugins->get('status')->isAdminRequest();
 
 if ($accessStatus) {
     $level = $accessStatus->displayLevel();
@@ -18,12 +21,38 @@ if ($accessStatus) {
     $level = $escape($translate('Free'));
     $embargo = null;
 }
+
+$isLevelInherited = $isAdmin && $accessStatus && $accessStatus->level() !== $accessStatus->levelSet();
+$isEmbargoInherited = $isAdmin && $accessStatus && $accessStatus->displayEmbargoSet('medium') !== $embargo;
+
+$originLabels = [
+    'item_sets' => 'item set %s', // @translate
+    'items' => 'item %s', // @translate
+];
+$origins = [];
+if ($isLevelInherited) {
+    foreach ($accessStatus->levelOrigins() as $origin) {
+        $label = $originLabels[$origin->resourceName()] ?? null;
+        $link = $origin->link($origin->displayTitle());
+        $origins[] = $label ? sprintf($escape($translate($label)), $link) : $link;
+    }
+}
 ?>
 
 <div class="meta-group access-status">
     <h4><?= $translate('Access status') ?></h4>
+    <?php if ($isLevelInherited): ?>
+    <div class="value"><?= $origins
+        ? sprintf($escape($translate('Applied status: %1$s (inherited from %2$s)')), $level, implode(', ', $origins))
+        : sprintf($escape($translate('Applied status: %s')), $level) ?></div>
+    <div class="value"><?= sprintf($escape($translate('Defined status: %s')), $accessStatus->displayLevelSet()) ?></div>
+    <?php else: ?>
     <div class="value"><?= $level ?></div>
-    <?php if ($embargo): ?>
+    <?php endif; ?>
+    <?php if ($isEmbargoInherited): ?>
+    <div class="value"><?= sprintf($escape($translate('Applied embargo: %s')), $embargo ?: $escape($translate('none'))) ?></div>
+    <div class="value"><?= sprintf($escape($translate('Defined embargo: %s')), $accessStatus->displayEmbargoSet('medium') ?: $escape($translate('none'))) ?></div>
+    <?php elseif ($embargo): ?>
     <div class="value"><?= $embargo ?></div>
     <?php endif; ?>
 </div>
