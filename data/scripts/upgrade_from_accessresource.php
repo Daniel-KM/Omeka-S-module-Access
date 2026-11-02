@@ -288,16 +288,19 @@ CREATE TABLE `access_status` (
 
 ALTER TABLE `access_status` ADD CONSTRAINT FK_898BF02EBF396750 FOREIGN KEY (`id`) REFERENCES `resource` (`id`) ON DELETE CASCADE;
 
-# Fill the table with data in private/public.
+# Fill the table with data in private/public. A private item set is free: its
+# visibility did not restrict its items, but its level does since 3.4.45.
 INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
 SELECT `id`, "free", NULL, NULL
 FROM `resource`
-WHERE `is_public` = 1;
+WHERE `is_public` = 1
+    OR `resource_type` = "Omeka\\Entity\\ItemSet";
 
 INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
 SELECT `id`, "forbidden", NULL, NULL
 FROM `resource`
-WHERE `is_public` = 0;
+WHERE `is_public` = 0
+    AND `resource_type` <> "Omeka\\Entity\\ItemSet";
 
 # Update the table for reserved resources.
 UPDATE `access_status`
@@ -306,6 +309,12 @@ SET
     `access_status`.`level` = "reserved",
     `access_status`.`embargo_start` = `access_reserved`.`start_date`,
     `access_status`.`embargo_end` = `access_reserved`.`end_date`
+;
+# The reserved resources were private, but visible, with restricted files. The
+# visibility is now independent, so they are public, with reserved files.
+UPDATE `resource`
+INNER JOIN `access_reserved` ON `access_reserved`.`id` = `resource`.`id`
+SET `resource`.`is_public` = 1
 ;
 # Remove table "access_reserved".
 DROP TABLE IF EXISTS `access_reserved`;
@@ -469,6 +478,11 @@ SQL;
 
     $message = new Message(
         'Warning: you may have to check the config and the resources statuses with the new config. If wrong, save config, then run the job.' // @translate
+    );
+    $messenger->addWarning($message);
+
+    $message = new Message(
+        'The reserved resources were private, but visible with restricted files: they are now public with reserved files. The private item sets are now free, because their level applies to their items.' // @translate
     );
     $messenger->addWarning($message);
 
