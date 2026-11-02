@@ -214,14 +214,13 @@ class Module extends AbstractModule
             );
         }
 
-        // Upgrade the tables and the settings of AccessResource to 3.4.17.1.
-        if (version_compare($version, '3.4.17', '<')) {
-            $oldVersion = $version;
-            require $this->modulePath() . '/data/scripts/upgrade_from_accessresource_legacy.php';
-        }
-
+        // Upgrade the tables and the settings of AccessResource to 3.4.17.1,
+        // then convert them for Access.
         try {
+            $oldVersion = $version;
             require $this->modulePath() . '/data/scripts/upgrade_from_accessresource.php';
+        } catch (\Omeka\Module\Exception\ModuleCannotInstallException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             $message = new PsrMessage(
                 'An error occurred during migration of module "{module}". Check the config and uninstall it manually.', // @translate
