@@ -200,4 +200,71 @@ class AccessCascadeTest extends AbstractHttpControllerTestCase
         $this->rebuildAccessCascade();
         $this->assertSame(AccessStatus::FREE, $this->effectiveLevel($media->id()));
     }
+
+    /**
+     * The recompute of an item set creates the missing statuses of its items
+     * and media, so they follow its level.
+     */
+    public function testRecomputeItemSetCreatesMissingStatuses(): void
+    {
+        $itemSet = $this->createItemSet();
+        $item = $this->createItem(['item_set' => $itemSet]);
+        $media = $this->createMedia($item);
+        $this->setAccessLevelSet($itemSet->id(), AccessStatus::RESERVED);
+        $this->getConnection()->executeStatement('DELETE FROM `access_status` WHERE `id` IN (?, ?)', [$item->id(), $media->id()]);
+        $this->getEntityManager()->clear(AccessStatus::class);
+
+        $this->getServiceLocator()->get(\Access\Stdlib\AccessCascade::class)->recomputeItemSet($itemSet->id());
+
+        foreach ([$item->id(), $media->id()] as $id) {
+            $this->assertSame(
+                ['level' => AccessStatus::RESERVED, 'level_set' => AccessStatus::FREE],
+                $this->getConnection()->fetchAssociative('SELECT `level`, `level_set` FROM `access_status` WHERE `id` = ?', [$id])
+            );
+        }
+    }
+
+    /**
+     * The recompute of an item creates the missing statuses of its media.
+     */
+    public function testRecomputeItemCreatesMissingStatuses(): void
+    {
+        $item = $this->createItem();
+        $media = $this->createMedia($item);
+        $this->setAccessLevelSet($item->id(), AccessStatus::FORBIDDEN);
+        $this->getConnection()->executeStatement('DELETE FROM `access_status` WHERE `id` = ?', [$media->id()]);
+        $this->getEntityManager()->clear(AccessStatus::class);
+
+        $this->getServiceLocator()->get(\Access\Stdlib\AccessCascade::class)->recomputeItem($item->id());
+
+        $this->assertSame(AccessStatus::FORBIDDEN, $this->getConnection()->fetchOne('SELECT `level` FROM `access_status` WHERE `id` = ?', [$media->id()]));
+    }
+
+    /**
+     * The recompute of an item set notifies the ids of its subtree.
+     */
+    public function testRecomputeItemSetNotifiesTheIdsOfItsSubtree(): void
+    {
+        $itemSet = $this->createItemSet();
+        $item = $this->createItem(['item_set' => $itemSet]);
+        $media = $this->createMedia($item);
+
+        $notified = [];
+        $sharedEventManager = $this->getServiceLocator()->get('SharedEventManager');
+        $listener = function ($event) use (&$notified): void {
+            $notified[] = $event->getParam('resource_ids');
+        };
+        $sharedEventManager->attach('*', 'access.status.updated', $listener);
+
+        $cascade = $this->getServiceLocator()->get(\Access\Stdlib\AccessCascade::class);
+        $cascade->recomputeItemSet($itemSet->id());
+        $cascade->triggerUpdated();
+        $sharedEventManager->detach($listener, '*', 'access.status.updated');
+
+        $this->assertCount(1, $notified);
+        $this->assertIsArray($notified[0]);
+        foreach ([$itemSet->id(), $item->id(), $media->id()] as $id) {
+            $this->assertContains($id, $notified[0]);
+        }
+    }
 }

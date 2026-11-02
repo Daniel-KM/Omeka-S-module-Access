@@ -37,6 +37,23 @@ class AccessFileNotFoundTest extends AbstractHttpControllerTestCase
         $this->assertSame([], $this->errors());
     }
 
+    /**
+     * The page not found is rendered without layout: the layout starts a
+     * session, that is avoided for the stateless file requests of anonymous
+     * visitors.
+     *
+     * @see \Common\Service\Delegator\AuthenticationServiceDelegatorFactory
+     */
+    public function testNotFoundIsRenderedWithoutLayout(): void
+    {
+        $this->dispatch('/access/files/original/' . str_repeat('0', 40) . '.jpg');
+        $this->assertResponseStatusCode(404);
+        $this->assertTrue($this->getApplication()->getMvcEvent()->getResult()->terminate());
+        $body = $this->getResponse()->getContent();
+        $this->assertStringNotContainsString('<html', $body);
+        $this->assertStringNotContainsString('<body', $body);
+    }
+
     public function testMissingFileOfExistingMediaIsLogged(): void
     {
         $this->loginAdmin();
