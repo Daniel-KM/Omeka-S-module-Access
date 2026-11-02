@@ -98,14 +98,28 @@ class AccessCascade
      */
     public function createMissingStatuses(): int
     {
-        return (int) $this->connection->executeStatement(
+        return $this->insertMissingStatuses(
             <<<'SQL'
+            SELECT `id` FROM `resource`
+            WHERE `resource_type` IN ("Omeka\\Entity\\ItemSet", "Omeka\\Entity\\Item", "Omeka\\Entity\\Media")
+            SQL
+        );
+    }
+
+    /**
+     * Create the missing access statuses of the listed resources as free.
+     *
+     * @param string $idsSql A select of the resource ids as column "id".
+     */
+    protected function insertMissingStatuses(string $idsSql): int
+    {
+        return (int) $this->connection->executeStatement(
+            <<<SQL
             INSERT INTO `access_status` (`id`, `level`, `level_set`)
-            SELECT `resource`.`id`, 'free', 'free'
-            FROM `resource`
-            LEFT JOIN `access_status` ON `access_status`.`id` = `resource`.`id`
+            SELECT `ids`.`id`, 'free', 'free'
+            FROM ($idsSql) `ids`
+            LEFT JOIN `access_status` ON `access_status`.`id` = `ids`.`id`
             WHERE `access_status`.`id` IS NULL
-                AND `resource`.`resource_type` IN ("Omeka\\Entity\\ItemSet", "Omeka\\Entity\\Item", "Omeka\\Entity\\Media")
             SQL
         );
     }
@@ -302,6 +316,15 @@ class AccessCascade
      */
     public function recomputeItemSet(int $itemSetId): void
     {
+        // The subtree may contain resources without status, for example after
+        // a direct import or when the module was disabled.
+        $this->insertMissingStatuses(
+            <<<SQL
+            SELECT $itemSetId AS `id`
+            UNION SELECT `item_id` FROM `item_item_set` WHERE `item_set_id` = $itemSetId
+            UNION SELECT `media`.`id` FROM `item_item_set` JOIN `media` ON `media`.`item_id` = `item_item_set`.`item_id` WHERE `item_item_set`.`item_set_id` = $itemSetId
+            SQL
+        );
         $this->recomputeItemSets([$itemSetId]);
         // Items that belong to this item set, and their media.
         $itemIds = $this->connection
@@ -321,6 +344,12 @@ class AccessCascade
      */
     public function recomputeItem(int $itemId): void
     {
+        $this->insertMissingStatuses(
+            <<<SQL
+            SELECT $itemId AS `id`
+            UNION SELECT `id` FROM `media` WHERE `item_id` = $itemId
+            SQL
+        );
         $this->recomputeItems([$itemId]);
         $this->recomputeMediaOfItems([$itemId]);
     }
@@ -330,6 +359,7 @@ class AccessCascade
      */
     public function recomputeMedia(int $mediaId): void
     {
+        $this->insertMissingStatuses("SELECT $mediaId AS `id`");
         $this->recomputeMediaSet([$mediaId]);
     }
 
