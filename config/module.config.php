@@ -321,9 +321,12 @@ return [
         'Remove', // @translate
     ],
     'common' => [
-        // The files are checked without session for anonymous visitors.
+        // The files are checked without session for anonymous visitors. The
+        // path "/files/" is used when the rewrite rule of the htaccess is used,
+        // because the url is not modified.
         'session_free_paths' => [
             '/access/files/',
+            '/files/',
         ],
     ],
     'access' => [
