@@ -2,7 +2,6 @@
 
 namespace Access\Job;
 
-use Access\Api\Representation\AccessStatusRepresentation;
 use Omeka\Job\AbstractJob;
 
 class AccessStatusUpdate extends AbstractJob
@@ -35,11 +34,6 @@ class AccessStatusUpdate extends AbstractJob
      * @var \Laminas\Log\LoggerInterface
      */
     protected $logger;
-
-    /**
-     * @var string
-     */
-    protected $modeMissing = 'skip';
 
     /**
      * @var string
@@ -113,25 +107,6 @@ class AccessStatusUpdate extends AbstractJob
             return;
         }
 
-        $modeMissings = [
-            'skip',
-            'free',
-            'reserved',
-            'protected',
-            'forbidden',
-            'visibility_reserved',
-            'visibility_protected',
-            'visibility_forbidden',
-        ];
-        $this->modeMissing = $this->getArg('missing', 'skip') ?: 'skip';
-        if (!in_array($this->modeMissing, $modeMissings)) {
-            $this->logger->err(
-                'Missing mode {mode} is invalid.', // @translate
-                ['mode' => $this->modeMissing]
-            );
-            return;
-        }
-
         $this->propagateProcesses = $this->getArg('recursive', []) ?: [];
         $propagates = [
             'from_item_sets_to_items_and_media',
@@ -167,11 +142,10 @@ class AccessStatusUpdate extends AbstractJob
         );
 
         if ($this->modeSync === 'skip'
-            && $this->modeMissing === 'skip'
             && $this->propagateProcesses === []
         ) {
             $this->logger->warn(
-                'Synchronization and missing modes are set as "skip" and no recursive processes are set.' // @translate
+                'Synchronization mode is set as "skip" and no recursive processes are set.' // @translate
             );
             return;
         }
@@ -223,17 +197,7 @@ class AccessStatusUpdate extends AbstractJob
         if ($this->modeSync === 'from_properties_to_accesses') {
             $this->updateLevelAndEmbargoViaProperty();
         } elseif ($this->modeSync === 'from_accesses_to_properties') {
-            // This job can be skipped if the missing mode is not skip, but it
-            // is simpler to understand. It's just a quick sql anyway.
             $this->copyIndexIntoPropertyValues();
-        }
-
-        if ($this->modeMissing !== 'skip') {
-            $this->addMissingLevelViaVisibility();
-            // Update properties when the config use them.
-            if ($this->accessViaProperty) {
-                $this->copyIndexIntoPropertyValues();
-            }
         }
 
         // The statuses are updated directly, outside of the cascade.
@@ -448,47 +412,6 @@ class AccessStatusUpdate extends AbstractJob
         return $this;
     }
 
-    protected function addMissingLevelViaVisibility(): self
-    {
-        if (in_array($this->modeMissing, AccessStatusRepresentation::LEVELS)) {
-            $sql = <<<SQL
-                # Set the specified status for all missing resources.
-                INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-                SELECT `id`, "{$this->modeMissing}", NULL, NULL
-                FROM `resource`
-                ON DUPLICATE KEY UPDATE
-                   `id` = `resource`.`id`
-                ;
-                SQL;
-        } else {
-            $mode = substr($this->modeMissing, 11);
-            $sql = <<<SQL
-                # Set free all missing public resources.
-                INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-                SELECT `id`, "free", NULL, NULL
-                FROM `resource`
-                WHERE `is_public` = 1
-                ON DUPLICATE KEY UPDATE
-                    `id` = `resource`.`id`
-                ;
-                # Set reserved/protected/forbidden all missing private resources.
-                INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-                SELECT `id`, "$mode", NULL, NULL
-                FROM `resource`
-                WHERE `is_public` = 0
-                ON DUPLICATE KEY UPDATE
-                    `id` = `resource`.`id`
-                ;
-                SQL;
-        }
-
-        $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql) {
-            $this->connection->executeStatement($sql);
-        });
-
-        return $this;
-    }
-
     protected function updateLevelAndEmbargoViaProperty(): self
     {
         $quotedList = [];
@@ -497,13 +420,8 @@ class AccessStatusUpdate extends AbstractJob
         }
         $quotedListString = implode(', ', $quotedList);
 
-        // Insert missing access according to property values.
-        if (in_array($this->modeMissing, AccessStatusRepresentation::LEVELS)) {
-            $subSql = "'$this->modeMissing'";
-        } else {
-            $mode = substr($this->modeMissing, 11);
-            $subSql = "IF(`resource`.`is_public` = 1, 'free', '$mode')";
-        }
+        // The default level is free.
+        $subSql = "'free'";
 
         // TODO %T espace?
         // Use insert: statuses were created previously, but there may be levels
