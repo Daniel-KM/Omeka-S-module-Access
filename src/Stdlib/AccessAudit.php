@@ -37,6 +37,7 @@ class AccessAudit
      */
     public const FINDINGS = [
         'missing_status_restricted_parent' => 'Resources without access status, so free, although their parent is restricted ({type}): {count} (for example #{ids}). Run the task "Rebuild access index" to apply the level of their parent.', // @translate
+        'private_item_sets_forbidding_public' => 'Private item sets with the level "forbidden", that forbid the files of their public items and medias: {count} (for example #{ids}). This level may come from an old conversion of the private resources: if the item set is private only to be hidden, set its level free.', // @translate
         'missing_status' => 'Resources without access status, so free ({type}): {count} (for example #{ids}). Run the task "Rebuild access index" to create them.', // @translate
         'stale_levels' => 'Resources whose effective level does not follow the hierarchy ({type}): {count} (for example #{ids}). Run the task "Rebuild access index".', // @translate
         'masked_decisions' => 'Restricted levels without effect, because a parent is stricter ({type}): {count} (for example #{ids}).', // @translate
@@ -84,6 +85,7 @@ class AccessAudit
         $findings = [
             'missing_status' => $this->missingStatus(),
             'missing_status_restricted_parent' => $this->missingStatusWithRestrictedParent(),
+            'private_item_sets_forbidding_public' => $this->privateItemSetsForbiddingPublic(),
             'stale_levels' => $this->staleLevels(),
             'masked_decisions' => $this->maskedDecisions(),
             'item_sets_with_different_levels' => $this->itemsInItemSetsWithDifferentLevels(),
@@ -178,6 +180,26 @@ class AccessAudit
                 WHERE `s`.`id` IS NULL
                 SQL),
         ];
+    }
+
+    /**
+     * Private item sets with the level "forbidden" that contain public items.
+     */
+    protected function privateItemSetsForbiddingPublic(): array
+    {
+        $type = self::TYPES['item_sets'];
+        return $this->countAndSample(<<<SQL
+            SELECT `s`.`id`
+            FROM `access_status` `s`
+            JOIN `resource` `r` ON `r`.`id` = `s`.`id` AND `r`.`resource_type` = "$type" AND `r`.`is_public` = 0
+            WHERE `s`.`level_set` = 'forbidden'
+                AND EXISTS (
+                    SELECT 1
+                    FROM `item_item_set` `iis`
+                    JOIN `resource` `ri` ON `ri`.`id` = `iis`.`item_id` AND `ri`.`is_public` = 1
+                    WHERE `iis`.`item_set_id` = `s`.`id`
+                )
+            SQL);
     }
 
     /**
