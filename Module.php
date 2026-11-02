@@ -991,10 +991,11 @@ class Module extends AbstractModule
         }
 
         // The rule settings are stored keyed by source; the collection element
-        // expects a plain list (each entry keeps its own source field).
-        foreach (['access_ip_rules', 'access_auth_sso_idp_rules'] as $name) {
+        // expects a plain list.
+        // The rules with the same item sets are grouped in one rule.
+        foreach (['access_ip_rules' => false, 'access_auth_sso_idp_rules' => true] as $name => $isSso) {
             if (!empty($data[$name]) && is_array($data[$name])) {
-                $data[$name] = array_values($data[$name]);
+                $data[$name] = $this->groupRulesBySources($data[$name], $isSso);
             }
         }
 
@@ -2933,37 +2934,40 @@ class Module extends AbstractModule
         $listIps = [];
         $hasError = false;
         foreach ($rules as $rule) {
-            $ip = trim((string) ($rule['source'] ?? ''));
+            // A rule may have several sources, stored as separate entries.
+            $ips = $this->splitRuleSources((string) ($rule['source'] ?? ''));
             $allow = $this->normalizeRuleItemSets($rule['allow'] ?? []);
             $forbid = $this->normalizeRuleItemSets($rule['forbid'] ?? []);
-            if ($ip === '' && !$allow && !$forbid) {
-                continue;
-            }
-            $range = $ip === '' ? null : \Access\Stdlib\IpRange::fromCidr($ip);
-            if (!$range) {
-                $messenger->addError(new PsrMessage(
-                    'The ip "{ip}" is empty or invalid.', // @translate
-                    ['ip' => $ip]
-                ));
-                $hasError = true;
+            if (!$ips && !$allow && !$forbid) {
                 continue;
             }
             $checked = $this->checkRuleItemSets($api, $allow, $forbid);
-            if ($checked === null) {
-                $messenger->addError(new PsrMessage(
-                    'The item sets selected for ip {ip} are unknown or duplicated.', // @translate
-                    ['ip' => $ip]
-                ));
-                $hasError = true;
-                continue;
+            foreach ($ips ?: [''] as $ip) {
+                $range = $ip === '' ? null : \Access\Stdlib\IpRange::fromCidr($ip);
+                if (!$range) {
+                    $messenger->addError(new PsrMessage(
+                        'The ip "{ip}" is empty or invalid.', // @translate
+                        ['ip' => $ip]
+                    ));
+                    $hasError = true;
+                    continue;
+                }
+                if ($checked === null) {
+                    $messenger->addError(new PsrMessage(
+                        'The item sets selected for ip {ip} are unknown or duplicated.', // @translate
+                        ['ip' => $ip]
+                    ));
+                    $hasError = true;
+                    continue;
+                }
+                // The source is normalized, so the exact ip matches whatever
+                // its notation (ipv6 compressed or not, upper or lower case).
+                $prefix = strpos($ip, '/') === false ? '' : '/' . substr($ip, strpos($ip, '/') + 1);
+                $ip = \Access\Stdlib\IpRange::normalizeIp(strtok($ip, '/')) . $prefix;
+                $listIps[$ip] = ['source' => $ip] + $range;
+                $listIps[$ip]['allow'] = $checked['allow'];
+                $listIps[$ip]['forbid'] = $checked['forbid'];
             }
-            // The source is normalized, so the exact ip matches whatever its
-            // notation (ipv6 compressed or not, upper or lower case).
-            $prefix = strpos($ip, '/') === false ? '' : '/' . substr($ip, strpos($ip, '/') + 1);
-            $ip = \Access\Stdlib\IpRange::normalizeIp(strtok($ip, '/')) . $prefix;
-            $listIps[$ip] = ['source' => $ip] + $range;
-            $listIps[$ip]['allow'] = $checked['allow'];
-            $listIps[$ip]['forbid'] = $checked['forbid'];
         }
 
         if ($hasError) {
@@ -2986,6 +2990,53 @@ class Module extends AbstractModule
         $settings->set('access_ip_rules', $listIps);
 
         return true;
+    }
+
+    /**
+     * Split the sources of a rule, separated by spaces, commas or new lines.
+     *
+     * @return string[]
+     */
+    protected function splitRuleSources(string $sources): array
+    {
+        return array_values(array_unique(array_filter(preg_split('/[\s,]+/', trim($sources)) ?: [], 'strlen')));
+    }
+
+    /**
+     * Group the rules that have the same item sets, so a rule is displayed with
+     * all its sources.
+     *
+     * @param bool $isSso The sso rules have a select for a single source, so
+     *   several sources are displayed in the manual field.
+     */
+    protected function groupRulesBySources(array $rules, bool $isSso): array
+    {
+        $groups = [];
+        foreach ($rules as $source => $rule) {
+            if (!is_array($rule)) {
+                continue;
+            }
+            $allow = array_map('intval', $rule['allow'] ?? []);
+            $forbid = array_map('intval', $rule['forbid'] ?? []);
+            sort($allow);
+            sort($forbid);
+            $key = json_encode([$allow, $forbid]);
+            $groups[$key]['allow'] = $rule['allow'] ?? [];
+            $groups[$key]['forbid'] = $rule['forbid'] ?? [];
+            $groups[$key]['sources'][] = (string) ($rule['source'] ?? $source);
+        }
+        $result = [];
+        foreach ($groups as $group) {
+            $sources = $group['sources'];
+            $row = ['allow' => $group['allow'], 'forbid' => $group['forbid']];
+            if ($isSso && count($sources) > 1) {
+                $row = ['source' => '', 'source_manual' => implode(' ', $sources)] + $row;
+            } else {
+                $row = ['source' => implode(' ', $sources)] + $row;
+            }
+            $result[] = $row;
+        }
+        return $result;
     }
 
     /**
@@ -3065,44 +3116,44 @@ class Module extends AbstractModule
         $hasError = false;
         foreach ($rules as $rule) {
             // The manual field takes precedence over the select, so a
-            // federation idp not in the list can be added.
-            $idpName = trim((string) ($rule['source_manual'] ?? ''));
-            if ($idpName === '') {
-                $idpName = trim((string) ($rule['source'] ?? ''));
-            }
+            // federation idp not in the list can be added. It may contain
+            // several idps, stored as separate entries.
+            $idpNames = $this->splitRuleSources((string) ($rule['source_manual'] ?? ''))
+                ?: $this->splitRuleSources((string) ($rule['source'] ?? ''));
             $allow = $this->normalizeRuleItemSets($rule['allow'] ?? []);
             $forbid = $this->normalizeRuleItemSets($rule['forbid'] ?? []);
-            if ($idpName === '' && !$allow && !$forbid) {
+            if (!$idpNames && !$allow && !$forbid) {
                 continue;
             }
-            if ($idpName === '') {
+            if (!$idpNames) {
                 $messenger->addError(new PsrMessage(
                     'An idp entity id is empty.' // @translate
                 ));
                 $hasError = true;
                 continue;
             }
-            // A configured idp or "federation" is expected; a manually entered
-            // federation idp is accepted but reported as a notice.
-            if ($idpName !== 'federation' && !isset($knownIdps[$idpName]) && $knownIdps) {
-                $messenger->addWarning(new PsrMessage(
-                    'The idp "{idp}" is not configured in module Single Sign-On; it is kept as a manual federation idp.', // @translate
-                    ['idp' => $idpName]
-                ));
-            }
             $checked = $this->checkRuleItemSets($api, $allow, $forbid);
-            if ($checked === null) {
-                $messenger->addError(new PsrMessage(
-                    'The item sets selected for idp {idp} are unknown or duplicated.', // @translate
-                    ['idp' => $idpName]
-                ));
-                $hasError = true;
-                continue;
+            foreach ($idpNames as $idpName) {
+                // A configured idp or "federation" is expected; a manually
+                // entered federation idp is accepted but reported as a notice.
+                if ($idpName !== 'federation' && !isset($knownIdps[$idpName]) && $knownIdps) {
+                    $messenger->addWarning(new PsrMessage(
+                        'The idp "{idp}" is not configured in module Single Sign-On; it is kept as a manual federation idp.', // @translate
+                        ['idp' => $idpName]
+                    ));
+                }
+                if ($checked === null) {
+                    $messenger->addError(new PsrMessage(
+                        'The item sets selected for idp {idp} are unknown or duplicated.', // @translate
+                        ['idp' => $idpName]
+                    ));
+                    $hasError = true;
+                    continue;
+                }
+                // Key the stored rule by its source, so the resolver can look
+                // it up directly.
+                $normalizedRules[$idpName] = ['source' => $idpName, 'allow' => $checked['allow'], 'forbid' => $checked['forbid']];
             }
-            // Normalize the stored rule to a single source and key it by that
-            // source, so the manual entry becomes a plain (and, next time,
-            // selectable) idp and the resolver can look it up directly.
-            $normalizedRules[$idpName] = ['source' => $idpName, 'allow' => $checked['allow'], 'forbid' => $checked['forbid']];
         }
 
         if ($hasError) {

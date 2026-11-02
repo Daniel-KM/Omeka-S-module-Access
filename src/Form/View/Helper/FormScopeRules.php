@@ -93,7 +93,7 @@ class FormScopeRules extends AbstractHelper
             ? <<<'TXT'
                 12.34.56.78
                 124.8.16.32 = 17 89 -1940
-                65.43.21.0/24 = -2005
+                65.43.21.0/24 2001:db8::/32 = -2005
                 TXT // @translate
             : <<<'TXT'
                 idp.example.org =

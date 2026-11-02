@@ -39,8 +39,8 @@ class AccessSsoIdpRuleFieldset extends AbstractAccessScopeRuleFieldset
                 'name' => 'source_manual',
                 'type' => Element\Text::class,
                 'options' => [
-                    'label' => 'Or a federation idp entered manually', // @translate
-                    'info' => 'Entity id of a federation idp not in the list above. It takes precedence over the select and becomes a selectable option once saved.', // @translate
+                    'label' => 'Or idps entered manually', // @translate
+                    'info' => 'Entity ids of idps, separated by spaces, for example a federation idp not in the list above or several idps with the same item sets. It takes precedence over the select.', // @translate
                 ],
                 'attributes' => [
                     'class' => 'access-scope-source-manual',

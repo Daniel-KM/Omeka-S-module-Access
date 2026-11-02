@@ -18,8 +18,8 @@ class AccessIpRuleFieldset extends AbstractAccessScopeRuleFieldset
                 'name' => 'source',
                 'type' => Element\Text::class,
                 'options' => [
-                    'label' => 'IP address', // @translate
-                    'info' => 'A single ip (v4 or v6) or a range in cidr notation.', // @translate
+                    'label' => 'IP addresses', // @translate
+                    'info' => 'One or more ips (v4 or v6) or ranges in cidr notation, separated by spaces, for example the ipv4 and the ipv6 ranges of an institution.', // @translate
                 ],
                 'attributes' => [
                     'class' => 'access-scope-source',
