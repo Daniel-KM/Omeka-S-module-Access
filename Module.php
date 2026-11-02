@@ -29,6 +29,7 @@ use Access\Api\Representation\AccessStatusRepresentation;
 use Access\Entity\AccessRequest;
 use Access\Entity\AccessStatus;
 use Access\Form\Admin\BatchEditFieldset;
+use Access\Stdlib\IpRange;
 use Common\Stdlib\PsrMessage;
 use Common\TraitModule;
 use DateTime;
@@ -2789,21 +2790,21 @@ class Module extends AbstractModule
         }
 
         // Detect private/loopback IPs and the current REMOTE_ADDR in rules.
-        $listIps = $settings->get('access_ip_item_sets', []);
-        if (!is_array($listIps) || !$listIps) {
+        $rules = $settings->get('access_ip_rules', []);
+        if (!is_array($rules) || !$rules) {
             return;
         }
 
         $privates = [];
         $remoteListed = null;
         $remote = $_SERVER['REMOTE_ADDR'] ?? null;
-        foreach (array_keys($listIps) as $entry) {
-            $ip = strpos($entry, '/') === false ? $entry : strtok($entry, '/');
-            if ($this->isPrivateOrLoopbackIp($ip)) {
-                $privates[] = $entry;
+        foreach ($rules as $source => $rule) {
+            $source = (string) ($rule['source'] ?? $source);
+            if ($this->isPrivateOrLoopbackIp((string) strtok($source, '/'))) {
+                $privates[] = $source;
             }
-            if ($remote && $entry === $remote) {
-                $remoteListed = $entry;
+            if ($remote && !$remoteListed && is_array($rule) && IpRange::contains($rule, $remote)) {
+                $remoteListed = $remote;
             }
         }
 
