@@ -178,6 +178,13 @@ class Module extends AbstractModule
         file_put_contents($htaccessPath, $htaccess);
     }
 
+    /**
+     * Upgrade the tables and the settings of the module AccessResource, if any.
+     *
+     * The module AccessResource is no more required and only tables are needed.
+     * Its version is read from the module when present, else from the table
+     * "module", else from the tables themselves.
+     */
     protected function upgradeFromAccessResource(): bool
     {
         $services = $this->getServiceLocator();
@@ -185,38 +192,20 @@ class Module extends AbstractModule
         $translate = $plugins->get('translate');
         $messenger = $plugins->get('messenger');
 
-        // Check if module AccessResource is installed to upgrade from it.
-
         /** @var \Doctrine\DBAL\Connection $connection */
         $connection = $services->get('Omeka\Connection');
-        try {
-            $connection->executeQuery('SELECT id FROM access_log LIMIT 1')->fetchOne();
-        } catch (\Throwable $e) {
+        $tables = array_map('strtolower', $connection->fetchFirstColumn(
+            'SELECT `table_name` FROM `information_schema`.`tables` WHERE `table_schema` = DATABASE()'
+        ));
+        if (!in_array('access_log', $tables, true)) {
             // Continue standard install.
             return false;
         }
 
-        // Check upgrade from old module AccessResource if any.
-        // The module should be present, active or not, and at version 3.4.17.1,
-
-        $moduleManager = $services->get('Omeka\ModuleManager');
-        $module = $moduleManager->getModule('AccessResource');
-        $version = $module ? $module->getIni('version') : null;
-        $status = $module ? $module->getState() : \Omeka\Module\Manager::STATE_NOT_FOUND;
-
-        if (!$module || !$version || !in_array($status, [
-            \Omeka\Module\Manager::STATE_ACTIVE,
-            \Omeka\Module\Manager::STATE_NOT_ACTIVE,
-            \Omeka\Module\Manager::STATE_NEEDS_UPGRADE,
-        ])) {
-            // Continue standard install.
+        $version = $this->accessResourceVersion($tables);
+        if (!$version) {
+            // Continue standard install, that will fail with existing tables.
             return false;
-        }
-
-        if (version_compare($version, '3.4.17', '<')) {
-            throw new \Omeka\Module\Exception\ModuleCannotInstallException(
-                $translate('To be automatically upgraded and replaced by this module, the module "Access Resource" should be upgraded first to version 3.4.17.1. Else uninstall it first, but you will lose access statuses and requests.') // @translate
-            );
         }
 
         if (version_compare($version, '3.4.17.1', '>')) {
@@ -225,9 +214,14 @@ class Module extends AbstractModule
             );
         }
 
+        // Upgrade the tables and the settings of AccessResource to 3.4.17.1.
+        if (version_compare($version, '3.4.17', '<')) {
+            $oldVersion = $version;
+            require $this->modulePath() . '/data/scripts/upgrade_from_accessresource_legacy.php';
+        }
+
         try {
-            $filepath = $this->modulePath() . '/data/scripts/upgrade_from_accessresource.php';
-            require_once $filepath;
+            require $this->modulePath() . '/data/scripts/upgrade_from_accessresource.php';
         } catch (\Throwable $e) {
             $message = new PsrMessage(
                 'An error occurred during migration of module "{module}". Check the config and uninstall it manually.', // @translate
@@ -243,12 +237,54 @@ class Module extends AbstractModule
          * @var string $oldVersion
          * @var string $newVersion
          */
-        $oldVersion = $version;
+        $oldVersion = '3.4.17.1';
         $newVersion = '999';
         $filepath = __DIR__ . '/data/scripts/upgrade.php';
-        require_once $filepath;
+        require $filepath;
 
         return true;
+    }
+
+    /**
+     * Get the version of the data of the module AccessResource, if any.
+     *
+     * @param string[] $tables Lower case names of the tables of the database.
+     */
+    protected function accessResourceVersion(array $tables): ?string
+    {
+        $services = $this->getServiceLocator();
+        $connection = $services->get('Omeka\Connection');
+
+        // The column "record_id" was renamed during the upgrade to 3.4.17, so a
+        // failed upgrade, that is marked as done, is detected by the tables.
+        $isBefore3417 = in_array('record_id', $connection->fetchFirstColumn('SHOW COLUMNS FROM `access_log`'), true);
+
+        $module = $services->get('Omeka\ModuleManager')->getModule('AccessResource');
+        $version = $module ? ($module->getIni('version') ?: $module->getDb('version')) : null;
+        if ($version && (!$isBefore3417 || version_compare((string) $version, '3.4.17', '<'))) {
+            return (string) $version;
+        }
+        if ($version) {
+            $services->get('ControllerPluginManager')->get('messenger')->addWarning(new PsrMessage(
+                'The module AccessResource is marked as version {version}, but its upgrade to version 3.4.17 was not completed, so it is resumed.', // @translate
+                ['version' => $version]
+            ));
+        }
+
+        // Without the module, the settings or the tables of AccessResource are
+        // required, so the tables of an existing module Access are skipped.
+        $hasSettings = (bool) $connection->fetchOne(
+            'SELECT 1 FROM `setting` WHERE `id` LIKE "accessresource#_%" ESCAPE "#" LIMIT 1'
+        );
+        if (!$isBefore3417 && in_array('access_status', $tables, true)) {
+            return $hasSettings || $version ? '3.4.17.1' : null;
+        }
+        if (in_array('access_reserved', $tables, true)) {
+            return '3.4.0.13';
+        }
+        // The versions before 3.3.0.12 managed the ip by site, upgraded to the
+        // ip by item set, so their ip settings should be checked.
+        return in_array('access_resource', $tables, true) ? '3.3.0.12' : null;
     }
 
     public function install(ServiceLocatorInterface $services): void
@@ -277,13 +313,42 @@ class Module extends AbstractModule
             $this->execSqlFromFile($sqlFile);
         }
 
+        $this->installAllResources();
+
+        // The settings upgraded from AccessResource are kept. The site and the
+        // user settings are never overwritten on install.
+        if ($wasUpgradedFromAccessResource) {
+            $this
+                ->installMissingMainSettings('config')
+                ->installMissingMainSettings('settings');
+        } else {
+            $this
+                ->manageConfig('install')
+                ->manageMainSettings('install');
+        }
+
         $this
-            ->installAllResources()
-            ->manageConfig('install')
-            ->manageMainSettings('install')
             ->manageSiteSettings('install')
             ->manageUserSettings('install')
             ->postInstall();
+    }
+
+    /**
+     * Set the default value of the main settings that are not set yet.
+     *
+     * @param string $settingsType "config" (config form) or "settings".
+     */
+    protected function installMissingMainSettings(string $settingsType): self
+    {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $translator = $services->get('MvcTranslator');
+        foreach ($this->getModuleConfig($settingsType) ?: [] as $name => $value) {
+            if ($settings->get($name) === null) {
+                $settings->set($name, $this->isSettingTranslatable($settingsType, $name) ? $translator->translate($value) : $value);
+            }
+        }
+        return $this;
     }
 
     protected function postInstall(): void

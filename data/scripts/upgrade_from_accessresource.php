@@ -27,68 +27,49 @@ $messenger = $plugins->get('messenger');
 
 $config = $services->get('Config');
 
-$moduleManager = $services->get('Omeka\ModuleManager');
-$accessResourceModule = $moduleManager->getModule('AccessResource');
-
-if (!$accessResourceModule) {
-    return;
-}
+// The module AccessResource may be absent: only its tables and its settings
+// are required.
 
 // Convert the settings.
 
 // This option was not upgraded from an old server, so update it manually.
 $useProperty = (bool) $settings->get('accessresource_property');
 
-$sql = <<<'SQL'
-REPLACE INTO `setting` (`id`, `value`)
-SELECT
-    REPLACE(`setting`.`id`, "accessresource_", "access_"),
-    `setting`.`value`
-FROM `setting`
-WHERE
-    `setting`.`id` LIKE "accessresource#_%" ESCAPE "#";
-SQL;
-$connection->executeStatement($sql);
+// The settings are converted via the settings services, not via sql, so their
+// cache is kept up to date for the next steps of the upgrade.
+$rows = $connection->fetchAllAssociative(
+    'SELECT `id`, `value` FROM `setting` WHERE `id` LIKE "accessresource#_%" ESCAPE "#"'
+);
+foreach ($rows as $row) {
+    $settings->set('access_' . substr($row['id'], 15), json_decode((string) $row['value'], true));
+    $settings->delete($row['id']);
+}
 
 $settings->set('access_property', $useProperty);
 
+// The message was empty after the upgrade of AccessResource to 3.4.17.
+if (!$settings->get('access_message_access_text')) {
+    $configModule = require dirname(__DIR__, 2) . '/config/module.config.php';
+    $settings->set('access_message_access_text', $configModule['access']['settings']['access_message_access_text']);
+}
+
 // Convert the site settings.
 
-$sql = <<<'SQL'
-REPLACE INTO `site_setting` (`id`, `site_id`, `value`)
-SELECT
-    REPLACE(`site_setting`.`id`, "accessresource_", "access_"),
-    `site_setting`.`site_id`,
-    `site_setting`.`value`
-FROM `site_setting`
-WHERE
-    `site_setting`.`id` LIKE "accessresource#_%" ESCAPE "#";
-SQL;
-$connection->executeStatement($sql);
+$siteSettings = $services->get('Omeka\Settings\Site');
+$rows = $connection->fetchAllAssociative(
+    'SELECT `id`, `site_id`, `value` FROM `site_setting` WHERE `id` LIKE "accessresource#_%" ESCAPE "#"'
+);
+foreach ($rows as $row) {
+    $siteSettings->set('access_' . substr($row['id'], 15), json_decode((string) $row['value'], true), (int) $row['site_id']);
+    $siteSettings->delete($row['id'], (int) $row['site_id']);
+}
 
 // Remove original data and module.
 
-$sql = <<<'SQL'
-# Uninstall data of the module Access Resource.
-
-DELETE FROM `setting`
-WHERE
-    `setting`.`id` LIKE "accessresource#_%" ESCAPE "#";
-
-DELETE FROM `site_setting`
-WHERE
-    `site_setting`.`id` LIKE "accessresource#_%" ESCAPE "#";
-
-DELETE FROM `module` WHERE `id` = "AccessResource";
-SQL;
-
-$sqls = array_filter(array_map('trim', explode(";\n", $sql)));
-foreach ($sqls as $sql) {
-    try {
-        $connection->executeStatement($sql);
-    } catch (\Throwable $e) {
-        $messenger->addError($e->getMessage());
-    }
+try {
+    $connection->executeStatement('DELETE FROM `module` WHERE `id` = "AccessResource"');
+} catch (\Throwable $e) {
+    $messenger->addError($e->getMessage());
 }
 
 $message = new Message(
