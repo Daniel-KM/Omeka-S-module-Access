@@ -131,10 +131,23 @@ in the `.htaccess`:
 # Module Access: protect files.
 # This rule is automatically managed by the module.
 RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [NC,L]
+# /Module Access: protect files.
 ```
 
-The block is identified by its marker comment, so the module can update or
+The block is identified by its marker comments, so the module can update or
 remove it without affecting the rest of the file.
+
+Other comment lines may be added between the opening marker and the rule, for
+example to indicate that the rule is managed by a deployment tool (Ansible,
+etc.) when the `.htaccess` is not writable. The module still recognizes the
+block, reads its file types and flags, and removes it on uninstall:
+
+```apache
+# Module Access: protect files.
+# This rule is managed by Ansible, not by the module.
+RewriteRule "^files/(original|large)/(.*)$" "/access/files/$1/$2" [NC,L]
+# /Module Access: protect files.
+```
 
 **When the `.htaccess` is not writable**, the module cannot modify it. In that
 case the rule to add or remove is displayed in the configuration form so you can
@@ -459,6 +472,11 @@ Sign-On module plus "federation" (a fallback for any federated idp not listed);
 a companion field lets you enter a federation idp not in the list, which then
 becomes a selectable option once saved.
 
+A rule may have several sources separated by spaces, for example the ipv4 and
+the ipv6 ranges of an institution (`192.0.2.0/24 2001:db8::/32`), or several
+idps in the companion field. They are stored as separate rules with the same
+item sets, and the rules with the same item sets are displayed as one rule.
+
 The item set pickers are:
 
 - Access only to these item sets: the source reaches only resources in the
@@ -697,6 +715,7 @@ TODO
 - [x] Reindexation (trigger event?) when embargo is updated automatically. Use the cron task of module EasyAdmin?
 - [ ] Clarify process for embargo start and update embargo start date with a specific option (no one seems to use it anyway).
 - [ ] Add a mode cas_itemsets to define access rules by cas attributes and item sets (like sso_idp).
+- [ ] Add an icon somewhere in admin or public for free/reserved/protected/forbidden?
 
 
 Warning
