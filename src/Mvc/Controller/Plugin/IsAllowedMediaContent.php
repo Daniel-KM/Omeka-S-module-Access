@@ -161,10 +161,15 @@ class IsAllowedMediaContent extends AbstractPlugin
         if (!$accessStatus && $media instanceof MediaRepresentation) {
             $accessStatus = $this->accessStatus->__invoke($media->item());
         }
-        // If neither resource nor item has access status, allow access (free by
-        // default).
+        // Normally, all resources have a status. Else, for example after a
+        // direct import, apply the level of the item sets, else free.
         if (!$accessStatus) {
-            return true;
+            $item = $media instanceof MediaRepresentation ? $media->item() : $media;
+            $level = $this->levelOfItemSets((int) $item->id());
+            if (!$level) {
+                return true;
+            }
+            $accessStatus = (new AccessStatus())->setLevel($level);
         }
 
         // Check access level first (quick string comparison, most common check).
@@ -261,6 +266,23 @@ class IsAllowedMediaContent extends AbstractPlugin
         }
 
         return false;
+    }
+
+    /**
+     * Get the strictest level set on the item sets of a resource, if any.
+     */
+    protected function levelOfItemSets(int $resourceId): ?string
+    {
+        $level = $this->entityManager->getConnection()->fetchOne(
+            <<<'SQL'
+            SELECT ELT(MAX(FIELD(`access_status`.`level_set`, 'free', 'reserved', 'protected', 'forbidden')), 'free', 'reserved', 'protected', 'forbidden')
+            FROM `item_item_set`
+            JOIN `access_status` ON `access_status`.`id` = `item_item_set`.`item_set_id`
+            WHERE `item_item_set`.`item_id` = ?
+            SQL,
+            [$resourceId]
+        );
+        return $level && $level !== AccessStatus::FREE ? $level : null;
     }
 
     protected function isUnderEmbargo(AccessStatus $accessStatus): bool

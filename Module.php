@@ -1947,30 +1947,22 @@ class Module extends AbstractModule
             $accessLevels = array_intersect($accessLevels, AccessStatusRepresentation::LEVELS);
 
             if ($accessLevels) {
+                // Normally, all resources have a status. Else, a resource
+                // without status is free.
                 $accessStatusAlias = $adapter->createAlias();
+                $levelAlias = $adapter->createAlias();
                 $qb
-                    ->innerJoin(
+                    ->leftJoin(
                         AccessStatus::class,
                         $accessStatusAlias,
                         \Doctrine\ORM\Query\Expr\Join::WITH,
                         "$accessStatusAlias.id = omeka_root.id"
-                    );
-                if (count($accessLevels) === 1) {
-                    $qb
-                        ->andWhere($expr->eq(
-                            "$accessStatusAlias.level",
-                            $adapter->createNamedParameter($qb, reset($accessLevels))
-                        ));
-                } else {
-                    $levelAlias = $adapter->createAlias();
-                    $qb
-                        ->andWhere($expr->in(
-                            "$accessStatusAlias.level",
-                            ":$levelAlias"
-                        ))
-                        ->setParameter($levelAlias, $accessLevels, Connection::PARAM_STR_ARRAY)
-                    ;
-                }
+                    )
+                    ->setParameter($levelAlias, array_values($accessLevels), Connection::PARAM_STR_ARRAY);
+                $condition = $expr->in("$accessStatusAlias.level", ":$levelAlias");
+                $qb->andWhere(in_array(AccessStatus::FREE, $accessLevels, true)
+                    ? $expr->orX($condition, $expr->isNull("$accessStatusAlias.id"))
+                    : $condition);
             } else {
                 // A way to return no value when the query has bad argument.
                 $qb
