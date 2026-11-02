@@ -124,6 +124,16 @@ if (version_compare((string) $oldVersion, '3.4.19', '<')) {
         $connection->executeStatement($sql);
     }
 
+    // The properties were renamed or deleted via sql, but the entities loaded
+    // above keep their old names, so the update of the vocabulary on install
+    // would create the renamed properties again (duplicate entry).
+    $propertyEntities = $entityManager->getUnitOfWork()->getIdentityMap()[\Omeka\Entity\Property::class] ?? [];
+    foreach ($propertyEntities as $propertyEntity) {
+        $connection->fetchOne('SELECT 1 FROM `property` WHERE `id` = ?', [$propertyEntity->getId()])
+            ? $entityManager->refresh($propertyEntity)
+            : $entityManager->detach($propertyEntity);
+    }
+
     $levels = [
         'free' => 'free',
         'reserved' => 'reserved',

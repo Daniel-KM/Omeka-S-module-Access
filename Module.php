@@ -91,7 +91,7 @@ class Module extends AbstractModule
 
         /** @var bool $skipMessage */
         $skipMessage = true;
-        require_once __DIR__ . '/data/scripts/upgrade_vocabulary.php';
+        require __DIR__ . '/data/scripts/upgrade_vocabulary.php';
     }
 
     protected function preUninstall(): void
@@ -245,6 +245,22 @@ class Module extends AbstractModule
     }
 
     /**
+     * Check if the tables of Access exist with the current schema.
+     */
+    protected function hasTablesOfAccess(): bool
+    {
+        $connection = $this->getServiceLocator()->get('Omeka\Connection');
+        $tables = array_map('strtolower', $connection->fetchFirstColumn(
+            'SELECT `table_name` FROM `information_schema`.`tables` WHERE `table_schema` = DATABASE()'
+        ));
+        if (array_diff(['access_log', 'access_request', 'access_resource', 'access_status'], $tables)) {
+            return false;
+        }
+        return in_array('level_set', $connection->fetchFirstColumn('SHOW COLUMNS FROM `access_status`'), true)
+            && in_array('access_id', $connection->fetchFirstColumn('SHOW COLUMNS FROM `access_log`'), true);
+    }
+
+    /**
      * Get the version of the data of the module AccessResource, if any.
      *
      * @param string[] $tables Lower case names of the tables of the database.
@@ -300,8 +316,18 @@ class Module extends AbstractModule
         // Check and upgrade from module AccessResource if any.
         $wasUpgradedFromAccessResource = $this->upgradeFromAccessResource();
 
+        // The tables of Access may exist already with their data, for example
+        // after an install that failed once the tables were upgraded, so they
+        // are kept.
+        $hasTablesOfAccess = !$wasUpgradedFromAccessResource && $this->hasTablesOfAccess();
+        if ($hasTablesOfAccess) {
+            $services->get('ControllerPluginManager')->get('messenger')->addWarning(new PsrMessage(
+                'The tables of the module Access exist already, so they are kept with their data.' // @translate
+            ));
+        }
+
         // Else process standard install.
-        if (!$wasUpgradedFromAccessResource) {
+        if (!$wasUpgradedFromAccessResource && !$hasTablesOfAccess) {
             $sqlFile = __DIR__ . '/data/install/schema.sql';
             if (!$this->checkNewTablesFromFile($sqlFile)) {
                 $message = new PsrMessage(
@@ -314,9 +340,10 @@ class Module extends AbstractModule
 
         $this->installAllResources();
 
-        // The settings upgraded from AccessResource are kept. The site and the
-        // user settings are never overwritten on install.
-        if ($wasUpgradedFromAccessResource) {
+        // The settings upgraded from AccessResource or kept with the tables are
+        // not overwritten. The site and the user settings are never overwritten
+        // on install.
+        if ($wasUpgradedFromAccessResource || $hasTablesOfAccess) {
             $this
                 ->installMissingMainSettings('config')
                 ->installMissingMainSettings('settings');

@@ -63,7 +63,7 @@ if (version_compare((string) $oldVersion, '3.3.0.7', '<')) {
 }
 
 if (version_compare((string) $oldVersion, '3.3.0.11', '<')) {
-    require_once __DIR__ . '/upgrade_vocabulary.php';
+    require __DIR__ . '/upgrade_vocabulary.php';
 }
 
 if (version_compare((string) $oldVersion, '3.3.0.12', '<')) {
@@ -195,7 +195,7 @@ if (version_compare((string) $oldVersion, '3.4.0.15', '<')) {
 if (version_compare((string) $oldVersion, '3.4.16', '<')) {
     /** @var bool $skipMessage */
     $skipMessage = true;
-    require_once __DIR__ . '/upgrade_vocabulary.php';
+    require __DIR__ . '/upgrade_vocabulary.php';
 }
 
 if (version_compare((string) $oldVersion, '3.4.17', '<')) {
