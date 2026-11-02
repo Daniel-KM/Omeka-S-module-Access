@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 00:00+0000\n"
-"PO-Revision-Date: 2026-10-19 00:00+0000\n"
+"POT-Creation-Date: 2026-11-02 07:11+0000\n"
+"PO-Revision-Date: 2026-11-02 00:00+0000\n"
 "Last-Translator: Daniel Berthereau <Daniel.fr@Berthereau.net>\n"
 "Language-Team: br <LL@li.org>\n"
 "Language: br\n"
@@ -24,7 +24,7 @@ msgid "This module requires module %1$s version %2$s or greater."
 msgstr ""
 "Ezhomm en deus ar modul-mañ eus ar modul %1$s stumm %2$s pe unan uheloc'h."
 
-#: data/scripts/upgrade.php:42 Module.php:66 Module.php:82
+#: data/scripts/upgrade.php:42 Module.php:78 Module.php:94
 #, php-format
 msgid "The module %1$s should be upgraded to version %2$s or later."
 msgstr ""
@@ -34,18 +34,7 @@ msgstr ""
 msgid "Missing requirement. Unable to upgrade."
 msgstr "Rekizadenn a vank. N'haller ket hizivaat."
 
-#: Module.php:218
-msgid ""
-"To be automatically upgraded and replaced by this module, the module "
-"\"Access Resource\" should be upgraded first to version 3.4.17.1. Else "
-"uninstall it first, but you will lose access statuses and requests."
-msgstr ""
-"Evit ma vo hizivaet ha kemeret e blas ent emgefreek gant ar modul-mañ, e "
-"rank ar modul \"Moned d'ar Mammennoù\" bezañ hizivaet da gentañ d'ar stumm "
-"3.4.17.1. A-hend-all, diinstalit anezhañ da gentañ, met koll a reot ar "
-"statudoù moned hag ar goulennoù."
-
-#: Module.php:224
+#: Module.php:229
 msgid ""
 "To be automatically upgraded and replaced by this module, the module "
 "\"Access Resource\" should be downgraded first to version 3.4.17.1. Else "
@@ -56,7 +45,7 @@ msgstr ""
 "A-hend-all, diinstalit anezhañ da gentañ, met koll a reot ar statudoù moned "
 "hag ar goulennoù."
 
-#: Module.php:887
+#: Module.php:1147
 msgid ""
 "When properties are used, three properties should be defined for \"level\", "
 "\"embargo start\" and \"embargo end\"."
@@ -64,7 +53,7 @@ msgstr ""
 "Pa vez implijet perzhioù, e tlefe bezañ termenet tri perzh evit \"live\", "
 "\"deroù an embargo\" hag \"fin an embargo\"."
 
-#: Module.php:1840 view/access/admin/log/browse.phtml:27
+#: Module.php:2092 view/access/admin/log/browse.phtml:27
 #: view/access/admin/request/browse.phtml:35
 #: view/access/admin/request/edit.phtml:30
 #: view/access/admin/request/edit.phtml:31
@@ -72,7 +61,7 @@ msgstr ""
 msgid "Access"
 msgstr "Moned"
 
-#: Module.php:1870 view/access/site/request/browse.phtml:26
+#: Module.php:2122 view/access/site/request/browse.phtml:26
 msgid "Access requests"
 msgstr "Goulennadennoù moned"
 
@@ -101,19 +90,19 @@ msgid "Undefined"
 msgstr "Dizifinet"
 
 #: src/Api/Representation/AccessRequestRepresentation.php:230
-#: src/Api/Representation/AccessStatusRepresentation.php:184
+#: src/Api/Representation/AccessStatusRepresentation.php:254
 #, php-format
 msgid "from %s"
 msgstr "eus %s"
 
 #: src/Api/Representation/AccessRequestRepresentation.php:234
-#: src/Api/Representation/AccessStatusRepresentation.php:188
+#: src/Api/Representation/AccessStatusRepresentation.php:258
 #, php-format
 msgid "until %s"
 msgstr "betek %s"
 
 #: src/Api/Representation/AccessRequestRepresentation.php:240
-#: src/Api/Representation/AccessStatusRepresentation.php:194
+#: src/Api/Representation/AccessStatusRepresentation.php:264
 #, php-format
 msgid "from %1$s until %2$s"
 msgstr "eus %1$s betek %2$s"
@@ -304,6 +293,51 @@ msgstr "Kemmañ ar goulenn moned"
 msgid "No access requests yet."
 msgstr "Goulenn moned ebet evit ar poent."
 
+#: view/common/access-audit.phtml:32
+#, php-format
+msgid ""
+"A new audit is in progress (%1$sjob #%2$s%3$s): reload the page once it is "
+"completed to display it."
+msgstr ""
+
+#: view/common/access-audit.phtml:39
+msgid ""
+"The base is too big to be audited when this page is displayed, so the audit "
+"is computed in a background job."
+msgstr ""
+
+#: view/common/access-audit.phtml:42
+#, fuzzy
+msgid "Current state of the access statuses."
+msgstr "Adlañsañ statud ar moned da"
+
+#: view/common/access-audit.phtml:45
+#, php-format
+msgid ""
+"Result of the audit of %1$s (%2$sjob #%3$s%4$s). It is updated automatically "
+"after one day, or via the task \"Audit access statuses\" in the tab Tasks."
+msgstr ""
+
+#: view/common/access-audit.phtml:58
+msgid "Restricted levels set on"
+msgstr ""
+
+#: view/common/access-audit.phtml:59
+msgid "Count"
+msgstr ""
+
+#: view/common/access-audit.phtml:71
+msgid ""
+"The counts are the restricted levels set directly on the resources. In a "
+"base managed by item set, it is normal that items and medias have no own "
+"level: they follow the level of their item sets. In a base managed by "
+"document, item sets have no level."
+msgstr ""
+
+#: view/common/access-audit.phtml:75
+msgid "No inconsistency was found in the access statuses."
+msgstr ""
+
 #: view/common/access-request-block.phtml:13
 msgid ""
 "You already have access to the resource. Go back to the previous page to see "
@@ -375,13 +409,42 @@ msgstr "Tennañ ar goulenn"
 msgid "Request access"
 msgstr "Goulenn an aotre"
 
-#: view/common/access-status.phtml:18
+#: view/common/access-status.phtml:21
 msgid "Free"
 msgstr "Digoust"
 
-#: view/common/access-status.phtml:24
+#: view/common/access-status.phtml:43
 msgid "Access status"
 msgstr "Stad ar moned"
+
+#: view/common/access-status.phtml:46
+#, php-format
+msgid "Applied status: %1$s (inherited from %2$s)"
+msgstr ""
+
+#: view/common/access-status.phtml:47
+#, php-format
+msgid "Applied status: %s"
+msgstr ""
+
+#: view/common/access-status.phtml:48
+#, php-format
+msgid "Defined status: %s"
+msgstr ""
+
+#: view/common/access-status.phtml:53
+#, php-format
+msgid "Applied embargo: %s"
+msgstr ""
+
+#: view/common/access-status.phtml:53 view/common/access-status.phtml:54
+msgid "none"
+msgstr ""
+
+#: view/common/access-status.phtml:54
+#, fuzzy, php-format
+msgid "Defined embargo: %s"
+msgstr "Mirout deiziadoù an embargo"
 
 #: view/error/403-access-resource.phtml:1
 msgid "Access Forbidden"
@@ -395,7 +458,120 @@ msgstr "Ma goulennoù moned"
 msgid "Dashboard"
 msgstr "Taolenn-vourzh"
 
-#: data/scripts/upgrade_from_accessresource.php:95
+#: data/scripts/upgrade_from_accessresource.php:81
+msgid ""
+"The reserved access by ip by site has been replaced by a reserved acces by "
+"ip by item set. You should check and resave your config if needed and "
+"eventually create item sets."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:163
+msgid ""
+"A new option allows to set the access restricted status via a simple radio "
+"in resource form instead of a property."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:168
+msgid ""
+"Warning: to use only the button is the default behavior. To keep the old "
+"behavior via the property, you must set the param level_via_property to true "
+"in the file config/local.config.php."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:173
+msgid ""
+"Warning: if you use specific properties (not \"curation:reserved\", "
+"\"curation:start\", \"curation:end\"), you need to update the table "
+"\"access_reserved\"."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:180
+msgid ""
+"A new option allows to set the access restricted status via a a property "
+"with three status (free, reserved, forbidden)."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:185
+msgid ""
+"Warning: if you use the old mode \"property\", you must update your "
+"local.config.php with status \"reserved\"."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:190
+msgid ""
+"Warning: if you want to hide records and not only media files, the current "
+"version may have break some configs. Keep old releases (until 3.3.0.10) in "
+"that case for now."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:406
+#, php-format
+msgid "An error occurred during upgrade of the database: %s"
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:442
+msgid ""
+"The structure of the module has been rewritten to make status easier to "
+"manage and quicker to check."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:446
+msgid ""
+"The access status is now independant of the visibility status (public/"
+"private)."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:450
+msgid ""
+"A new checkbox in resource form and a new api argument have been added to "
+"allow to recursively set a status."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:454
+msgid ""
+"The config has been simplified and fully manageable in admin board. The "
+"modes \"guest\", \"ip\" and \"user\" are no more exclusive."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:459
+msgid ""
+"The property mode \"presence\" of a value has been removed for now. The "
+"value \"free\", \"reserved\", \"protected\" or \"forbidden\" (or the "
+"specified ones) should be set."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:465
+msgid ""
+"The property mode has been unset during upgrade. Update config, save it, "
+"then submit the job in config form."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:471
+msgid ""
+"The embargo can be set via a specific setting in resource advanced tab or "
+"via a property as before. The option should be set in config."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:475
+msgid ""
+"The properties for embargo has not been updated during upgrade. Update "
+"config, save it, then submit the job in config form."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:480
+msgid ""
+"Warning: you may have to check the config and the resources statuses with "
+"the new config. If wrong, save config, then run the job."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:485
+msgid ""
+"The reserved resources were private, but visible with restricted files: they "
+"are now public with reserved files. The private item sets are now free, "
+"because their level applies to their items."
+msgstr ""
+
+#: data/scripts/upgrade_from_accessresource.php:538
 #, php-format
 msgid "The module \"%1$s\" was upgraded by module \"%2$s\" and uninstalled."
 msgstr ""
@@ -405,11 +581,11 @@ msgstr ""
 msgid "The vocabulary \"{vocabulary}\" was updated successfully."
 msgstr "Hizivaet eo bet ar geriaoueg \"{vocabulary}\" gant berzh."
 
-#: data/scripts/upgrade.php:161
+#: data/scripts/upgrade.php:176
 msgid "It is now possible to add a page block to request an access."
 msgstr "Bremañ e c'haller ouzhpennañ ur bloc'had pajenn evit goulenn un digor."
 
-#: data/scripts/upgrade.php:166
+#: data/scripts/upgrade.php:181
 msgid ""
 "New messages were added to make a distinction between user/visitor and "
 "accepted/rejected. Check main settings to adapt them."
@@ -418,7 +594,7 @@ msgstr ""
 "gweladenner hag asantet/dibaset. Gwiriit an arventennoù pennañ evit o "
 "azasaat."
 
-#: data/scripts/upgrade.php:181
+#: data/scripts/upgrade.php:196
 msgid ""
 "The module manages now http requests \"Content Range\" that allow to read "
 "files faster."
@@ -426,7 +602,7 @@ msgstr ""
 "Ar modul a ver bremañ ar goulennoù HTTP \"Content Range\" a ro an tu da lenn "
 "restroù buanoc'h."
 
-#: data/scripts/upgrade.php:203
+#: data/scripts/upgrade.php:218
 msgid ""
 "A new access mode allows to limit access to medias to users with a specific "
 "email via regex."
@@ -434,7 +610,7 @@ msgstr ""
 "Ur mod moned nevez a ro an tu da vevenniñ ar moned d'ar mediaoù d'an "
 "implijerien gant ur postel resis dre regex."
 
-#: data/scripts/upgrade.php:278
+#: data/scripts/upgrade.php:293
 msgid ""
 "The settings \"heading\" was removed from block Access request. New blocks "
 "\"Heading\" or \"Html\" were prepended to all blocks that had a filled "
@@ -445,7 +621,7 @@ msgstr ""
 "holl bloc'hadoù a oa ganto un \"heading\" leuniet. Gallout a rit gwiriañ ar "
 "pajennoù evit ar stiloù : {json}"
 
-#: data/scripts/upgrade.php:288
+#: data/scripts/upgrade.php:303
 msgid ""
 "The setting \"template\" was moved to the new block layout settings "
 "available since Omeka S v4.1. You may check pages for styles: {json}"
@@ -454,7 +630,7 @@ msgstr ""
 "aozadur ar bloc'hoù, a c'haller implijout abaoe Omeka S v4.1. Gallout a rit "
 "gwiriañ ar pajennoù evit ar stiloù : {json}"
 
-#: data/scripts/upgrade.php:295
+#: data/scripts/upgrade.php:310
 msgid ""
 "The template files for the block Access request should be moved from \"view/"
 "common/block-layout\" to \"view/common/block-template\" in your themes. You "
@@ -464,12 +640,12 @@ msgstr ""
 "moned\" eus \"view/common/block-layout\" da \"view/common/block-template\" "
 "en ho temoù. Gallout a rit gwiriañ ho temoù evit ar pajennoù: {json}"
 
-#: data/scripts/upgrade.php:307
+#: data/scripts/upgrade.php:322
 msgid "It is now possible to define accesses by sso idps and item sets."
 msgstr ""
 "Bremañ eo posupl termeniñ an tremenioù dre IDP-où SSO ha strolladoù elfennoù."
 
-#: data/scripts/upgrade.php:312
+#: data/scripts/upgrade.php:327
 msgid ""
 "It is now possible to define excluded item sets for accesses by ip and sso "
 "idp."
@@ -477,7 +653,7 @@ msgstr ""
 "Bremañ e c'haller termeniñ strolladoù elfennoù berzet evit an digoroù dre IP "
 "hag an IDP SSO."
 
-#: data/scripts/upgrade.php:319
+#: data/scripts/upgrade.php:334
 msgid ""
 "When no time is set to an date of end of embargo, the check is now done "
 "against 23:59:59 and no more 00:00:00."
@@ -485,7 +661,7 @@ msgstr ""
 "Pa ne vez ket lakaet eur ebet evit deiziad fin an embargo, e vez graet ar "
 "gwiriadenn bremañ da 23:59:59 ha n'eo ket ken da 00:00:00."
 
-#: data/scripts/upgrade.php:346
+#: data/scripts/upgrade.php:361
 msgid ""
 "A new option allows to update the status level and to remove the embargo "
 "metadata when it ends. Default option is to keep them."
@@ -493,13 +669,13 @@ msgstr ""
 "Un dibab nevez a ro an tu da hizivaat live ar statud ha da dennañ ar "
 "metaroadennoù embargo pa echu. An dibab dre ziouer eo o mirout."
 
-#: data/scripts/upgrade.php:351
+#: data/scripts/upgrade.php:366
 msgid "A job is run once a day to update accesses when embargo ends."
 msgstr ""
 "Ur wech an deiz e vez lañset ul labour evit hizivaat an tremenoù pa echu an "
 "embargo."
 
-#: data/scripts/upgrade.php:383
+#: data/scripts/upgrade.php:398
 msgid ""
 "The three criteria to access a media are now fully independant: visibility "
 "of item and media should be public; access level should be free (or reserved "
@@ -510,14 +686,14 @@ msgstr ""
 "bezañ digoust (pe miret evit an implijerien aotreet) ; ar resurs ne rank ket "
 "bezañ dindan embargo."
 
-#: data/scripts/upgrade.php:419 Module.php:2186
+#: data/scripts/upgrade.php:434 Module.php:2438
 msgid ""
 "The .htaccess rule is managed by the module and protects file types: {types}."
 msgstr ""
 "Meret e vez ar reolenn .htaccess gant ar modul ha gwareziñ a ra ar seurtadoù "
 "restroù: {types}."
 
-#: data/scripts/upgrade.php:425
+#: data/scripts/upgrade.php:440
 msgid ""
 "A legacy .htaccess rule was detected for file types: {types}. It is "
 "recommended to open the module configuration form and save it to convert the "
@@ -527,7 +703,7 @@ msgstr ""
 "{types}. Erbedet e vez digeriñ furmskrid kefluniadur ar modul ha spardañ "
 "anezhañ evit treuzfurmiñ ar reolenn d'ar furmad meret."
 
-#: data/scripts/upgrade.php:431
+#: data/scripts/upgrade.php:446
 msgid ""
 "The .htaccess rule is not yet set. Open the module configuration form to "
 "manage it. Default file types: {types}."
@@ -535,17 +711,17 @@ msgstr ""
 "N'eo ket bet lakaet c'hoazh ar reolenn .htaccess. Digorit furmskrid "
 "kefluniadur ar modul evit he merañ. Seurtoù restroù dre ziouer : {types}"
 
-#: data/scripts/upgrade.php:449
+#: data/scripts/upgrade.php:464
 msgid "The module {module} should be upgraded to version {version} or later."
 msgstr ""
 "Ar modul {module} a rank bezañ hizivaet d'ar stumm {version} pe d'ur stumm "
 "nevesoc'h."
 
-#: data/scripts/upgrade.php:468
+#: data/scripts/upgrade.php:478
+#, fuzzy
 msgid ""
-"A previous bug may have removed access property values. A background job has "
-"been launched to restore them from indexes ({link}job #{job_id}{link_end}, "
-"{link_log}logs{link_end})."
+"A previous bug may have removed access property values. They are restored "
+"from the indexes."
 msgstr ""
 "Ur bug kent en deus lamet moarvat talvoudoù ar perzhioù moned. Ur labour a-"
 "dreñv zo bet lañset evit o adsevel diwar an endeksoù ({link}job #{job_id}"
@@ -614,35 +790,7 @@ msgstr ""
 "IP e pleustr nemet pa zeu ar goulenn eus un IP a zo war ar roll. Hep se, e "
 "vez gwelet bep gweladenner gant REMOTE_ADDR."
 
-#: data/scripts/upgrade.php:544
-msgid ""
-"A new option \"propagation mode\" was added and forced to \"skip if set\" "
-"for this upgraded install: previous saves with \"Apply recursive\" would "
-"silently overwrite per-item and per-media levels. If your workflow relies on "
-"bulk propagation from an item set to its items and medias, switch to \"max "
-"restrictive\" or \"overwrite\" in the Tasks tab of the module config, but be "
-"aware that \"overwrite\" writes the parent level onto every child "
-"unconditionally."
-msgstr ""
-"Ouzhpennet ez eus bet un dibab nevez \"doare skignañ\" ha rediet da \"lamat "
-"ma'z eo lakaet\" evit ar staliadur hizivaet-mañ : an enrolladennoù kent gant "
-"\"Lakaat adarre\" a adskrivevje didrouz al liveoù dre elfenn ha dre vedia. "
-"Ma'z eo diazezet ho froud labour war ar skignerezh a-vras eus un hollad "
-"elfennoù d'e elfennoù ha d'e vediaoù, cheñchit da \"max restrictive\" pe "
-"\"overwrite\" e skiant-prenet an eilennoù e kefluniadur ar modul, met bezit "
-"emskiant e skriv \"overwrite\" al live kar war bep live-bugel hep diviz."
-
-#: data/scripts/upgrade.php:549
-msgid ""
-"A new option allows to separate propagation of the embargo dates and the "
-"status level. Embargo dates are per-resource and time-bound and checked "
-"independantly from the level."
-msgstr ""
-"Un dibab nevez a ro an tu da zispartiañ skignadur deiziadoù an embargo ha "
-"live ar statud. Deiziadoù an embargo a zo dre zanvez ha bevennet en amzer, "
-"ha gwiriet e vezont en o-unan, dizalc'h diouzh al live."
-
-#: data/scripts/upgrade.php:555
+#: data/scripts/upgrade.php:535
 msgid ""
 "The status \"protected\" has been clarified: a \"reserved\" file is granted "
 "to global bypass modes, while a \"protected\" file requires an approved "
@@ -652,7 +800,7 @@ msgstr ""
 "d'ar modoù tremen hollek, tra ma c'houlenn un restr \"gwarezet\" ur goulenn "
 "moned hiniennel aprouet ha ne c'haller ket tremen drezi en un doare hollek."
 
-#: data/scripts/upgrade.php:600
+#: data/scripts/upgrade.php:578
 msgid ""
 "The process to check rights was simplified. Now, an access level set on an "
 "item set or an item now applies automatically to its items and medias, "
@@ -662,16 +810,13 @@ msgstr ""
 "lakaet war un tolzad elfennoù pe war un elfenn a dalvez ent emgefreek evit "
 "hec'h elfennoù hag he mediaoù, hep pazenn skignañ ebet."
 
-#: data/scripts/upgrade.php:605
+#: data/scripts/upgrade.php:583
 msgid ""
-"A background job was started to apply the access levels to all resources "
-"({link}job #{job_id}{link_end}, {link_log}logs{link_end})."
+"The access levels are applied to all resources, according to their item sets "
+"and items."
 msgstr ""
-"Ur gefridi a-dreñv zo bet lañset evit lakaat e pleustr al liveoù moned evit "
-"an holl ziazezoù ({link}kefridi #{job_id}{link_end}, {link_log}"
-"marilhoù{link_end})."
 
-#: data/scripts/upgrade.php:619
+#: data/scripts/upgrade.php:587
 msgid ""
 "The old \"propagation mode\" options have been removed: they are no longer "
 "needed. A new option \"Cascade embargo dates\" (off by default) makes an "
@@ -684,47 +829,60 @@ msgstr ""
 "ivez evit hec'h elfennoù hag he mediaoù, evel al live moned. Gwiriet e vez "
 "an embargo a-zisrann memes tra."
 
-#: data/scripts/upgrade.php:684
+#: data/scripts/upgrade.php:652
 msgid "The config form was improved."
 msgstr "Gwellaet eo bet ar furmskrid kefluniañ."
 
-#: data/scripts/upgrade.php:715
+#: data/scripts/upgrade.php:683
 msgid ""
 "The table of access statuses was missing the columns holding the admin "
 "decision ({columns}), so access statuses were unreadable. They were added "
 "and filled from the current levels."
 msgstr ""
 
-#: data/scripts/upgrade.php:734
+#: data/scripts/upgrade.php:701
 msgid ""
-"A background job was started to fix the access levels of all resources, "
-"which could not be computed on mysql ({link}job #{job_id}{link_end}, "
-"{link_log}logs{link_end})."
+"The access levels of all resources are fixed, since they could not be "
+"computed on mysql."
 msgstr ""
-"Lañset eo bet ur labour-foñs evit reizhañ liveoù moned an holl vammennoù, na "
-"c'helled ket jediñ war mysql ({link}labour #{job_id}{link_end}, {link_log}"
-"marilhoù{link_end})."
 
-#: data/scripts/upgrade.php:760
+#: data/scripts/upgrade.php:717
 msgid ""
 "The access mode \"guest\" was renamed \"auth_guest\" (users with a guest "
 "role). A new mode \"auth_any\" gives access to any authenticated user."
 msgstr ""
 
-#: data/scripts/upgrade.php:788
+#: data/scripts/upgrade.php:745
 msgid ""
 "These ip rules were removed, because their source is not a valid ip or cidr "
 "range: {list}. Check the rules in the config of the module."
 msgstr ""
 
-#: data/scripts/upgrade.php:798
-msgid ""
-"A background job was started to rebuild the access index, so the modules "
-"that follow the access statuses can update their data ({link}job #{job_id}"
-"{link_end}, {link_log}logs{link_end})."
+#: data/scripts/upgrade.php:754
+msgid "The modules that follow the access statuses can update their data."
 msgstr ""
 
-#: Module.php:114
+#: data/scripts/upgrade.php:766
+#, fuzzy
+msgid ""
+"The missing access statuses are created, so all resources follow the level "
+"of their item sets and items."
+msgstr ""
+"Lañset eo bet ur labour-foñs evit reizhañ liveoù moned an holl vammennoù, na "
+"c'helled ket jediñ war mysql ({link}labour #{job_id}{link_end}, {link_log}"
+"marilhoù{link_end})."
+
+#: data/scripts/upgrade.php:773 Module.php:468
+#, fuzzy
+msgid ""
+"A background job was started to rebuild the access statuses ({link}job "
+"#{job_id}{link_end}, {link_log}logs{link_end})."
+msgstr ""
+"Ur gefridi a-dreñv zo bet lañset evit lakaat e pleustr al liveoù moned evit "
+"an holl ziazezoù ({link}kefridi #{job_id}{link_end}, {link_log}"
+"marilhoù{link_end})."
+
+#: Module.php:128
 msgid ""
 "Access module: the .htaccess is not writable; the rewrite rule was not "
 "removed during uninstall."
@@ -732,7 +890,7 @@ msgstr ""
 "Modul moned : n'haller ket skrivañ war an .htaccess ; n'eo ket bet lamet ar "
 "reolenn adskrivañ e-pad an distaliañ."
 
-#: Module.php:172
+#: Module.php:186
 msgid ""
 "The Access rule has been converted to an Analytics download rule for file "
 "types: {types}."
@@ -740,7 +898,11 @@ msgstr ""
 "Ar reolenn Access zo bet treuzfurmet en ur reolenn pellgargañ Analytics evit "
 "ar seurtadoù restroù : {types}."
 
-#: Module.php:233
+#: Module.php:242
+msgid "Migration of module AccessResource: {exception}"
+msgstr ""
+
+#: Module.php:246
 msgid ""
 "An error occurred during migration of module \"{module}\". Check the config "
 "and uninstall it manually."
@@ -748,7 +910,25 @@ msgstr ""
 "Ur fazi zo c'hoarvezet e-pad treuzkas ar modul \"{module}\". Gwiriit ar "
 "c'hemenn ha diinstalit anezhañ gant an dorn."
 
-#: Module.php:273
+#: Module.php:332
+msgid ""
+"The module AccessResource is uninstalled, but its files cannot be removed. "
+"Remove them manually: {paths}."
+msgstr ""
+
+#: Module.php:370
+msgid ""
+"The module AccessResource is marked as version {version}, but its upgrade to "
+"version 3.4.17 was not completed, so it is resumed."
+msgstr ""
+
+#: Module.php:412
+msgid ""
+"The tables of the module Access exist already, so they are kept with their "
+"data."
+msgstr ""
+
+#: Module.php:421
 msgid ""
 "This module cannot install its tables, because they exist already. Try to "
 "remove them first."
@@ -756,15 +936,7 @@ msgstr ""
 "Ne c'hall ket ar modul-mañ staliañ e zataolioù, rak ez eus anezho dija. "
 "Klaskit o dilemel da gentañ."
 
-#: Module.php:303
-msgid ""
-"It is recommended to run the job in config form to initialize all access "
-"statuses."
-msgstr ""
-"Erbedet e vez lañsañ al labour e stumm ar c'hemenn da ziazezañ an holl "
-"statudoù moned."
-
-#: Module.php:308
+#: Module.php:513
 msgid ""
 "Choose the storage mode for access level and embargo in the module "
 "configuration: either as resource metadata (default) or as property values "
@@ -774,7 +946,7 @@ msgstr ""
 "modul : pe evel metaroadennoù an danvez (dre ziouer) pe evel talvoudoù perzh "
 "war an danvez."
 
-#: Module.php:312
+#: Module.php:517
 msgid ""
 "Files are not protected until the Apache .htaccess is configured. The module "
 "will try to write the rewrite rule automatically; otherwise edit "
@@ -786,21 +958,21 @@ msgstr ""
 "kemmit an .htaccess e gwrizienn Omeka gant an dorn. Sellit ouzh ar furmskrid "
 "kefluniañ hag ar README evit muioc'h a vunudoù."
 
-#: Module.php:347
+#: Module.php:552
 msgid ""
 "Access requests are open to any visitor, but no anti-spam protection is "
 "available. Install and enable the module SpamGuard to protect anonymous "
 "requests."
 msgstr ""
 
-#: Module.php:350
+#: Module.php:555
 msgid ""
 "To open access requests to any visitor with modes \"email\" or \"token\", "
 "install the module SpamGuard first: it is the only anti-spam protection for "
 "anonymous requests."
 msgstr ""
 
-#: Module.php:386
+#: Module.php:591
 msgid ""
 "Trusted proxy automatically detected and added: {ip}. Review and adjust the "
 "list if more than one proxy is involved."
@@ -808,7 +980,7 @@ msgstr ""
 "Proksi fizius detektet hag ouzhpennet ent emgefre : {ip}. Adwelit hag "
 "reizhit al listenn ma'z eus muioc'h eget ur proksi."
 
-#: Module.php:707
+#: Module.php:946
 msgid ""
 "The automatic management of .htaccess is disabled in config. Apache "
 "redirections must be configured manually."
@@ -816,7 +988,7 @@ msgstr ""
 "Diweredekaet eo ar mererezh emgefreek eus .htaccess er gefluniadur. Rankout "
 "a ra an adkasadennoù Apache bezañ kefluniet gant an dorn."
 
-#: Module.php:798
+#: Module.php:1040
 msgid ""
 "Access settings affecting indexation changed. You should reindex metadata "
 "via the job \"Reindex database\" in the tab Tasks."
@@ -825,11 +997,20 @@ msgstr ""
 "tlefe bezañ ar metaroadennoù dre ar labour \"Adindekset an diaz roadennoù\" "
 "en ivinell Kefridioù."
 
-#: Module.php:853
+#: Module.php:1092
+#, fuzzy
+msgid ""
+"Auditing the access statuses in a background job ({link_job}job #{job_id}"
+"{link_end}, {link_log}logs{link_end})."
+msgstr ""
+"Hizivaat al liveoù moned en ur labour-foñs ({link_job}labour #{job_id}"
+"{link_end}, {link_log}marilhoù{link_end})."
+
+#: Module.php:1113
 msgid "No resource type was selected to reset."
 msgstr "N'eus bet dibabet seurt danvez ebet da adlañsañ."
 
-#: Module.php:863
+#: Module.php:1123
 msgid ""
 "Resetting and updating the access levels in a background job ({link_job}job "
 "#{job_id}{link_end}, {link_log}logs{link_end})."
@@ -837,7 +1018,7 @@ msgstr ""
 "Adlañsañ hag hizivaat al liveoù moned en ur labour-foñs ({link_job}labour "
 "#{job_id}{link_end}, {link_log}marilhoù{link_end})."
 
-#: Module.php:864
+#: Module.php:1124
 msgid ""
 "Updating the access levels in a background job ({link_job}job #{job_id}"
 "{link_end}, {link_log}logs{link_end})."
@@ -845,7 +1026,7 @@ msgstr ""
 "Hizivaat al liveoù moned en ur labour-foñs ({link_job}labour #{job_id}"
 "{link_end}, {link_log}marilhoù{link_end})."
 
-#: Module.php:1012
+#: Module.php:1272
 msgid ""
 "Cleaned params used for Access:\n"
 "{json}"
@@ -853,76 +1034,76 @@ msgstr ""
 "Parametrioù naetaet implijet evit an Access :\n"
 "{json}"
 
-#: Module.php:1463 src/Controller/Admin/RequestController.php:311
+#: Module.php:1723 src/Controller/Admin/RequestController.php:311
 msgid "You should set either a user or an email or check box for token."
 msgstr ""
 "Ret e vefe deoc'h lakaat pe un implijer, pe ur chomlec'h postel, pe ur voest "
 "da askañ evit an token."
 
-#: Module.php:1486 src/Controller/Admin/RequestController.php:337
+#: Module.php:1746 src/Controller/Admin/RequestController.php:337
 msgid "Access request successfully created."
 msgstr "Krouet eo bet ar goulenn moned gant berzh."
 
-#: Module.php:1567 src/Form/Admin/BatchEditFieldset.php:51
+#: Module.php:1827 src/Form/Admin/BatchEditFieldset.php:51
 msgid "Reserved"
 msgstr "Miret"
 
-#: Module.php:1568 src/Form/Admin/BatchEditFieldset.php:52
+#: Module.php:1828 src/Form/Admin/BatchEditFieldset.php:52
 msgid "Protected"
 msgstr "Gwarezet"
 
-#: Module.php:1583 src/ColumnType/AccessLevel.php:13
+#: Module.php:1843 src/ColumnType/AccessLevel.php:13
 msgid "Access level"
 msgstr "Live moned"
 
-#: Module.php:1597 src/Form/Admin/BatchEditFieldset.php:89
+#: Module.php:1857 src/Form/Admin/BatchEditFieldset.php:89
 msgid "Embargo start"
 msgstr "Krogiad an embargo"
 
-#: Module.php:1614 Module.php:1622 src/Form/Admin/BatchEditFieldset.php:134
+#: Module.php:1874 Module.php:1882 src/Form/Admin/BatchEditFieldset.php:134
 msgid "Embargo end"
 msgstr "Fin an embargo"
 
-#: Module.php:1632
+#: Module.php:1892
 #, php-format
 msgid "Access level (managed via property %s)"
 msgstr "Live moned (meret dre ar perzh %s)"
 
-#: Module.php:1635
+#: Module.php:1895
 #, php-format
 msgid "Embargo start (managed via property %s)"
 msgstr "Deroù an embargo (meret dre ar perzh %s)"
 
-#: Module.php:1638
+#: Module.php:1898
 #, php-format
 msgid "Embargo end (managed via property %s)"
 msgstr "Fin an embargo (meret dre ar perzh %s)"
 
-#: Module.php:1994
+#: Module.php:2246
 msgid "Access: Reindex resources"
 msgstr "Moned : Adindeksetañ ar mammennoù"
 
-#: Module.php:2001
+#: Module.php:2253
 msgid "Access: Reindex statuses"
 msgstr ""
 
-#: Module.php:2002
+#: Module.php:2254
 msgid "Reindex the access status of resources."
 msgstr "Adindekset statud moned ar mammennoù."
 
-#: Module.php:2004
+#: Module.php:2256
 msgid "Reindex"
 msgstr "Adindekseañ"
 
-#: Module.php:2023
+#: Module.php:2275
 msgid "Options to reindex accesses"
 msgstr "Dibaboù evit adindeksiñ ar monedoù"
 
-#: Module.php:2063
+#: Module.php:2315
 msgid "The file .htaccess is not readable at the root of Omeka."
 msgstr "N'eo ket lennus ar restr .htaccess e gwrizienn Omeka."
 
-#: Module.php:2153
+#: Module.php:2405
 msgid ""
 "A legacy .htaccess rule protects file types \"{types}\" but is not managed "
 "by the module. Save the configuration to convert it to the managed format."
@@ -931,7 +1112,7 @@ msgstr ""
 "n'eo ket meret gant ar modul. Enrollit ar c'hefluniadur evit e droiñ d'ar "
 "furmad meret."
 
-#: Module.php:2164
+#: Module.php:2416
 msgid ""
 "The file .htaccess is not writable, so the rule for types \"{types}\" set "
 "below could not be applied. Add the following lines manually in the "
@@ -943,7 +1124,7 @@ msgstr ""
 "Ouzhpennit an linennoù da-heul gant an dorn er restr .htaccess e gwrizienn "
 "Omeka, just goude \"RewriteEngine On\":{line_break}{rule}"
 
-#: Module.php:2176
+#: Module.php:2428
 msgid ""
 "No .htaccess rule is set to protect files. To control access to files, add "
 "the following lines in the file .htaccess at the root of Omeka, just after "
@@ -954,7 +1135,7 @@ msgstr ""
 "restr .htaccess e gwrizienn Omeka, just goude \"RewriteEngine On\":"
 "{line_break}{rule}"
 
-#: Module.php:2228
+#: Module.php:2480
 msgid ""
 "The file .htaccess is not writable. Add the following lines manually in the "
 "file .htaccess at the root of Omeka, just after \"RewriteEngine On\":"
@@ -964,7 +1145,7 @@ msgstr ""
 "gant an dorn er restr .htaccess e gwrizienn Omeka, just goude "
 "\"RewriteEngine On\":{line_break}{rule}"
 
-#: Module.php:2238
+#: Module.php:2490
 msgid ""
 "The file .htaccess is not writable. Remove the lines starting with \"{marker}"
 "\" manually from the file .htaccess at the root of Omeka."
@@ -972,17 +1153,17 @@ msgstr ""
 "N'haller ket skrivañ war ar restr .htaccess. Lamit gant an dorn al linennoù "
 "a grog gant \"{marker}\" eus ar restr .htaccess e gwrizienn Omeka."
 
-#: Module.php:2288
+#: Module.php:2540
 msgid "The .htaccess rule has been updated to protect file types: {types}."
 msgstr ""
 "Hizivaet eo bet ar reolenn .htaccess evit gwareziñ an doareoù restroù : "
 "{types}."
 
-#: Module.php:2294
+#: Module.php:2546
 msgid "The .htaccess rule for file protection has been removed."
 msgstr "Lemellet eo bet ar reolenn .htaccess evit gwareziñ ar restroù."
 
-#: Module.php:2310
+#: Module.php:2562
 msgid ""
 "According to setting, when embargo ends, the access level is set to \"free\" "
 "and the embargo dates are cleared."
@@ -990,7 +1171,7 @@ msgstr ""
 "Hervez an arventenn, pa echu an embargo, e vez lakaet al live moned da "
 "\"digoust\" ha diverket deiziadoù an embargo."
 
-#: Module.php:2314
+#: Module.php:2566
 msgid ""
 "According to setting, when embargo ends, the access level is set to \"free\" "
 "and the embargo dates are kept."
@@ -998,7 +1179,7 @@ msgstr ""
 "Hervez an arventenn, pa echu an embargo, e vez lakaet al live moned da "
 "\"digoust\" ha miret e vez deiziadoù an embargo."
 
-#: Module.php:2318
+#: Module.php:2570
 msgid ""
 "According to setting, when embargo ends, the access level is set to the "
 "level under (\"free\" for reserved, \"reserved\" for protected/forbidden) "
@@ -1008,7 +1189,7 @@ msgstr ""
 "live a-is (\"digoust\" evit \"miret\", \"miret\" evit \"gwarezet/berzet\") "
 "ha diverket e vez deiziadoù an embargo."
 
-#: Module.php:2322
+#: Module.php:2574
 msgid ""
 "According to setting, when embargo ends, the access level is set to the "
 "level under (\"free\" for reserved, \"reserved\" for protected/forbidden) "
@@ -1018,7 +1199,7 @@ msgstr ""
 "live a-is (\"digollet\" evit \"miret\", \"miret\" evit \"gwarezet/berzet\") "
 "ha miret e vez deiziadoù an embargo."
 
-#: Module.php:2326
+#: Module.php:2578
 msgid ""
 "According to setting, when embargo ends, the access level is kept and the "
 "embargo dates are cleared."
@@ -1026,7 +1207,7 @@ msgstr ""
 "Hervez an arventenn, pa echu an embargo, e vez miret al live moned hag e vez "
 "diverket deiziadoù an embargo."
 
-#: Module.php:2330
+#: Module.php:2582
 msgid ""
 "According to setting, when embargo ends, the access level and the embargo "
 "dates are kept."
@@ -1034,14 +1215,14 @@ msgstr ""
 "Hervez an arventenn, pa echu an embargo, e vez miret al live moned ha "
 "deiziadoù an embargo."
 
-#: Module.php:2401
+#: Module.php:2653
 msgid ""
 "The module Derivative Media stores files in folders that are not protected: "
 "{dirs}. The automatic management of .htaccess is disabled, so add them to "
 "the rewrite rule manually."
 msgstr ""
 
-#: Module.php:2409
+#: Module.php:2661
 msgid ""
 "The folders of the module Derivative Media {dirs} contain files and are not "
 "protected: the derivatives of a reserved file can be downloaded directly. "
@@ -1049,14 +1230,14 @@ msgid ""
 "below."
 msgstr ""
 
-#: Module.php:2416
+#: Module.php:2668
 msgid ""
 "The module Derivative Media may create the folders {dirs}, that are not "
 "protected. Add them to the option \"Custom directory paths to protect "
 "via .htaccess\" below before building derivatives."
 msgstr ""
 
-#: Module.php:2505
+#: Module.php:2757
 msgid ""
 "A reverse proxy is detected (header X-Forwarded-For or X-Real-IP) but no "
 "trusted proxy is configured: all visitors are seen with the proxy IP. Fill "
@@ -1066,7 +1247,7 @@ msgstr ""
 "proksi fiziañs ebet kefluniet : an holl weladennerien a zo gwelet gant IP ar "
 "proksi. Leugnit \"Proksioù fiziañs\" gant IP diabarzh ho proksi enep."
 
-#: Module.php:2509
+#: Module.php:2761
 msgid ""
 "Trusted proxies are configured but no reverse proxy header is detected on "
 "the current request. Clear the list or verify the proxy configuration."
@@ -1075,7 +1256,7 @@ msgstr ""
 "bet detektet war ar goulenn red. Naetaat ar roll pe gwiriañ kefridiadur ar "
 "proksi."
 
-#: Module.php:2534
+#: Module.php:2786
 msgid ""
 "The IP rules contain private or loopback addresses ({ips}). Unless used for "
 "a real intranet, they are likely a reverse-proxy/Docker bridge and grant "
@@ -1086,7 +1267,7 @@ msgstr ""
 "Docker hag a ro moned da bep gweladenner diavaez pa n'eus proxy fizius ebet "
 "kefluniet."
 
-#: Module.php:2541
+#: Module.php:2793
 msgid ""
 "The current request comes from IP {ip} which is listed in the IP rules and "
 "no trusted proxy is configured: this IP likely is the reverse proxy and "
@@ -1096,21 +1277,37 @@ msgstr ""
 "n'eus proksi fiziañs ebet kefluniet : moarvat eo an IP-mañ ar proksi enep "
 "hag a ro ur moned foran d'an holl strolladoù elfennoù merket."
 
-#: Module.php:2623
+#: Module.php:2823
+msgid ""
+"The current request comes from the ipv6 address {ip}, but the ip rules "
+"contain only ipv4 addresses: the visitors of the institutions who connect in "
+"ipv6 are not recognized. Ask the institutions for their ipv6 ranges and add "
+"them to the rules."
+msgstr ""
+
+#: Module.php:2834
+msgid ""
+"The site {host} is reachable in ipv6, but the ip rules contain only ipv4 "
+"addresses: the visitors of the institutions who connect in ipv6 are not "
+"recognized. Ask the institutions for their ipv6 ranges and add them to the "
+"rules."
+msgstr ""
+
+#: Module.php:2920
 msgid "The ip \"{ip}\" is empty or invalid."
 msgstr "An IP \"{ip}\" zo goullo pe direizh."
 
-#: Module.php:2632
+#: Module.php:2928
 msgid "The item sets selected for ip {ip} are unknown or duplicated."
 msgstr ""
 "An elfennoù a ya d'ober an holladoù dibabet evit ip {ip} zo dianav pe "
 "eilpennet."
 
-#: Module.php:2758
+#: Module.php:3101
 msgid "An idp entity id is empty."
 msgstr "Un ID unanenn IDP zo goullo."
 
-#: Module.php:2767
+#: Module.php:3112
 msgid ""
 "The idp \"{idp}\" is not configured in module Single Sign-On; it is kept as "
 "a manual federation idp."
@@ -1118,53 +1315,30 @@ msgstr ""
 "An idp \"{idp}\" n'eo ket kefluniet er modul Kevreañ Unel; miret eo evel un "
 "idp kevredadurel dornel."
 
-#: Module.php:2774
+#: Module.php:3118
 msgid "The item sets selected for idp {idp} are unknown or duplicated."
 msgstr "An elfennoù aozet evit idp {idp} zo dianav pe liesek."
 
-#: src/Job/AccessStatusUpdate.php:110
-msgid "Sync mode {mode} is invalid."
-msgstr "Mod sinkronizañ {mode} n'eo ket reizh."
+#: view/common/access-status.phtml:29
+#, fuzzy, php-format
+msgid "item set %s"
+msgstr "Eilañ strolladoù traezoù"
 
-#: src/Job/AccessStatusUpdate.php:129
-msgid "Missing mode {mode} is invalid."
-msgstr "Mankout a ra ar mod {mode} n'eo ket reizh."
+#: view/common/access-status.phtml:30
+#, fuzzy, php-format
+msgid "item %s"
+msgstr "Eilañ strolladoù traezoù"
 
-#: src/Job/AccessStatusUpdate.php:142
-msgid "These recursive processes are unknown: {names}."
-msgstr "An argerzhioù adargelc'hiek-mañ n'int ket anavezet : {names}."
-
-#: src/Job/AccessStatusUpdate.php:151
-msgid "Propagation mode \"{mode}\" is invalid; falling back to skip_if_set."
-msgstr "Mod skignañ \"{mode}\" n'eo ket reizh; distreiñ da skip_if_set."
-
-#: src/Job/AccessStatusUpdate.php:165
-msgid "Propagation mode: {mode}; embargo propagation: {embargo}."
-msgstr "Mod skignañ: {mode}; skignañ embargo: {embargo}."
-
-#: src/Job/AccessStatusUpdate.php:174
+#: src/Job/AccessStatusAudit.php:40
 msgid ""
-"Synchronization and missing modes are set as \"skip\" and no recursive "
-"processes are set."
+"Restricted levels set on item sets: {item_sets}; items: {items}; medias: "
+"{media}."
 msgstr ""
-"Lakaet eo ar sinkronizadur hag ar modoù a vank da \"lamat\", ha n'eus "
-"prosesus adarreollet ebet."
 
-#: src/Job/AccessStatusUpdate.php:182
-msgid ""
-"Synchronization of property values and index is set, but the config for "
-"access mode does not use properties."
-msgstr ""
-"Ar c'henstokañ etre an talvoudoù perzh hag an indeks a zo lakaet, met ne ra "
-"ket ar c'hefluniadur evit ar mod moned gant ar perzhioù."
-
-#: src/Job/AccessStatusUpdate.php:194
-msgid "Starting indexation of access statuses of all resources."
-msgstr "Kregiñ gant indeksadur statudoù moned an holl vammennoù."
-
-#: src/Job/AccessStatusUpdate.php:243
-msgid "End of indexation."
-msgstr "Fin an endeksadur."
+#: src/Job/AccessStatusAudit.php:60
+#, fuzzy
+msgid "End of the access audit."
+msgstr "Fin adsevel an tremen."
 
 #: src/Job/AccessEmbargoUpdate.php:112
 msgid "Skipping process according to the option defined."
@@ -1254,20 +1428,31 @@ msgstr ""
 "N'eo ket termenet an doare roadennoù evit live ar perzh, neuze e vo implijet "
 "{data_type} dre ziouer pa ne vez ket termenet er metaroadennoù."
 
-#: src/Job/AccessStatusRebuild.php:59
+#: src/Job/AccessStatusRebuild.php:48
+msgid ""
+"{count} resources without access status were set as free, so they follow the "
+"level of their parents."
+msgstr ""
+
+#: src/Job/AccessStatusRebuild.php:61
+#, fuzzy
+msgid "The access statuses were copied into the property values."
+msgstr "Hizivaet eo bet al liveoù moned diwar talvou an domani."
+
+#: src/Job/AccessStatusRebuild.php:89
 msgid "Reset the access status of: {types}."
 msgstr "Adlañsañ statud ar moned da: {types}."
 
-#: src/Job/AccessStatusRebuild.php:92
+#: src/Job/AccessStatusRebuild.php:122
 msgid "Updated the access levels from the property values."
 msgstr "Hizivaet eo bet al liveoù moned diwar talvou an domani."
 
-#: src/Job/AccessStatusRebuild.php:121
+#: src/Job/AccessStatusRebuild.php:150
+#, fuzzy
 msgid ""
 "{count} resources are now more restricted than before (for example free "
 "files inside a reserved item set now follow its level), so their files can "
-"no longer be downloaded by visitors who could reach them before. If this is "
-"not wanted, run the \"reset item sets\" task to manage access by document."
+"no longer be downloaded by visitors who could reach them before."
 msgstr ""
 "{count} Muioc'h bevennet eo ar mammennoù bremañ eget a-raok (da skouer, an "
 "teuliadoù digoust en ur strollad elfennoù miret a heuilh bremañ e live), "
@@ -1275,41 +1460,13 @@ msgstr ""
 "pellgargañ o restroù. Ma ne fell ket deoc'h kement-se, lañsit an trevell "
 "\"adreizhañ ar strolladoù elfennoù\" evit merañ ar moned dre deul."
 
-#: src/Job/AccessStatusRebuild.php:127
+#: src/Job/AccessStatusRebuild.php:156
 msgid "{count} resources are now less restricted than before."
 msgstr "{count} danvezioù a zo bremañ nebeutoc'h bevennet eget a-raok."
 
-#: src/Job/AccessStatusRebuild.php:135
+#: src/Job/AccessStatusRebuild.php:164
 msgid "End of the access rebuild."
 msgstr "Fin adsevel an tremen."
-
-#: src/Job/AccessStatusPropagate.php:111
-msgid ""
-"Embargo propagation enabled: parent embargo dates will be copied onto "
-"children."
-msgstr ""
-"Gweredekaet skignadur an embargo : deiziadoù embargo ar gerent a vo eiladet "
-"war ar vugale."
-
-#: src/Job/AccessStatusPropagate.php:126
-msgid "No resource to process."
-msgstr "N'eus danvez ebet da dretiñ."
-
-#: src/Job/AccessStatusPropagate.php:159
-msgid "End of indexation of access statuses in properties."
-msgstr "Fin indexadur statudoù moned er perzhioù."
-
-#: src/Job/AccessStatusPropagate.php:169
-msgid "No resource \"{resource_id}\" to process."
-msgstr "N'eus \"{resource_id}\" ebet da dretiñ."
-
-#: src/Job/AccessStatusPropagate.php:178
-msgid "Resource #{resource_id} is not an item or an item set."
-msgstr "N'eo ket an danvez #{resource_id} un elfenn pe ur strollad elfennoù."
-
-#: src/Job/AccessStatusPropagate.php:188
-msgid "No access status for resource #{resource_id}."
-msgstr "Stad digoradur nann evit ar vammenn #{resource_id}."
 
 #: src/Form/SiteSettingsFieldset.php:15
 msgid "Old themes"
@@ -1488,7 +1645,7 @@ msgstr "Gwirioù moned"
 msgid "Files to protect"
 msgstr "Restroù da wareziñ"
 
-#: src/Form/ConfigForm.php:15 src/Form/ConfigForm.php:349
+#: src/Form/ConfigForm.php:15 src/Form/ConfigForm.php:350
 msgid "Access modes"
 msgstr "Modoù moned"
 
@@ -1500,7 +1657,11 @@ msgstr "Stankadenn"
 msgid "Tasks"
 msgstr "Kefridioù"
 
-#: src/Form/ConfigForm.php:43
+#: src/Form/ConfigForm.php:30
+msgid "Audit"
+msgstr ""
+
+#: src/Form/ConfigForm.php:44
 msgid ""
 "<details>\n"
 "    <summary>Quick help about access levels</summary>\n"
@@ -1621,7 +1782,7 @@ msgstr ""
 "strishañ a c'hounez.</p>\n"
 "</details>"
 
-#: src/Form/ConfigForm.php:102
+#: src/Form/ConfigForm.php:103
 msgid ""
 "Access level and embargo dates can be managed either separately as specific "
 "metadata of each resource set via a tab in the resource edit page, or as "
@@ -1631,35 +1792,35 @@ msgstr ""
 "evel metaroadennoù ispisial evit pep strollad danvez dre un ivinell war "
 "bajenn kemmañ an danvez, pe evel talvoudoù perzh standart an danvez."
 
-#: src/Form/ConfigForm.php:112
+#: src/Form/ConfigForm.php:113
 msgid "Storage of access level and embargo"
 msgstr "Renkañ al live moned hag an embargo"
 
-#: src/Form/ConfigForm.php:114
+#: src/Form/ConfigForm.php:115
 msgid "Resource metadata"
 msgstr "Metaroadennoù ar mammenn"
 
-#: src/Form/ConfigForm.php:115
+#: src/Form/ConfigForm.php:116
 msgid "Property in the resource"
 msgstr "Perzh er vammenn"
 
-#: src/Form/ConfigForm.php:121
+#: src/Form/ConfigForm.php:122
 msgid "display: inline;"
 msgstr "diskouez: e-linenn;"
 
-#: src/Form/ConfigForm.php:152
+#: src/Form/ConfigForm.php:153
 msgid "Set property when access uses property"
 msgstr "Termeniñ ar perzh pa implij an moned ar perzh"
 
-#: src/Form/ConfigForm.php:153
+#: src/Form/ConfigForm.php:154
 msgid "Warning: a full reindexation is needed when changing the property."
 msgstr "Diwallit : ret eo adindeksaat penn-da-benn pa cheñcher ar perzh."
 
-#: src/Form/ConfigForm.php:170
+#: src/Form/ConfigForm.php:171
 msgid "Labels for access levels"
 msgstr "Etikedennoù evit al liveoù moned"
 
-#: src/Form/ConfigForm.php:171
+#: src/Form/ConfigForm.php:172
 msgid ""
 "One level by line, formatted as \"key = label\". The keys (\"free\", "
 "\"reserved\", \"protected\", \"forbidden\") are fixed; only the labels can "
@@ -1672,11 +1833,11 @@ msgstr ""
 "etikedennoù evel talvoudoù ar perzh a-us (ur geriaoueg personelaet pe un "
 "daolenn peurliesañ) ha rankout a reont klotañ gant an termenoù aotreet."
 
-#: src/Form/ConfigForm.php:192
+#: src/Form/ConfigForm.php:193
 msgid "Data type to use for the level"
 msgstr "Seurt roadenn da implijout evit al live"
 
-#: src/Form/ConfigForm.php:193
+#: src/Form/ConfigForm.php:194
 msgid ""
 "A data type like \"literal\" (default) or a controlled vocabulary like "
 "\"customvocab:X\" or \"table:X\". A specific data type is recommended to "
@@ -1686,19 +1847,19 @@ msgstr ""
 "evel \"customvocab:X\" pe \"table:X\". Erbedet e vez ur seurt roadennoù "
 "resis evit aesaat embann an danvezioù hag ar prosesusoù dre strolladoù."
 
-#: src/Form/ConfigForm.php:208
+#: src/Form/ConfigForm.php:209
 msgid "Set property to use for embargo start"
 msgstr "Termeniñ ar perzh da implijout evit deroù an embargo"
 
-#: src/Form/ConfigForm.php:225
+#: src/Form/ConfigForm.php:226
 msgid "Set property to use for embargo end"
 msgstr "Termenadur da implijout evit fin an embargo"
 
-#: src/Form/ConfigForm.php:243
+#: src/Form/ConfigForm.php:244
 msgid "Show the access status in advanced tab of resource form"
 msgstr "Diskouez statud an digor e skiant-prenet araokaet furmskrid ar gwezenn"
 
-#: src/Form/ConfigForm.php:257
+#: src/Form/ConfigForm.php:258
 msgid ""
 "Determine if you want to protect only original files or derivative "
 "thumbnails too. This option must be set in the file .htaccess of the server. "
@@ -1709,11 +1870,11 @@ msgstr ""
 "restr .htaccess war ar servijer. Ne c'hall bezañ graet ent emgefreek nemet "
 "m'en deus ar servijer web moned outi."
 
-#: src/Form/ConfigForm.php:267
+#: src/Form/ConfigForm.php:268
 msgid "Do not modify .htaccess (manage Apache redirections manually)"
 msgstr "Na gemmit ket .htaccess (merit an adkasadennoù Apache gant an dorn)"
 
-#: src/Form/ConfigForm.php:268
+#: src/Form/ConfigForm.php:269
 msgid ""
 "When checked, the module will not write or update the rewrite rule in the "
 "root .htaccess. Add the rules manually to redirect file requests through the "
@@ -1723,11 +1884,11 @@ msgstr ""
 "restr .htaccess gwrizienn. Ouzhpennit ar reolennoù gant an dorn evit "
 "adheñchañ ar goulennoù restroù dre ar reoler Moned."
 
-#: src/Form/ConfigForm.php:281
+#: src/Form/ConfigForm.php:282
 msgid "File types to protect via .htaccess"
 msgstr "Seurtoù restroù da wareziñ dre .htaccess"
 
-#: src/Form/ConfigForm.php:283
+#: src/Form/ConfigForm.php:284
 msgid ""
 "Select the file types that should be protected by an Apache rewrite rule in "
 "the root .htaccess. The rule redirects direct file access through the module "
@@ -1740,23 +1901,23 @@ msgstr ""
 "c'haller skrivañ ennañ e vez hizivaet an .htaccess ent emgefre ; a-hend-all "
 "e vez diskwelet ar reolenn da eilañ."
 
-#: src/Form/ConfigForm.php:286
+#: src/Form/ConfigForm.php:287
 msgid "large (derivative: 800px)"
 msgstr "bras (deveradur: 800px)"
 
-#: src/Form/ConfigForm.php:287
+#: src/Form/ConfigForm.php:288
 msgid "medium (derivative: 200px)"
 msgstr "krenn (deveradenn: 200px)"
 
-#: src/Form/ConfigForm.php:288
+#: src/Form/ConfigForm.php:289
 msgid "square (derivative: 200px)"
 msgstr "karrez (deveradenn: 200px)"
 
-#: src/Form/ConfigForm.php:304
+#: src/Form/ConfigForm.php:305
 msgid "Custom directory paths to protect via .htaccess"
 msgstr "Hentoù dosier personelaet da wareziñ dre .htaccess"
 
-#: src/Form/ConfigForm.php:305
+#: src/Form/ConfigForm.php:306
 msgid ""
 "Additional file subdirectories to protect, for example for the module "
 "Derivative Media (mp3, mp4, webm, ogg, pdf, etc.). Separate paths with "
@@ -1765,20 +1926,20 @@ msgstr ""
 "Isdirektorioù ouzhpenn da wareziñ, da skouer evit ar modul Derivative Media "
 "(mp3, mp4, webm, ogg, pdf, hag all.). Dispartit an hentoù gant esaouennoù."
 
-#: src/Form/ConfigForm.php:319
+#: src/Form/ConfigForm.php:320
 msgid "Protection"
 msgstr "Gwarez"
 
-#: src/Form/ConfigForm.php:322
+#: src/Form/ConfigForm.php:323
 msgid "Protect media content only (files)"
 msgstr "Gwareziñ danvez ar mediaoù hepken (restroù)"
 
-#: src/Form/ConfigForm.php:323
+#: src/Form/ConfigForm.php:324
 msgid "Protect records and content (not supported currently)"
 msgstr ""
 "Gwareziñ an enrolladennoù hag ar c'hontenid (n'eo ket skoret evit ar poent)"
 
-#: src/Form/ConfigForm.php:339
+#: src/Form/ConfigForm.php:340
 msgid ""
 "Two approaches can be combined: global rules (ip, guest, authentication…) "
 "grant access to a whole audience, while individual requests (user, email, "
@@ -1789,7 +1950,7 @@ msgstr ""
 "(implijer, postel, jeton) an tu d'ur gweladenner da c'houlenn moned d'ur "
 "vammenn resis."
 
-#: src/Form/ConfigForm.php:352
+#: src/Form/ConfigForm.php:353
 msgid ""
 "IP: visitors with specified ips have access to all reserved medias, or only "
 "to those in selected item sets"
@@ -1797,16 +1958,16 @@ msgstr ""
 "IP: ar weladennerien gant IPoù spisaet o deus moned d'an holl mediaoù miret, "
 "pe nemet d'ar re a zo e strolladoù elfennoù dibabet"
 
-#: src/Form/ConfigForm.php:353
+#: src/Form/ConfigForm.php:354
 msgid ""
 "Authenticated: all authenticated users have access to all reserved medias"
 msgstr ""
 
-#: src/Form/ConfigForm.php:354
+#: src/Form/ConfigForm.php:355
 msgid "Guest: users with a guest role have access to all reserved medias"
 msgstr ""
 
-#: src/Form/ConfigForm.php:355
+#: src/Form/ConfigForm.php:356
 msgid ""
 "External: users externally authenticated (cas, ldap, sso) have access to all "
 "reserved medias"
@@ -1814,23 +1975,23 @@ msgstr ""
 "Diavaez : an implijerien gwiriekaet a-ziavaez (cas, ldap, sso) o deus moned "
 "d'an holl mediaoù miret"
 
-#: src/Form/ConfigForm.php:356
+#: src/Form/ConfigForm.php:357
 msgid "CAS: users authenticated by cas have access to all reserved medias"
 msgstr ""
 "CAS: an implijerien gwiriekaet gant CAS o deus moned d'an holl mediaoù miret"
 
-#: src/Form/ConfigForm.php:357
+#: src/Form/ConfigForm.php:358
 msgid "LDAP: users authenticated by ldap have access to all reserved medias"
 msgstr ""
 "LDAP: an implijerien gwiriekaet gant LDAP o deus moned d'an holl mediaoù "
 "miret"
 
-#: src/Form/ConfigForm.php:358
+#: src/Form/ConfigForm.php:359
 msgid "SSO: users authenticated by sso have access to all reserved medias"
 msgstr ""
 "SSO: an implijerien gwiriekaet dre SSO o deus moned d'an holl mediaoù miret"
 
-#: src/Form/ConfigForm.php:359
+#: src/Form/ConfigForm.php:360
 msgid ""
 "SSO / IDP: users authenticated by specified identity providers have access "
 "to all reserved medias, or only to those in selected item sets"
@@ -1839,21 +2000,21 @@ msgstr ""
 "deus moned d'an holl mediaoù miret, pe nemet d'ar re a zo en strolladoù "
 "elfennoù dibabet"
 
-#: src/Form/ConfigForm.php:360
+#: src/Form/ConfigForm.php:361
 msgid ""
 "Users authenticated with a specific email have access to all reserved medias"
 msgstr ""
 "An implijerien gwiriekaet gant ur postel resis o deus moned d'an holl "
 "mediaoù miret"
 
-#: src/Form/ConfigForm.php:361
+#: src/Form/ConfigForm.php:362
 msgid ""
 "User: authenticated users should request access to specific reserved medias"
 msgstr ""
 "Implijer: an implijerien gwiriekaet a rank goulenn moned da vediaoù resis "
 "miret"
 
-#: src/Form/ConfigForm.php:362
+#: src/Form/ConfigForm.php:363
 msgid ""
 "Email: A visitor identified by email should request access to specific "
 "reserved medias"
@@ -1861,18 +2022,18 @@ msgstr ""
 "Postel: Un gweladenner anavezet dre bostel a zlefe goulenn moned da vediaoù "
 "resis miret"
 
-#: src/Form/ConfigForm.php:363
+#: src/Form/ConfigForm.php:364
 msgid ""
 "Token: A user or visitor with a token have access to specific reserved medias"
 msgstr ""
 "Jedouenn: Un implijer pe ur gweladenner gant un jedouenn en deus moned da "
 "vediaoù ispisial miret"
 
-#: src/Form/ConfigForm.php:379
+#: src/Form/ConfigForm.php:380
 msgid "Trusted proxies (one IP per line)"
 msgstr "Proksi fizius (ur chomlec'h IP dre linenn)"
 
-#: src/Form/ConfigForm.php:380
+#: src/Form/ConfigForm.php:381
 msgid ""
 "When filled, the module reads the real client IP from the proxy headers X-"
 "Forwarded-For / X-Real-IP, but only when the request comes from one of these "
@@ -1886,11 +2047,11 @@ msgstr ""
 "gwelet e vez pep gweladenner gant REMOTE_ADDR. Lakit amañ ar chomlec'hioù IP "
 "diabarzh eus ho proksi enep (Traefik, nginx, pont Docker, kempouezer kargoù)."
 
-#: src/Form/ConfigForm.php:399
+#: src/Form/ConfigForm.php:400
 msgid "IP addresses with open access to reserved files"
 msgstr "Chomlec'hioù IP gant moned digor da restroù miret"
 
-#: src/Form/ConfigForm.php:400
+#: src/Form/ConfigForm.php:401
 msgid ""
 "For each ip or range, choose the item sets it may reach. Leave both lists "
 "empty for access to every reserved resource."
@@ -1898,11 +2059,11 @@ msgstr ""
 "Evit pep IP pe skalfad, dibabit an hollad traezoù a c'hall bezañ tizhet. "
 "Lezit an daou listenn goullo evit kaout moned d'an holl vammennoù miret."
 
-#: src/Form/ConfigForm.php:424
+#: src/Form/ConfigForm.php:425
 msgid "SSO identity providers with open access to reserved files"
 msgstr "Pourvezerien identelezh SSO gant ur moned digor d'ar restroù miret"
 
-#: src/Form/ConfigForm.php:425
+#: src/Form/ConfigForm.php:426
 msgid ""
 "For each idp (or \"federation\" as a fallback), choose the item sets it may "
 "reach. Leave both lists empty for access to every reserved resource."
@@ -1911,22 +2072,22 @@ msgstr ""
 "elfennoù a c'hall tizhout. Lezit an div listenn da vezañ goullo evit kaout "
 "moned d'an holl ziazezoù miret."
 
-#: src/Form/ConfigForm.php:448
+#: src/Form/ConfigForm.php:449
 msgid ""
 "Regex on email of users allowed to access reserved medias (option above)"
 msgstr ""
 "Regex war postel an implijerien aotreet da vont e-barzh ar mediaoù miret "
 "(diuz an uhel)"
 
-#: src/Form/ConfigForm.php:461
+#: src/Form/ConfigForm.php:462
 msgid "Manage embargo dates and specify behavior when the date is reached."
 msgstr ""
 
-#: src/Form/ConfigForm.php:471
+#: src/Form/ConfigForm.php:472
 msgid "Cascade embargo dates"
 msgstr "Deiziadoù embargo Cascade"
 
-#: src/Form/ConfigForm.php:472
+#: src/Form/ConfigForm.php:473
 msgid ""
 "By default, an embargo applies only to the resource it is set on. Check this "
 "box to make an embargo set on an item set or an item also apply to its items "
@@ -1939,19 +2100,19 @@ msgstr ""
 "live moned. Goude bezañ cheñchet an dibarzh-mañ, lañsit an trevell \"Adsevel "
 "meneger ar moned\"."
 
-#: src/Form/ConfigForm.php:484
+#: src/Form/ConfigForm.php:485
 msgid "Bypass embargo dates for reserved resources"
 msgstr "Deiziadoù tremen-hebiou an embargo evit ar madoù miret"
 
-#: src/Form/ConfigForm.php:496
+#: src/Form/ConfigForm.php:497
 msgid "Update access level when embargo ends"
 msgstr "Hizivaat al live moned pa echu an embargo"
 
-#: src/Form/ConfigForm.php:499
+#: src/Form/ConfigForm.php:500
 msgid "Set access level to \"free\""
 msgstr "Lakaat al live moned da \"digoust\""
 
-#: src/Form/ConfigForm.php:500
+#: src/Form/ConfigForm.php:501
 msgid ""
 "Set access level to the level under (\"free\" for reserved, \"reserved\" for "
 "protected/forbidden)"
@@ -1959,19 +2120,19 @@ msgstr ""
 "Reolennit al live moned d'al live dindan (\"free\" evit \"miret\", "
 "\"reserved\" evit \"gwarezet/berzet\")"
 
-#: src/Form/ConfigForm.php:501
+#: src/Form/ConfigForm.php:502
 msgid "Keep access level"
 msgstr "Mirout al live moned"
 
-#: src/Form/ConfigForm.php:514
+#: src/Form/ConfigForm.php:515
 msgid "Update embargo dates when embargo ends"
 msgstr "Hizivaat deiziadoù an embargo pa echu an embargo"
 
-#: src/Form/ConfigForm.php:517
+#: src/Form/ConfigForm.php:518
 msgid "Remove embargo dates"
 msgstr "Lemel deiziadoù an embargo"
 
-#: src/Form/ConfigForm.php:518
+#: src/Form/ConfigForm.php:519
 msgid "Keep embargo dates"
 msgstr "Mirout deiziadoù an embargo"
 
@@ -2001,11 +2162,27 @@ msgstr "Adsevel an meneger moned"
 
 #: src/Form/Admin/AccessReindexFieldset.php:48
 msgid ""
+"Check if the access is managed by item set or by document, and list the "
+"inconsistencies in the logs: resources without access status, levels that do "
+"not follow the hierarchy, restricted levels without effect, items in item "
+"sets with different levels. This task does not modify anything."
+msgstr ""
+
+#: src/Form/Admin/AccessReindexFieldset.php:55
+#: src/Form/Admin/AccessReindexFieldset.php:59
+#, fuzzy
+msgid "Audit access statuses"
+msgstr "Stad ar moned"
+
+#: src/Form/Admin/AccessReindexFieldset.php:67
+#, fuzzy
+msgid ""
 "Clear the access levels and embargoes set on whole resource types, then "
 "update the access. Check \"item sets\" to manage access by document (the "
 "access is set on items and medias). Check \"items\" and \"medias\" to manage "
 "access by item set (the access is set on the item sets). This clears the "
-"checked levels and cannot be undone."
+"checked levels and cannot be undone: the resources without another "
+"restricted level become free."
 msgstr ""
 "Goullonderit al liveoù moned hag an embargoioù lakaet war an holl seurtadoù "
 "danvezioù, ha nevezait ar moned. Asellit \"strolladoù elfennoù\" evit merañ "
@@ -2014,34 +2191,37 @@ msgstr ""
 "(war ar strolladoù elfennoù eo termenet an moned). Kement-mañ a ziverk al "
 "liveoù merket ha ne c'haller ket e zizober."
 
-#: src/Form/Admin/AccessReindexFieldset.php:55
+#: src/Form/Admin/AccessReindexFieldset.php:74
 msgid "Remove the access status of"
 msgstr ""
 
-#: src/Form/Admin/AccessReindexFieldset.php:57
+#: src/Form/Admin/AccessReindexFieldset.php:76
 msgid "Item sets (to manage access by document)"
 msgstr "Steredennoù elfennoù (evit merañ ar moned dre an teulioù)"
 
-#: src/Form/Admin/AccessReindexFieldset.php:58
+#: src/Form/Admin/AccessReindexFieldset.php:77
 msgid "Items (to manage access by item set)"
 msgstr "Elfennoù (evit merañ ar moned dre strollad elfennoù)"
 
-#: src/Form/Admin/AccessReindexFieldset.php:59
+#: src/Form/Admin/AccessReindexFieldset.php:78
 msgid "Medias (to manage access by item set)"
 msgstr "Mediaoù (evit merañ ar moned dre strollad elfennoù)"
 
-#: src/Form/Admin/AccessReindexFieldset.php:70
-#: src/Form/Admin/AccessReindexFieldset.php:74
+#: src/Form/Admin/AccessReindexFieldset.php:89
+#: src/Form/Admin/AccessReindexFieldset.php:93
 msgid "Reset and rebuild"
 msgstr "Adlañsañ hag adsevel"
 
 #: src/Form/Admin/AccessIpRuleFieldset.php:21
-msgid "IP address"
+#, fuzzy
+msgid "IP addresses"
 msgstr "Chomlec'h IP"
 
 #: src/Form/Admin/AccessIpRuleFieldset.php:22
-msgid "A single ip (v4 or v6) or a range in cidr notation."
-msgstr "Ur chomlec'h IP (v4 pe v6) pe ur skalfad e notadur CIDR."
+msgid ""
+"One or more ips (v4 or v6) or ranges in cidr notation, separated by spaces, "
+"for example the ipv4 and the ipv6 ranges of an institution."
+msgstr ""
 
 #: src/Form/Admin/AccessIpRuleFieldset.php:26
 msgid "124.8.16.32  or  65.43.21.0/24"
@@ -2201,17 +2381,16 @@ msgid "Select an identity provider…"
 msgstr "Diuzit ur pourvezer identelezh…"
 
 #: src/Form/Admin/AccessSsoIdpRuleFieldset.php:42
-msgid "Or a federation idp entered manually"
+#, fuzzy
+msgid "Or idps entered manually"
 msgstr "Pe un IDP kevredadeg entret gant an dorn"
 
 #: src/Form/Admin/AccessSsoIdpRuleFieldset.php:43
 msgid ""
-"Entity id of a federation idp not in the list above. It takes precedence "
-"over the select and becomes a selectable option once saved."
+"Entity ids of idps, separated by spaces, for example a federation idp not in "
+"the list above or several idps with the same item sets. It takes precedence "
+"over the select."
 msgstr ""
-"ID an ensavadur eus un IDP kevredad n'emañ ket war ar roll a-us. Gwelloc'h "
-"eo eget ar 'select' ha dont a ra da vezañ un dibab dibabadus ur wech "
-"enrollet."
 
 #: src/Form/Admin/AccessSsoIdpRuleFieldset.php:47
 msgid "https://idp.example.org/idp/shibboleth"
@@ -2271,10 +2450,11 @@ msgstr ""
 "strollad hollek a anavez an holl dafar miret."
 
 #: src/Form/View/Helper/FormScopeRules.php:93
+#, fuzzy
 msgid ""
 "12.34.56.78\n"
 "124.8.16.32 = 17 89 -1940\n"
-"65.43.21.0/24 = -2005"
+"65.43.21.0/24 2001:db8::/32 = -2005"
 msgstr ""
 "12.34.56.78\n"
 "124.8.16.32 = 17 89 -1940\n"
@@ -2487,6 +2667,86 @@ msgstr ""
 "Evit ouzhpennañ maeziennoù, e rank pep linenn kaout un anv hag un dikedenn "
 "dispartiet gant un \"=\"."
 
+#: src/Stdlib/AccessAudit.php:28
+msgid ""
+"The access is managed by item set: the restricted levels are set on item "
+"sets only."
+msgstr ""
+
+#: src/Stdlib/AccessAudit.php:29
+msgid ""
+"The access is managed by document: the restricted levels are set on items "
+"and medias only."
+msgstr ""
+
+#: src/Stdlib/AccessAudit.php:30
+msgid "The access is managed both by item set and by document."
+msgstr ""
+
+#: src/Stdlib/AccessAudit.php:31
+msgid "No restricted level is set: all resources are free."
+msgstr ""
+
+#: src/Stdlib/AccessAudit.php:39
+msgid ""
+"Resources without access status, so free, although their parent is "
+"restricted ({type}): {count} (for example #{ids}). Run the task \"Rebuild "
+"access index\" to apply the level of their parent."
+msgstr ""
+
+#: src/Stdlib/AccessAudit.php:40
+msgid ""
+"Private item sets with the level \"forbidden\", that forbid the files of "
+"their public items and medias: {count} (for example #{ids}). This level may "
+"come from an old conversion of the private resources: if the item set is "
+"private only to be hidden, set its level free."
+msgstr ""
+
+#: src/Stdlib/AccessAudit.php:41
+msgid ""
+"Resources without access status, so free ({type}): {count} (for example "
+"#{ids}). Run the task \"Rebuild access index\" to create them."
+msgstr ""
+
+#: src/Stdlib/AccessAudit.php:42
+msgid ""
+"Resources whose effective level does not follow the hierarchy ({type}): "
+"{count} (for example #{ids}). Run the task \"Rebuild access index\"."
+msgstr ""
+
+#: src/Stdlib/AccessAudit.php:43
+msgid ""
+"Restricted levels without effect, because a parent is stricter ({type}): "
+"{count} (for example #{ids})."
+msgstr ""
+
+#: src/Stdlib/AccessAudit.php:44
+msgid ""
+"Items that belong to item sets with different levels, so the strictest one "
+"applies: {count} (for example #{ids})."
+msgstr ""
+
+#: src/Stdlib/AccessAudit.php:45
+msgid ""
+"Embargoes set on item sets, that do not apply to their items and medias, "
+"because the option \"Cascade embargo dates\" is disabled: {count} (for "
+"example #{ids})."
+msgstr ""
+
+#: src/Stdlib/AccessAudit.php:49
+#, fuzzy
+msgid "item sets"
+msgstr "Eilañ strolladoù traezoù"
+
+#: src/Stdlib/AccessAudit.php:50
+msgid "items"
+msgstr ""
+
+#: src/Stdlib/AccessAudit.php:51
+#, fuzzy
+msgid "medias"
+msgstr "Diskouez mediaoù"
+
 #: config/module.config.php:253
 msgid "Accesses"
 msgstr "Monedoù"
@@ -2602,6 +2862,145 @@ msgstr ""
 "En ur gas ar furmskrid-mañ e asantan d'ar politikerezh evit treterezh ma "
 "roadennoù personel."
 
+#~ msgid ""
+#~ "A new option \"propagation mode\" was added and forced to \"skip if set\" "
+#~ "for this upgraded install: previous saves with \"Apply recursive\" would "
+#~ "silently overwrite per-item and per-media levels. If your workflow relies "
+#~ "on bulk propagation from an item set to its items and medias, switch to "
+#~ "\"max restrictive\" or \"overwrite\" in the Tasks tab of the module "
+#~ "config, but be aware that \"overwrite\" writes the parent level onto "
+#~ "every child unconditionally."
+#~ msgstr ""
+#~ "Ouzhpennet ez eus bet un dibab nevez \"doare skignañ\" ha rediet da "
+#~ "\"lamat ma'z eo lakaet\" evit ar staliadur hizivaet-mañ : an "
+#~ "enrolladennoù kent gant \"Lakaat adarre\" a adskrivevje didrouz al liveoù "
+#~ "dre elfenn ha dre vedia. Ma'z eo diazezet ho froud labour war ar "
+#~ "skignerezh a-vras eus un hollad elfennoù d'e elfennoù ha d'e vediaoù, "
+#~ "cheñchit da \"max restrictive\" pe \"overwrite\" e skiant-prenet an "
+#~ "eilennoù e kefluniadur ar modul, met bezit emskiant e skriv \"overwrite\" "
+#~ "al live kar war bep live-bugel hep diviz."
+
+#~ msgid ""
+#~ "A new option allows to separate propagation of the embargo dates and the "
+#~ "status level. Embargo dates are per-resource and time-bound and checked "
+#~ "independantly from the level."
+#~ msgstr ""
+#~ "Un dibab nevez a ro an tu da zispartiañ skignadur deiziadoù an embargo ha "
+#~ "live ar statud. Deiziadoù an embargo a zo dre zanvez ha bevennet en "
+#~ "amzer, ha gwiriet e vezont en o-unan, dizalc'h diouzh al live."
+
+#~ msgid ""
+#~ "A background job was started to apply the access levels to all resources "
+#~ "({link}job #{job_id}{link_end}, {link_log}logs{link_end})."
+#~ msgstr ""
+#~ "Ur gefridi a-dreñv zo bet lañset evit lakaat e pleustr al liveoù moned "
+#~ "evit an holl ziazezoù ({link}kefridi #{job_id}{link_end}, {link_log}"
+#~ "marilhoù{link_end})."
+
+#~ msgid ""
+#~ "A background job was started to fix the access levels of all resources, "
+#~ "which could not be computed on mysql ({link}job #{job_id}{link_end}, "
+#~ "{link_log}logs{link_end})."
+#~ msgstr ""
+#~ "Lañset eo bet ur labour-foñs evit reizhañ liveoù moned an holl vammennoù, "
+#~ "na c'helled ket jediñ war mysql ({link}labour #{job_id}{link_end}, "
+#~ "{link_log}marilhoù{link_end})."
+
+#~ msgid "A single ip (v4 or v6) or a range in cidr notation."
+#~ msgstr "Ur chomlec'h IP (v4 pe v6) pe ur skalfad e notadur CIDR."
+
+#~ msgid ""
+#~ "Entity id of a federation idp not in the list above. It takes precedence "
+#~ "over the select and becomes a selectable option once saved."
+#~ msgstr ""
+#~ "ID an ensavadur eus un IDP kevredad n'emañ ket war ar roll a-us. "
+#~ "Gwelloc'h eo eget ar 'select' ha dont a ra da vezañ un dibab dibabadus ur "
+#~ "wech enrollet."
+
+#, fuzzy, php-format
+#~ msgid "%s"
+#~ msgstr "#%s"
+
+#, fuzzy
+#~ msgid "item_sets"
+#~ msgstr "Eilañ strolladoù traezoù"
+
+#~ msgid "Sync mode {mode} is invalid."
+#~ msgstr "Mod sinkronizañ {mode} n'eo ket reizh."
+
+#~ msgid "These recursive processes are unknown: {names}."
+#~ msgstr "An argerzhioù adargelc'hiek-mañ n'int ket anavezet : {names}."
+
+#~ msgid "Propagation mode \"{mode}\" is invalid; falling back to skip_if_set."
+#~ msgstr "Mod skignañ \"{mode}\" n'eo ket reizh; distreiñ da skip_if_set."
+
+#~ msgid "Propagation mode: {mode}; embargo propagation: {embargo}."
+#~ msgstr "Mod skignañ: {mode}; skignañ embargo: {embargo}."
+
+#, fuzzy
+#~ msgid ""
+#~ "Synchronization mode is set as \"skip\" and no recursive processes are "
+#~ "set."
+#~ msgstr ""
+#~ "Lakaet eo ar sinkronizadur hag ar modoù a vank da \"lamat\", ha n'eus "
+#~ "prosesus adarreollet ebet."
+
+#~ msgid ""
+#~ "Synchronization of property values and index is set, but the config for "
+#~ "access mode does not use properties."
+#~ msgstr ""
+#~ "Ar c'henstokañ etre an talvoudoù perzh hag an indeks a zo lakaet, met ne "
+#~ "ra ket ar c'hefluniadur evit ar mod moned gant ar perzhioù."
+
+#~ msgid "Starting indexation of access statuses of all resources."
+#~ msgstr "Kregiñ gant indeksadur statudoù moned an holl vammennoù."
+
+#~ msgid "End of indexation."
+#~ msgstr "Fin an endeksadur."
+
+#~ msgid ""
+#~ "Embargo propagation enabled: parent embargo dates will be copied onto "
+#~ "children."
+#~ msgstr ""
+#~ "Gweredekaet skignadur an embargo : deiziadoù embargo ar gerent a vo "
+#~ "eiladet war ar vugale."
+
+#~ msgid "No resource to process."
+#~ msgstr "N'eus danvez ebet da dretiñ."
+
+#~ msgid "End of indexation of access statuses in properties."
+#~ msgstr "Fin indexadur statudoù moned er perzhioù."
+
+#~ msgid "No resource \"{resource_id}\" to process."
+#~ msgstr "N'eus \"{resource_id}\" ebet da dretiñ."
+
+#~ msgid "Resource #{resource_id} is not an item or an item set."
+#~ msgstr ""
+#~ "N'eo ket an danvez #{resource_id} un elfenn pe ur strollad elfennoù."
+
+#~ msgid "No access status for resource #{resource_id}."
+#~ msgstr "Stad digoradur nann evit ar vammenn #{resource_id}."
+
+#~ msgid ""
+#~ "It is recommended to run the job in config form to initialize all access "
+#~ "statuses."
+#~ msgstr ""
+#~ "Erbedet e vez lañsañ al labour e stumm ar c'hemenn da ziazezañ an holl "
+#~ "statudoù moned."
+
+#~ msgid "Missing mode {mode} is invalid."
+#~ msgstr "Mankout a ra ar mod {mode} n'eo ket reizh."
+
+#~ msgid ""
+#~ "To be automatically upgraded and replaced by this module, the module "
+#~ "\"Access Resource\" should be upgraded first to version 3.4.17.1. Else "
+#~ "uninstall it first, but you will lose access statuses and requests."
+#~ msgstr ""
+#~ "Evit ma vo hizivaet ha kemeret e blas ent emgefreek gant ar modul-mañ, e "
+#~ "rank ar modul \"Moned d'ar Mammennoù\" bezañ hizivaet da gentañ d'ar "
+#~ "stumm 3.4.17.1. A-hend-all, diinstalit anezhañ da gentañ, met koll a reot "
+#~ "ar statudoù moned hag ar goulennoù."
+
 #~ msgid "Access reindex"
 #~ msgstr "Moned adindeksañ"
 
@@ -2616,9 +3015,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Spisaat petra a zeu da vezañ eus ar metaroadennoù evit an embargo pa vez "
 #~ "tizhet an deiziad."
-
-#~ msgid "Reset the access status of"
-#~ msgstr "Adlañsañ statud ar moned da"
 
 #~ msgid ""
 #~ "The job #{job_id} is still starting after the sleep delay. It may need to "
