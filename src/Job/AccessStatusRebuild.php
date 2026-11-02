@@ -19,6 +19,13 @@ use Omeka\Job\AbstractJob;
  */
 class AccessStatusRebuild extends AbstractJob
 {
+    use AccessPropertiesTrait;
+
+    /**
+     * @var \Doctrine\DBAL\Connection
+     */
+    protected $connection;
+
     public function perform(): void
     {
         $services = $this->getServiceLocator();
@@ -41,6 +48,19 @@ class AccessStatusRebuild extends AbstractJob
                 '{count} resources without access status were set as free, so they follow the level of their parents.', // @translate
                 ['count' => $count]
             );
+        }
+
+        // Restore the property values from the own statuses, for example after
+        // a bug that removed them, before the sync from the properties below.
+        if ($this->getArg('copy_to_properties') && $settings->get('access_property')) {
+            $this->connection = $connection;
+            $this->logger = $logger;
+            if ($this->prepareProperties(true)) {
+                $this->copyIndexIntoPropertyValues();
+                $logger->notice(
+                    'The access statuses were copied into the property values.' // @translate
+                );
+            }
         }
 
         // Snapshot the current effective level, to report afterwards how many
