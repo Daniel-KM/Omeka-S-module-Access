@@ -963,6 +963,7 @@ class Module extends AbstractModule
 
         $this->infoEmbargo();
         $this->checkIpProxySetting();
+        $this->checkIpv6Rules();
         $this->checkDerivativeMediaFolders();
 
         $assetUrl = $renderer->plugin('assetUrl');
@@ -2820,6 +2821,48 @@ class Module extends AbstractModule
                 'The current request comes from IP {ip} which is listed in the IP rules and no trusted proxy is configured: this IP likely is the reverse proxy and grants public access to the listed item sets.', // @translate
                 ['ip' => $remoteListed]
             ));
+        }
+    }
+
+    /**
+     * Warn when the site is reachable in ipv6 but the ip rules are ipv4 only.
+     *
+     * The visitors of an institution may connect in ipv6, so they are not
+     * recognized by the ipv4 ranges of the institution.
+     */
+    protected function checkIpv6Rules(): void
+    {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $rules = $settings->get('access_ip_rules', []);
+        if (!is_array($rules) || !$rules) {
+            return;
+        }
+        foreach ($rules as $source => $rule) {
+            if (strpos((string) ($rule['source'] ?? $source), ':') !== false) {
+                return;
+            }
+        }
+
+        $messenger = $services->get('ControllerPluginManager')->get('messenger');
+        $clientIp = (string) IpRange::normalizeIp((new \Access\Service\BypassResolver($settings))->resolveClientIp());
+        if (strpos($clientIp, ':') !== false && $clientIp !== '::') {
+            $messenger->addWarning(new PsrMessage(
+                'The current request comes from the ipv6 address {ip}, but the ip rules contain only ipv4 addresses: the visitors of the institutions who connect in ipv6 are not recognized. Ask the institutions for their ipv6 ranges and add them to the rules.', // @translate
+                ['ip' => $clientIp]
+            ));
+            return;
+        }
+
+        $host = strtolower((string) parse_url('http://' . ($_SERVER['HTTP_HOST'] ?? ''), PHP_URL_HOST));
+        if ($host && !filter_var($host, FILTER_VALIDATE_IP) && function_exists('dns_get_record')) {
+            $records = @dns_get_record($host, DNS_AAAA);
+            if ($records) {
+                $messenger->addWarning(new PsrMessage(
+                    'The site {host} is reachable in ipv6, but the ip rules contain only ipv4 addresses: the visitors of the institutions who connect in ipv6 are not recognized. Ask the institutions for their ipv6 ranges and add them to the rules.', // @translate
+                    ['host' => $host]
+                ));
+            }
         }
     }
 
