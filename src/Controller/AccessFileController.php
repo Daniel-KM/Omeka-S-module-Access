@@ -25,6 +25,11 @@ class AccessFileController extends AbstractActionController
     const CACHE_MAX_AGE_PRIVATE = 3600;
 
     /**
+     * Maximum size of a generic xml file to repair before sending, in bytes.
+     */
+    const MAX_XML_REPAIR_SIZE = 10000000;
+
+    /**
      * @var \Doctrine\ORM\EntityManager
      */
     protected $entityManager;
@@ -177,11 +182,16 @@ class AccessFileController extends AbstractActionController
 
     /**
      * Send the page not found without exception, so the core does not log it.
+     *
+     * The page is rendered without layout: the layout starts a session, that is
+     * useless for a file and that is avoided for anonymous visitors.
      */
     protected function notFound(): ViewModel
     {
         $this->getResponse()->setStatusCode(404);
-        return (new ViewModel())->setTemplate('error/404');
+        return (new ViewModel())
+            ->setTemplate('error/404')
+            ->setTerminal(true);
     }
 
     /**
@@ -314,23 +324,26 @@ class AccessFileController extends AbstractActionController
             $headers->addHeaderLine('Cache-Control: no-store');
         }
 
-        // Normally, these formats are not used, so check quality.
-        // TODO Why xml content is managed separately when sending file?
-        if ($mediaType === 'text/xml' || $mediaType === 'application/xml') {
-            $headers
-                ->addHeaderLine('Content-Length: ' . $filesize);
-            $xmlContent = file_get_contents($filepath);
+        // Generic xml files are repaired when they are malformed, unless they
+        // are too big to be loaded in memory, in which case they are sent as is.
+        if (($mediaType === 'text/xml' || $mediaType === 'application/xml')
+            && $filesize <= self::MAX_XML_REPAIR_SIZE
+        ) {
             libxml_use_internal_errors(true);
             $dom = new \DOMDocument('1.1', 'UTF-8');
             $dom->strictErrorChecking = false;
             $dom->validateOnParse = false;
             $dom->recover = true;
-            $dom->loadXML($xmlContent, LIBXML_NONET);
-            $currentXml = simplexml_import_dom($dom);
+            $content = $dom->loadXML((string) file_get_contents($filepath), LIBXML_NONET)
+                ? $dom->saveXML()
+                : false;
             libxml_clear_errors();
             libxml_use_internal_errors(false);
-            $response->setContent($currentXml->asXML());
-            return $response;
+            if ($content !== false) {
+                $headers->addHeaderLine('Content-Length: ' . strlen($content));
+                $response->setContent($content);
+                return $response;
+            }
         }
 
         $headers
