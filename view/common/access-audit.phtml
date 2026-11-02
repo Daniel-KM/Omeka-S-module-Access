@@ -3,6 +3,7 @@
  * @var \Laminas\View\Renderer\PhpRenderer $this
  * @var array|null $audit
  * @var bool $isLive
+ * @var int|null $runningJobId
  */
 
 use Access\Stdlib\AccessAudit;
@@ -26,6 +27,14 @@ $controllers = [
 ?>
 
 <div class="access-audit">
+<?php if ($runningJobId): ?>
+    <p class="access-audit-running"><strong><?= sprintf(
+        $escape($translate('A new audit is in progress (%1$sjob #%2$s%3$s): reload the page once it is completed to display it.')),
+        sprintf('<a href="%s">', $escape($url('admin/id', ['controller' => 'job', 'id' => $runningJobId]))),
+        (int) $runningJobId,
+        '</a>'
+    ) ?></strong></p>
+<?php endif; ?>
 <?php if (!$audit): ?>
     <p><?= $escape($translate('The base is too big to be audited when this page is displayed. Run the task "Audit access statuses" in the tab Tasks, then come back here.')) ?></p>
 <?php else: ?>

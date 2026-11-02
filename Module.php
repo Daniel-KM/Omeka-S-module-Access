@@ -911,9 +911,14 @@ class Module extends AbstractModule
         $audit = $isLive
             ? (new \Access\Stdlib\AccessAudit($connection, (bool) $settings->get('access_embargo_cascade')))->audit()
             : $settings->get('access_audit');
+        $runningJobId = $isLive ? null : (int) $connection->fetchOne(
+            'SELECT `id` FROM `job` WHERE `class` = ? AND `status` IN (?, ?) ORDER BY `id` DESC LIMIT 1',
+            [\Access\Job\AccessStatusAudit::class, \Omeka\Entity\Job::STATUS_STARTING, \Omeka\Entity\Job::STATUS_IN_PROGRESS]
+        );
         return $renderer->partial('common/access-audit', [
             'audit' => $audit,
             'isLive' => $isLive,
+            'runningJobId' => $runningJobId ?: null,
         ]);
     }
 
