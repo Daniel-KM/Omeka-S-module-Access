@@ -4,16 +4,17 @@ namespace Access\Job;
 
 use Omeka\Job\AbstractJob;
 
+/**
+ * Copy the access statuses into the property values.
+ *
+ * Used by the upgrade to version 3.4.40 to restore the property values removed
+ * by a bug of the daily embargo job. The reverse sync is done by the rebuild.
+ *
+ * @see \Access\Job\AccessStatusRebuild
+ */
 class AccessStatusUpdate extends AbstractJob
 {
     use AccessPropertiesTrait;
-
-    /**
-     * Limit for the loop to avoid heavy sql requests.
-     *
-     * @var int
-     */
-    const SQL_LIMIT = 25;
 
     /**
      * @var \Omeka\Api\Manager
@@ -26,185 +27,37 @@ class AccessStatusUpdate extends AbstractJob
     protected $connection;
 
     /**
-     * @var \Doctrine\ORM\EntityManager
-     */
-    protected $entityManager;
-
-    /**
      * @var \Laminas\Log\LoggerInterface
      */
     protected $logger;
-
-    /**
-     * @var string
-     */
-    protected $modeSync = 'skip';
-
-    /**
-     * @var array
-     */
-    protected $propagateProcesses = [];
-
-    /**
-     * @var int
-     */
-    protected $totalSucceed;
-
-    /**
-     * @var int
-     */
-    protected $totalFailed;
-
-    /**
-     * @var int
-     */
-    protected $totalSkipped;
-
-    /**
-     * @var int
-     */
-    protected $totalMedias;
-
-    /**
-     * @var int
-     */
-    protected $totalProcessed;
-
-    /**
-     * @var int
-     */
-    protected $totalToProcess;
 
     public function perform(): void
     {
         $services = $this->getServiceLocator();
 
-        // The reference id is the job id for now.
         $referenceIdProcessor = new \Laminas\Log\Processor\ReferenceId();
         $referenceIdProcessor->setReferenceId('access/index_' . $this->job->getId());
 
         $this->logger = $services->get('Omeka\Logger');
         $this->logger->addProcessor($referenceIdProcessor);
-        $this->entityManager = $services->get('Omeka\EntityManager');
-        // These two connections are not the same.
         $this->connection = $services->get('Omeka\Connection');
-        // $this->connection = $this->entityManager->getConnection();
-        $this->api = $services->get('Omeka\ApiManager');
 
-        $settings = $services->get('Omeka\Settings');
-
-        $modeSyncs = [
-            'skip',
-            'from_properties_to_accesses',
-            'from_accesses_to_properties',
-        ];
-        $this->modeSync = $this->getArg('sync', 'skip') ?: 'skip';
-        if (!in_array($this->modeSync, $modeSyncs)) {
-            $this->logger->err(
-                'Sync mode {mode} is invalid.', // @translate
-                ['mode' => $this->modeSync]
-            );
-            return;
-        }
-
-        $this->propagateProcesses = $this->getArg('recursive', []) ?: [];
-        $propagates = [
-            'from_item_sets_to_items_and_media',
-            'from_items_to_media',
-        ];
-        if ($this->propagateProcesses && count($this->propagateProcesses) !== count(array_intersect($this->propagateProcesses, $propagates))) {
-            $this->logger->err(
-                'These recursive processes are unknown: {names}.', // @translate
-                ['names' => implode(', ', array_diff($this->propagateProcesses, $propagates))]
-            );
-            return;
-        }
-
-        $propagationMode = $this->getArg('propagation_mode', 'skip_if_set') ?: 'skip_if_set';
-        if (!in_array($propagationMode, ['skip_if_set', 'max_restrictive', 'overwrite'], true)) {
-            $this->logger->err(
-                'Propagation mode "{mode}" is invalid; falling back to skip_if_set.', // @translate
-                ['mode' => $propagationMode]
-            );
-            $propagationMode = 'skip_if_set';
-        }
-
-        $propagateEmbargo = (bool) $this->getArg('propagation_embargo', false);
-        // Persist on the job args so the subjob (AccessStatusPropagate) reads
-        // the validated values and not raw user input.
-        $args = $this->job->getArgs();
-        $args['propagation_mode'] = $propagationMode;
-        $args['propagation_embargo'] = $propagateEmbargo;
-        $this->job->setArgs($args);
-        $this->logger->info(
-            'Propagation mode: {mode}; embargo propagation: {embargo}.', // @translate
-            ['mode' => $propagationMode, 'embargo' => $propagateEmbargo ? 'yes' : 'no']
-        );
-
-        if ($this->modeSync === 'skip'
-            && $this->propagateProcesses === []
-        ) {
+        $this->accessViaProperty = (bool) $services->get('Omeka\Settings')->get('access_property');
+        if (!$this->accessViaProperty) {
             $this->logger->warn(
-                'Synchronization mode is set as "skip" and no recursive processes are set.' // @translate
+                'The access statuses are not stored as property values, so there is nothing to copy.' // @translate
             );
             return;
         }
 
-        $this->accessViaProperty = (bool) $settings->get('access_property');
-        if (!$this->accessViaProperty && $this->modeSync !== 'skip') {
-            $this->logger->warn(
-                'Synchronization of property values and index is set, but the config for access mode does not use properties.' // @translate
-            );
+        if (!$this->prepareProperties(true)) {
+            return;
         }
 
-        if ($this->accessViaProperty || $this->modeSync !== 'skip') {
-            $result = $this->prepareProperties(true);
-            if (!$result) {
-                return;
-            }
-        }
+        $this->copyIndexIntoPropertyValues();
 
         $this->logger->info(
-            'Starting indexation of access statuses of all resources.' // @translate
-        );
-
-        // Warning: this is not a full sync: only existing properties and
-        // indexes are updated.
-
-        if (in_array('from_item_sets_to_items_and_media', $this->propagateProcesses)) {
-            $ids = $this->api->search('item_sets', [], ['returnScalar' => 'id'])->getContent();
-            if ($ids) {
-                $args = $this->job->getArgs();
-                $args['resource_ids'] = $ids;
-                $this->job->setArgs($args);
-                $subJob = new AccessStatusPropagate($this->job, $services);
-                $subJob->perform();
-            }
-        }
-
-        // There may be items without item sets.
-        if (in_array('from_items_to_media', $this->propagateProcesses)) {
-            $ids = $this->api->search('items', [], ['returnScalar' => 'id'])->getContent();
-            if ($ids) {
-                $args = $this->job->getArgs();
-                $args['resource_ids'] = $ids;
-                $this->job->setArgs($args);
-                $subJob = new AccessStatusPropagate($this->job, $services);
-                $subJob->perform();
-            }
-        }
-
-        if ($this->modeSync === 'from_properties_to_accesses') {
-            $this->updateLevelAndEmbargoViaProperty();
-        } elseif ($this->modeSync === 'from_accesses_to_properties') {
-            $this->copyIndexIntoPropertyValues();
-        }
-
-        // The statuses are updated directly, outside of the cascade.
-        $services->get(\Access\Stdlib\AccessCascade::class)->triggerUpdated(true);
-
-        $this->logger->info(
-            'End of indexation.' // @translate
+            'The access statuses were copied into the property values.' // @translate
         );
     }
 
@@ -214,6 +67,13 @@ class AccessStatusUpdate extends AbstractJob
         foreach ($this->accessLevels as $key => $value) {
             $quotedList[$key] = $this->connection->quote($value);
         }
+
+        // The own columns are used since version 3.4.45. Before, during the
+        // replay of the upgrade to version 3.4.40, only the effective ones exist.
+        $hasSetColumns = in_array('level_set', $this->connection->fetchFirstColumn('SHOW COLUMNS FROM `access_status`'), true);
+        [$level, $embargoStart, $embargoEnd] = $hasSetColumns
+            ? ['level_set', 'embargo_start_set', 'embargo_end_set']
+            : ['level', 'embargo_start', 'embargo_end'];
 
         $intType = \Doctrine\DBAL\ParameterType::INTEGER;
         $strType = \Doctrine\DBAL\ParameterType::STRING;
@@ -225,10 +85,10 @@ class AccessStatusUpdate extends AbstractJob
         // Each statement is executed separately: PDO emulated prepares does not
         // reliably bind named params across multiple statements in one call.
 
-        $this->connection->transactional(function () use ($quotedList, $intType, $strType, $embargoStartType, $embargoEndType) {
+        $this->connection->transactional(function () use ($quotedList, $intType, $strType, $embargoStartType, $embargoEndType, $level, $embargoStart, $embargoEnd) {
             // Remove all level and embargo values.
             $this->connection->executeStatement(
-                <<<'SQL'
+                <<<SQL
                 DELETE `value`
                 FROM `value`
                 JOIN `resource` ON `resource`.`id` = `value`.`resource_id`
@@ -249,7 +109,7 @@ class AccessStatusUpdate extends AbstractJob
 
             if ($this->hasNumericDataTypes) {
                 $this->connection->executeStatement(
-                    <<<'SQL'
+                    <<<SQL
                     DELETE `numeric_data_types_timestamp`
                     FROM `numeric_data_types_timestamp`
                     JOIN `resource` ON `resource`.`id` = `numeric_data_types_timestamp`.`resource_id`
@@ -275,7 +135,7 @@ class AccessStatusUpdate extends AbstractJob
                     `access_status`.`id`,
                     :property_level,
                     :level_type,
-                    CASE `access_status`.`level`
+                    CASE `access_status`.`$level`
                         WHEN "free" THEN {$quotedList['free']}
                         WHEN "reserved" THEN {$quotedList['reserved']}
                         WHEN "protected" THEN {$quotedList['protected']}
@@ -297,18 +157,18 @@ class AccessStatusUpdate extends AbstractJob
 
             // Set embargo start.
             $this->connection->executeStatement(
-                <<<'SQL'
+                <<<SQL
                 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
                 SELECT
                     `access_status`.`id`,
                     :property_embargo_start,
                     :embargo_start_type,
-                    IF(TIME(`access_status`.`embargo_start`) = '00:00:00',
-                        CAST(DATE(`access_status`.`embargo_start`) AS CHAR),
-                        CAST(`access_status`.`embargo_start` AS CHAR)),
+                    IF(TIME(`access_status`.`$embargoStart`) = '00:00:00',
+                        CAST(DATE(`access_status`.`$embargoStart`) AS CHAR),
+                        CAST(`access_status`.`$embargoStart` AS CHAR)),
                     1
                 FROM `access_status`
-                WHERE `access_status`.`embargo_start` IS NOT NULL
+                WHERE `access_status`.`$embargoStart` IS NOT NULL
                 SQL,
                 [
                     'property_embargo_start' => $this->propertyEmbargoStartId,
@@ -322,12 +182,12 @@ class AccessStatusUpdate extends AbstractJob
 
             if ($this->hasNumericDataTypes) {
                 $this->connection->executeStatement(
-                    <<<'SQL'
+                    <<<SQL
                     INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                    SELECT `access_status`.`id`, :property_embargo_start, UNIX_TIMESTAMP(`access_status`.`embargo_start`)
+                    SELECT `access_status`.`id`, :property_embargo_start, UNIX_TIMESTAMP(`access_status`.`$embargoStart`)
                     FROM `access_status`
-                    WHERE `access_status`.`embargo_start` IS NOT NULL
-                        AND UNIX_TIMESTAMP(`access_status`.`embargo_start`) IS NOT NULL
+                    WHERE `access_status`.`$embargoStart` IS NOT NULL
+                        AND UNIX_TIMESTAMP(`access_status`.`$embargoStart`) IS NOT NULL
                     SQL,
                     ['property_embargo_start' => $this->propertyEmbargoStartId],
                     ['property_embargo_start' => $intType]
@@ -336,18 +196,18 @@ class AccessStatusUpdate extends AbstractJob
 
             // Set embargo end.
             $this->connection->executeStatement(
-                <<<'SQL'
+                <<<SQL
                 INSERT INTO `value` (`resource_id`, `property_id`, `type`, `value`, `is_public`)
                 SELECT
                     `access_status`.`id`,
                     :property_embargo_end,
                     :embargo_end_type,
-                    IF(TIME(`access_status`.`embargo_end`) = '00:00:00',
-                        CAST(DATE(`access_status`.`embargo_end`) AS CHAR),
-                        CAST(`access_status`.`embargo_end` AS CHAR)),
+                    IF(TIME(`access_status`.`$embargoEnd`) = '00:00:00',
+                        CAST(DATE(`access_status`.`$embargoEnd`) AS CHAR),
+                        CAST(`access_status`.`$embargoEnd` AS CHAR)),
                     1
                 FROM `access_status`
-                WHERE `access_status`.`embargo_end` IS NOT NULL
+                WHERE `access_status`.`$embargoEnd` IS NOT NULL
                 SQL,
                 [
                     'property_embargo_end' => $this->propertyEmbargoEndId,
@@ -361,12 +221,12 @@ class AccessStatusUpdate extends AbstractJob
 
             if ($this->hasNumericDataTypes) {
                 $this->connection->executeStatement(
-                    <<<'SQL'
+                    <<<SQL
                     INSERT INTO `numeric_data_types_timestamp` (`resource_id`, `property_id`, `value`)
-                    SELECT `access_status`.`id`, :property_embargo_end, UNIX_TIMESTAMP(`access_status`.`embargo_end`)
+                    SELECT `access_status`.`id`, :property_embargo_end, UNIX_TIMESTAMP(`access_status`.`$embargoEnd`)
                     FROM `access_status`
-                    WHERE `access_status`.`embargo_end` IS NOT NULL
-                        AND UNIX_TIMESTAMP(`access_status`.`embargo_end`) IS NOT NULL
+                    WHERE `access_status`.`$embargoEnd` IS NOT NULL
+                        AND UNIX_TIMESTAMP(`access_status`.`$embargoEnd`) IS NOT NULL
                     SQL,
                     ['property_embargo_end' => $this->propertyEmbargoEndId],
                     ['property_embargo_end' => $intType]
@@ -376,7 +236,7 @@ class AccessStatusUpdate extends AbstractJob
             // Strip trailing "-00-00", "-00" from partial dates produced by
             // DATETIME columns (e.g. "2070-00-00" => "2070", "2026-09-00" => "2026-09").
             $this->connection->executeStatement(
-                <<<'SQL'
+                <<<SQL
                 UPDATE `value`
                 SET `value` = LEFT(`value`, LENGTH(`value`) - 6)
                 WHERE `property_id` IN (:property_embargo_start, :property_embargo_end)
@@ -392,7 +252,7 @@ class AccessStatusUpdate extends AbstractJob
                 ]
             );
             $this->connection->executeStatement(
-                <<<'SQL'
+                <<<SQL
                 UPDATE `value`
                 SET `value` = LEFT(`value`, LENGTH(`value`) - 3)
                 WHERE `property_id` IN (:property_embargo_start, :property_embargo_end)
@@ -407,123 +267,6 @@ class AccessStatusUpdate extends AbstractJob
                     'property_embargo_end' => $intType,
                 ]
             );
-        });
-
-        return $this;
-    }
-
-    protected function updateLevelAndEmbargoViaProperty(): self
-    {
-        $quotedList = [];
-        foreach ($this->accessLevels as $key => $value) {
-            $quotedList[$key] = $this->connection->quote($value);
-        }
-        $quotedListString = implode(', ', $quotedList);
-
-        // The default level is free.
-        $subSql = "'free'";
-
-        // TODO %T espace?
-        // Use insert: statuses were created previously, but there may be levels
-        // or embargos without levels, in which case the default level is used.
-
-        // The process check for dates like "0000", that is an error, or partial
-        // dates, that are completed.
-
-        // Use LENGTH to determine the date format instead of STR_TO_DATE which
-        // matches too eagerly on partial dates.
-        $sql = <<<SQL
-            # Set access statuses according to values.
-            INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-            SELECT
-                `resource`.`id`,
-                (CASE `value`.`value`
-                    WHEN {$quotedList['free']} THEN "free"
-                    WHEN {$quotedList['reserved']} THEN "reserved"
-                    WHEN {$quotedList['protected']} THEN "protected"
-                    WHEN {$quotedList['forbidden']} THEN "forbidden"
-                    ELSE $subSql
-                END),
-                NULL,
-                NULL
-            FROM `resource`
-            JOIN `value`
-                ON `value`.`resource_id` = `resource`.`id`
-                AND `value`.`property_id` = $this->propertyLevelId
-                AND `value`.`value` IN ($quotedListString)
-            ON DUPLICATE KEY UPDATE
-                `level` = (CASE `value`.`value`
-                    WHEN {$quotedList['free']} THEN "free"
-                    WHEN {$quotedList['reserved']} THEN "reserved"
-                    WHEN {$quotedList['protected']} THEN "protected"
-                    WHEN {$quotedList['forbidden']} THEN "forbidden"
-                    ELSE $subSql
-                END)
-            ;
-            # Set access embargo start according to values.
-            INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-            SELECT
-                `resource_id`,
-                $subSql,
-                CASE
-                    WHEN `value`.`value` IS NULL THEN NULL
-                    WHEN LENGTH(TRIM(REPLACE(REPLACE(REPLACE(`value`.`value`, '0', ''), '-', ''), ':', ''))) = 0 THEN NULL
-                    WHEN LENGTH(`value`.`value`) > 10 THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-                    WHEN LENGTH(`value`.`value`) = 10 THEN CONCAT(`value`.`value`, ' 00:00:00')
-                    WHEN LENGTH(`value`.`value`) = 7 THEN CONCAT(`value`.`value`, '-01 00:00:00')
-                    WHEN LENGTH(`value`.`value`) <= 4 THEN CONCAT(`value`.`value`, '-01-01 00:00:00')
-                    ELSE NULL
-                END,
-                NULL
-            FROM `resource`
-            JOIN `value`
-                ON `value`.`resource_id` = `resource`.`id`
-                AND `value`.`property_id` = $this->propertyEmbargoStartId
-            ON DUPLICATE KEY UPDATE
-                `embargo_start` = CASE
-                    WHEN `value`.`value` IS NULL THEN NULL
-                    WHEN LENGTH(TRIM(REPLACE(REPLACE(REPLACE(`value`.`value`, '0', ''), '-', ''), ':', ''))) = 0 THEN NULL
-                    WHEN LENGTH(`value`.`value`) > 10 THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-                    WHEN LENGTH(`value`.`value`) = 10 THEN CONCAT(`value`.`value`, ' 00:00:00')
-                    WHEN LENGTH(`value`.`value`) = 7 THEN CONCAT(`value`.`value`, '-01 00:00:00')
-                    WHEN LENGTH(`value`.`value`) <= 4 THEN CONCAT(`value`.`value`, '-01-01 00:00:00')
-                    ELSE NULL
-                END
-            ;
-            # Set access embargo end according to values.
-            INSERT INTO `access_status` (`id`, `level`, `embargo_start`, `embargo_end`)
-            SELECT
-                `resource_id`,
-                $subSql,
-                NULL,
-                CASE
-                    WHEN `value`.`value` IS NULL THEN NULL
-                    WHEN LENGTH(TRIM(REPLACE(REPLACE(REPLACE(`value`.`value`, '0', ''), '-', ''), ':', ''))) = 0 THEN NULL
-                    WHEN LENGTH(`value`.`value`) > 10 THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-                    WHEN LENGTH(`value`.`value`) = 10 THEN CONCAT(`value`.`value`, ' 23:59:59')
-                    WHEN LENGTH(`value`.`value`) = 7 THEN CONCAT(`value`.`value`, '-01 23:59:59')
-                    WHEN LENGTH(`value`.`value`) <= 4 THEN CONCAT(`value`.`value`, '-12-31 23:59:59')
-                    ELSE NULL
-                END
-            FROM `resource`
-            JOIN `value`
-                ON `value`.`resource_id` = `resource`.`id`
-                AND `value`.`property_id` = $this->propertyEmbargoEndId
-            ON DUPLICATE KEY UPDATE
-                `embargo_end` = CASE
-                    WHEN `value`.`value` IS NULL THEN NULL
-                    WHEN LENGTH(TRIM(REPLACE(REPLACE(REPLACE(`value`.`value`, '0', ''), '-', ''), ':', ''))) = 0 THEN NULL
-                    WHEN LENGTH(`value`.`value`) > 10 THEN STR_TO_DATE(`value`.`value`, '%Y-%m-%d %T')
-                    WHEN LENGTH(`value`.`value`) = 10 THEN CONCAT(`value`.`value`, ' 23:59:59')
-                    WHEN LENGTH(`value`.`value`) = 7 THEN CONCAT(`value`.`value`, '-01 23:59:59')
-                    WHEN LENGTH(`value`.`value`) <= 4 THEN CONCAT(`value`.`value`, '-12-31 23:59:59')
-                    ELSE NULL
-                END
-            ;
-            SQL;
-
-        $this->connection->transactional(function (\Doctrine\DBAL\Connection $connection) use ($sql) {
-            $this->connection->executeStatement($sql);
         });
 
         return $this;
