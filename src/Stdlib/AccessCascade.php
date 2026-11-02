@@ -91,6 +91,26 @@ class AccessCascade
     }
 
     /**
+     * Create the missing access statuses of item sets, items and medias, with
+     * the level free, so their effective level follows their parents.
+     *
+     * @return int The number of created statuses.
+     */
+    public function createMissingStatuses(): int
+    {
+        return (int) $this->connection->executeStatement(
+            <<<'SQL'
+            INSERT INTO `access_status` (`id`, `level`, `level_set`)
+            SELECT `resource`.`id`, 'free', 'free'
+            FROM `resource`
+            LEFT JOIN `access_status` ON `access_status`.`id` = `resource`.`id`
+            WHERE `access_status`.`id` IS NULL
+                AND `resource`.`resource_type` IN ("Omeka\\Entity\\ItemSet", "Omeka\\Entity\\Item", "Omeka\\Entity\\Media")
+            SQL
+        );
+    }
+
+    /**
      * Recompute the effective columns for every access_status row.
      */
     public function recomputeAll(): void

@@ -33,6 +33,16 @@ class AccessStatusRebuild extends AbstractJob
         $settings = $services->get('Omeka\Settings');
         $connection = $services->get('Omeka\Connection');
 
+        // Create the missing statuses first, so the reset, the sync from the
+        // properties and the recompute apply to all resources.
+        $count = $cascade->createMissingStatuses();
+        if ($count) {
+            $logger->notice(
+                '{count} resources without access status were set as free, so they follow the level of their parents.', // @translate
+                ['count' => $count]
+            );
+        }
+
         // Snapshot the current effective level, to report afterwards how many
         // resources become more or less restrictive. On the 3.4.45 upgrade,
         // this reveals for instance the free files inside a reserved item set
