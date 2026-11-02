@@ -518,11 +518,7 @@ foreach ($rows as $row) {
 
 // Remove original data and module.
 
-try {
-    $connection->executeStatement('DELETE FROM `module` WHERE `id` = "AccessResource"');
-} catch (\Throwable $e) {
-    $messenger->addError($e->getMessage());
-}
+$this->uninstallAccessResource();
 
 $message = new Message(
     'The module "%1$s" was upgraded by module "%2$s" and uninstalled.', // @translate

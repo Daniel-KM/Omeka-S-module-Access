@@ -279,11 +279,62 @@ class Module extends AbstractModule
      */
     protected function removeLeftoversOfAccessResource(): void
     {
-        $connection = $this->getServiceLocator()->get('Omeka\Connection');
-        $connection->executeStatement('DROP TABLE IF EXISTS `access_reserved`');
-        $connection->executeStatement('DELETE FROM `setting` WHERE `id` LIKE "accessresource#_%" ESCAPE "#"');
-        $connection->executeStatement('DELETE FROM `site_setting` WHERE `id` LIKE "accessresource#_%" ESCAPE "#"');
+        $this->getServiceLocator()->get('Omeka\Connection')
+            ->executeStatement('DROP TABLE IF EXISTS `access_reserved`');
+        $this->uninstallAccessResource();
+    }
+
+    /**
+     * Remove the module AccessResource: settings, row in table module, files.
+     *
+     * The tables are not removed, since they are reused by this module.
+     */
+    public function uninstallAccessResource(): void
+    {
+        $services = $this->getServiceLocator();
+        $connection = $services->get('Omeka\Connection');
+        foreach (['setting', 'site_setting', 'user_setting'] as $table) {
+            $connection->executeStatement("DELETE FROM `$table` WHERE `id` LIKE 'accessresource#_%' ESCAPE '#'");
+        }
         $connection->executeStatement('DELETE FROM `module` WHERE `id` = "AccessResource"');
+
+        // The files are removed when possible. A module installed via composer
+        // is kept, else composer would be out of sync. A module loaded in the
+        // current request is kept too, since its classes may still be needed.
+        $path = OMEKA_PATH . '/modules/AccessResource';
+        if (class_exists('AccessResource\Module', false)) {
+            // Keep the files.
+        } elseif (is_link($path)) {
+            @unlink($path);
+        } elseif (is_dir($path) && is_writable(dirname($path))) {
+            $this->removeDirectory($path);
+        }
+        $remainingPaths = array_values(array_filter(
+            [$path, OMEKA_PATH . '/composer-addons/modules/AccessResource'],
+            fn ($path) => file_exists($path) || is_link($path)
+        ));
+        if ($remainingPaths) {
+            $services->get('ControllerPluginManager')->get('messenger')->addWarning(new PsrMessage(
+                'The module AccessResource is uninstalled, but its files cannot be removed. Remove them manually: {paths}.', // @translate
+                ['paths' => implode(', ', $remainingPaths)]
+            ));
+        }
+    }
+
+    /**
+     * Remove a directory recursively, without following the symbolic links.
+     */
+    protected function removeDirectory(string $path): bool
+    {
+        foreach (array_diff(scandir($path) ?: [], ['.', '..']) as $file) {
+            $filepath = $path . '/' . $file;
+            if (is_dir($filepath) && !is_link($filepath)) {
+                $this->removeDirectory($filepath);
+            } else {
+                @unlink($filepath);
+            }
+        }
+        return @rmdir($path);
     }
 
     protected function accessResourceVersion(array $tables): ?string
