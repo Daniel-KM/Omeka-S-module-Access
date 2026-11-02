@@ -42,6 +42,25 @@ class AccessReindexFieldset extends Fieldset
             ])
 
             ->add([
+                'name' => 'audit_note',
+                'type' => CommonElement\Note::class,
+                'options' => [
+                    'text' => 'Check if the access is managed by item set or by document, and list the inconsistencies in the logs: resources without access status, levels that do not follow the hierarchy, restricted levels without effect, items in item sets with different levels. This task does not modify anything.', // @translate
+                ],
+            ])
+            ->add([
+                'name' => 'process_audit',
+                'type' => Element\Submit::class,
+                'options' => [
+                    'label' => 'Audit access statuses', // @translate
+                ],
+                'attributes' => [
+                    'id' => 'process_audit',
+                    'value' => 'Audit access statuses', // @translate
+                ],
+            ])
+
+            ->add([
                 'name' => 'reset_note',
                 'type' => CommonElement\Note::class,
                 'options' => [

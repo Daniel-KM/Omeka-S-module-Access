@@ -54,6 +54,12 @@ class Module extends AbstractModule
 
     const NAMESPACE = __NAMESPACE__;
 
+    /**
+     * Maximum number of resources to compute the audit when the config form is
+     * displayed (0.2 s for 14,000 resources, 23 s for 1.3 million).
+     */
+    protected const AUDIT_LIVE_MAX_RESOURCES = 100000;
+
     protected function preInstall(): void
     {
         $services = $this->getServiceLocator();
@@ -96,6 +102,8 @@ class Module extends AbstractModule
 
     protected function preUninstall(): void
     {
+        $this->getServiceLocator()->get('Omeka\Settings')->delete('access_audit');
+
         $htaccessPath = OMEKA_PATH . '/.htaccess';
         $htaccess = @file_get_contents($htaccessPath);
         if ($htaccess === false) {
@@ -888,6 +896,27 @@ class Module extends AbstractModule
         );
     }
 
+    /**
+     * Render the audit of the access statuses for the config form.
+     *
+     * The audit is computed live on small bases, else the last result of the
+     * job is displayed.
+     */
+    protected function renderAudit(PhpRenderer $renderer): string
+    {
+        $services = $this->getServiceLocator();
+        $settings = $services->get('Omeka\Settings');
+        $connection = $services->get('Omeka\Connection');
+        $isLive = (int) $connection->fetchOne('SELECT COUNT(*) FROM `resource`') <= self::AUDIT_LIVE_MAX_RESOURCES;
+        $audit = $isLive
+            ? (new \Access\Stdlib\AccessAudit($connection, (bool) $settings->get('access_embargo_cascade')))->audit()
+            : $settings->get('access_audit');
+        return $renderer->partial('common/access-audit', [
+            'audit' => $audit,
+            'isLive' => $isLive,
+        ]);
+    }
+
     public function getConfigForm(PhpRenderer $renderer)
     {
         $services = $this->getServiceLocator();
@@ -940,6 +969,7 @@ class Module extends AbstractModule
         $form = $formManager->get($formClass);
         $form->init();
         $form->setData($data);
+        $form->get('access_audit_report')->setOption('text', $this->renderAudit($renderer));
         $form->prepare();
 
         // The tabs are declared by the form, each element carrying its own tab.
@@ -1032,7 +1062,25 @@ class Module extends AbstractModule
         $post = $controller->getRequest()->getPost();
         $isRebuild = !empty($post['access_reindex']['process_rebuild']);
         $isReset = !empty($post['access_reindex']['process_reset']);
-        if ($isRebuild || $isReset) {
+        $isAudit = !empty($post['access_reindex']['process_audit']);
+        if ($isAudit) {
+            $job = $services->get(\Omeka\Job\Dispatcher::class)
+                ->dispatch(\Access\Job\AccessStatusAudit::class);
+            $urlHelper = $services->get('ViewHelperManager')->get('url');
+            $message = new PsrMessage(
+                'Auditing the access statuses in a background job ({link_job}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+                [
+                    'link_job' => sprintf('<a href="%s">', htmlspecialchars($urlHelper('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
+                    'job_id' => $job->getId(),
+                    'link_end' => '</a>',
+                    'link_log' => class_exists('Log\Module', false)
+                        ? sprintf('<a href="%1$s">', htmlspecialchars($urlHelper('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
+                        : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($urlHelper('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
+                ]
+            );
+            $message->setEscapeHtml(false);
+            $messenger->addSuccess($message);
+        } elseif ($isRebuild || $isReset) {
             $args = [];
             if ($isReset) {
                 $args['reset'] = array_values(array_intersect(

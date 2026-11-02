@@ -1,0 +1,80 @@
+<?php
+/**
+ * @var \Laminas\View\Renderer\PhpRenderer $this
+ * @var array|null $audit
+ * @var bool $isLive
+ */
+
+use Access\Stdlib\AccessAudit;
+
+// Display the audit of the access statuses in the config form.
+
+$plugins = $this->getHelperPluginManager();
+$translate = $plugins->get('translate');
+$escape = $plugins->get('escapeHtml');
+$url = $plugins->get('url');
+
+// The ids of the findings without type are items or item sets.
+$controllers = [
+    'item_sets' => 'item-set',
+    'items' => 'item',
+    'media' => 'media',
+    'item_sets_with_different_levels' => 'item',
+    'item_set_embargoes_without_cascade' => 'item-set',
+];
+?>
+
+<div class="access-audit">
+<?php if (!$audit): ?>
+    <p><?= $escape($translate('The base is too big to be audited when this page is displayed. Run the task "Audit access statuses" in the tab Tasks, then come back here.')) ?></p>
+<?php else: ?>
+    <?php if ($isLive): ?>
+    <p><?= $escape($translate('Current state of the access statuses.')) ?></p>
+    <?php else: ?>
+    <p><?= sprintf(
+        $escape($translate('Result of the audit of %1$s (%2$sjob #%3$s%4$s). Run the task "Audit access statuses" in the tab Tasks to update it.')),
+        $escape($audit['date']),
+        sprintf('<a href="%s">', $escape($url('admin/id', ['controller' => 'job', 'id' => $audit['job_id']]))),
+        (int) $audit['job_id'],
+        '</a>'
+    ) ?></p>
+    <?php endif; ?>
+
+    <p><strong><?= $escape($translate(AccessAudit::MODES[$audit['mode']])) ?></strong></p>
+
+    <table class="tablesaw access-audit-decisions">
+        <thead>
+            <tr>
+                <th><?= $escape($translate('Restricted levels set on')) ?></th>
+                <th><?= $escape($translate('Count')) ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach (AccessAudit::TYPE_LABELS as $type => $label): ?>
+            <tr>
+                <td><?= $escape($translate($label)) ?></td>
+                <td><?= (int) ($audit['decisions'][$type] ?? 0) ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <p class="explanation"><?= $escape($translate('The counts are the restricted levels set directly on the resources. In a base managed by item set, it is normal that items and medias have no own level: they follow the level of their item sets. In a base managed by document, item sets have no level.')) ?></p>
+
+    <?php $rows = AccessAudit::rows($audit['findings'] ?? []); ?>
+    <?php if (!$rows): ?>
+    <p><?= $escape($translate('No inconsistency was found in the access statuses.')) ?></p>
+    <?php else: ?>
+    <ul class="access-audit-findings">
+        <?php foreach ($rows as $row):
+            $controller = $controllers[$row['type'] ?? $row['finding']];
+            $links = array_map(fn ($id) => sprintf('<a href="%1$s">%2$d</a>', $escape($url('admin/id', ['controller' => $controller, 'id' => $id])), $id), $row['ids']);
+            echo '<li>' . strtr($escape($translate(AccessAudit::FINDINGS[$row['finding']])), [
+                '{type}' => $row['type'] ? $escape($translate(AccessAudit::TYPE_LABELS[$row['type']])) : '',
+                '{count}' => (int) $row['count'],
+                '{ids}' => implode(', #', $links),
+            ]) . '</li>';
+        endforeach; ?>
+    </ul>
+    <?php endif; ?>
+<?php endif; ?>
+</div>

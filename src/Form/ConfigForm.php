@@ -27,6 +27,7 @@ class ConfigForm extends Form
     protected $elementTabs = [
         'access-settings' => 'Settings', // @translate
         'access-tasks' => 'Tasks', // @translate
+        'access-audit' => 'Audit', // @translate
     ];
 
     public function init(): void
@@ -533,6 +534,17 @@ class ConfigForm extends Form
                 'options' => [
                     'tab' => 'access-tasks',
                     'use_as_base_fieldset' => false,
+                ],
+            ])
+
+            // The report is set when the form is rendered.
+            ->add([
+                'name' => 'access_audit_report',
+                'type' => CommonElement\Note::class,
+                'options' => [
+                    'tab' => 'access-audit',
+                    'text' => '',
+                    'disable_html_escape' => true,
                 ],
             ]);
     }
