@@ -25,6 +25,16 @@ use SingleSignOn\Mvc\Controller\Plugin\IsSsoUser;
 class IsAllowedMediaContent extends AbstractPlugin
 {
     /**
+     * Maximum number of resources whose item sets are cached.
+     */
+    const MAX_CACHED_RESOURCES = 1000;
+
+    /**
+     * @var array Item set ids by resource name and id.
+     */
+    protected $itemSetIdsCache = [];
+
+    /**
      * @var \Access\Mvc\Controller\Plugin\AccessStatus
      */
     protected $accessStatus;
@@ -344,11 +354,14 @@ class IsAllowedMediaContent extends AbstractPlugin
      */
     protected function resourceItemSetIds(AbstractResourceEntityRepresentation $resource): array
     {
-        static $cache = [];
         $resourceName = $resource->resourceName();
         $cacheKey = $resourceName . ':' . $resource->id();
-        if (isset($cache[$cacheKey])) {
-            return $cache[$cacheKey];
+        if (isset($this->itemSetIdsCache[$cacheKey])) {
+            return $this->itemSetIdsCache[$cacheKey];
+        }
+        // The cache is limited, because the plugin may be used in long jobs.
+        if (count($this->itemSetIdsCache) >= self::MAX_CACHED_RESOURCES) {
+            $this->itemSetIdsCache = [];
         }
 
         $connection = $this->entityManager->getConnection();
@@ -374,8 +387,8 @@ class IsAllowedMediaContent extends AbstractPlugin
             $itemSetIds = [];
         }
 
-        $cache[$cacheKey] = array_map('intval', $itemSetIds);
-        return $cache[$cacheKey];
+        $this->itemSetIdsCache[$cacheKey] = array_map('intval', $itemSetIds);
+        return $this->itemSetIdsCache[$cacheKey];
     }
 
     /**
