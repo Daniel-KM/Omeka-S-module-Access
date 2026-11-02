@@ -61,6 +61,11 @@ $dispatchJobDuringUpgrade = fn (string $jobClass, array $args = []): \Omeka\Enti
         $jobDir . substr(strrchr('\\' . $jobClass, '\\'), 1) . '.php',
     ]);
 
+// Several versions require a rebuild of the access statuses, that is dispatched
+// once at the end, so the jobs do not run concurrently on the same table.
+$rebuildReasons = [];
+$rebuildArgs = [];
+
 if (version_compare((string) $oldVersion, '3.4.19', '<')) {
     // Update vocabulary via sql.
     foreach ([
@@ -466,27 +471,12 @@ if (version_compare((string) $oldVersion, '3.4.39', '<')) {
 if (version_compare((string) $oldVersion, '3.4.40', '<')) {
     // A bug in previous versions caused the daily embargo job to delete all
     // access property values (curation:access, start, end) without re-creating
-    // them. Re-sync now synchronously.
-    $accessViaProperty = (bool) $settings->get('access_property');
-    if ($accessViaProperty) {
-        $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusUpdate::class, [
-            'sync' => 'from_accesses_to_properties',
-            'missing' => 'skip',
-            'recursive' => [],
-        ]);
-        $message = new PsrMessage(
-            'A previous bug may have removed access property values. A background job has been launched to restore them from indexes ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
-            [
-                'link' => sprintf('<a href="%s">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
-                'job_id' => $job->getId(),
-                'link_end' => '</a>',
-                'link_log' => class_exists('Log\Module', false)
-                    ? sprintf('<a href="%1$s">', htmlspecialchars($url('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
-                    : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
-            ]
+    // them. The rebuild restores them first, then reads them.
+    if ($settings->get('access_property')) {
+        $rebuildArgs['copy_to_properties'] = true;
+        $rebuildReasons[] = new PsrMessage(
+            'A previous bug may have removed access property values. They are restored from the indexes.' // @translate
         );
-        $message->setEscapeHtml(false);
-        $messenger->addSuccess($message);
     }
 }
 
@@ -541,26 +531,6 @@ if (version_compare($oldVersion, '3.4.42', '<')) {
 }
 
 if (version_compare($oldVersion, '3.4.44', '<')) {
-    // Force skip_if_set on upgrade to prevent silent data loss: the legacy
-    // "overwrite" behavior copies parent levels onto every child, so an item or
-    // a media that was manually set to a stricter or specific level would be
-    // silently rewritten on the first "Apply recursive" save. Admins who relied
-    // on bulk propagation can opt back into "overwrite" or "max_restrictive"
-    // explicitly in the Tasks tab.
-    $settings->set('access_propagation_mode', 'skip_if_set');
-    $settings->set('access_propagation_embargo', false);
-
-    $message = new PsrMessage(
-        'A new option "propagation mode" was added and forced to "skip if set" for this upgraded install: previous saves with "Apply recursive" would silently overwrite per-item and per-media levels. If your workflow relies on bulk propagation from an item set to its items and medias, switch to "max restrictive" or "overwrite" in the Tasks tab of the module config, but be aware that "overwrite" writes the parent level onto every child unconditionally.' // @translate
-    );
-    $messenger->addWarning($message);
-
-    $message = new PsrMessage(
-        'A new option allows to separate propagation of the embargo dates and the status level. Embargo dates are per-resource and time-bound and checked independantly from the level.' // @translate
-    );
-    $messenger->addWarning($message);
-
-
     $message = new PsrMessage(
         'The status "protected" has been clarified: a "reserved" file is granted to global bypass modes, while a "protected" file requires an approved individual access request and no global bypass applies.' // @translate
     );
@@ -604,26 +574,14 @@ if (version_compare($oldVersion, '3.4.45', '<')) {
     // Recompute the effective columns from the own columns and the item set /
     // item / media hierarchy. Dispatched as a background job because the
     // recompute walks the whole hierarchy and may be heavy on large bases.
-    $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusRebuild::class);
-
     $message = new PsrMessage(
         'The process to check rights was simplified. Now, an access level set on an item set or an item now applies automatically to its items and medias, without any propagation step.' // @translate
     );
     $messenger->addSuccess($message);
 
-    $message = new PsrMessage(
-        'A background job was started to apply the access levels to all resources ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
-        [
-            'link' => sprintf('<a href="%s">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
-            'job_id' => $job->getId(),
-            'link_end' => '</a>',
-            'link_log' => class_exists('Log\Module', false)
-                ? sprintf('<a href="%1$s">', htmlspecialchars($url('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
-                : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
-        ]
+    $rebuildReasons[] = new PsrMessage(
+        'The access levels are applied to all resources, according to their item sets and items.' // @translate
     );
-    $message->setEscapeHtml(false);
-    $messenger->addSuccess($message);
 
     $message = new PsrMessage(
         'The old "propagation mode" options have been removed: they are no longer needed. A new option "Cascade embargo dates" (off by default) makes an embargo set on an item set or an item apply to its items and medias too, like the access level. The embargo is still checked separately.' // @translate
@@ -731,28 +689,17 @@ if (version_compare((string) $oldVersion, '3.4.46', '<')) {
     // access levels recompute (job AccessStatusRebuild) failed with error 1093
     // and the level/embargo columns kept their pre-3.4.45 values. The sql is
     // fixed since 3.4.46, so re-run the recompute once for them. Skip when
-    // arriving from an older version, whose own 3.4.45 block already dispatches
-    // this (now-working) job, to avoid a double run. Skip MariaDB too: its
-    // 3.4.45 recompute already succeeded (1093 is a MySQL-only restriction).
-    // A repaired schema always needs the recompute, whatever the database.
+    // arriving from an older version, whose own 3.4.45 block already requires
+    // the rebuild. Skip MariaDB too: its 3.4.45 recompute already succeeded
+    // (1093 is a MySQL-only restriction). A repaired schema always needs the
+    // recompute, whatever the database.
     $isMysql = stripos((string) $connection->executeQuery('SELECT VERSION()')->fetchOne(), 'mariadb') === false;
     if ($missingColumns
         || ($isMysql && version_compare((string) $oldVersion, '3.4.45', '>='))
     ) {
-        $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusRebuild::class);
-        $message = new PsrMessage(
-            'A background job was started to fix the access levels of all resources, which could not be computed on mysql ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
-            [
-                'link' => sprintf('<a href="%s">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
-                'job_id' => $job->getId(),
-                'link_end' => '</a>',
-                'link_log' => class_exists('Log\Module', false)
-                    ? sprintf('<a href="%1$s">', htmlspecialchars($url('admin/default', ['controller' => 'log'], ['query' => ['job_id' => $job->getId()]])))
-                    : sprintf('<a href="%1$s" target="_blank" rel="noopener noreferrer">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'action' => 'log', 'id' => $job->getId()]))),
-            ]
+        $rebuildReasons[] = new PsrMessage(
+            'The access levels of all resources are fixed, since they could not be computed on mysql.' // @translate
         );
-        $message->setEscapeHtml(false);
-        $messenger->addSuccess($message);
     }
 }
 
@@ -803,9 +750,27 @@ if (version_compare((string) $oldVersion, '3.4.49', '<')) {
     // The rebuild triggers the new event "access.status.updated" for all the
     // resources, so the other modules can update their data, for example the
     // visibility of the extracted text in module IIIF Search.
-    $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusRebuild::class);
+    $rebuildReasons[] = new PsrMessage(
+        'The modules that follow the access statuses can update their data.' // @translate
+    );
+}
+
+if (version_compare((string) $oldVersion, '3.4.50', '<')) {
+    // The propagation was replaced by the cascade in version 3.4.45.
+    $settings->delete('access_propagation_mode');
+    $settings->delete('access_propagation_embargo');
+
+    // The rebuild creates the missing statuses as free, so their resources
+    // follow the level of their parents.
+    $rebuildReasons[] = new PsrMessage(
+        'The missing access statuses are created, so all resources follow the level of their item sets and items.' // @translate
+    );
+}
+
+if ($rebuildReasons) {
+    $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusRebuild::class, $rebuildArgs);
     $message = new PsrMessage(
-        'A background job was started to rebuild the access index, so the modules that follow the access statuses can update their data ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
+        'A background job was started to rebuild the access statuses ({link}job #{job_id}{link_end}, {link_log}logs{link_end}).', // @translate
         [
             'link' => sprintf('<a href="%s">', htmlspecialchars($url('admin/id', ['controller' => 'job', 'id' => $job->getId()]))),
             'job_id' => $job->getId(),
@@ -817,6 +782,9 @@ if (version_compare((string) $oldVersion, '3.4.49', '<')) {
     );
     $message->setEscapeHtml(false);
     $messenger->addSuccess($message);
+    foreach ($rebuildReasons as $message) {
+        $messenger->addSuccess($message);
+    }
 }
 
 // Recommend SpamGuard on each upgrade: Access has no built-in spam engine, so
