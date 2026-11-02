@@ -60,6 +60,11 @@ class Module extends AbstractModule
      */
     protected const AUDIT_LIVE_MAX_RESOURCES = 100000;
 
+    /**
+     * Age in seconds of the last audit to launch a new one automatically.
+     */
+    protected const AUDIT_MAX_AGE = 86400;
+
     protected function preInstall(): void
     {
         $services = $this->getServiceLocator();
@@ -915,6 +920,14 @@ class Module extends AbstractModule
             'SELECT `id` FROM `job` WHERE `class` = ? AND `status` IN (?, ?) ORDER BY `id` DESC LIMIT 1',
             [\Access\Job\AccessStatusAudit::class, \Omeka\Entity\Job::STATUS_STARTING, \Omeka\Entity\Job::STATUS_IN_PROGRESS]
         );
+        // On big bases, a new audit is launched when the last one is old.
+        if (!$isLive && !$runningJobId
+            && (empty($audit['date']) || strtotime($audit['date']) < time() - self::AUDIT_MAX_AGE)
+        ) {
+            $runningJobId = $services->get(\Omeka\Job\Dispatcher::class)
+                ->dispatch(\Access\Job\AccessStatusAudit::class)
+                ->getId();
+        }
         return $renderer->partial('common/access-audit', [
             'audit' => $audit,
             'isLive' => $isLive,

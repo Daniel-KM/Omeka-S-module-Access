@@ -36,13 +36,13 @@ $controllers = [
     ) ?></strong></p>
 <?php endif; ?>
 <?php if (!$audit): ?>
-    <p><?= $escape($translate('The base is too big to be audited when this page is displayed. Run the task "Audit access statuses" in the tab Tasks, then come back here.')) ?></p>
+    <p><?= $escape($translate('The base is too big to be audited when this page is displayed, so the audit is computed in a background job.')) ?></p>
 <?php else: ?>
     <?php if ($isLive): ?>
     <p><?= $escape($translate('Current state of the access statuses.')) ?></p>
     <?php else: ?>
     <p><?= sprintf(
-        $escape($translate('Result of the audit of %1$s (%2$sjob #%3$s%4$s). Run the task "Audit access statuses" in the tab Tasks to update it.')),
+        $escape($translate('Result of the audit of %1$s (%2$sjob #%3$s%4$s). It is updated automatically after one day, or via the task "Audit access statuses" in the tab Tasks.')),
         $escape($audit['date']),
         sprintf('<a href="%s">', $escape($url('admin/id', ['controller' => 'job', 'id' => $audit['job_id']]))),
         (int) $audit['job_id'],
