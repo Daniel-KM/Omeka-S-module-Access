@@ -304,10 +304,22 @@ class RequestController extends AbstractActionController
     protected function spamContext(array $post, string $email): array
     {
         return [
-            'ip' => $this->getEvent()->getApplication()->getServiceManager()->get('Omeka\ClientIp')->getIp(),
+            'ip' => $this->clientIp(),
             'userAgent' => (string) $this->getRequest()->getServer('HTTP_USER_AGENT', ''),
             'email' => $email,
             'body' => (string) ($post['o:message'] ?? ''),
         ];
+    }
+
+    /**
+     * Get the ip of the client, even behind a reverse proxy.
+     */
+    protected function clientIp(): string
+    {
+        // The service is missing while the module Common is not upgraded.
+        $services = $this->getEvent()->getApplication()->getServiceManager();
+        return $services->has('Omeka\ClientIp')
+            ? $services->get('Omeka\ClientIp')->getIp()
+            : (string) ($_SERVER['REMOTE_ADDR'] ?? '');
     }
 }

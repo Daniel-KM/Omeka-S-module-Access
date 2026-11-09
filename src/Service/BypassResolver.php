@@ -20,7 +20,7 @@ class BypassResolver
     private ?UserSettings $userSettings;
 
     /**
-     * @var \Omeka\Stdlib\ClientIp|\Common\Stdlib\ClientIp
+     * @var \Omeka\Stdlib\ClientIp|\Common\Stdlib\ClientIp|null
      */
     private $clientIp;
 
@@ -40,6 +40,11 @@ class BypassResolver
      */
     public function resolveClientIp(): string
     {
+        // The service is missing while the module Common is not upgraded.
+        if (!$this->clientIp) {
+            $remote = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+            return filter_var($remote, FILTER_VALIDATE_IP) ? $remote : '::';
+        }
         $trusted = $this->clientIp::normalizeTrustedProxies($this->settings->get('access_ip_proxy_trusted', []));
         return $this->clientIp->getIp(null, $trusted ?: null, true);
     }

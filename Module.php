@@ -582,7 +582,7 @@ class Module extends AbstractModule
             $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
         }
         $trusted = array_values(array_filter(array_map('trim', $trusted)));
-        if ($trusted || $services->get('Omeka\ClientIp')->getTrustedProxies()) {
+        if ($trusted || ($services->has('Omeka\ClientIp') && $services->get('Omeka\ClientIp')->getTrustedProxies())) {
             return false;
         }
 
@@ -2919,7 +2919,7 @@ class Module extends AbstractModule
             $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
         }
         $trusted = array_values(array_filter(array_map('trim', $trusted)));
-        $proxyActive = $trusted || $services->get('Omeka\ClientIp')->getTrustedProxies();
+        $proxyActive = $trusted || ($services->has('Omeka\ClientIp') && $services->get('Omeka\ClientIp')->getTrustedProxies());
 
         if ($hasProxyHeader && !$proxyActive) {
             $messenger->addWarning(new PsrMessage(
@@ -2986,7 +2986,7 @@ class Module extends AbstractModule
         }
 
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
-        $clientIp = (string) IpRange::normalizeIp((new \Access\Service\BypassResolver($settings, null, $services->get('Omeka\ClientIp')))->resolveClientIp());
+        $clientIp = (string) IpRange::normalizeIp((new \Access\Service\BypassResolver($settings, null, $services->has('Omeka\ClientIp') ? $services->get('Omeka\ClientIp') : null))->resolveClientIp());
         if (strpos($clientIp, ':') !== false && $clientIp !== '::') {
             $messenger->addWarning(new PsrMessage(
                 'The current request comes from the ipv6 address {ip}, but the ip rules contain only ipv4 addresses: the visitors of the institutions who connect in ipv6 are not recognized. Ask the institutions for their ipv6 ranges and add them to the rules.', // @translate
