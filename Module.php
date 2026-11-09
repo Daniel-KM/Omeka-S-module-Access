@@ -62,6 +62,16 @@ class Module extends AbstractModule
     protected const AUDIT_LIVE_MAX_RESOURCES = 100000;
 
     /**
+     * @var \Access\Stdlib\FileSignature|false|null
+     */
+    protected $fileSignature;
+
+    /**
+     * @var string[]|null
+     */
+    protected $protectedFileTypes;
+
+    /**
      * Age in seconds of the last audit to launch a new one automatically.
      */
     protected const AUDIT_MAX_AGE = 86400;
@@ -129,9 +139,10 @@ class Module extends AbstractModule
             return;
         }
 
-        // Extract current types from the Access rule before removing it.
+        // Extract current types from the Access rule before removing it. The
+        // condition and the rule of the signed urls are skipped.
         $currentTypes = [];
-        if (preg_match('/' . preg_quote($accessMarker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"\^files\/\(([^)]+)\)\//', $htaccess, $matches)) {
+        if (preg_match('/' . preg_quote($accessMarker, '/') . '\s*\n(?:\s*#[^\n]*\n)*(?:\s*RewriteCond[^\n]*\n)*(?:\s*RewriteRule[^\n]*data\/scripts\/file\.php[^\n]*\n)?\s*RewriteRule\s+"\^files\/\(([^)]+)\)\//', $htaccess, $matches)) {
             $currentTypes = explode('|', $matches[1]);
         }
 
@@ -148,7 +159,7 @@ class Module extends AbstractModule
                 $htaccess
             );
         } else {
-            $htaccess = preg_replace('/' . preg_quote($accessMarker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"[^"]*"\s+"[^"]*"\s+\[[^\]]*\]\s*\n?/', '', $htaccess);
+            $htaccess = $this->removeHtaccessBlockWithoutEndMarker($htaccess, $accessMarker);
         }
 
         // If Analytics is active and has no download rule, convert the Access
@@ -680,6 +691,13 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager): void
     {
+        // Sign the urls of the allowed thumbnails, so they are sent quickly.
+        $sharedEventManager->attach(
+            '*',
+            'view_helper.thumbnail.attribs',
+            [$this, 'signThumbnailUrl']
+        );
+
         $settings = $this->getServiceLocator()->get('Omeka\Settings');
         $accessViaProperty = (bool) $settings->get('access_property');
         if (!$accessViaProperty) {
@@ -1173,6 +1191,63 @@ class Module extends AbstractModule
      * Use getJsonLd() instead of jsonSerialize() because access status is not
      * an api for now.
      */
+    /**
+     * Sign the url of a thumbnail allowed to the current user.
+     *
+     * The signed url is sent by a light script, without starting Omeka.
+     *
+     * @see \Access\Stdlib\FileSignature
+     */
+    public function signThumbnailUrl(Event $event): void
+    {
+        $attribs = $event->getParam('attribs') ?: [];
+        $src = (string) ($attribs['src'] ?? '');
+        if (!preg_match('~/files/([a-zA-Z0-9][-a-zA-Z0-9]*)/([^?#]+)~', $src, $matches)
+            || !in_array($matches[1], $this->protectedFileTypes(), true)
+        ) {
+            return;
+        }
+
+        $representation = $event->getParam('representation');
+        $media = $representation instanceof \Omeka\Api\Representation\MediaRepresentation
+            ? $representation
+            : ($representation instanceof \Omeka\Api\Representation\ItemRepresentation ? $representation->primaryMedia() : null);
+        if (!$media
+            || strpos($matches[2], (string) $media->storageId() . '.') !== 0
+            || !$this->getServiceLocator()->get('ControllerPluginManager')->get('isAllowedMediaContent')($media)
+        ) {
+            return;
+        }
+
+        $this->fileSignature ??= \Access\Stdlib\FileSignature::fromOmekaPath(OMEKA_PATH) ?: false;
+        if (!$this->fileSignature) {
+            return;
+        }
+
+        $attribs['src'] = $src
+            . (strpos($src, '?') === false ? '?' : '&')
+            . \Access\Stdlib\FileSignature::QUERY_ARG . '='
+            . rawurlencode($this->fileSignature->sign($matches[1] . '/' . $matches[2]));
+        $event->setParam('attribs', $attribs);
+    }
+
+    /**
+     * Get the types of files protected by the rule of the htaccess.
+     *
+     * @return string[]
+     */
+    protected function protectedFileTypes(): array
+    {
+        if ($this->protectedFileTypes === null) {
+            $settings = $this->getServiceLocator()->get('Omeka\Settings');
+            $this->protectedFileTypes = array_values(array_unique(array_merge(
+                (array) $settings->get('access_htaccess_types', []),
+                array_filter(array_map('trim', preg_split('/[\s,|]+/', (string) $settings->get('access_htaccess_custom_types', ''))))
+            )));
+        }
+        return $this->protectedFileTypes;
+    }
+
     /**
      * Load the access statuses of the found resources with one query, so the
      * json-ld of each resource does not query its own status.
@@ -2330,6 +2405,46 @@ class Module extends AbstractModule
      *
      * @param array|null $types Null for read mode, array for write mode.
      */
+    /**
+     * Remove a block of the module written without end marker.
+     *
+     * Only the comments, the condition of the signed urls and the rules of the
+     * module that follow the marker are removed, so the rules of other modules
+     * or of the core are kept, even without blank line between them. The last
+     * rule may end the file without new line.
+     */
+    protected function removeHtaccessBlockWithoutEndMarker(string $htaccess, string $marker): string
+    {
+        return preg_replace(
+            '/' . preg_quote($marker, '/') . '\s*\n'
+            . '(?:[ \t]*#[^\n]*\n)*'
+            . '(?:[ \t]*RewriteCond[^\n]*access_signature[^\n]*\n)?'
+            . '(?:[ \t]*RewriteRule[^\n]*(?:access\/files\/|data\/scripts\/file\.php)[^\n]*(?:\n|$))+/',
+            '',
+            $htaccess
+        );
+    }
+
+    /**
+     * Build the block of rules of the htaccess to protect the files.
+     *
+     * The first rule sends the signed urls to a light script, the second one
+     * sends the other urls to the module.
+     *
+     * @see \Access\Stdlib\FileSignature
+     */
+    protected function htaccessBlock(array $types, string $flags): string
+    {
+        $typesPattern = implode('|', $types);
+        $modulePath = is_dir(OMEKA_PATH . '/modules/Access') ? 'modules/Access' : 'composer-addons/modules/Access';
+        return '# Module Access: protect files.' . "\n"
+            . '# This rule is automatically managed by the module.' . "\n"
+            . 'RewriteCond %{QUERY_STRING} (^|&)' . \Access\Stdlib\FileSignature::QUERY_ARG . '=' . "\n"
+            . 'RewriteRule "^files/(' . $typesPattern . ')/(.*)$" "' . $modulePath . '/data/scripts/file.php" [END,E=ACCESS_FILE:$1/$2]' . "\n"
+            . 'RewriteRule "^files/(' . $typesPattern . ')/(.*)$" "access/files/$1/$2" [' . $flags . ']' . "\n"
+            . '# /Module Access: protect files.';
+    }
+
     protected function manageHtaccess(?array $types = null): void
     {
         $services = $this->getServiceLocator();
@@ -2359,7 +2474,8 @@ class Module extends AbstractModule
         if ($hasMarker) {
             // Match the RewriteRule line after the marker (skip optional
             // comment lines).
-            if (preg_match('/' . preg_quote($marker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"\^files\/\(([^)]+)\)\/[^"]*"\s+"[^"]*"\s+\[([^\]]+)\]/', $htaccess, $matches)) {
+            // The rule of the signed urls is skipped.
+            if (preg_match('/' . preg_quote($marker, '/') . '\s*\n(?:\s*#[^\n]*\n)*(?:\s*RewriteCond[^\n]*\n)*(?:\s*RewriteRule[^\n]*data\/scripts\/file\.php[^\n]*\n)?\s*RewriteRule\s+"\^files\/\(([^)]+)\)\/[^"]*"\s+"[^"]*"\s+\[([^\]]+)\]/', $htaccess, $matches)) {
                 $currentTypes = explode('|', $matches[1]);
                 $currentFlags = $matches[2];
             }
@@ -2440,7 +2556,7 @@ class Module extends AbstractModule
                     $savedTypes,
                     array_filter(array_map('trim', preg_split('/[\s,|]+/', $savedCustom)))
                 )));
-                $exampleRule = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(' . implode('|', $wantedTypes) . ')/(.*)$" "access/files/$1/$2" [' . $flags . ']' . "\n" . $markerEnd;
+                $exampleRule = $this->htaccessBlock($wantedTypes, $flags);
                 $message = new PsrMessage(
                     'The file .htaccess is not writable, so the rule for types "{types}" set below could not be applied. Add the following lines manually in the file .htaccess at the root of Omeka, just after "RewriteEngine On":{line_break}{rule}', // @translate
                     [
@@ -2452,7 +2568,7 @@ class Module extends AbstractModule
                 $message->setEscapeHtml(false);
                 $messenger->addWarning($message);
             } elseif (empty($currentTypes)) {
-                $exampleRule = $marker . "\n" . '# This rule is automatically managed by the module.' . "\n" . 'RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [' . $flags . ']' . "\n" . $markerEnd;
+                $exampleRule = $this->htaccessBlock(['original', 'large'], $flags);
                 $message = new PsrMessage(
                     'No .htaccess rule is set to protect files. To control access to files, add the following lines in the file .htaccess at the root of Omeka, just after "RewriteEngine On":{line_break}{rule}', // @translate
                     [
@@ -2468,6 +2584,11 @@ class Module extends AbstractModule
                     ['types' => implode(', ', $currentTypes)]
                 );
                 $messenger->addSuccess($message);
+                if (strpos($htaccess, 'data/scripts/file.php') === false) {
+                    $messenger->addWarning(new PsrMessage(
+                        'The .htaccess rule does not send the signed thumbnails to the quick script of the module. Save the configuration to update it.' // @translate
+                    ));
+                }
             }
             return;
         }
@@ -2482,21 +2603,17 @@ class Module extends AbstractModule
         // Build the new block (or empty if no types). The block is bounded by
         // an explicit start and end marker so removal cannot accidentally
         // swallow neighbouring rules.
-        $newBlock = '';
-        if (!empty($allTypes)) {
-            $typesPattern = implode('|', $allTypes);
-            $newBlock = $marker . "\n"
-                . '# This rule is automatically managed by the module.' . "\n"
-                . 'RewriteRule "^files/(' . $typesPattern . ')/(.*)$" "access/files/$1/$2" [' . $flags . ']' . "\n"
-                . $markerEnd;
-        }
+        $newBlock = empty($allTypes) ? '' : $this->htaccessBlock($allTypes, $flags);
 
         // Nothing changed: same types and already in managed format.
         $sortedCurrent = $currentTypes;
         $sortedAll = $allTypes;
         sort($sortedCurrent);
         sort($sortedAll);
-        if ($sortedCurrent === $sortedAll && !$hasLegacyRule) {
+        if ($sortedCurrent === $sortedAll
+            && !$hasLegacyRule
+            && (!$allTypes || strpos($htaccess, $this->htaccessBlock($allTypes, $flags)) !== false)
+        ) {
             $settings->set('access_htaccess_types', $types);
             return;
         }
@@ -2539,7 +2656,7 @@ class Module extends AbstractModule
                 $htaccess
             );
         } elseif ($hasMarker) {
-            $htaccess = preg_replace('/' . preg_quote($marker, '/') . '\s*\n(?:\s*#[^\n]*\n)*\s*RewriteRule\s+"[^"]*"\s+"[^"]*"\s+\[[^\]]*\]\s*\n?/', '', $htaccess);
+            $htaccess = $this->removeHtaccessBlockWithoutEndMarker($htaccess, $marker);
         }
 
         // Remove legacy rules (without marker) that redirect to /access/files/.
