@@ -13,10 +13,22 @@ class UpgradeTest extends AbstractHttpControllerTestCase
 {
     use AccessTestTrait;
 
+    protected ?string $htaccess = null;
+
     public function setUp(): void
     {
         parent::setUp();
         $this->loginAdmin();
+        // The upgrade may update the htaccess.
+        $this->htaccess = @file_get_contents(OMEKA_PATH . '/.htaccess') ?: null;
+    }
+
+    public function tearDown(): void
+    {
+        if ($this->htaccess !== null) {
+            file_put_contents(OMEKA_PATH . '/.htaccess', $this->htaccess);
+        }
+        parent::tearDown();
     }
 
     /**

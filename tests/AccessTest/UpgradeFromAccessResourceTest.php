@@ -18,10 +18,14 @@ class UpgradeFromAccessResourceTest extends AbstractHttpControllerTestCase
 {
     protected array $itemIds = [];
 
+    protected ?string $htaccess = null;
+
     public function setUp(): void
     {
         parent::setUp();
         $this->loginAdmin();
+        // The uninstall and the install of the module update the htaccess.
+        $this->htaccess = @file_get_contents(OMEKA_PATH . '/.htaccess') ?: null;
     }
 
     public function tearDown(): void
@@ -33,6 +37,9 @@ class UpgradeFromAccessResourceTest extends AbstractHttpControllerTestCase
             $manager->install($module);
         }
         $this->connection()->executeStatement('DELETE FROM `module` WHERE `id` = "AccessResource"');
+        if ($this->htaccess !== null) {
+            file_put_contents(OMEKA_PATH . '/.htaccess', $this->htaccess);
+        }
         foreach ($this->itemIds as $id) {
             try {
                 $this->api()->delete('items', $id);

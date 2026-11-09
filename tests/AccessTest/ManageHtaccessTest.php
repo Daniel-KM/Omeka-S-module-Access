@@ -61,6 +61,49 @@ HTACCESS;
     }
 
     /**
+     * The block currently written by the module, with the rule of the signed
+     * urls and the end marker.
+     */
+    protected function fixtureManagedSigned(): string
+    {
+        return <<<'HTACCESS'
+RewriteEngine On
+
+# Module Access: protect files.
+# This rule is automatically managed by the module.
+RewriteCond %{QUERY_STRING} (^|&)access_signature=
+RewriteRule "^files/(original|large)/(.*)$" "modules/Access/data/scripts/file.php" [END,E=ACCESS_FILE:$1/$2]
+RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [NC,L]
+# /Module Access: protect files.
+
+# Module ImageServer: fast IIIF tile server.
+RewriteRule iiif/(.*) modules/ImageServer/data/scripts/iiiftile.php [END]
+# /Module ImageServer: fast IIIF tile server.
+HTACCESS;
+    }
+
+    /**
+     * The same block, but without the end marker, so the removal uses the
+     * fallback.
+     */
+    protected function fixtureManagedSignedNoEndMarker(): string
+    {
+        return <<<'HTACCESS'
+RewriteEngine On
+
+# Module Access: protect files.
+# This rule is automatically managed by the module.
+RewriteCond %{QUERY_STRING} (^|&)access_signature=
+RewriteRule "^files/(original|large)/(.*)$" "modules/Access/data/scripts/file.php" [END,E=ACCESS_FILE:$1/$2]
+RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [NC,L]
+
+# Module ImageServer: fast IIIF tile server.
+RewriteRule iiif/(.*) modules/ImageServer/data/scripts/iiiftile.php [END]
+# /Module ImageServer: fast IIIF tile server.
+HTACCESS;
+    }
+
+    /**
      * .htaccess with a managed rule (marker + comment + rule).
      */
     protected function fixtureManagedOriginalLarge(): string
@@ -695,21 +738,132 @@ HTACCESS;
     }
 
     /**
-     * Write mode: idempotent — same types with managed format → no change.
+     * Get the current block of rules built by the module.
+     */
+    protected function currentBlock(array $types): string
+    {
+        $method = new ReflectionMethod($this->accessModuleInstance, 'htaccessBlock');
+        $method->setAccessible(true);
+        return $method->invoke($this->accessModuleInstance, $types, 'NC,L');
+    }
+
+    /**
+     * Write mode: idempotent — same types with the current block → no change.
      */
     public function testWriteModeIdempotent(): void
     {
-        $fixture = $this->fixtureManagedOriginalLarge();
+        $fixture = "RewriteEngine On\n\n" . $this->currentBlock(['original', 'large']) . "\n\nRewriteRule .* - [L]\n";
         file_put_contents($this->htaccessPath, $fixture);
 
         // First, read mode to sync settings.
         $this->manageHtaccessMethod->invoke($this->accessModuleInstance, null);
+        $this->assertSame(['original', 'large'], $this->getSettings()->get('access_htaccess_types'));
         // Then write mode with same types.
         $this->manageHtaccessMethod->invoke($this->accessModuleInstance, ['original', 'large']);
 
-        $htaccess = $this->readHtaccess();
         // The file should be unchanged from the fixture.
-        $this->assertSame($fixture, $htaccess);
+        $this->assertSame($fixture, $this->readHtaccess());
+    }
+
+    /**
+     * Read mode: when the file is not writable, the block to copy is displayed.
+     */
+    public function testReadModeDisplaysBlockWhenNotWritable(): void
+    {
+        file_put_contents($this->htaccessPath, $this->fixtureManagedOriginalLarge());
+        $messenger = $this->getServiceLocator()->get('ControllerPluginManager')->get('messenger');
+        $messenger->clear();
+        chmod($this->htaccessPath, 0444);
+        try {
+            $this->manageHtaccessMethod->invoke($this->accessModuleInstance, null);
+        } finally {
+            chmod($this->htaccessPath, 0664);
+        }
+
+        $messages = '';
+        foreach ($messenger->get() as $typeMessages) {
+            foreach ($typeMessages as $message) {
+                $messages .= (string) $message;
+            }
+        }
+        $messenger->clear();
+        $this->assertStringContainsString(htmlspecialchars($this->currentBlock(['original', 'large'])), $messages);
+        $this->assertSame($this->fixtureManagedOriginalLarge(), $this->readHtaccess());
+    }
+
+    protected function removeBlockWithoutEndMarker(string $htaccess): string
+    {
+        $method = new ReflectionMethod($this->accessModuleInstance, 'removeHtaccessBlockWithoutEndMarker');
+        $method->setAccessible(true);
+        return $method->invoke($this->accessModuleInstance, $htaccess, '# Module Access: protect files.');
+    }
+
+    /**
+     * Removal without end marker: the rules that follow the block without blank
+     * line are kept.
+     */
+    public function testRemovalWithoutEndMarkerKeepsFollowingRules(): void
+    {
+        $htaccess = <<<'HTACCESS'
+RewriteEngine On
+# Module Access: protect files.
+# This rule is automatically managed by the module.
+RewriteCond %{QUERY_STRING} (^|&)access_signature=
+RewriteRule "^files/(original|large)/(.*)$" "modules/Access/data/scripts/file.php" [END,E=ACCESS_FILE:$1/$2]
+RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [NC,L]
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule .* - [L]
+RewriteRule ^ index.php [L]
+
+HTACCESS;
+        $expected = <<<'HTACCESS'
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule .* - [L]
+RewriteRule ^ index.php [L]
+
+HTACCESS;
+        $this->assertSame($expected, $this->removeBlockWithoutEndMarker($htaccess));
+    }
+
+    /**
+     * Removal without end marker: the rule that ends the file without new line
+     * is removed too.
+     */
+    public function testRemovalWithoutEndMarkerAtEndOfFile(): void
+    {
+        $htaccess = "RewriteEngine On\n# Module Access: protect files.\n"
+            . 'RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [NC,L]';
+        $this->assertSame("RewriteEngine On\n", $this->removeBlockWithoutEndMarker($htaccess));
+    }
+
+    /**
+     * Removal without end marker: the old block with one rule and the current
+     * block are removed.
+     */
+    public function testRemovalWithoutEndMarkerOfOldAndCurrentBlocks(): void
+    {
+        $this->assertStringNotContainsString('access/files', $this->removeBlockWithoutEndMarker($this->fixtureManagedOriginalLarge()));
+        $htaccess = $this->removeBlockWithoutEndMarker($this->fixtureManagedSignedNoEndMarker());
+        $this->assertStringNotContainsString('access_signature', $htaccess);
+        $this->assertStringNotContainsString('data/scripts/file.php', $htaccess);
+        $this->assertStringNotContainsString('access/files', $htaccess);
+        $this->assertStringContainsString('iiiftile.php', $htaccess);
+    }
+
+    /**
+     * Write mode: a managed block without the rule of the signed urls is
+     * updated.
+     */
+    public function testWriteModeAddsRuleOfSignedUrls(): void
+    {
+        file_put_contents($this->htaccessPath, $this->fixtureManagedOriginalLarge());
+        $this->manageHtaccessMethod->invoke($this->accessModuleInstance, ['original', 'large']);
+
+        $htaccess = $this->readHtaccess();
+        $this->assertStringContainsString($this->currentBlock(['original', 'large']), $htaccess);
+        $this->assertSame(1, substr_count($htaccess, '"access/files/$1/$2"'));
+        $this->assertStringContainsString('data/scripts/file.php" [END,E=ACCESS_FILE:$1/$2]', $htaccess);
     }
 
     /**
@@ -826,6 +980,58 @@ HTACCESS;
         $analyticsTypes = $settings->get('analytics_htaccess_types');
         sort($analyticsTypes);
         $this->assertSame(['large', 'original'], $analyticsTypes);
+    }
+
+    /**
+     * preUninstall: the types are extracted from the current block, where the
+     * rule of the signed urls stands before the rule of the types.
+     */
+    public function testPreUninstallWithSignedRuleExtractsTypes(): void
+    {
+        $moduleManager = $this->getServiceLocator()->get('Omeka\ModuleManager');
+        $analyticsModule = $moduleManager->getModule('Analytics');
+        if (!$analyticsModule || $analyticsModule->getState() !== \Omeka\Module\Manager::STATE_ACTIVE) {
+            $this->markTestSkipped('Requires Analytics module to be active.');
+        }
+
+        file_put_contents($this->htaccessPath, $this->fixtureManagedSigned());
+
+        $preUninstall = new ReflectionMethod($this->accessModuleInstance, 'preUninstall');
+        $preUninstall->setAccessible(true);
+        $preUninstall->invoke($this->accessModuleInstance);
+
+        $htaccess = $this->readHtaccess();
+        $this->assertStringNotContainsString('# Module Access: protect files.', $htaccess);
+        $this->assertStringNotContainsString('data/scripts/file.php', $htaccess);
+        $this->assertStringContainsString('(original|large)', $htaccess);
+
+        $settings = $this->getSettings();
+        $analyticsTypes = $settings->get('analytics_htaccess_types');
+        sort($analyticsTypes);
+        $this->assertSame(['large', 'original'], $analyticsTypes);
+    }
+
+    /**
+     * preUninstall: without the end marker, the fallback removes the whole
+     * block, including the condition and the rule of the signed urls, and
+     * keeps the rules of the other modules.
+     */
+    public function testPreUninstallWithSignedRuleWithoutEndMarker(): void
+    {
+        file_put_contents($this->htaccessPath, $this->fixtureManagedSignedNoEndMarker());
+
+        $preUninstall = new ReflectionMethod($this->accessModuleInstance, 'preUninstall');
+        $preUninstall->setAccessible(true);
+        $preUninstall->invoke($this->accessModuleInstance);
+
+        $htaccess = $this->readHtaccess();
+        $this->assertStringNotContainsString('# Module Access: protect files.', $htaccess);
+        $this->assertStringNotContainsString('access_signature', $htaccess);
+        $this->assertStringNotContainsString('Access/data/scripts/file.php', $htaccess);
+        $this->assertStringNotContainsString('access/files/$1/$2', $htaccess);
+        // The rules of the other modules are kept.
+        $this->assertStringContainsString('# Module ImageServer: fast IIIF tile server.', $htaccess);
+        $this->assertStringContainsString('iiiftile.php', $htaccess);
     }
 
     /**
