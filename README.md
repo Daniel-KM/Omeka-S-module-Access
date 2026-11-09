@@ -130,12 +130,25 @@ in the `.htaccess`:
 ```apache
 # Module Access: protect files.
 # This rule is automatically managed by the module.
+RewriteCond %{QUERY_STRING} (^|&)access_signature=
+RewriteRule "^files/(original|large)/(.*)$" "modules/Access/data/scripts/file.php" [END,E=ACCESS_FILE:$1/$2]
 RewriteRule "^files/(original|large)/(.*)$" "access/files/$1/$2" [NC,L]
 # /Module Access: protect files.
 ```
 
 The block is identified by its marker comments, so the module can update or
-remove it without affecting the rest of the file.
+remove it without affecting the rest of the file. If modules are installed via
+composer, the path of the script starts with "composer-addons/modules/".
+
+The first rule speeds up the thumbnails. Each file sent by the module starts
+Omeka, so a page with hundreds of thumbnails, for example an item with many
+medias, sends hundreds of heavy requests. When Omeka renders a page, it already
+checks the rights of each thumbnail, so the module signs the url of the allowed
+thumbnails (argument `access_signature`). A light script sends the signed files
+without starting Omeka, in a few milliseconds instead of about 0.2 second. The
+signature is valid one or two days, specific to the file, and derives from the
+private config of the database. A request without a valid signature is checked
+by the module as usual.
 
 Other comment lines may be added between the opening marker and the rule, for
 example to indicate that the rule is managed by a deployment tool (Ansible,
