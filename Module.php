@@ -2545,11 +2545,22 @@ class Module extends AbstractModule
                 $settings->set('access_htaccess_custom_types', implode(' ', $customCurrent));
             }
 
-            if ($hasLegacyRule) {
+            if ($hasLegacyRule && $isWritable) {
                 $message = new PsrMessage(
                     'A legacy .htaccess rule protects file types "{types}" but is not managed by the module. Save the configuration to convert it to the managed format.', // @translate
                     ['types' => implode(', ', $currentTypes)]
                 );
+                $messenger->addWarning($message);
+            } elseif ($hasLegacyRule) {
+                $message = new PsrMessage(
+                    'A legacy .htaccess rule protects file types "{types}" but is not managed by the module, so the signed thumbnails are slow, and the file .htaccess is not writable. Replace the legacy rule manually in the file .htaccess at the root of Omeka by the following lines:{line_break}{rule}', // @translate
+                    [
+                        'types' => implode(', ', $currentTypes),
+                        'line_break' => '<br><pre>',
+                        'rule' => htmlspecialchars($this->htaccessBlock($currentTypes, $flags)) . '</pre>',
+                    ]
+                );
+                $message->setEscapeHtml(false);
                 $messenger->addWarning($message);
             } elseif ($unwritableMismatch) {
                 $wantedTypes = array_values(array_unique(array_merge(
@@ -2585,9 +2596,21 @@ class Module extends AbstractModule
                 );
                 $messenger->addSuccess($message);
                 if (strpos($htaccess, 'data/scripts/file.php') === false) {
-                    $messenger->addWarning(new PsrMessage(
-                        'The .htaccess rule does not send the signed thumbnails to the quick script of the module. Save the configuration to update it.' // @translate
-                    ));
+                    if ($isWritable) {
+                        $messenger->addWarning(new PsrMessage(
+                            'The .htaccess rule does not send the signed thumbnails to the quick script of the module. Save the configuration to update it.' // @translate
+                        ));
+                    } else {
+                        $message = new PsrMessage(
+                            'The .htaccess rule does not send the signed thumbnails to the quick script of the module, so they are slow, and the file .htaccess is not writable. Replace the block of the module manually in the file .htaccess at the root of Omeka by the following lines:{line_break}{rule}', // @translate
+                            [
+                                'line_break' => '<br><pre>',
+                                'rule' => htmlspecialchars($this->htaccessBlock($currentTypes, $flags)) . '</pre>',
+                            ]
+                        );
+                        $message->setEscapeHtml(false);
+                        $messenger->addWarning($message);
+                    }
                 }
             }
             return;
