@@ -24,9 +24,9 @@ use Omeka\Api\Representation\MediaRepresentation;
  * - filename : filename with extension (storage_id + extension)
  *
  * The request IP used for rule matching follows the existing
- * IsAllowedMediaContent logic, including the setting access_ip_proxy_trusted
- * (reads X-Forwarded-For or X-Real-IP only when the request comes from a listed
- * trusted proxy).
+ * IsAllowedMediaContent logic, including the trusted reverse proxies of the main
+ * settings (reads X-Forwarded-For or X-Real-IP only when the request comes from
+ * a listed trusted proxy).
  */
 class AuthorizeController extends AbstractActionController
 {

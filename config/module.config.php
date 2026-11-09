@@ -379,7 +379,6 @@ return [
                 // 'token',
             ],
 
-            'access_ip_proxy_trusted' => [],
 
             // Access-scope rules, edited as item sets in the config form and
             // normalized on save: keyed by source, each entry keeps the source

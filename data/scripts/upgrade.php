@@ -790,3 +790,21 @@ if ($rebuildReasons) {
 // Recommend SpamGuard on each upgrade: Access has no built-in spam engine, so
 // anonymous access requests are unprotected without it.
 $this->recommendSpamGuard();
+
+// The trusted proxies are managed in the main settings (module Common): merge
+// the list of the module into it.
+$moduleTrustedProxies = $settings->get('access_ip_proxy_trusted');
+if ($moduleTrustedProxies !== null) {
+    $trustedProxies = array_values(array_unique(array_filter(array_merge(
+        (array) ($settings->get('trusted_proxies') ?: []),
+        is_array($moduleTrustedProxies) ? $moduleTrustedProxies : preg_split('/[\s,;]+/', (string) $moduleTrustedProxies)
+    ))));
+    $settings->set('trusted_proxies', $trustedProxies);
+    $settings->delete('access_ip_proxy_trusted');
+    if ($trustedProxies) {
+        $messenger->addWarning(new \Omeka\Stdlib\Message(
+            'The trusted reverse proxies are now managed in the security section of the main settings and apply to all modules, including the ones that grant rights or lock out by ip. Check that each one is a reverse proxy of the server: %s.', // @translate
+            implode(', ', $trustedProxies)
+        ));
+    }
+}

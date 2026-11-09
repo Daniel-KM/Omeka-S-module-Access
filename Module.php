@@ -568,21 +568,19 @@ class Module extends AbstractModule
     }
 
     /**
-     * Auto-fill the trusted proxy list from the current admin request when the
-     * list is empty and proxy headers are present. Shared by install, upgrade
-     * and config form handling.
+     * Auto-fill the trusted proxies of the main settings from the current admin
+     * request when the list is empty and proxy headers are present. Shared by
+     * install, upgrade and config form handling.
      */
     public function autoDetectTrustedProxy(): bool
     {
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        $trusted = $settings->get('access_ip_proxy_trusted', []);
-        if (!is_array($trusted)) {
-            $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
-        }
-        $trusted = array_values(array_filter(array_map('trim', $trusted)));
-        if ($trusted || ($services->has('Omeka\ClientIp') && $services->get('Omeka\ClientIp')->getTrustedProxies())) {
+        // The service is missing while the module Common is not upgraded.
+        if (!$services->has('Omeka\ClientIp')
+            || $services->get('Omeka\ClientIp')->getTrustedProxies()
+        ) {
             return false;
         }
 
@@ -596,10 +594,10 @@ class Module extends AbstractModule
             return false;
         }
 
-        $settings->set('access_ip_proxy_trusted', [$remote]);
+        $settings->set('trusted_proxies', [$remote]);
         $services->get('ControllerPluginManager')->get('messenger')->addSuccess(
             new PsrMessage(
-                'Trusted proxy automatically detected and added: {ip}. Review and adjust the list if more than one proxy is involved.', // @translate
+                'Trusted proxy automatically detected and added to the security section of the main settings: {ip}. Review and adjust the list if more than one proxy is involved.', // @translate
                 ['ip' => $remote]
             )
         );
@@ -2914,20 +2912,15 @@ class Module extends AbstractModule
 
         $hasProxyHeader = !empty($_SERVER['HTTP_X_FORWARDED_FOR'])
             || !empty($_SERVER['HTTP_X_REAL_IP']);
-        $trusted = $settings->get('access_ip_proxy_trusted', []);
-        if (!is_array($trusted)) {
-            $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
-        }
-        $trusted = array_values(array_filter(array_map('trim', $trusted)));
-        $proxyActive = $trusted || ($services->has('Omeka\ClientIp') && $services->get('Omeka\ClientIp')->getTrustedProxies());
+        $proxyActive = $services->has('Omeka\ClientIp') && $services->get('Omeka\ClientIp')->getTrustedProxies();
 
         if ($hasProxyHeader && !$proxyActive) {
             $messenger->addWarning(new PsrMessage(
-                'A reverse proxy is detected (header X-Forwarded-For or X-Real-IP) but no trusted proxy is configured: all visitors are seen with the proxy IP. Fill "Trusted proxies" below or in the main settings with the internal IP of your reverse proxy.' // @translate
+                'A reverse proxy is detected (header X-Forwarded-For or X-Real-IP) but no trusted proxy is configured: all visitors are seen with the proxy IP. Fill the trusted reverse proxies of the main settings (section Security) with the internal IP of your reverse proxy.' // @translate
             ));
         } elseif (!$hasProxyHeader && $proxyActive) {
             $messenger->addWarning(new PsrMessage(
-                'Trusted proxies are configured but no reverse proxy header is detected on the current request. Clear the list or verify the proxy configuration.' // @translate
+                'Trusted proxies are configured in the main settings but no reverse proxy header is detected on the current request. Clear the list or verify the proxy configuration.' // @translate
             ));
         }
 

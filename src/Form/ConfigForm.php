@@ -371,22 +371,6 @@ class ConfigForm extends Form
                 ],
             ])
 
-            ->add([
-                'name' => 'access_ip_proxy_trusted',
-                'type' => OmekaElement\ArrayTextarea::class,
-                'options' => [
-                    'element_group' => 'modes',
-                    'tab' => 'access-settings',
-                    'label' => 'Trusted proxies (one IP or cidr range per line)', // @translate
-                    'info' => 'When filled, the module reads the real client IP from the proxy headers X-Forwarded-For / X-Real-IP, but only when the request comes from one of these IPs. When empty, the trusted reverse proxies of the main settings are used. Without any list, proxy headers are ignored and every visitor is seen with REMOTE_ADDR, since the ip grants rights. Put here the internal IPs of your reverse proxy (Traefik, nginx, Docker bridge, load balancer).', // @translate
-                ],
-                'attributes' => [
-                    'id' => 'access_ip_proxy_trusted',
-                    'rows' => 4,
-                    'placeholder' => "172.18.0.1\n10.0.0.5",
-                ],
-            ])
-
             // Anchor rendered inside the "Access modes" group; getConfigForm
             // replaces it with the ip and sso rule collections, so they appear
 

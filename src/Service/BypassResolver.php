@@ -35,8 +35,8 @@ class BypassResolver
      * Real client IP under trusted-proxy rules. Returns "::" when no usable
      * address is found.
      *
-     * The trusted proxies of the module take precedence over the main ones.
-     * The ip grants rights, so the headers are ignored when no proxy is set.
+     * The ip grants rights, so the headers are ignored when no trusted proxy is
+     * set in the main settings.
      */
     public function resolveClientIp(): string
     {
@@ -45,8 +45,7 @@ class BypassResolver
             $remote = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
             return filter_var($remote, FILTER_VALIDATE_IP) ? $remote : '::';
         }
-        $trusted = $this->clientIp::normalizeTrustedProxies($this->settings->get('access_ip_proxy_trusted', []));
-        return $this->clientIp->getIp(null, $trusted ?: null, true);
+        return $this->clientIp->getIp(null, null, true);
     }
 
     /**
