@@ -377,8 +377,8 @@ class ConfigForm extends Form
                 'options' => [
                     'element_group' => 'modes',
                     'tab' => 'access-settings',
-                    'label' => 'Trusted proxies (one IP per line)', // @translate
-                    'info' => 'When filled, the module reads the real client IP from the proxy headers X-Forwarded-For / X-Real-IP, but only when the request comes from one of these IPs. Without this list, proxy headers are ignored and every visitor is seen with REMOTE_ADDR. Put here the internal IPs of your reverse proxy (Traefik, nginx, Docker bridge, load balancer).', // @translate
+                    'label' => 'Trusted proxies (one IP or cidr range per line)', // @translate
+                    'info' => 'When filled, the module reads the real client IP from the proxy headers X-Forwarded-For / X-Real-IP, but only when the request comes from one of these IPs. When empty, the trusted reverse proxies of the main settings are used. Without any list, proxy headers are ignored and every visitor is seen with REMOTE_ADDR, since the ip grants rights. Put here the internal IPs of your reverse proxy (Traefik, nginx, Docker bridge, load balancer).', // @translate
                 ],
                 'attributes' => [
                     'id' => 'access_ip_proxy_trusted',

@@ -582,7 +582,7 @@ class Module extends AbstractModule
             $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
         }
         $trusted = array_values(array_filter(array_map('trim', $trusted)));
-        if ($trusted) {
+        if ($trusted || $services->get('Omeka\ClientIp')->getTrustedProxies()) {
             return false;
         }
 
@@ -2919,11 +2919,11 @@ class Module extends AbstractModule
             $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
         }
         $trusted = array_values(array_filter(array_map('trim', $trusted)));
-        $proxyActive = (bool) $trusted;
+        $proxyActive = $trusted || $services->get('Omeka\ClientIp')->getTrustedProxies();
 
         if ($hasProxyHeader && !$proxyActive) {
             $messenger->addWarning(new PsrMessage(
-                'A reverse proxy is detected (header X-Forwarded-For or X-Real-IP) but no trusted proxy is configured: all visitors are seen with the proxy IP. Fill "Trusted proxies" with the internal IP of your reverse proxy.' // @translate
+                'A reverse proxy is detected (header X-Forwarded-For or X-Real-IP) but no trusted proxy is configured: all visitors are seen with the proxy IP. Fill "Trusted proxies" below or in the main settings with the internal IP of your reverse proxy.' // @translate
             ));
         } elseif (!$hasProxyHeader && $proxyActive) {
             $messenger->addWarning(new PsrMessage(
@@ -2986,7 +2986,7 @@ class Module extends AbstractModule
         }
 
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
-        $clientIp = (string) IpRange::normalizeIp((new \Access\Service\BypassResolver($settings))->resolveClientIp());
+        $clientIp = (string) IpRange::normalizeIp((new \Access\Service\BypassResolver($settings, null, $services->get('Omeka\ClientIp')))->resolveClientIp());
         if (strpos($clientIp, ':') !== false && $clientIp !== '::') {
             $messenger->addWarning(new PsrMessage(
                 'The current request comes from the ipv6 address {ip}, but the ip rules contain only ipv4 addresses: the visitors of the institutions who connect in ipv6 are not recognized. Ask the institutions for their ipv6 ranges and add them to the rules.', // @translate

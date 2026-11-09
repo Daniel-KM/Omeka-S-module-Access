@@ -3,7 +3,6 @@
 namespace Access\Service;
 
 use Access\Stdlib\IpRange;
-use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Omeka\Settings\Settings;
 use Omeka\Settings\UserSettings;
 
@@ -20,46 +19,29 @@ class BypassResolver
 
     private ?UserSettings $userSettings;
 
-    public function __construct(Settings $settings, ?UserSettings $userSettings = null)
+    /**
+     * @var \Omeka\Stdlib\ClientIp|\Common\Stdlib\ClientIp
+     */
+    private $clientIp;
+
+    public function __construct(Settings $settings, ?UserSettings $userSettings, $clientIp)
     {
         $this->settings = $settings;
         $this->userSettings = $userSettings;
+        $this->clientIp = $clientIp;
     }
 
     /**
      * Real client IP under trusted-proxy rules. Returns "::" when no usable
      * address is found.
+     *
+     * The trusted proxies of the module take precedence over the main ones.
+     * The ip grants rights, so the headers are ignored when no proxy is set.
      */
     public function resolveClientIp(): string
     {
-        $remoteAddress = new RemoteAddress();
-        $remote = $remoteAddress->getIpAddress();
-        if (!$remote || !filter_var($remote, FILTER_VALIDATE_IP)) {
-            return '::';
-        }
-        $trusted = $this->settings->get('access_ip_proxy_trusted', []);
-        if (!is_array($trusted)) {
-            $trusted = preg_split('/[\s,]+/', (string) $trusted) ?: [];
-        }
-        $trusted = array_values(array_filter(
-            array_map('trim', $trusted),
-            fn ($v) => $v !== '' && filter_var(
-                strpos($v, '/') === false ? $v : strtok($v, '/'),
-                FILTER_VALIDATE_IP
-            )
-        ));
-        if (!$trusted || !in_array($remote, $trusted, true)) {
-            return $remote;
-        }
-        if (empty($_SERVER['HTTP_X_FORWARDED_FOR'])
-            && !empty($_SERVER['HTTP_X_REAL_IP'])
-        ) {
-            $realIp = trim((string) $_SERVER['HTTP_X_REAL_IP']);
-            return filter_var($realIp, FILTER_VALIDATE_IP) ? $realIp : $remote;
-        }
-        $remoteAddress->setUseProxy(true)->setTrustedProxies($trusted);
-        $ip = $remoteAddress->getIpAddress();
-        return $ip && filter_var($ip, FILTER_VALIDATE_IP) ? $ip : $remote;
+        $trusted = $this->clientIp::normalizeTrustedProxies($this->settings->get('access_ip_proxy_trusted', []));
+        return $this->clientIp->getIp(null, $trusted ?: null, true);
     }
 
     /**

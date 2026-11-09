@@ -106,7 +106,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         ?User $user,
         UserIsAllowed $userIsAllowed,
         ?UserSettings $userSettings,
-        ?BypassResolver $bypassResolver = null
+        BypassResolver $bypassResolver
     ) {
         $this->accessStatus = $accessStatus;
         $this->entityManager = $entityManager;
@@ -119,7 +119,7 @@ class IsAllowedMediaContent extends AbstractPlugin
         $this->user = $user;
         $this->userIsAllowed = $userIsAllowed;
         $this->userSettings = $userSettings;
-        $this->bypassResolver = $bypassResolver ?? new BypassResolver($settings, $userSettings);
+        $this->bypassResolver = $bypassResolver;
     }
 
     /**

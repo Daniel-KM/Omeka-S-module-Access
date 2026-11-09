@@ -8,7 +8,6 @@ use Access\Form\Site\AccessRequestForm;
 use Access\Spam\SpamCheckerInterface;
 use Common\Mvc\Controller\Plugin\JSend;
 use Common\Stdlib\PsrMessage;
-use Laminas\Http\PhpEnvironment\RemoteAddress;
 use Laminas\Http\Response as HttpResponse;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
@@ -305,7 +304,7 @@ class RequestController extends AbstractActionController
     protected function spamContext(array $post, string $email): array
     {
         return [
-            'ip' => (new RemoteAddress())->getIpAddress(),
+            'ip' => $this->getEvent()->getApplication()->getServiceManager()->get('Omeka\ClientIp')->getIp(),
             'userAgent' => (string) $this->getRequest()->getServer('HTTP_USER_AGENT', ''),
             'email' => $email,
             'body' => (string) ($post['o:message'] ?? ''),

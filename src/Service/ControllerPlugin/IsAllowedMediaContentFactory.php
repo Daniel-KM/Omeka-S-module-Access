@@ -29,7 +29,7 @@ class IsAllowedMediaContentFactory implements FactoryInterface
             $user,
             $plugins->get('userIsAllowed'),
             $userSettings,
-            new \Access\Service\BypassResolver($settings, $userSettings)
+            new \Access\Service\BypassResolver($settings, $userSettings, $services->get('Omeka\ClientIp'))
         );
     }
 }
