@@ -767,6 +767,16 @@ if (version_compare((string) $oldVersion, '3.4.50', '<')) {
     );
 }
 
+if (version_compare((string) $oldVersion, '3.4.52', '<')) {
+    // Add the rule of the signed thumbnails to the htaccess. The current types
+    // are read first, so the protection is never removed.
+    $this->manageHtaccess();
+    $htaccessTypes = $settings->get('access_htaccess_types') ?: [];
+    if ($htaccessTypes) {
+        $this->manageHtaccess($htaccessTypes);
+    }
+}
+
 if ($rebuildReasons) {
     $job = $dispatchJobDuringUpgrade(\Access\Job\AccessStatusRebuild::class, $rebuildArgs);
     $message = new PsrMessage(

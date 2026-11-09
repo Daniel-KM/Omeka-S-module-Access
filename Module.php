@@ -2430,6 +2430,8 @@ class Module extends AbstractModule
      */
     protected function htaccessBlock(array $types, string $flags): string
     {
+        // The classes of the module are not loaded during upgrade.
+        require_once __DIR__ . '/src/Stdlib/FileSignature.php';
         $typesPattern = implode('|', $types);
         $modulePath = is_dir(OMEKA_PATH . '/modules/Access') ? 'modules/Access' : 'composer-addons/modules/Access';
         return '# Module Access: protect files.' . "\n"
