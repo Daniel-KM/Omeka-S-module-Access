@@ -9,87 +9,91 @@
         position: fixed;
         top: 0;
         left: 0;
-    }
-    .access-request-form .form-wrapper {
-        padding: 0;
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        display: -webkit-box;
-        display: -moz-box;
-        display: -ms-flexbox;
-        display: -webkit-flex;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .access-request-form .form-wrapper .form-block {
-        background: #ffffff;
-        border: 1px solid #000000;
-    }
-    .access-request-form .form-wrapper .form-block .block-title {
-        background-color: #000000;
-        padding: 5px 10px;
-        color: #ffffff;
-        position: relative;
-    }
-    .access-request-form .form-wrapper .form-block .block-title h3{
-        display: inline;
-    }
-    .access-request-form .form-wrapper .form-block .block-title a {
-        color: #ffffff;
-    }
-    .access-request-form .form-wrapper .form-block .block-title .block-close {
-        position: absolute;
-        right: 12px;
-        top: 5px;
-    }
-    .access-request-form .form-wrapper .form-block .block-body {
-        padding: 15px 10px;
-    }
-    .access-request-form form label {
-        display: block;
-        margin-bottom: 12px;
-    }
-    .access-request-form form label input {
-        margin-right: 12px;
-        vertical-align: unset;
+        & .form-wrapper {
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            display: -webkit-box;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: -webkit-flex;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            & .form-block {
+                background: #ffffff;
+                border: 1px solid #000000;
+                & .block-title {
+                    background-color: #000000;
+                    padding: 5px 10px;
+                    color: #ffffff;
+                    position: relative;
+                }
+                & .block-title h3 {
+                    display: inline;
+                }
+                & .block-title a {
+                    color: #ffffff;
+                }
+                & .block-title .block-close {
+                    position: absolute;
+                    right: 12px;
+                    top: 5px;
+                }
+                & .block-body {
+                    padding: 15px 10px;
+                }
+            }
+        }
+        & form {
+            & label {
+                display: block;
+                margin-bottom: 12px;
+                & input {
+                    margin-right: 12px;
+                    vertical-align: unset;
+                }
+            }
+        }
     }
 
     /* Copied from _screen.scss */
-    .list-messages .messages {
-        padding: 0;
-        margin: 0 0 12px;
-        clear: both;
-    }
-    .list-messages .messages li {
-        margin: 0 0 6px;
-        background-color: rgba(255,255,255,.5);
-        border-radius: 3px;
-        padding: 6px 10px;
-        margin-top: 6px;
-        display: block;
-        width: 100%;
-    }
-    .list-messages .messages .error {
-        background-color: #f4b4b4;
-    }
-    .list-messages .messages .success {
-        background-color: #cdffcd;
-    }
-    .list-messages .messages .warning {
-        background-color: #fff6e6;
-    }
-    .list-messages .messages .error,
-    .list-messages .messages .error a {
-        color: #A91919;
-    }
-    .list-messages .messages .success,
-    .list-messages .messages .success a {
-        color: green;
-    }
-    .list-messages .messages .warning,
-    .list-messages .messages .warning a {
-        color: orange;
+    .list-messages {
+        & .messages {
+            padding: 0;
+            margin: 0 0 12px;
+            clear: both;
+            & li {
+                margin: 0 0 6px;
+                background-color: rgba(255,255,255,.5);
+                border-radius: 3px;
+                padding: 6px 10px;
+                margin-top: 6px;
+                display: block;
+                width: 100%;
+            }
+            & .error {
+                background-color: #f4b4b4;
+            }
+            & .success {
+                background-color: #cdffcd;
+            }
+            & .warning {
+                background-color: #fff6e6;
+            }
+            & .error,
+            & .error a {
+                color: #A91919;
+            }
+            & .success,
+            & .success a {
+                color: green;
+            }
+            & .warning,
+            & .warning a {
+                color: orange;
+            }
+        }
     }
 }
