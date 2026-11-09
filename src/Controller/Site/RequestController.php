@@ -316,10 +316,7 @@ class RequestController extends AbstractActionController
      */
     protected function clientIp(): string
     {
-        // The service is missing while the module Common is not upgraded.
-        $services = $this->getEvent()->getApplication()->getServiceManager();
-        return $services->has('Omeka\ClientIp')
-            ? $services->get('Omeka\ClientIp')->getIp()
-            : (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        return $this->getEvent()->getApplication()->getServiceManager()
+            ->get('Omeka\ClientIp')->getIp();
     }
 }

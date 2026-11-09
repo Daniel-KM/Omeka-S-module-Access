@@ -577,10 +577,7 @@ class Module extends AbstractModule
         $services = $this->getServiceLocator();
         $settings = $services->get('Omeka\Settings');
 
-        // The service is missing while the module Common is not upgraded.
-        if (!$services->has('Omeka\ClientIp')
-            || $services->get('Omeka\ClientIp')->getTrustedProxies()
-        ) {
+        if ($services->get('Omeka\ClientIp')->getTrustedProxies()) {
             return false;
         }
 
@@ -2912,7 +2909,7 @@ class Module extends AbstractModule
 
         $hasProxyHeader = !empty($_SERVER['HTTP_X_FORWARDED_FOR'])
             || !empty($_SERVER['HTTP_X_REAL_IP']);
-        $proxyActive = $services->has('Omeka\ClientIp') && $services->get('Omeka\ClientIp')->getTrustedProxies();
+        $proxyActive = (bool) $services->get('Omeka\ClientIp')->getTrustedProxies();
 
         if ($hasProxyHeader && !$proxyActive) {
             $messenger->addWarning(new PsrMessage(
@@ -2979,7 +2976,7 @@ class Module extends AbstractModule
         }
 
         $messenger = $services->get('ControllerPluginManager')->get('messenger');
-        $clientIp = (string) IpRange::normalizeIp((new \Access\Service\BypassResolver($settings, null, $services->has('Omeka\ClientIp') ? $services->get('Omeka\ClientIp') : null))->resolveClientIp());
+        $clientIp = (string) IpRange::normalizeIp((new \Access\Service\BypassResolver($settings, null, $services->get('Omeka\ClientIp')))->resolveClientIp());
         if (strpos($clientIp, ':') !== false && $clientIp !== '::') {
             $messenger->addWarning(new PsrMessage(
                 'The current request comes from the ipv6 address {ip}, but the ip rules contain only ipv4 addresses: the visitors of the institutions who connect in ipv6 are not recognized. Ask the institutions for their ipv6 ranges and add them to the rules.', // @translate
